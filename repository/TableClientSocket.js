@@ -13,6 +13,8 @@ const getAllClientSocketQuery =async (fastify) =>{
             "wrReconnectMaxDelay" as "reconnectMaxDelay",
             "wrReconnectCount" as "reconnectCount",
             "wrActionType" as "actionType",
+            "wrIsUpdateView" as "isUpdateView",
+            "wrUpdateInterval" as "updateInterval",
             "wrConnectCount" as "connectCount"
         FROM "tblClientSockets"
         WHERE "wrIsDeleted" = false
@@ -95,9 +97,11 @@ const createClientSocketQuery =async (data,request,fastify) =>{
                 "wrIsActive",
                 "wrReconnectDelay",
                 "wrReconnectAttempts",
-                "wrReconnectMaxDelay"
+                "wrReconnectMaxDelay",
+                "wrIsUpdateView",
+                "wrUpdateInterval"
             )
-            VALUES( $1, $2, $3, $4, $5, $6)
+            VALUES( $1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING 
             "wrId" as "clientSocketId"  , 
             "wrServerName" as "serverName",
@@ -109,7 +113,9 @@ const createClientSocketQuery =async (data,request,fastify) =>{
             "wrReconnectMaxDelay" as "reconnectMaxDelay",
             "wrReconnectCount" as "reconnectCount",
             "wrActionType" as "actionType",
-            "wrConnectCount" as "connectCount"	
+            "wrConnectCount" as "connectCount",
+            "wrIsUpdateView" as "isUpdateView",
+            "wrUpdateInterval" as "updateInterval"
         `;
         const result = await fastify.db.query(query,
             {
@@ -120,7 +126,9 @@ const createClientSocketQuery =async (data,request,fastify) =>{
                     data.hasOwnProperty('isActive') ? data.isActive : false,
                     data.reconnectDelay,
                     data.reconnectAttempts,
-                    data.reconnectMaxDelay
+                    data.reconnectMaxDelay,
+                    data.isUpdateView ?? false,
+                    data.updateInterval ?? null
                 ]
             }
         )
@@ -145,7 +153,9 @@ const updateClientSocketQuery = async(data,request,fastify) =>{
                 "wrIsActive" = $2,
                 "wrReconnectDelay" = $3,
                 "wrReconnectAttempts" = $4,
-                "wrReconnectMaxDelay" = $5
+                "wrReconnectMaxDelay" = $5,
+                "wrIsUpdateView" = $7,
+                "wrUpdateInterval" = $8
             WHERE "wrId" = $6
             RETURNING "wrId" as "clientSocketId",
             "wrServerName" as "serverName",
@@ -157,7 +167,9 @@ const updateClientSocketQuery = async(data,request,fastify) =>{
             "wrReconnectMaxDelay" as "reconnectMaxDelay",
             "wrReconnectCount" as "reconnectCount",
             "wrActionType" as "actionType",
-            "wrConnectCount" as "connectCount"
+            "wrConnectCount" as "connectCount",
+            "wrIsUpdateView" as "isUpdateView",
+            "wrUpdateInterval" as "updateInterval"
         `;
         const result = await  fastify.db.query(query,
             {
@@ -168,7 +180,9 @@ const updateClientSocketQuery = async(data,request,fastify) =>{
                     data.reconnectDelay,
                     data.reconnectAttempts,
                     data.reconnectMaxDelay,
-                    data.clientSocketId
+                    data.clientSocketId,
+                    data.isUpdateView,
+                    data.updateInterval,
                 ]
             }
         )
@@ -271,6 +285,34 @@ const updateActiveInactiveClientSocketQuery = async(request,fastify) =>{
         throw new Error(err.message);
     }
 }
+const changeIsUpdateViewClientSocketQuery = async(data, request, fastify) => {
+    try {
+        const query = `
+            UPDATE "tblClientSockets"
+            SET
+                "wrIsUpdateView" = $1
+            WHERE "wrId" = $2
+        `;
+        const result = await fastify.db.query(query,
+            {
+                type: fastify.db.QueryTypes.SELECT,
+                bind: [
+                    data.isUpdateView,
+                    data.clientSocketId
+                ]
+            }
+        )
+        return result[0];
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB Error --> repository/TableClientSocket/changeIsUpdateViewClientSocketQuery",
+            request
+        )
+        throw new Error(err.message);
+    }
+}
 const disConnectClientSocketQuery = async (fastify) => {
     try {
       const result = await fastify.db.query(`
@@ -306,5 +348,6 @@ module.exports = {
     updateActiveInactiveClientSocketQuery,
     updateClientSocketStatusQuery,
     updateReconnectCountQuery,
-    disConnectClientSocketQuery
+    disConnectClientSocketQuery,
+    changeIsUpdateViewClientSocketQuery,
 }

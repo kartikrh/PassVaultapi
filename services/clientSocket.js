@@ -1,4 +1,11 @@
-const { createClientSocketQuery, updateClientSocketQuery, deleteClientSocketQuery, updateActionTypeQuery, updateActiveInactiveClientSocketQuery } = require("../repository/TableClientSocket");
+const { 
+    createClientSocketQuery,
+    updateClientSocketQuery,
+    deleteClientSocketQuery,
+    updateActionTypeQuery,
+    updateActiveInactiveClientSocketQuery,
+    changeIsUpdateViewClientSocketQuery,
+} = require("../repository/TableClientSocket");
 const { connectClients, disconnectClients, disconnectInactiveClients } = require("../sockets");
 const { 
     clientSocketActionType, 
@@ -90,7 +97,9 @@ const updateClientSocketService = async (request, fastify) => {
         reconnectAttempts : request.body.reconnectAttempts || result.reconnectAttempts,
         reconnectMaxDelay : request.body.reconnectMaxDelay || result.reconnectMaxDelay,
         reconnectCount : request.body.reconnectCount || result.reconnectCount,
-        actionType : request.body.actionType || result.actionType
+        actionType : request.body.actionType || result.actionType,
+        isUpdateView : request.body.hasOwnProperty("isUpdateView") ? request.body.isUpdateView : result.isUpdateView,
+        updateInterval : request.body.updateInterval || result.updateInterval,
     }
     const data = await updateClientSocketQuery(
         body,
@@ -182,6 +191,19 @@ const activeInactiveClientSocketService = async (request, fastify) => {
     global.tblClientSocket[index].isActive = isActive;
     return `Client Socket updated successfully`;
 }
+
+const changeIsUpdateViewClientSocketService = async (request, fastify) => {
+    const {clientSocketId, isUpdateView} = request.body;
+    let index = global.tblClientSocket.findIndex((item) => item.clientSocketId === clientSocketId);
+    if(index === -1){
+        throw new Error(`Client with this id not found`);
+    }
+    await changeIsUpdateViewClientSocketQuery({clientSocketId, isUpdateView}, request, fastify)    
+    global.tblClientSocket[index].isUpdateView = isUpdateView;
+
+    return `Client Socket updated successfully`;
+}
+
 module.exports = {
     getAllClientSocketService,
     getClientSocketByIdService,
@@ -190,4 +212,5 @@ module.exports = {
     changeActionTypeService,
     activeInactiveClientSocketService,
     socketCountService,
+    changeIsUpdateViewClientSocketService,
 }
