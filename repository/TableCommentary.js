@@ -79,6 +79,7 @@ const getAllCommentaryQuery = async (fastify) => {
     tc."wrScoringType" as "scoringType",
     tc."wrPythonURI" as "pythonURI",
     tc."wrCancelTime" as "cancelTime",
+    tc."wrViews" as "views",
     tc."wrStreamingUrl" as "streamingUrl",
     tc."wrStreamingType" as "streamingType"
     from "tblCommentaries" tc
@@ -186,6 +187,7 @@ const getCommentariesDataQuery = async (fastify , where = null) => {
     tc."wrPythonURI" as "pythonURI",
     tc."wrCancelTime" as "cancelTime",
     tc."wrStreamingUrl" as "streamingUrl",
+    tc."wrViews" as "views",
     tc."wrStreamingType" as "streamingType"
     from "tblCommentaries" tc
 
@@ -329,6 +331,7 @@ const insertCommentaryQuery = async (request, fastify) => {
     tc."wrPythonURI" as "pythonURI",
     tc."wrCancelTime" as "cancelTime",
     "wrStreamingUrl" as "streamingUrl",
+    tc."wrViews" as "views",
     "wrStreamingType" as "streamingType"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
@@ -977,6 +980,7 @@ const updateCommentaryQuery = async (request, fastify) => {
           tc."wrPythonId" as "pythonId",
           tc."wrPythonURI" as "pythonURI",
           tc."wrCancelTime" as "cancelTime",
+          tc."wrViews" as "views",
           "wrStreamingUrl" as "streamingUrl",
           "wrStreamingType" as "streamingType"
         from "update_data" tc
@@ -1365,6 +1369,7 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       tc."wrPythonURI" as "pythonURI",
       tc."wrCancelTime" as "cancelTime",
       tc."wrStreamingUrl" as "streamingUrl",
+      tc."wrViews" as "views",
       tc."wrStreamingType" as "streamingType"
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
@@ -4194,6 +4199,7 @@ const getCommentaryDetailByIdQuery = async (data, fastify) => {
               tco."wrCompetition" as "competition",
               tc."wrCompetitionId" as "competitionId",
               tc."wrIsVirtual" as "isVirtual",
+              tc."wrViews" as "views",
               "wrIsPredictMarket" as "isPredictMarket",
               tc."wrCommentaryCloseTime" as "commentaryCloseTime"
           FROM "tblCommentaries" tc
@@ -5144,6 +5150,7 @@ const getCommentariesResultQuery = async (request, fastify) => {
       tc."wrScoringType" as "scoringType",
       tc."wrVenueId" as "venueId",
       tc."wrPythonURI" as "pythonURI",
+      tc."wrViews" as "views",
       tc."wrCancelTime" as "cancelTime"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
@@ -5284,6 +5291,7 @@ const getAllCommentaryHistoryQuery = async (whereCondition, fastify, request) =>
             tc."wrScoringType" as "scoringType",
             tc."wrVenueId" as "venueId",
             tc."wrPythonURI" as "pythonURI",
+            tc."wrViews" as "views",
             tc."wrCancelTime" as "cancelTime"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
@@ -5487,6 +5495,7 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           tc."wrScoringType" as "scoringType",
           tc."wrPythonId" as "pythonId",
           tc."wrPythonURI" as "pythonURI",
+          tc."wrViews" as "views",
           tc."wrCancelTime" as "cancelTime"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 ON tt1."wrTeamId" = tc."wrTeam1Id" AND tt1."wrIsDeleted" = false
@@ -5605,6 +5614,7 @@ const getCommentariesDataByDifferentIdsQuery = async (whereCondition, request, f
           tc."wrScoringType" as "scoringType",
           tc."wrPythonId" as "pythonId",
           tc."wrPythonURI" as "pythonURI",
+          tc."wrViews" as "views",
           tc."wrCancelTime" as "cancelTime"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
@@ -5706,6 +5716,7 @@ const getCommentariesDataQueryV1 = async (fastify) => {
         tc."wrScoringType" as "scoringType",
         tc."wrPythonId" as "pythonId",
         tc."wrPythonURI" as "pythonURI",
+        tc."wrViews" as "views",
         tc."wrCancelTime" as "cancelTime"
     FROM "tblCommentaries" tc
     LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
@@ -6291,6 +6302,7 @@ const insertVirtualEventQuery = async (data, request, fastify) => {
     tc."wrTossDelay" as "tossDelay",
     tc."wrPythonId" as "pythonId",
     tc."wrScoringType" as "scoringType",
+    tc."wrViews" as "views",
     tc."wrPythonURI" as "pythonURI"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
@@ -7724,6 +7736,7 @@ const insertCommentaryWithImportQuery = async (data, request, fastify) => {
     tc."wrPythonURI" as "pythonURI",
     tc."wrCountryId" as "countryId",
     tc."wrVenueId" as "venueId",
+    tc."wrViews" as "views",
     tc."wrScoringType" as "scoringType",
     tc."wrCancelTime" as "cancelTime"
     from "insert_data" tc
@@ -8093,6 +8106,7 @@ const getComEntityQuery = async (data,request,fastify) => {
       tc."wrPythonId" as "pythonId",
       tc."wrScoringType" as "scoringType",
       tc."wrPythonURI" as "pythonURI",
+      tc."wrViews" as "views",
       tc."wrCancelTime" as "cancelTime"
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
