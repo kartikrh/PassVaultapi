@@ -987,7 +987,6 @@ const UpdatePlayerFromEntityService = async (request, fastify) => {
             if (index !== -1) {
               global.tblPlayers[index] = updatePlayerData[0];
             }
-            updateCount++;
           } catch (err) {
             errorLogger(fastify, `Failed to update player id: ${entry.playerId} data: ${err.message}`, "/services/teams.js/updatePlayerData", request);
             continue;
@@ -1005,7 +1004,7 @@ const UpdatePlayerFromEntityService = async (request, fastify) => {
         }, fastify);
       }
     } catch (err) {
-      errorLogger(fastify, `Failed to fetch or process player id: ${entry.playerId} data: ${err.message}`, "/services/teams.js/UpdateTeamFromEntityService", request);
+      errorLogger(fastify, `Failed to fetch or process player id: ${entry.playerId} data: ${err.message}`, "/services/player.js/UpdatePlayerFromEntityService", request);
       continue;
     }
   }
