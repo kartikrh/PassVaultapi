@@ -24,7 +24,9 @@ const getAllBattingHistory = async (fastify) => {
                 "wrStumpCount" as "stumpCount",
                 "wrCreatedBy" as "createdBy",
                 "wrCreatedAt" as "createdAt",
-                "wrOutCount" as "outCount"
+                "wrOutCount" as "outCount",
+                "wrFastest50Balls" as "fastest100Balls",
+                "wrFastest100Balls" as "fastest100Balls"
             FROM "tblPlayerBattingHistory";`,
       { type: fastify.db.QueryTypes.SELECT }
     );
@@ -61,7 +63,10 @@ const getAllBowlingHistory = async (fastify) => {
             "wr5Wickets" as "wickets5",
             "wr10Wickets" as "wickets10",
             "wrCreatedBy" as "createdBy",
-            "wrCreatedAt" as "createdAt"
+            "wrCreatedAt" as "createdAt",
+            "wrOverCount" as "overCount",
+            "wrHattrickCount" as "hattrickCount",
+            "wrExpensiveOverRuns" as "expensiveOverRuns"
             FROM "tblPlayerBowlingHistory";`,
       { type: fastify.db.QueryTypes.SELECT }
     );
@@ -100,7 +105,9 @@ const getAllPlayersBattingHistory = async (playerId, fastify) => {
                   tpbh."wrStumpCount" as "stumpCount",
                   tpbh."wrCreatedBy" as "createdBy",
                   tpbh."wrCreatedAt" as "createdAt",
-                  tpbh."wrOutCount" as "outCount"
+                  tpbh."wrOutCount" as "outCount",
+                  tpbh."wrFastest50Balls" as "fastest100Balls",
+                  tpbh."wrFastest100Balls" as "fastest100Balls"
               FROM "tblMatchTypes" AS tmt
               LEFT JOIN 
               "tblPlayerBattingHistory" AS tpbh ON tpbh."wrMatchTypeId" = tmt."wrMatchTypeId"
@@ -144,7 +151,10 @@ const getAllPlayerBowlingHistory = async (playerId, fastify) => {
               tpbh."wr5Wickets" as "wickets5",
               tpbh."wr10Wickets" as "wickets10",
               tpbh."wrCreatedBy" as "createdBy",
-              tpbh."wrCreatedAt" as "createdAt"
+              tpbh."wrCreatedAt" as "createdAt",
+              tpbh."wrOverCount" as "overCount",
+              tpbh."wrHattrickCount" as "hattrickCount",
+              tpbh."wrExpensiveOverRuns" as "expensiveOverRuns"
               FROM "tblMatchTypes" AS tmt
               LEFT JOIN 
               "tblPlayerBowlingHistory" AS tpbh ON tpbh."wrMatchTypeId" = tmt."wrMatchTypeId"
@@ -359,7 +369,10 @@ const getBowlingHistoryByPlayerIdQuery = async (playerId, request, fastify) => {
             "wr5Wickets" as "wickets5",
             "wr10Wickets" as "wickets10",
             "wrCreatedBy" as "createdBy",
-            "wrCreatedAt" as "createdAt"
+            "wrCreatedAt" as "createdAt",
+            "wrOverCount" as "overCount",
+            "wrHattrickCount" as "hattrickCount",
+            "wrExpensiveOverRuns" as "expensiveOverRuns"
             FROM "tblPlayerBowlingHistory"
             WHERE "wrPlayerId" = $1;`,
       { 
@@ -403,7 +416,9 @@ const getBatterHistoryQuery = async (data, request, fastify) => {
                 "wrStumpCount" as "stumpCount",
                 "wrCreatedBy" as "createdBy",
                 "wrCreatedAt" as "createdAt",
-                "wrOutCount" as "outCount"
+                "wrOutCount" as "outCount",
+                "wrFastest50Balls" as "fastest100Balls",
+                "wrFastest100Balls" as "fastest100Balls"
             FROM "tblPlayerBattingHistory"
             WHERE "wrPlayerId" = $1 AND "wrMatchTypeId" = $2;`,
       { 
@@ -445,7 +460,10 @@ const getBowlerHistorydQuery = async (data, request, fastify) => {
             "wr5Wickets" as "wickets5",
             "wr10Wickets" as "wickets10",
             "wrCreatedBy" as "createdBy",
-            "wrCreatedAt" as "createdAt"
+            "wrCreatedAt" as "createdAt",
+            "wrOverCount" as "overCount",
+            "wrHattrickCount" as "hattrickCount",
+            "wrExpensiveOverRuns" as "expensiveOverRuns"
             FROM "tblPlayerBowlingHistory"
             WHERE "wrPlayerId" = $1 AND "wrMatchTypeId" = $2;`,
       { 
@@ -489,7 +507,9 @@ const getPlayersBattingHistoryByIdQuery = async (data, fastify, request) => {
                   "wrStumpCount" as "stumpCount",
                   "wrCreatedBy" as "createdBy",
                   "wrCreatedAt" as "createdAt",
-                  "wrOutCount" as "outCount"
+                  "wrOutCount" as "outCount",
+                "wrFastest50Balls" as "fastest100Balls",
+                "wrFastest100Balls" as "fastest100Balls"
               FROM "tblPlayerBattingHistory"
               WHERE "wrPlayerId" = $1
               AND "wrMatchTypeId" = $2;`,
