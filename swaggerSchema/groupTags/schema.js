@@ -6597,6 +6597,21 @@ const ClientSocket = {
       },
     },
   },
+  updateView: {
+    schema: {
+      tags: ["ClientSocket"],
+      description: "isUpdateView ClientSocket",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          clientSocketId: { type: "integer" },
+          isUpdateView: { type: "boolean" },
+        },
+        required: ["clientSocketId", "isUpdateView"],
+      },
+    },
+  },
 };
 const ActivityLog = {
   getAll: {
