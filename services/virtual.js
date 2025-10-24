@@ -1818,7 +1818,7 @@ const checkInningsSwitch = async (data, request, fastify) => {
       overLimit =
         matchType.isLimitedOvers &&
         Math.ceil(+overdetails.over || 0) + 1 >= batTeam?.teamMaxOver;
-      wicketLimit = batTeam?.teamWicket >= maxNoOfWicket - (matchType.isLastManStand ? 0 : 1);
+      wicketLimit = batTeam?.teamWicket >= maxNoOfWicket;
       isRunTargetAchieved =
         isLastInnigs && target !== 0 && batTeam?.teamScore >= target;
 
@@ -1832,7 +1832,7 @@ const checkInningsSwitch = async (data, request, fastify) => {
       // conditionsToCheck.push(true)
       break;
     case "WICKET":
-      wicketLimit = batTeam?.teamWicket >= maxNoOfWicket - (matchType.isLastManStand ? 0 : 1);
+      wicketLimit = batTeam?.teamWicket >= maxNoOfWicket;
       conditionsToCheck.push(wicketLimit);
       break;
     case "RUN":
