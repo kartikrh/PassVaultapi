@@ -12544,6 +12544,10 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
             jerseyPlayerImage: curr.jerseyPlayerImage,
             jerseyPlayerImagePath: curr.jerseyPlayerImagePath,
             bowlingType: curr?.bowlingType,
+            isPlay: curr?.isPlay,
+            onStrike: curr?.onStrike,
+            isBatterOut: curr?.isBatterOut,
+            isBatterRetir: curr?.isBatterRetir,
           };
         })
     );
