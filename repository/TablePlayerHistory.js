@@ -25,7 +25,7 @@ const getAllBattingHistory = async (fastify) => {
                 "wrCreatedBy" as "createdBy",
                 "wrCreatedAt" as "createdAt",
                 "wrOutCount" as "outCount",
-                "wrFastest50Balls" as "fastest100Balls",
+                "wrFastest50Balls" as "fastest50Balls",
                 "wrFastest100Balls" as "fastest100Balls"
             FROM "tblPlayerBattingHistory";`,
       { type: fastify.db.QueryTypes.SELECT }
@@ -106,7 +106,7 @@ const getAllPlayersBattingHistory = async (playerId, fastify) => {
                   tpbh."wrCreatedBy" as "createdBy",
                   tpbh."wrCreatedAt" as "createdAt",
                   tpbh."wrOutCount" as "outCount",
-                  tpbh."wrFastest50Balls" as "fastest100Balls",
+                  tpbh."wrFastest50Balls" as "fastest50Balls",
                   tpbh."wrFastest100Balls" as "fastest100Balls"
               FROM "tblMatchTypes" AS tmt
               LEFT JOIN 
@@ -419,7 +419,7 @@ const getBatterHistoryQuery = async (data, request, fastify) => {
                 "wrCreatedBy" as "createdBy",
                 "wrCreatedAt" as "createdAt",
                 "wrOutCount" as "outCount",
-                "wrFastest50Balls" as "fastest100Balls",
+                "wrFastest50Balls" as "fastest50Balls",
                 "wrFastest100Balls" as "fastest100Balls"
             FROM "tblPlayerBattingHistory"
             WHERE "wrPlayerId" = $1 AND "wrMatchTypeId" = $2;`,
@@ -510,7 +510,7 @@ const getPlayersBattingHistoryByIdQuery = async (data, fastify, request) => {
                   "wrCreatedBy" as "createdBy",
                   "wrCreatedAt" as "createdAt",
                   "wrOutCount" as "outCount",
-                "wrFastest50Balls" as "fastest100Balls",
+                "wrFastest50Balls" as "fastest50Balls",
                 "wrFastest100Balls" as "fastest100Balls"
               FROM "tblPlayerBattingHistory"
               WHERE "wrPlayerId" = $1
