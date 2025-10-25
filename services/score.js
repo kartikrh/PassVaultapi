@@ -546,6 +546,7 @@ const getAllCommentariesDataV2Service = async (request,fastify) => {
                 commentaries[c.commentaryId] = {
                     commentaryId : c.commentaryId,
                     eventRefId : c.eventRefId,
+                    totalViews : c.views,
                     commentaryStatus : c.commentaryStatus,
                     commentaryDetails: { ...c, ...weatherAndPitchData },
                     commentaryTeams: teams,

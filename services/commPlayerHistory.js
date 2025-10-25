@@ -60,6 +60,8 @@ const updateCommPlayerBatHistoryService = async (request, fastify) => {
       catchCount: batHist.catchCount !== undefined ? parseInt(batHist.catchCount) : existingData.catchCount,
       stumpCount: batHist.stumpCount !== undefined ? parseInt(batHist.stumpCount) : existingData.stumpCount,
       outCount: batHist.outCount !== undefined ? parseInt(batHist.outCount) : existingData.outCount,
+      fastest50Balls: batHist.fastest50Balls !== undefined ? parseInt(batHist.fastest50Balls) : existingData.fastest50Balls,
+      fastest100Balls: batHist.fastest100Balls !== undefined ? parseInt(batHist.fastest100Balls) : existingData.fastest100Balls,
     }
     await updateCommPlayerBattingHistoryQuery(updateData, fastify, request);
 
@@ -98,6 +100,9 @@ const updateCommPlayerBowlHistoryService = async (request, fastify) => {
       wickets4: bowlHist.wickets4 !== undefined ? parseInt(bowlHist.wickets4) : existingData.wickets4,
       wickets5: bowlHist.wickets5 !== undefined ? parseInt(bowlHist.wickets5) : existingData.wickets5,
       wickets10: bowlHist.wickets10 !== undefined ? parseInt(bowlHist.wickets10) : existingData.wickets10,
+      overCount: bowlHist.overCount !== undefined ? parseInt(bowlHist.overCount) : existingData.overCount,
+      hattrickCount: bowlHist.hattrickCount !== undefined ? parseInt(bowlHist.hattrickCount) : existingData.hattrickCount,
+      expensiveOverRuns: bowlHist.expensiveOverRuns !== undefined ? parseInt(bowlHist.expensiveOverRuns) : existingData.expensiveOverRuns,
     }
     await updateCommPlayerBowlingHistoryQuery(updateData, fastify, request);
 

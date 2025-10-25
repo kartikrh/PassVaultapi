@@ -389,6 +389,36 @@ const getAllPlayersByTeamIdAndMatchTypeIdQuery = async (data, fastify, request) 
     throw new Error(err.message);
   }
 };
+const getTeamPlayerTournamentQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+        `SELECT      
+      tp."wrPlayerId" as "playerId",
+      pl."wrPlayerName" as "playerName",
+      "wrBatsmanAverage" as "batsmanAverage",
+      "wrBatsmanStrikeRate" as "batsmanStrikeRate",
+      "wrIsKipper" as "isKipper",
+      COALESCE(pbh."wrBallsFacedCount", 0) as "ballsFacedCount",
+      COALESCE(pbh."wr4Count", 0) + COALESCE(pbh."wr6Count", 0) as "boundary"
+      FROM "tblTournamentTeamPlayers" tp 
+      left join "tblPlayers" pl on tp."wrPlayerId" = pl."wrPlayerId" AND pl."wrIsDeleted" = false
+      left join "tblPlayerBattingHistory" pbh on tp."wrPlayerId" = pbh."wrPlayerId" and pbh."wrMatchTypeId" = $1
+      where tp."wrTeamId" = $2 and tp."wrCompetitionId" = $3 and tp."wrIsDeleted" = false`,
+      {
+        bind: [data.matchTypeId,data.teamId, data.competitionId],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeams/getTeamPlayerTournamentQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 const getAllTeamsByIdsQuery = async (whereCondition = undefined, fastify) => {
   try {
     const result = await fastify.db.query(
@@ -436,5 +466,6 @@ module.exports = {
   getAllPlayersByTeamIdAndMatchTypeIdQuery,
   getAllTeamsByIdsQuery,
   getTeamsByIds,
-  updateExchangeTeamQuery
+  updateExchangeTeamQuery,
+  getTeamPlayerTournamentQuery
 };

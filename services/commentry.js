@@ -95,6 +95,7 @@ const {
   overTypeChangeOnOversQuery,
   updateStreamingURLQuery,
   bowlingTypeChangeQuery,
+  updateCommentaryViewsQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -129,6 +130,7 @@ const {
   getAllPlayersByTeamIdAndMatchTypeIdQuery,
   insertTeamQuery,
   updateExchangeTeamQuery,
+  getTeamPlayerTournamentQuery,
 } = require("../repository/TableTeams");
 const {
   handleMarketCloseService,
@@ -154,7 +156,7 @@ const {
   getAllEventMarketsQuery,
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
-const { commentaryLogger, errorLogger } = require("../utilities/logger");
+const { commentaryLogger, errorLogger, commActionLogger } = require("../utilities/logger");
 const { setCompEventSnapSerice } = require("./competitionEventSnap");
 const { setTeamPointService } = require("./tournamentTeamPoints");
 const { setPlayerHistoryService } = require("./playerHistory");
@@ -212,6 +214,7 @@ const { insertCompetitionQuery } = require("../repository/TableCompitition");
 const { getImageFromUrl } = require("../utilities/Images");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { insertTeamPlayersByTeamId, insertCommentaryPlayersByTeam } = require("./competition");
+const cron = require('node-cron');
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -10028,6 +10031,27 @@ const changeShowClientService = async (request, fastify) => {
         request
       );
     });
+
+    commActionLogger(
+      {
+        commentaryId: request.body.commentaryId,
+        requestBody: request.body,
+        response: {
+          message: "Commentary Updated successfully",
+        },
+        apiName: "/admin/commentary/updateShowClient",
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      console.log("isClientshow commActionLogger console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/changeShowClientService - commActionLogger",
+        request
+      );
+    });
   // }
 
   return "Commentary Updated successfully";
@@ -10712,6 +10736,26 @@ const activeInactiveCommentaryService = async (request, fastify) => {
       socket.client.emit("updateActionType", socketData);
     });
   }
+  commActionLogger(
+    {
+      commentaryId: request.body.commentaryId,
+      requestBody: request.body,
+      response: {
+        message: "Commentary Updated successfully",
+      },
+      apiName: "/admin/commentary/activeInactiveCommentary",
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("acitve commActionLogger console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/activeInactiveCommentaryService - commActionLogger",
+      request
+    );
+  });
   return "Commentary Updated successfully";
 };
 const closeCommentaryService = async (request, fastify) => {
@@ -11032,6 +11076,24 @@ const updateDelayInCommentaryService = async (request, fastify) => {
       callPrediction.endPoint = "/api/v1/loadcommentary";
     }
   }
+  commActionLogger(
+    {
+      commentaryId: commentaryId,
+      requestBody: request.body,
+      response: updatedData,
+      apiName: "/admin/commentary/changeDelay",
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("changeDelay commActionLogger console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/updateDelayInCommentaryService - commActionLogger",
+      request
+    );
+  });
   updatedData.callPrediction = callPrediction;
   return updatedData;
 };
@@ -11696,6 +11758,25 @@ const updateTeamPredictionService = async (request, fastify) => {
   const updatedData = await getCommentaryByIdQuery(request, fastify);
 
   global.tblCommentaries[index] = updatedData;
+
+  commActionLogger(
+    {
+      commentaryId: commentaryId,
+      requestBody: request.body,
+      response: updatedData,
+      apiName: "/admin/commentary/updateTeamPrediction",
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("team predict commActionLogger console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/updateTeamPredictionService - commActionLogger",
+      request
+    );
+  });
 
   return updatedData;
 };
@@ -12468,11 +12549,23 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
     );
 
     if (!teamMap[team.teamId]) {
-      const players = await getAllPlayersByTeamIdAndMatchTypeIdQuery(
-        { matchTypeId: commentaryDetails.matchTypeId, teamId: team.teamId },
-        fastify,
-        request
-      );
+      let findInCompPlayer = global.tblTournamentTeamPlayers.find((i)=> i.competitionId == commentaryDetails.competitionId && 
+        i.teamId == team.teamId)
+      let players =[]
+      if(!findInCompPlayer){
+          players = await getAllPlayersByTeamIdAndMatchTypeIdQuery(
+          { matchTypeId: commentaryDetails.matchTypeId, teamId: team.teamId },
+          fastify,
+          request
+        );
+      }
+      else {
+          players = await getTeamPlayerTournamentQuery({ matchTypeId: commentaryDetails.matchTypeId, 
+            competitionId :commentaryDetails.competitionId,teamId: team.teamId },
+          fastify,
+          request
+        );
+      }
 
       teamMap[team.teamId] = {
         teamId: team.teamId,
@@ -12781,6 +12874,27 @@ const isCountInPointCommentaryService = async (request, fastify) => {
 
     await netRunRateRe_calculationService(request, fastify);
   }
+
+  commActionLogger(
+    {
+      commentaryId: request.body.commentaryId,
+      requestBody: request.body,
+      response: {
+        message: "Commentary Updated successfully",
+      },
+      apiName: "/admin/commentary/isCountInPoint",
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("isCountInPoint commActionLogger console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/isCountInPointCommentaryService - commActionLogger",
+      request
+    );
+  });
 
   return "Commentary Updated successfully";
 };
@@ -13144,6 +13258,26 @@ const updateMergeImageOnCommentaryPlayersService = async (request, fastify) => {
       }
     }
   }
+  commActionLogger(
+    {
+      commentaryId: request.body.commentaryId,
+      requestBody: request.body,
+      response: {
+        message: "Jersey and Player images updated successfully"
+      },
+      apiName: "/admin/commentary/mergeImage",
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("mergeImage commActionLogger console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/updateMergeImageOnCommentaryPlayersService - commActionLogger",
+      request
+    );
+  });
   return "Jersey and Player images updated successfully";
 };
 const changeIsTestComService = async (request, fastify) => {
@@ -13183,6 +13317,26 @@ const changeIsTestComService = async (request, fastify) => {
       fastify,
       err.message,
       "ERROR --> services/commentary.js/changeIsTestComService",
+      request
+    );
+  });
+  commActionLogger(
+    {
+      commentaryId: request.body.commentaryId,
+      requestBody: request.body,
+      response: {
+        message: "Commentary Updated successfully"
+      },
+      apiName: "/admin/commentary/changeIsTest",
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("isTest commActionLogger console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/changeIsTestComService - commActionLogger",
       request
     );
   });
@@ -21953,6 +22107,27 @@ const scoringTypeCommentaryService = async (request, fastify) => {
     tpId
   }
 
+  commActionLogger(
+    {
+      commentaryId: commentaryId,
+      requestBody: request.body,
+      response: {
+        message: "Commentary scoring type updated successfully"
+      },
+      apiName: "/admin/commentary/scoringType",
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("scoringType commActionLogger console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/scoringTypeCommentaryService - commActionLogger",
+      request
+    );
+  });
+
   return "Commentary scoring type updated successfully";
 };
 
@@ -22967,9 +23142,6 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
 
   const insertCompetition = await insertCompetitionQuery({
     ...request,
-    userTokenInfo: {
-      WrUserId: -5
-    },
     body: competitionData
   }, fastify);
   global.tblCompetitions.push(insertCompetition);
@@ -23019,7 +23191,7 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
       teamShortName: teamData?.abbr,
       country: teamData?.country,
       eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
-      userId: -5,
+      userId: -2,
       tpId: teamData?.tid || null,
       image: imageUrl.fullPath,
       imagePath: imageUrl.imagePath,
@@ -23031,7 +23203,7 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
     checkTeam = insertTeam;
   } else if (checkTeam?.tpId === null || !checkTeam?.tpId) {
     const data = {
-      userId: -5,
+      userId: -2,
       tpId: teamData?.tid || null,
       teamId: checkTeam.teamId
     }
@@ -23076,7 +23248,7 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
           isKipper: player?.playing_role === 'wk' ? true : false,
           isLeftHandedBatting: player.batting_style ? !player.batting_style.includes('Right') : false,
           isLeftArmFielding: player.bowling_style ? !player.bowling_style.includes('Right') : false,
-          userId: -3,
+          userId: -2,
           batsmanAverage: 0.0,
           batsmanStrikeRate: 0.0,
           bowlerAverage: 0.0,
@@ -23093,7 +23265,7 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
       }
       else if (checkPlayer?.tpId === null || !checkPlayer?.tpId) {
         const data = {
-          userId: -3,
+          userId: -2,
           tpId: player?.pid || null,
           playerId: checkPlayer.playerId,
         };
@@ -23118,7 +23290,7 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
             teamId: checkTeam?.teamId,
             refPlayerId: player?.playerId,
             tpId: player?.tpId,
-            userId: -5,
+            userId: -2,
             jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage || null,
             jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
           }, fastify, request);
@@ -23194,12 +23366,7 @@ const matchImportService = async (data, fastify, request = null) => {
         capacity: matchInfoResponse?.venue?.capacity || null,
       };
 
-      checkVenue = await insertVenueQuery(venueData, fastify, {
-        ...request,
-        userTokenInfo: {
-          WrUserId: -5
-        }
-      });
+      checkVenue = await insertVenueQuery(venueData, fastify, request);
       global.tblVenues.push(checkVenue);
     } else if (checkVenue?.tpId === null || !checkVenue?.tpId) {
       const venueData = {
@@ -23207,12 +23374,7 @@ const matchImportService = async (data, fastify, request = null) => {
         venueId: checkVenue.id,
       };
 
-      checkVenue = await updateVenueQuery(venueData, fastify, {
-        ...request,
-        userTokenInfo: {
-          WrUserId: -5
-        }
-      });
+      checkVenue = await updateVenueQuery(venueData, fastify, request);
       const index = global.tblVenues.findIndex(item => item.id === checkVenue.id);
       global.tblVenues[index] = checkVenue;
     }
@@ -23247,7 +23409,7 @@ const matchImportService = async (data, fastify, request = null) => {
       isClientShow: false,
       commentaryStatus: 1,
       tpId: entitySportMatchResponse?.match_id,
-      createdBy: -5,
+      createdBy: -2,
       CurrentInnings: -1,
       isPlayersShow: false,
       isPredictMarket: false,
@@ -23273,16 +23435,13 @@ const matchImportService = async (data, fastify, request = null) => {
       isCountInPoint: checkCompetition?.isPointTable,
       countryId: checkCountry?.id,
       venueId: checkVenue?.id,
-      scoringType: null
+      scoringType: ScoringTypes.Entity
     }
 
     if (!checkCommentary) {
       const insertCommentary = await insertCommentaryQuery({
         ...request,
-        body: commentaryData,
-        userTokenInfo: {
-          WrUserId: -5
-        }
+        body: commentaryData
       }, fastify);
 
       global.tblCommentaries.push(insertCommentary);
@@ -23331,7 +23490,9 @@ const matchImportService = async (data, fastify, request = null) => {
             team1Id: teamAData?.teamId,
             team2Id: teamBData?.teamId,
             currentInnings: i,
-            teamMaxOver: maxOver
+            teamMaxOver: maxOver,
+            team1TpId: teamAData?.tpId,
+            team2TpId: teamBData?.tpId
           },
         }, fastify);
         const teamACommentaryTeam = await getCommentaryTeamsQuery({
@@ -23357,6 +23518,47 @@ const matchImportService = async (data, fastify, request = null) => {
     );
   }
   return checkCommentary;
+}
+const clientSocketCountService = async (fastify) => {
+  const clientScoketIo = global.clientSocketIo.filter(item => item.isUpdateView == true && 
+    item.actionType == 1 && item.isActive == true
+  );
+  for (const socket of clientScoketIo) {
+    const intervalMinutes = Number(socket.updateInterval) || 5;
+    const cronExpression = `*/${intervalMinutes} * * * *`;
+  
+    cron.schedule(cronExpression, async () => {
+      try {
+        if (!global.clientSocketIo.includes(socket)) {
+          if (socket.cronJob && typeof socket.cronJob.stop === 'function') {
+            socket.cronJob.stop();
+          }
+          return;
+        }
+        socket.client.emit("updateRoomUserCount", { message: "Send me user counts" });
+        socket.client.once("countData", async (data) => {
+          for (const elem of data) {
+            const currentCount = Number(elem.count) || 0;
+
+            await updateCommentaryViewsQuery({
+              views: currentCount,
+              commentaryId: elem.commentaryId,
+            }, fastify);
+
+            const index = global.tblCommentaries.findIndex(item => item.commentaryId == elem.commentaryId);
+            if (index !== -1) {
+              const oldCount = Number(global.tblCommentaries[index].views) || 0;
+              global.tblCommentaries[index].views = oldCount + currentCount;
+            }
+          }
+
+          socket.client.emit("updateCommentaryCounts", data);
+        });
+      } catch (error) {
+        console.error(new Date(), "Error during scheduled task:", error);
+      }
+    });
+  };
 }
 
 module.exports = {
@@ -23475,5 +23677,6 @@ module.exports = {
   weatherAndPitchDataService,
   bowlingTypeChangeService,
   matchImportService,
-  insertTeamAndPlayers
+  insertTeamAndPlayers,
+  clientSocketCountService,
 };

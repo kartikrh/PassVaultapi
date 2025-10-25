@@ -85,20 +85,20 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
             const request = { body: payload };
             if (payload.api_type && payload.api_type == "match_push_obj") {
               await setEntityCom2Service(request, fastify);
-              let isLog = global.tblConfigs.find((c) => c.configKey == configConstants.ISENTITYDATALOG)?.value || "false";
+              let isLog = global.tblConfigs.find((c) => c.key == configConstants.ISENTITYDATALOG)?.value || "false";
               if(isLog == "false") { return true; }
               await createDataQuery({data : payload, matchId : payload.response.match_id}, fastify);
             } else {
               return true;
             }
-            
           } catch (err) {
             console.error("Error saving entity data:", err);
             errorLogger(
               fastify,
               err.message,
               "ERROR --> socketIo.js/entitySports/entityScoreDatahandler",
-              null
+              null,
+              payload
             );
           }
         });
