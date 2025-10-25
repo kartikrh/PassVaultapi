@@ -51,7 +51,11 @@ const entitySportAutoImportProcess = async (fastify) => {
 
             try {
                 const data = { [idKey]: autoImport.refId };
-                const syncData = await importFn(data, fastify, null);
+                const syncData = await importFn(data, fastify, {
+                    userTokenInfo: {
+                        WrUserId: -2
+                    }
+                });
                 if (syncData) {
                     autoImport.importEndTime = new Date();
                     autoImport.isImported = false;

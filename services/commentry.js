@@ -23194,7 +23194,7 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
       teamShortName: teamData?.abbr,
       country: teamData?.country,
       eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
-      userId: -5,
+      userId: -2,
       tpId: teamData?.tid || null,
       image: imageUrl.fullPath,
       imagePath: imageUrl.imagePath,
@@ -23206,7 +23206,7 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
     checkTeam = insertTeam;
   } else if (checkTeam?.tpId === null || !checkTeam?.tpId) {
     const data = {
-      userId: -5,
+      userId: -2,
       tpId: teamData?.tid || null,
       teamId: checkTeam.teamId
     }
@@ -23251,7 +23251,7 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
           isKipper: player?.playing_role === 'wk' ? true : false,
           isLeftHandedBatting: player.batting_style ? !player.batting_style.includes('Right') : false,
           isLeftArmFielding: player.bowling_style ? !player.bowling_style.includes('Right') : false,
-          userId: -3,
+          userId: -2,
           batsmanAverage: 0.0,
           batsmanStrikeRate: 0.0,
           bowlerAverage: 0.0,
@@ -23268,7 +23268,7 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
       }
       else if (checkPlayer?.tpId === null || !checkPlayer?.tpId) {
         const data = {
-          userId: -3,
+          userId: -2,
           tpId: player?.pid || null,
           playerId: checkPlayer.playerId,
         };
@@ -23293,7 +23293,7 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
             teamId: checkTeam?.teamId,
             refPlayerId: player?.playerId,
             tpId: player?.tpId,
-            userId: -5,
+            userId: -2,
             jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage || null,
             jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
           }, fastify, request);
@@ -23369,12 +23369,7 @@ const matchImportService = async (data, fastify, request = null) => {
         capacity: matchInfoResponse?.venue?.capacity || null,
       };
 
-      checkVenue = await insertVenueQuery(venueData, fastify, {
-        ...request,
-        userTokenInfo: {
-          WrUserId: -5
-        }
-      });
+      checkVenue = await insertVenueQuery(venueData, fastify, request);
       global.tblVenues.push(checkVenue);
     } else if (checkVenue?.tpId === null || !checkVenue?.tpId) {
       const venueData = {
@@ -23382,12 +23377,7 @@ const matchImportService = async (data, fastify, request = null) => {
         venueId: checkVenue.id,
       };
 
-      checkVenue = await updateVenueQuery(venueData, fastify, {
-        ...request,
-        userTokenInfo: {
-          WrUserId: -5
-        }
-      });
+      checkVenue = await updateVenueQuery(venueData, fastify, request);
       const index = global.tblVenues.findIndex(item => item.id === checkVenue.id);
       global.tblVenues[index] = checkVenue;
     }
@@ -23422,7 +23412,7 @@ const matchImportService = async (data, fastify, request = null) => {
       isClientShow: false,
       commentaryStatus: 1,
       tpId: entitySportMatchResponse?.match_id,
-      createdBy: -5,
+      createdBy: -2,
       CurrentInnings: -1,
       isPlayersShow: false,
       isPredictMarket: false,
@@ -23454,10 +23444,7 @@ const matchImportService = async (data, fastify, request = null) => {
     if (!checkCommentary) {
       const insertCommentary = await insertCommentaryQuery({
         ...request,
-        body: commentaryData,
-        userTokenInfo: {
-          WrUserId: -5
-        }
+        body: commentaryData
       }, fastify);
 
       global.tblCommentaries.push(insertCommentary);
