@@ -23435,7 +23435,7 @@ const matchImportService = async (data, fastify, request = null) => {
       isCountInPoint: checkCompetition?.isPointTable,
       countryId: checkCountry?.id,
       venueId: checkVenue?.id,
-      scoringType: null
+      scoringType: ScoringTypes.Entity
     }
 
     if (!checkCommentary) {
