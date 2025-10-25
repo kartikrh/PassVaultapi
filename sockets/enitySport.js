@@ -104,7 +104,8 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
               fastify,
               err.message,
               "ERROR --> socketIo.js/entitySports/entityScoreDatahandler",
-              null
+              null,
+              payload
             );
           }
         });
