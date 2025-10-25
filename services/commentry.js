@@ -23531,7 +23531,9 @@ const clientSocketCountService = async (fastify) => {
     cron.schedule(cronExpression, async () => {
       try {
         if (!global.clientSocketIo.includes(socket)) {
-          socket.cronJob.stop(); // stop if socket removed
+          if (socket.cronJob && typeof socket.cronJob.stop === 'function') {
+            socket.cronJob.stop();
+          }
           return;
         }
         socket.client.emit("updateRoomUserCount", { message: "Send me user counts" });
