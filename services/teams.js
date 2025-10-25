@@ -727,7 +727,7 @@ const UpdateTeamFromEntityService = async (request, fastify) => {
                 teamId: entry.teamId,
                 refPlayerId: player?.playerId,
                 tpId: player?.tpId,
-                userId: -5,
+                userId: -2,
                 jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage || null,
                 jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
               }, fastify, request);

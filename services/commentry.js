@@ -23142,9 +23142,6 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
 
   const insertCompetition = await insertCompetitionQuery({
     ...request,
-    userTokenInfo: {
-      WrUserId: -5
-    },
     body: competitionData
   }, fastify);
   global.tblCompetitions.push(insertCompetition);
