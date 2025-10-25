@@ -8613,7 +8613,27 @@ const updateStreamingURLQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
-
+const updateCommentaryViewsQuery = async (data, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaries" SET
+        "wrViews" = COALESCE("wrViews", 0) + $1
+      WHERE "wrCommentaryId" = $2 AND "wrIsDelete" = false`,
+      {
+        bind: [data.views, data.commentaryId],
+      }
+    );
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/updateCommentaryViewsQuery",
+      null
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -8758,4 +8778,5 @@ module.exports = {
   bowlingStyleChangeOnCommPlayersQuery,
   updateStreamingURLQuery,
   bowlingTypeChangeQuery,
+  updateCommentaryViewsQuery,
 };

@@ -4,6 +4,7 @@ const { io } = require("socket.io-client");
 const { clientSocketActionType, clientSocketStatus } = require("../utilities");
 const { updateClientSocketStatusQuery, updateReconnectCountQuery } = require("../repository/TableClientSocket");
 const { errorLogger } = require("../utilities/logger");
+const { clientSocketCountService } = require("../services/commentry")
 
 const connectClients = async (fastify, clientSocketId = undefined) => {
   try {
@@ -21,7 +22,8 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
         (c) => c.isActive === true && c.actionType == clientSocketActionType.connect && c.status !== clientSocketStatus.connected
       );
     }
-    const promises = clientUrls.map(async (urlConfig) => {
+    const promises = clientUrls.map((urlConfig) => {
+     return new Promise((resolve, reject) => {
       const existing = global.clientSocketIo.find(c => c.url === urlConfig.url);
       if (existing) {
         existing.client.disconnect(true);
@@ -54,9 +56,11 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
         // update status in global.tblClientSocket
         let index = global.tblClientSocket.findIndex((c) => c.clientSocketId === urlConfig.clientSocketId);
         global.tblClientSocket[index].status = clientSocketStatus.connected;      
+        resolve();
       });
       client.on("connect_error", (error) => {
         console.log(`Connection error ${urlConfig.url}: ${error}`);
+        // reject(error);
       });
       client.on("disconnect", () => {
         console.log(`Disconnected from ${urlConfig.url}`);
@@ -201,9 +205,10 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
       //   global.tblClientSocket[index].status = clientSocketStatus.reconnected;
       // });
     });
-
+   });
     // Wait for all client connections to be established
     await Promise.all(promises);
+    clientSocketCountService(fastify);
   } catch (error) {
     console.log("Error connecting clients:", error);
     errorLogger(
