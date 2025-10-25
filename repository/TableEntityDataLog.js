@@ -2,6 +2,7 @@ const { errorLogger } = require("../utilities/logger");
 
 const createDataQuery = async (data  , fastify)=>{
     try {
+        console.log("entiy data log data", data)
         let result = await fastify.db.query(`
                 INSERT INTO public."tblEntityDataLogs"(
                  "wrData", "wrMatchId")
