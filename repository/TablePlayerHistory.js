@@ -328,7 +328,9 @@ const getBattingHistoryByPlayerIdQuery = async (playerId, request, fastify) => {
                 "wrStumpCount" as "stumpCount",
                 "wrCreatedBy" as "createdBy",
                 "wrCreatedAt" as "createdAt",
-                "wrOutCount" as "outCount"
+                "wrOutCount" as "outCount",
+                "wrFastest50Balls" as "fastest50Balls",
+                "wrFastest100Balls" as "fastest100Balls"
             FROM "tblPlayerBattingHistory"
             WHERE "wrPlayerId" = $1;`,
       { 

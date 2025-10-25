@@ -36,7 +36,8 @@ const { updateAutoImportDataService } = require("./autoImportData");
 const { errorLogger } = require("../utilities/logger");
 const { playersMergeImageService } = require("../utilities/index");
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
-const { createPlayerBattingHistoryService, createPlayerBowlingHistoryService } = require("./playerHistory");
+const { deleteCommentaryBattingHistoryService, deleteCommentaryBowlingHistoryService } = require("./commPlayerHistory");
+const { savePlayerBatHistQuery, savePlayerBallHistQuery } = require("../repository/TableCommPlayerHistory");
 
 const allPlayerService = async (request,fastify) => {
   const { isActive, eventTypeId , teamId} = request.body;
@@ -766,108 +767,168 @@ const activeInactivePlayerService = async (request, fastify) => {
 };
 
 const updatePlayerBatBowlHistory = async (playerId, playerBattingData, playerBowlingData, request, fastify) => {
-  const playerBattingArray = [];
+  const commentaryPlayerBattingArray = [], newPlayerBattingDataArray = [];
   for (const matchTypeData of Object.keys(playerBattingData)) {
     let matchType = global.tblMatchTypes.find(item => item.entityEnum === ICCMatchType.men[matchTypeData]);
     if (matchType) {
-      const playerBattingHistory = global.tblPlayersBattingHistory.find(item => item.playerId === playerId && item.matchTypeId === matchType?.matchTypeId);
+      const commentaryPlayerBattingHistory = global.tblCommPlayerBatHist.filter(item => item.playerId === playerId && item.matchTypeId === matchType?.matchTypeId);
+      if (commentaryPlayerBattingHistory?.length > 0) {
+        commentaryPlayerBattingArray.push(...commentaryPlayerBattingHistory.map(item => item.id));
+      }
       const { matches, innings, notout, runs, balls, highest, run100, run50, run4, run6, average, strike, catches, stumpings, fastest50balls, fastest100balls } = playerBattingData[matchTypeData];
       const newPlayerBattingData = {
-        ...(playerBattingHistory ? playerBattingHistory : { battingHistoryId: 0 }),
         matchTypeId: matchType?.matchTypeId,
         playerId,
         matchTypeName: matchType?.matchType,
-        matchCount: matches,
-        inningsCount: innings,
-        notOut: notout,
-        totalRuns: runs,
-        ballsFacedCount: balls,
-        highestScore: highest?.toString(),
-        countOf100: run100,
-        countOf50: run50,
-        countOf4: run4,
-        countOf6: run6,
-        average: average,
-        strikeRate: parseInt(strike),
-        catchCount: catches,
-        stumpCount: stumpings,
-        fastest50Balls: fastest50balls,
-        fastest100Balls: fastest100balls,
+        matchCount: matches || 0,
+        inningsCount: innings || 0,
+        notOut: notout || 0,
+        totalRuns: runs || 0,
+        ballsFacedCount: balls || 0,
+        highestScore: highest?.toString() || "",
+        countOf100: run100 || 0,
+        countOf50: run50 || 0,
+        countOf4: run4 || 0,
+        countOf6: run6 || 0,
+        average: average || 0,
+        strikeRate: parseInt(strike) || 0,
+        catchCount: catches || 0,
+        stumpCount: stumpings || 0,
+        fastest50Balls: fastest50balls || 0,
+        fastest100Balls: fastest100balls || 0,
         outCount: 0,
-        selected: true
       }
 
       const cleanNewPlayerBattingData = cleanEmptyStrings(newPlayerBattingData);
       if (countNulls(cleanNewPlayerBattingData) !== 13) {
-        playerBattingArray.push(cleanNewPlayerBattingData);
+        const result = await savePlayerBatHistQuery(newPlayerBattingData, request, fastify);
+        global.tblCommPlayerBatHist.push(result);
+      }
+
+      if (matchType?.matchTypeId) {  
+        const playerBattingHistory = global.tblPlayersBattingHistory.find(item => item.playerId === playerId && item.matchTypeId === matchType.matchTypeId);
+        newPlayerBattingDataArray.push({
+          ...(playerBattingHistory ? playerBattingHistory : { battingHistoryId: 0 }),
+          ...newPlayerBattingData
+        });
       }
     }
   }
 
-  if (playerBattingArray.length > 0) {
-    const finalRequest = request
-      ? {
-        ...request,
-        body: playerBattingArray
+  if (commentaryPlayerBattingArray.length > 0) {
+    await deleteCommentaryBattingHistoryService({
+      ...request,
+      body: {
+        id: commentaryPlayerBattingArray
       }
-      : {
-        body: playerBattingArray,
-        userTokenInfo: {
-          WrUserId: -2
-        }
-      };
-    await createPlayerBattingHistoryService(finalRequest, fastify);
+    }, fastify);
   }
 
-  const playerBowlingArray = [];
+  if (newPlayerBattingDataArray.length > 0) {
+    const result = await fastify.db.query(
+      `CALL upsert_player_batting_history($1, $2)`,
+      {
+        bind: [JSON.stringify(newPlayerBattingDataArray), request.userTokenInfo.WrUserId],
+        type: fastify.db.QueryTypes.RAW,
+      }
+    );
+
+    const updatedData = result[0] || [];
+    const HistoryIdData = updatedData[0]._battinghistorydata;
+
+    HistoryIdData.forEach((playerData) => {
+      const battingHistoryId = playerData.battingHistoryId;
+
+      const index = global.tblPlayersBattingHistory.findIndex(
+        (item) => item.battingHistoryId === battingHistoryId
+      );
+      if (index !== -1) {
+        global.tblPlayersBattingHistory[index] = playerData;
+      } else {
+        global.tblPlayersBattingHistory.push(playerData);
+      }
+    });
+  }
+
+  const commentaryPlayerBowlingArray = [], newPlayerBowlingDataArray = [];
   for (const matchTypeData of Object.keys(playerBowlingData)) {
     let matchType = global.tblMatchTypes.find(item => item.entityEnum === ICCMatchType.men[matchTypeData]);
     if (matchType) {
-      const playerBowlingHistory = global.tblPlayersBowlingHistory.find(item => item.playerId === playerId && item.matchTypeId === matchType?.matchTypeId);
+      const commentaryPlayerBowlingHistory = global.tblCommPlayerBowlHist.filter(item => item.playerId === playerId && item.matchTypeId === matchType?.matchTypeId);
+      if (commentaryPlayerBowlingHistory?.length > 0) {
+        commentaryPlayerBowlingArray.push(...commentaryPlayerBowlingHistory.map(item => item.id));
+      }
       const { matches, innings, balls, runs, wickets, average, bestinning, bestmatch, econ, strike, wicket4i, wicket5i, wicket10m, overs, hattrick, expensive_over_runs } = playerBowlingData[matchTypeData];
       const newPlayerBowlingData = {
-        ...(playerBowlingHistory ? playerBowlingHistory : { bowlingHistoryId: 0 }),
         matchTypeId: matchType?.matchTypeId,
         playerId,
-        matchTypeName: matchType?.matchType,
-        bowlerPlayedMatchCount: matches,
-        bowlerPlayedInningsCount: innings,
-        ballCount: balls,
-        runsFromBowler: runs,
-        wicketsCount: wickets,
-        bowlerAverage: average,
-        bestBowlingInInnings: bestinning,
-        bestBowlingInMatch: bestmatch,
-        economy: econ,
-        bowlerStrikeRate: parseInt(strike),
-        wickets4: wicket4i,
-        wickets5: wicket5i,
-        wickets10: wicket10m,
-        overCount: overs,
-        hattrickCount: hattrick,
-        expensiveOverRuns: expensive_over_runs,
-        selected: true
+        bowlerPlayedMatchCount: matches || 0,
+        bowlerPlayedInningsCount: innings || 0,
+        ballCount: balls || 0,
+        runsFromBowler: runs || 0,
+        wicketsCount: wickets || 0,
+        bowlerAverage: average || 0,
+        bestBowlingInInnings: bestinning || "",
+        bestBowlingInMatch: bestmatch || "",
+        economy: econ || 0,
+        bowlerStrikeRate: parseInt(strike) || 0,
+        wickets4: wicket4i || 0,
+        wickets5: wicket5i || 0,
+        wickets10: wicket10m || 0,
+        overCount: overs || 0,
+        hattrickCount: hattrick || 0,
+        expensiveOverRuns: expensive_over_runs || 0
       }
+
       const cleanNewPlayerBowlingData = cleanEmptyStrings(newPlayerBowlingData);
       if (countNulls(cleanNewPlayerBowlingData) !== 11) {
-        playerBowlingArray.push(cleanNewPlayerBowlingData);
+        const result = await savePlayerBallHistQuery(newPlayerBowlingData, request, fastify);
+        global.tblCommPlayerBatHist.push(result);
+      }
+
+      if (matchType?.matchTypeId) {
+        const playerBowlingHistory = global.tblPlayersBowlingHistory.find(item => item.playerId === playerId && item.matchTypeId === matchType.matchTypeId);
+        newPlayerBowlingDataArray.push({
+          ...(playerBowlingHistory ? playerBowlingHistory : { bowlingHistoryId: 0 }),
+          ...newPlayerBowlingData
+        });
       }
     }
   }
 
-  if (playerBowlingArray.length > 0) {
-    const finalRequest = request
-      ? {
-        ...request,
-        body: playerBowlingArray
+  if (commentaryPlayerBowlingArray.length > 0) {
+    await deleteCommentaryBowlingHistoryService({
+      ...request,
+      body: {
+        id: commentaryPlayerBowlingArray
       }
-      : {
-        body: playerBowlingArray,
-        userTokenInfo: {
-          WrUserId: -2
-        }
-      };
-    await createPlayerBowlingHistoryService(finalRequest, fastify);
+    }, fastify);
+  }
+
+  if (newPlayerBowlingDataArray.length > 0) {
+    const result = await fastify.db.query(
+      `CALL upsert_player_bowling_history($1, $2)`,
+      {
+        bind: [JSON.stringify(newPlayerBowlingDataArray), request.userTokenInfo.WrUserId],
+        type: fastify.db.QueryTypes.RAW,
+      }
+    );
+
+    const updatedData = result[0] || [];
+    const HistoryIdData = updatedData[0]._bowlinghistorydata;
+
+    HistoryIdData.forEach((playerData) => {
+      const bowlingHistoryId = playerData.bowlingHistoryId;
+
+      const index = global.tblPlayersBowlingHistory.findIndex(
+        (item) => item.bowlingHistoryId === bowlingHistoryId
+      );
+      if (index !== -1) {
+        global.tblPlayersBowlingHistory[index] = playerData;
+      } else {
+        global.tblPlayersBowlingHistory.push(playerData);
+      }
+    });
   }
 }
 
