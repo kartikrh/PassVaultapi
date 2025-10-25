@@ -971,7 +971,7 @@ const insertTeamPlayersByTeamId = async (teamId, teamTpId, request, fastify) => 
             teamId: teamId,
             refPlayerId: player?.playerId,
             tpId: player?.tpId || null,
-            userId: -5,
+            userId: -2,
             jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage || null,
             jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
           }, fastify, request);
