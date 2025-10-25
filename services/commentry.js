@@ -23529,17 +23529,14 @@ const clientSocketCountService = async (fastify) => {
   
     cron.schedule(cronExpression, async () => {
       try {
-        console.log("1111....", socket.cronJob)
         if (!global.clientSocketIo.includes(socket)) {
           if (socket.cronJob && typeof socket.cronJob.stop === 'function') {
             socket.cronJob.stop();
           }
           return;
         }
-        console.log("222222-----")
         socket.client.emit("updateRoomUserCount", { message: "Send me user counts" });
         socket.client.once("countData", async (data) => {
-          console.log("scoket data-----", data)
           for (const elem of data) {
             const currentCount = Number(elem.count) || 0;
 

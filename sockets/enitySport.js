@@ -83,21 +83,14 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
           try {
             // console.log("Received entity data from Backend A:", payload);
             const request = { body: payload };
-            console.log("request----")
-            console.log("payload----+++", payload)
             if (payload.api_type && payload.api_type == "match_push_obj") {
-              console.log("set enty data:", request)
               await setEntityCom2Service(request, fastify);
               let isLog = global.tblConfigs.find((c) => c.key == configConstants.ISENTITYDATALOG)?.value || "false";
-              console.log("isLog", isLog)
               if(isLog == "false") { return true; }
-              console.log("logs data");
               await createDataQuery({data : payload, matchId : payload.response.match_id}, fastify);
             } else {
-              console.log("else block");
               return true;
             }
-            
           } catch (err) {
             console.error("Error saving entity data:", err);
             errorLogger(
