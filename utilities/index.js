@@ -1906,7 +1906,7 @@ const cleanEmptyStrings = (obj) => {
   } else if (obj !== null && typeof obj === 'object') {
     const cleaned = {};
     for (const [key, value] of Object.entries(obj)) {
-      if (value === '') {
+      if (!value || value === '') {
         cleaned[key] = null;
       } else if (typeof value === 'object') {
         cleaned[key] = cleanEmptyStrings(value);
