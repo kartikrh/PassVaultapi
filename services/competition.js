@@ -1020,7 +1020,7 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
           teamId: teamId,
           refPlayerId: player?.playerId,
           tpId: player?.tpId || null,
-          userId: -5,
+          userId: -2,
           jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage || null,
           jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
         }, fastify, request);
@@ -1119,12 +1119,7 @@ const competitionImportService = async (data, fastify, request) => {
             capacity: venue?.capacity || null,
           };
 
-          checkVenue = await insertVenueQuery(venueData, fastify, {
-            ...request,
-            userTokenInfo: {
-              WrUserId: -5
-            }
-          });
+          checkVenue = await insertVenueQuery(venueData, fastify, request);
           global.tblVenues.push(checkVenue);
         } else if (checkVenue?.tpId === null || !checkVenue?.tpId) {
           const venueData = {
@@ -1132,12 +1127,7 @@ const competitionImportService = async (data, fastify, request) => {
             venueId: checkVenue.id,
           };
 
-          checkVenue = await updateVenueQuery(venueData, fastify, {
-            ...request,
-            userTokenInfo: {
-              WrUserId: -5
-            }
-          });
+          checkVenue = await updateVenueQuery(venueData, fastify, request);
           const index = global.tblVenues.findIndex(item => item.id === checkVenue.id);
           global.tblVenues[index] = checkVenue;
         }
@@ -1200,9 +1190,6 @@ const competitionImportService = async (data, fastify, request) => {
     }
     const insertCompetition = await insertCompetitionQuery({
       ...request,
-      userTokenInfo: {
-        WrUserId: -5
-      },
       body: competitionData
     }, fastify);
     global.tblCompetitions.push(insertCompetition);
@@ -1260,7 +1247,7 @@ const competitionImportService = async (data, fastify, request) => {
           teamShortName: entitySportTeamResponse?.abbr,
           country: entitySportTeamResponse?.country,
           eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
-          userId: -5,
+          userId: -2,
           tpId: entitySportTeamResponse?.tid || null,
           image: imageUrl.fullPath,
           imagePath: imageUrl.imagePath,
@@ -1273,7 +1260,7 @@ const competitionImportService = async (data, fastify, request) => {
       }
       else if (checkTeam?.tpId === null || !checkTeam?.tpId) {
         const data = {
-          userId: -5,
+          userId: -2,
           tpId: entitySportTeamResponse?.tid || null,
           teamId: checkTeam.teamId
         }
@@ -1306,7 +1293,7 @@ const competitionImportService = async (data, fastify, request) => {
                 teamId: checkTeam.teamId,
                 refPlayerId: player?.playerId,
                 tpId: player?.tpId || null,
-                userId: -5,
+                userId: -2,
                 jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage || null,
                 jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
               }, fastify, request);
@@ -1349,7 +1336,7 @@ const competitionImportService = async (data, fastify, request) => {
         isClientShow: true,
         commentaryStatus: 1,
         tpId: match?.match_id,
-        createdBy: -5,
+        createdBy: -2,
         CurrentInnings: -1,
         isPlayersShow: false,
         isPredictMarket: false,
@@ -1380,10 +1367,7 @@ const competitionImportService = async (data, fastify, request) => {
       if (!checkCommentary) {
         const insertCommentary = await insertCommentaryQuery({
           ...request,
-          body: commentaryData,
-          userTokenInfo: {
-            WrUserId: -5
-          }
+          body: commentaryData
         }, fastify);
 
         global.tblCommentaries.push(insertCommentary);
@@ -1546,19 +1530,11 @@ const competitionImportService = async (data, fastify, request) => {
         teamPlayers: teamPlayerByTeamId,
         competitionId: checkCompetition?.competitionId,
         teamId: checkTeam.teamId
-      },
-      userTokenInfo: {
-        WrUserId: -5
       }
     }, fastify);
   }
 
-  await addEditTournamentTeamPointDataService(entitySportCompetitionResponse, checkCompetition?.competitionId, fastify, {
-    ...request,
-    userTokenInfo: {
-      WrUserId: -5
-    },
-  });
+  await addEditTournamentTeamPointDataService(entitySportCompetitionResponse, checkCompetition?.competitionId, fastify, request);
 
   return checkCompetition;
 }
