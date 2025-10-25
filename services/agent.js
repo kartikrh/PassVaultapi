@@ -9,7 +9,7 @@ const { updateShowClientQuery, activeInactiveCommentaryQuery } = require("../rep
 const { getMatchDataByCId } = require("./commentry.js");
 const { getPlayersBattingHistoryByIdQuery } = require("../repository/TablePlayerHistory.js");
 const { getAllPlayersByTeamIdAndMatchTypeIdQuery } = require("../repository/TableTeams.js");
-const { errorLogger } = require("../utilities/logger.js");
+const { errorLogger, commActionLogger } = require("../utilities/logger.js");
 
 const signInAgentServices = async (request, fastify) => {
     const decryptedPassword = encrypt(request.body.password);
@@ -295,6 +295,26 @@ const changeShowClientService = async (request, fastify) => {
       socket.client.emit("updateActionType", socketData);
     });
   }
+  commActionLogger(
+    {
+      commentaryId: request.body.commentaryId,
+      requestBody: request.body,
+      response: {
+        message: "Commentary Updated successfully",
+      },
+      apiName: "/agent/commentary/updateShowClient",
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("agent isClietnShow commActionLogger console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/agent-commentary.js/changeShowClientService - commActionLogger",
+      request
+    );
+  });
 
   return "Commentary Updated successfully";
 };
@@ -353,6 +373,26 @@ const activeInactiveCommentaryService = async (request, fastify) => {
       socket.client.emit("updateActionType", socketData);
     });
   }
+  commActionLogger(
+    {
+      commentaryId: request.body.commentaryId,
+      requestBody: request.body,
+      response: {
+        message: "Commentary Updated successfully",
+      },
+      apiName: "/agent/commentary/activeInactiveCommentary",
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("agent isactive commActionLogger console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/agent-commentary.js/activeInactiveCommentaryService - commActionLogger",
+      request
+    );
+  });
   return "Commentary Updated successfully";
 };
 

@@ -128,7 +128,7 @@ const createClientSocketQuery =async (data,request,fastify) =>{
                     data.reconnectAttempts,
                     data.reconnectMaxDelay,
                     data.isUpdateView ?? false,
-                    data.updateInterval ?? null
+                    data.hasOwnProperty('updateInterval') ? data.updateInterval : false,
                 ]
             }
         )

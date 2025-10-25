@@ -469,6 +469,43 @@ const disMissalLogger = async (data,fastify,request)=>{
   }
 }
 
+const commActionLogger = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+      INSERT INTO "tblCommActionLogs"
+      (
+        "wrCommentaryId",
+        "wrRequestBody",
+        "wrResponse",
+        "wrApiName",
+        "wrCreatedBy",
+        "wrCreatedAt"
+      )
+      VALUES ($1, $2, $3, $4, $5, NOW())
+    `,
+    {
+      type: fastify.db.QueryTypes.INSERT,
+      bind: [
+        data.commentaryId ?? null,
+        data.requestBody ?? null,
+        data.response ?? null,
+        data.apiName ?? null,
+        request?.userTokenInfo?.WrUserId ?? null,
+      ],  
+    });
+ 
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "Error in commActionLogger -> utilities/logger.js/commActionLogger",
+      request ?? null
+    )
+    console.log(error);
+  }
+}
+
 const originalLog = console.log;
 const originalLogError = console.error;
 const originalLogWarn = console.warn;
@@ -484,4 +521,4 @@ console.warn = createLogPrefix(originalLogWarn);
 module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,
   marketDataLogger,tblPredictorAPILogger,tblThirdPartyAPILogger,commentaryLogger,updateWebRequestLogs,
   eventMarketLogger, marektResultLogger,pythonSocketLogger,
-disMissalLogger};
+disMissalLogger, commActionLogger};
