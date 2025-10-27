@@ -23349,7 +23349,7 @@ const matchImportService = async (data, fastify, request = null) => {
   const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
   let checkCountry, checkVenue;
   if (matchInfoResponse?.venue?.country && matchInfoResponse?.venue?.country !== "") {
-    const checkCountry = global.tblCountryCodes.find(item => item.countryName === matchInfoResponse?.venue?.country);
+    checkCountry = global.tblCountryCodes.find(item => item.countryName === matchInfoResponse?.venue?.country);
     if (!checkCountry) {
       const countryData = {
         countryName: matchInfoResponse?.venue?.country || null,
@@ -23357,9 +23357,10 @@ const matchImportService = async (data, fastify, request = null) => {
       };
       const insertCountryCode = await insertCountryCodeQuery(countryData, fastify, request);
       global.tblCountryCodes.push(insertCountryCode);
+      checkCountry = insertCountryCode;
     }
 
-    let checkVenue = global.tblVenues.find(item => item.countryId === checkCountry?.id && item.city === matchInfoResponse?.venue?.location && item.name === matchInfoResponse?.venue?.name);
+    checkVenue = global.tblVenues.find(item => item.countryId === checkCountry?.id && item.city === matchInfoResponse?.venue?.location && item.name === matchInfoResponse?.venue?.name);
     if (!checkVenue) {
       const venueData = {
         countryId: checkCountry?.id,
@@ -23381,6 +23382,77 @@ const matchImportService = async (data, fastify, request = null) => {
       checkVenue = await updateVenueQuery(venueData, fastify, request);
       const index = global.tblVenues.findIndex(item => item.id === checkVenue.id);
       global.tblVenues[index] = checkVenue;
+    }
+  }
+  
+  if (matchInfoResponse?.weather && matchInfoResponse?.weather.length > 0) {
+    const checkWeather = global.tblWeather.find(item => item.commentaryId === checkCommentary.commentaryId);
+    if (checkWeather) {
+      const matchWeather = matchInfoResponse?.weather[0];
+      const weatherData = {
+        weatherCondition: matchWeather?.weather ?? checkWeather?.weatherCondition,
+        description: matchWeather?.weather_desc ?? checkWeather?.description,
+        commentaryId: checkCommentary.commentaryId ?? checkWeather?.commentaryId,
+        temp: matchWeather?.temp ?? checkWeather?.temp,
+        humidity: matchWeather?.humidity ?? checkWeather?.humidity,
+        visibility: matchWeather?.visibility ?? checkWeather?.visibility,
+        windSpeed: matchWeather?.wind_speed ?? checkWeather?.clouds,
+        clouds: matchWeather?.clouds ?? checkWeather?.clouds,
+        id: checkWeather?.id
+      };
+      const updateWeather = await updateWeatherQuery(weatherData, fastify, request);
+      const index = global.tblWeather.findIndex(item => item?.commentaryId === checkCommentary.commentaryId);
+      if (index !== -1) {
+        global.tblWeather[index] = updateWeather[0]
+      } else {
+        global.tblWeather.push(updateWeather[0]);
+      }
+    } else {
+      const matchWeather = matchInfoResponse?.weather[0];
+      const weatherData = {
+        weatherCondition: matchWeather?.weather,
+        description: matchWeather?.weather_desc,
+        commentaryId: checkCommentary.commentaryId,
+        temp: matchWeather?.temp,
+        humidity: matchWeather?.humidity,
+        visibility: matchWeather?.visibility,
+        windSpeed: matchWeather?.wind_speed,
+        clouds: matchWeather?.clouds
+      };
+      const insertWeather = await insertWeatherQuery(weatherData, fastify, request);
+      global.tblWeather.push(insertWeather);
+    }
+  }
+
+  if (matchInfoResponse?.pitch_details && (matchInfoResponse?.pitch_details?.pitch_condition != "" || matchInfoResponse?.pitch_details?.batting_condition != "" || matchInfoResponse?.pitch_details?.pace_bowling_condition != "" || matchInfoResponse?.pitch_details?.spine_bowling_condition != "")) {
+    const checkPitchDetails = global.tblPitchConditions.find(item => item?.commentaryId === checkCommentary.commentaryId);
+    if (checkPitchDetails) {
+      const pitchConditionData = {
+        pitchCondition: matchInfoResponse?.pitch_details?.pitch_condition ?? checkPitchDetails?.pitchCondition,
+        battingCondition: matchInfoResponse?.pitch_details?.batting_condition ?? checkPitchDetails?.battingCondition,
+        paceBowlingCondition: matchInfoResponse?.pitch_details?.pace_bowling_condition ?? checkPitchDetails?.paceBowlingCondition,
+        spineBowlingConniton: matchInfoResponse?.pitch_details?.spine_bowling_condition ?? checkPitchDetails?.spineBowlingConniton,
+        commentaryId: checkCommentary.commentaryId,
+        id: checkPitchDetails?.id
+      };
+      const updatePitch = await updatePitchConditionQuery(pitchConditionData, fastify, request);
+      const index = global.tblPitchConditions.findIndex(item => item?.commentaryId === request.body.commentaryId);
+      if (index !== -1) {
+        global.tblPitchConditions[index] = updatePitch[0]
+      } else {
+        global.tblPitchConditions.push(updatePitch[0]);
+      }
+    } else {
+      const pitchConditionData = {
+        pitchCondition: matchInfoResponse?.pitch_details?.pitch_condition,
+        battingCondition: matchInfoResponse?.pitch_details?.batting_condition,
+        paceBowlingCondition: matchInfoResponse?.pitch_details?.pace_bowling_condition,
+        spineBowlingConniton: matchInfoResponse?.pitch_details?.spine_bowling_condition,
+        commentaryId: checkCommentary.commentaryId
+      };
+
+      const insertPitchDetails = await insertPitchConditionQuery(pitchConditionData, fastify, request);
+      global.tblPitchConditions.push(insertPitchDetails);
     }
   }
 
