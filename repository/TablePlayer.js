@@ -276,7 +276,7 @@ const updatePlayerQuery = async (data, fastify, request) => {
           data.imagePath,
           data.tpId,
           data.countryId,
-          data.bowlingTypeId,,
+          data.bowlingTypeId,
           data?.isMen || false,
         ],
       }
