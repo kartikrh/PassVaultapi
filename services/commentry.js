@@ -269,12 +269,12 @@ const allCommentaryService = async (request, fastify) => {
       result = result.filter((item) => {
         const eventDate = new Date(item.eventDate);
 
-        // if (item.commentaryStatus === 1) {
-        //   return eventDate >= start && eventDate <= end;
-        // }
-        if (item.commentaryStatus === 3) {
+        if ([2, 3, 5].includes(item.commentaryStatus)) {
           return eventDate <= end;
         }
+        // if (item.commentaryStatus === 3) {
+        //   return eventDate <= end;
+        // }
 
         return eventDate >= start && eventDate <= end;
       });
@@ -7555,6 +7555,7 @@ const commentaryDetailsByEventIdService = async (
       res: result.result,
       isvirtual: result.isVirtual,
       cid : result.commentaryId,
+      eventNo: result?.eventNo,
       ...weatherAndPitchData,
     },
     cbb,
@@ -8567,6 +8568,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       overDelay: item?.overDelay || 0,
       inningDelay: item?.inningDelay || 0,
       tossDelay: item?.tossDelay || 0,
+      eventNo: item?.eventNo || "",
       ...weatherAndPitchData,
       // mr: mr
       // bowT : item.bowlingTeam || null,
@@ -8773,6 +8775,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
     isTest: com.isTest,
     isActive: com.isActive,
     etyId: eventType?.eventTypeId,
+    eventNo: com?.eventNo,
     ...weatherAndPitchData,
   };
   return comDetails;
