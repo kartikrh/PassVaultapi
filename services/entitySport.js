@@ -857,73 +857,79 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     let upOvers = [];
     let upTeams = [];
     const playersMap = {}; // key: commentaryPlayerId
-
-    let boIncrease = false;
     let ltSetOrder = 0;
-    if(response.live.batsmen){
-      for(let p of response.live?.batsmen){
-        let comP = playerTpIdObj[p.batsman_id]
-        if(comP){
+    // Find the current max batter order from global data
+    const existingBatters = global.tblCommentaryPlayers.filter(i =>
+      i.commentaryId === comDetails.commentaryId &&
+      i.currentInnings === comDetails.currentInnings &&
+      i.teamId === battingTeam.teamId &&
+      i.batterOrder != null
+    );
+
+    ltSetOrder = existingBatters.length
+      ? Math.max(...existingBatters.map(i => i.batterOrder))
+      : 0;
+
+    if (response.live?.batsmen) {
+      for (let p of response.live.batsmen) {
+        let comP = playerTpIdObj[p.batsman_id];
+        if (comP) {
           let batterOrder = comP.batterOrder;
-          if(comP.batterOrder == undefined || comP.batterOrder == null ){
-              // get latest batter order 
-              if(ltSetOrder != 0){
-                batterOrder =ltSetOrder + 1
-              }
-              else {
-                 let bO = global.tblCommentaryPlayers.filter((i)=> i.commentaryId == comDetails.commentaryId &&
-                  i.currentInnings == comDetails.currentInnings &&
-                  i.teamId == battingTeam.teamId &&
-                  i.batterOrder != null
-                )
-                .sort((a,b)=> b.batterOrder - a.batterOrder)[0]?.batterOrder || 0
-                batterOrder = bO + 1
-                ltSetOrder = batterOrder
-              }
+
+          if (batterOrder == null) {
+            ltSetOrder += 1;
+            batterOrder = ltSetOrder;
           }
+
           playersMap[p.batsman_id] = {
-              ...comP,
-              isPlay : true,
-              batRun : p.runs,
-              batBall : p.balls_faced,
-              // batDotBall,
-              batFour : p.fours,
-              batSix : p.sixes,
-              batterOrder,
-          }
+            ...comP,
+            isPlay: true,
+            batRun: p.runs,
+            batBall: p.balls_faced,
+            batFour: p.fours,
+            batSix: p.sixes,
+            batterOrder,
+          };
         }
       }
     }
-    if(response.live?.bowlers){
-      for (let b of response.live?.bowlers){
-        let comP = playerTpIdObj[b.bowler_id] 
-        if(comP){
+    let ltSetBowlerOrder = 0;
+    // find the latest bowler order already stored for this innings/team
+    const existingBowlers = global.tblCommentaryPlayers.filter(i =>
+      i.commentaryId === comDetails.commentaryId &&
+      i.currentInnings === comDetails.currentInnings &&
+      i.teamId === bowlingTeam.teamId &&
+      i.bowlerOrder != null
+    );
+
+    ltSetBowlerOrder = existingBowlers.length
+      ? Math.max(...existingBowlers.map(i => i.bowlerOrder))
+      : 0;
+
+    if (response.live?.bowlers) {
+      for (let p of response.live.bowlers) {
+        let comP = playerTpIdObj[p.bowler_id];
+        if (comP) {
           let bowlerOrder = comP.bowlerOrder;
-          if(comP.bowlerOrder == undefined || comP.bowlerOrder == null ){
-              // get latest bowler order
-              let bO = global.tblCommentaryPlayers.filter((i)=> i.commentaryId == comDetails.commentaryId &&
-                  i.currentInnings == comDetails.currentInnings &&
-                  i.teamId == bowlingTeam.teamId &&
-                  i.bowlerOrder != null
-              ).sort((a,b)=> b.bowlerOrder - a.bowlerOrder)[0]?.bowlerOrder || 0
-              bowlerOrder = bO + 1
+
+          // assign order only if not set yet
+          if (bowlerOrder == null) {
+            ltSetBowlerOrder += 1;
+            bowlerOrder = ltSetBowlerOrder;
           }
-          playersMap[b.bowler_id] = {
-              ...comP,
-              bowlerRun : b.runs_conceded,
-              bowlerOver : b.overs,  
-              // bowlerTotalBall,
-              isPlay : true,
-              onStrike : null,
-              bowlerOrder
-              // bowlerDotBall,
-              // bowlerFour,
-              // bowlerSix
-          }
+
+          playersMap[p.bowler_id] = {
+            ...comP,
+            isPlay: true,
+            bowlOver: p.overs,
+            bowlRun: p.runs_conceded,
+            bowlWicket: p.wickets,
+            bowlerOrder,
+          };
         }
       }
     }
-  
+   
    
     const oversMap = {}; // key: `${teamId}_${overNumber}`
     const ballByBall = [];
@@ -939,6 +945,12 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
       if(comDetails.commentaryStatus == commentaryStatus.INNINGCHANGE){
         upComDetails.commentaryStatus = commentaryStatus.INPROGRESS
       }
+      // get last 5 elem of update
+      // let storeBall = commentaries.filter((i)=> i.event == "ball" && i.score != "w")
+      // await handleStoreBall({
+      //   response,
+      //   battingTeam
+      // },fastify,comDetails)
       for (let c of commentaries){
         let updateBall = {}
         let ball = 1;
@@ -1690,6 +1702,110 @@ const matchCompleteService = async (data , fastify,comDetails) =>{
   return true
 
 }
+const handleStoreBall = async (data , fastify, comDetails) => {
+  const {response , battingTeam} = data;
+  let com = response.commentaries;
+  let storedCom =com.slice(-5);
+  let tpIds = stored.map((i)=>i.event_id)
+  let playerTpIdObj = {};
+  let comPlayers = global.tblCommentaryPlayers.filter((cp)=> cp.commentaryId == comDetails.commentaryId && cp.currentInnings == comDetails.currentInnings)
+  for (let cp of comPlayers){
+      playerTpIdObj[cp.tpId] = {
+          ...cp,
+          playerName : cp.playerName,
+          playerId : cp.playerId,
+      };
+  }
+  let playersMap = {};
+  let upOvers = [];
+  let deleteBallByBallIds = [];
+  let oversMap = {};
+  let upTeams = []
+  for (let c of storedCom){
+    let updateBall = {}
+    let ball = 1;
+    let tpId = c.event_id;
+    let event = c.event;
+    let isBoundary = c.run == 4 || c.run ==6 ? true : false
+    if(String(c.score) == "w" ){
+      event = "wicket"
+      // wicket code
+    }
+    if(event == "ball" ){
+      let index = global.tblCommentaryBallByBall.findIndex((i)=>i.tpId == c.event_id)
+      if(index == -1) continue; // skip not created ball
+      let ball = global.tblCommentaryBallByBall.find((i)=> i.tpId == c.tpId)
+      if(ball.run == c.run){
+        continue;
+      }
+      // delete this ball and other ball
+      let ballAfterThis = global.tblCommentaryBallByBall.filter((i)=> i.commentaryBallByBallId >= ball.commentaryBallByBallId &&
+      i.commentaryId == comDetails.commentaryId && i.currentInnings == comDetails.currentInnings) 
+      // let ballIds = ballAfterThis.map((i)=> i.commentaryBallByBallId)
+      for(let b1 of ballAfterThis){
+        const overNumber = Number(c.over);
+        const overKey = `${comDetails.commentaryId}-${comDetails.currentInnings}-${battingTeam.teamId}-${overNumber}`;
+        let over = oversMap[overKey];
+        over = global.tblOvers.find((i)=>i.overId == b1.overId)
+        oversMap[overKey] = over
+        deleteBallByBallIds.push(b1.commentaryBallByBallId)
+        let tpBall = com.find((i)=>i.event_id == b1.tpId)
+        let tpId = tpBall.event_id;
+        let event = c.event;
+        if(String(c.score) == "w" ){
+          event = "wicket"
+          continue;
+        }
+        if(event == "ball"){
+          let run = b1.run
+          battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
+          // reducse teamOver
+          let previousBall = c.ball - 1;
+          battingTeam.teamOver = `${c.over}.${previousBall}`
+          battingTeam.teamLegByRuns =( battingTeam.teamLegByRuns || 0) - parseInt(b1.legbye_run)
+          battingTeam.teamNoBallRuns =( battingTeam.teamNoBallRuns || 0) - parseInt(b1.noball_run)
+          battingTeam.teamByRuns =( battingTeam.teamByRuns || 0) - parseInt(b1.bye_run)
+          over.ballCount -= 1;
+          over.totalRun -= 1;
+          over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+          playersMap[b1.bowler_id] = {
+            ...playerTpIdObj[c.bowler_id],
+            bowlerTotalBall : playersMap[b1.bowler_id].bowlerTotalBall > 0 ? playersMap[b1.bowler_id].bowlerTotalBall - 1 : 0
+          }
+          let isBoundary = run == 4 || run ==6 ? true : false;
+          if(run == 0){
+            over.dotBall = over.dotBall - 1;
+            playersMap[b1.batsman_id] = {
+              ...playerTpIdObj[b1.batsman_id],
+              batDotBall : playersMap[b1.batsman_id].batDotBall > 0 ?playersMap[b1.batsman_id].batDotBall - 1 : 0,
+              bowlerDotBall: playersMap[b1.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[b1.bowler_id].bowlerDotBall - 1 :0
+            }
+          }
+          else if(isBoundary){
+            if(run ==4){
+              playersMap[b1.bowler_id].bowlerFour = playersMap[b1.bowler_id].bowlerFour > 0? playersMap[b1.bowler_id].bowlerFour - 1 : 0 
+            }
+            if(run == 6){
+              over.totalSix -= 1;
+              playersMap[b1.bowler_id].bowlerSix =  playersMap[b1.bowler_id].bowlerSix > 0? playersMap[b1.bowler_id].bowlerSix - 1 : 0 
+            }
+          }
+        }
+      }
+      let plyArr = Object.values(playersMap);
+      let overArr = Object.values(oversMap)
+      await syncEntitySportCommentaryService({
+        commentaryId : comDetails.commentaryId,
+        commentaryPlayers : plyArr,
+        deleteBallByBallIds : deleteBallByBallIds,
+        commentaryOvers : overArr,
+        commentaryTeams : [battingTeam],
+      },fastify,request)
+
+    }
+  }
+  return true;
+}
 module.exports = {
     saveTeamsService,
     savePlayersService,
@@ -1699,5 +1815,6 @@ module.exports = {
     saveVenueService,
     setEntityComService,
     setEntityCom2Service,
-    saveTournamentTeamPlayerService
+    saveTournamentTeamPlayerService,
+    handleStoreBall
 }
