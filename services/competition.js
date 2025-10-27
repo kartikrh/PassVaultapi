@@ -904,7 +904,7 @@ const upsertPlayers = async (entitySocketData, players, playerTpId, request, fas
         isKipper: getPlayerFromEntity?.playing_role === 'wk' ? true : false,
         isLeftHandedBatting: getPlayerFromEntity.batting_style ? !getPlayerFromEntity.batting_style.includes('Right') : false,
         isLeftArmFielding: getPlayerFromEntity.bowling_style ? !getPlayerFromEntity.bowling_style.includes('Right') : false,
-        userId: -3,
+        userId: -2,
         batsmanAverage: 0.0,
         batsmanStrikeRate: 0.0,
         bowlerAverage: 0.0,
@@ -921,7 +921,7 @@ const upsertPlayers = async (entitySocketData, players, playerTpId, request, fas
     }
     else if (checkPlayer?.tpId === null || !checkPlayer?.tpId) {
       const data = {
-        userId: -3,
+        userId: -2,
         tpId: getPlayerFromEntity?.pid || null,
         playerId: checkPlayer.playerId,
       };
