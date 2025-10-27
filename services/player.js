@@ -768,8 +768,10 @@ const activeInactivePlayerService = async (request, fastify) => {
 
 const updatePlayerBatBowlHistory = async (playerId, playerBattingData, playerBowlingData, request, fastify) => {
   const commentaryPlayerBattingArray = [], newPlayerBattingDataArray = [];
+  const playerData = global.tblPlayers.find(item => item.playerId === playerId);
+  const isMen = playerData?.isMen;
   for (const matchTypeData of Object.keys(playerBattingData)) {
-    let matchType = global.tblMatchTypes.find(item => item.entityEnum === ICCMatchType.men[matchTypeData]);
+    let matchType = global.tblMatchTypes.find(item => item.entityEnum === ICCMatchType[isMen ? "men": "women"][matchTypeData]);
     if (matchType) {
       const commentaryPlayerBattingHistory = global.tblCommPlayerBatHist.filter(item => item.playerId === playerId && item.matchTypeId === matchType?.matchTypeId);
       if (commentaryPlayerBattingHistory?.length > 0) {
