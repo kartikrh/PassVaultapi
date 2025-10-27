@@ -5496,6 +5496,7 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           tc."wrPythonId" as "pythonId",
           tc."wrPythonURI" as "pythonURI",
           tc."wrViews" as "views",
+          tc."wrEventNo" as "eventNo",
           tc."wrCancelTime" as "cancelTime"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 ON tt1."wrTeamId" = tc."wrTeam1Id" AND tt1."wrIsDeleted" = false
