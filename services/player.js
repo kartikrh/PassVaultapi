@@ -388,6 +388,10 @@ const updatePlayerService = async (request, fastify) => {
     body.isLeftArmFielding = request.body.isLeftArmFielding;
   }
 
+  if ("isMen" in request.body) {
+    body.isMen = request.body.isMen;
+  }
+
   if (request.body.eventTypeId) {
     const checkEventTypeId = global.tblEventTypes.find(
       (item) => item.eventTypeId === request.body.eventTypeId

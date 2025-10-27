@@ -196,7 +196,7 @@ const insertPlayerQuery = async (data, fastify, request) => {
           data.tpId || null,
           data.countryId || null,
           data.bowlingTypeId || null,
-          data.isMen || false,
+          data?.isMen || false,
         ],
       }
     );
