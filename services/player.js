@@ -795,7 +795,7 @@ const updatePlayerBatBowlHistory = async (playerId, playerBattingData, playerBow
         countOf4: run4 || 0,
         countOf6: run6 || 0,
         average: average || 0,
-        strikeRate: parseInt(strike) || 0,
+        strikeRate: strike || 0,
         catchCount: catches || 0,
         stumpCount: stumpings || 0,
         fastest50Balls: fastest50balls || 0,
