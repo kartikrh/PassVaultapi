@@ -23168,6 +23168,7 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
   }
 
   const teamData = entitySportTeamPlayersResponse?.team;
+  const isMen = teamData?.sex === "male";
   const teamPlayerData = Object.values(entitySportTeamPlayersResponse?.players).flat()
   const entitySocketData = global.tblEntitySockets[0];
 
@@ -23261,7 +23262,8 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
           bowlingStyleId: player.bowling_type ? EntityBowlingStyleType[player.bowling_type.toLowerCase()] : null,
           bowlingTypeId: extractBowlingStyle(player.bowling_type, player.bowling_style),
           image: entitySocketData?.defaultPlayerImage || null,
-          imagePath: entitySocketData?.defaultPlayerImagePath || null
+          imagePath: entitySocketData?.defaultPlayerImagePath || null,
+          isMen
         };
         const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
         global.tblPlayers.push(insertPlayer);
