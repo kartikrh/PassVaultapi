@@ -25,7 +25,8 @@ const getAllPlayersQuery = async (fastify) => {
     tp."wrIsSystemPlayer" AS "isSystemPlayer",
     tp."wrImagePath" AS "imagePath",
     tp."wrTpId" AS "tpId",
-    tp."wrCountryId" AS "countryId"
+    tp."wrCountryId" AS "countryId",
+    tp."wrIsMen" AS "isMen"
 FROM 
     "tblPlayers" tp
     LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
@@ -100,7 +101,8 @@ const getPlyByIdQuery = async (data ,request ,fastify) => {
         tp."wrIsSystemPlayer" AS "isSystemPlayer",
         tp."wrImagePath" AS "imagePath",
         tp."wrTpId" AS "tpId",
-        tp."wrCountryId" AS "countryId"
+        tp."wrCountryId" AS "countryId",
+        tp."wrIsMen" AS "isMen"
     FROM 
         "tblPlayers" tp
         LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
@@ -134,8 +136,8 @@ const insertPlayerQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
       `with insert_data as (
-      insert into "tblPlayers" ("wrPlayerName","wrImage","wrBowlingStyle","wrIsActive","wrIsKipper","wrIsLeftHandedBatting","wrIsLeftArmFielding","wrBatsmanAverage","wrBatsmanStrikeRate","wrBowlerAverage","wrBowlerEconomy","wrDisplayName" ,"wrEventTypeId","wrPlayerTypeId" ,"wrCreatedDate","wrCreatedBy","wrIsSystemPlayer", "wrImagePath", "wrTpId", "wrCountryId", "wrBowlingType")
-      values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17, $18, $19, $20, $21)
+      insert into "tblPlayers" ("wrPlayerName","wrImage","wrBowlingStyle","wrIsActive","wrIsKipper","wrIsLeftHandedBatting","wrIsLeftArmFielding","wrBatsmanAverage","wrBatsmanStrikeRate","wrBowlerAverage","wrBowlerEconomy","wrDisplayName" ,"wrEventTypeId","wrPlayerTypeId" ,"wrCreatedDate","wrCreatedBy","wrIsSystemPlayer", "wrImagePath", "wrTpId", "wrCountryId", "wrBowlingType", "wrIsMen")
+      values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17, $18, $19, $20, $21, $22)
       returning *
     )
 
@@ -162,7 +164,8 @@ const insertPlayerQuery = async (data, fastify, request) => {
         "wrIsSystemPlayer" as "isSystemPlayer",
         tp."wrImagePath" AS "imagePath",
         tp."wrTpId" AS "tpId",
-        tp."wrCountryId" AS "countryId"
+        tp."wrCountryId" AS "countryId",
+        tp."wrIsMen" AS "isMen"
      from "insert_data" tp 
      left join "tblEventTypes" tet on tp."wrEventTypeId" = tet."wrEventTypeId"
      left join "tblPlayerTypes" tpt on tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
@@ -193,6 +196,7 @@ const insertPlayerQuery = async (data, fastify, request) => {
           data.tpId || null,
           data.countryId || null,
           data.bowlingTypeId || null,
+          data.isMen || false,
         ],
       }
     );
@@ -214,7 +218,7 @@ const updatePlayerQuery = async (data, fastify, request) => {
     return await fastify.db.query(
       `WITH update_data AS (
         update "tblPlayers" set "wrPlayerName" = $1,"wrImage" = $2,"wrBowlingStyle" = 
-          $3,"wrIsActive" = $4,"wrIsKipper" = $5,"wrIsLeftHandedBatting" = $6,"wrIsLeftArmFielding" = $7,"wrBatsmanAverage" = $8,"wrBatsmanStrikeRate" = $9,"wrBowlerAverage" = $10,"wrBowlerEconomy" = $11,"wrDisplayName" = $12,"wrEventTypeId" = $13,"wrPlayerTypeId" =$14,"wrModifyDate" = $15,"wrModifyBy" = $16,"wrIsSystemPlayer" = $17, "wrImagePath" = $19, "wrTpId" = $20, "wrCountryId" = $21, "wrBowlingType" = $22
+          $3,"wrIsActive" = $4,"wrIsKipper" = $5,"wrIsLeftHandedBatting" = $6,"wrIsLeftArmFielding" = $7,"wrBatsmanAverage" = $8,"wrBatsmanStrikeRate" = $9,"wrBowlerAverage" = $10,"wrBowlerEconomy" = $11,"wrDisplayName" = $12,"wrEventTypeId" = $13,"wrPlayerTypeId" =$14,"wrModifyDate" = $15,"wrModifyBy" = $16,"wrIsSystemPlayer" = $17, "wrImagePath" = $19, "wrTpId" = $20, "wrCountryId" = $21, "wrBowlingType" = $22, "wrIsMen" = $23
         where "wrPlayerId" = $18
         returning *
       )
@@ -241,7 +245,8 @@ const updatePlayerQuery = async (data, fastify, request) => {
         "wrIsSystemPlayer" as "isSystemPlayer",
         tp."wrImagePath" AS "imagePath",
         tp."wrTpId" AS "tpId",
-        tp."wrCountryId" AS "countryId"
+        tp."wrCountryId" AS "countryId",
+        tp."wrIsMen" AS "isMen"
       from "update_data" tp 
       left join "tblEventTypes" tet on tp."wrEventTypeId" = tet."wrEventTypeId"
       left join "tblPlayerTypes" tpt on tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
@@ -271,7 +276,8 @@ const updatePlayerQuery = async (data, fastify, request) => {
           data.imagePath,
           data.tpId,
           data.countryId,
-          data.bowlingTypeId,
+          data.bowlingTypeId,,
+          data?.isMen || false,
         ],
       }
     );
@@ -526,7 +532,8 @@ const getAllPlayersByIdsQuery = async (whereCondition = undefined, fastify) => {
           tp."wrIsSystemPlayer" AS "isSystemPlayer",
           tp."wrImagePath" AS "imagePath",
           tp."wrTpId" AS "tpId",
-          tp."wrCountryId" AS "countryId"
+          tp."wrCountryId" AS "countryId",
+          tp."wrIsMen" AS "isMen"
       FROM "tblPlayers" tp
       LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
       LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
@@ -592,7 +599,8 @@ const getPlayerByIdQuery = async (whereCondition = undefined, request, fastify) 
     tp."wrDisplayName" AS "displayName",
     tp."wrIsSystemPlayer" AS "isSystemPlayer",
     tp."wrImagePath" AS "imagePath",
-    tp."wrTpId" AS "tpId"
+    tp."wrTpId" AS "tpId",
+    tp."wrIsMen" AS "isMen"
   FROM 
     "tblPlayers" tp
     LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
@@ -651,7 +659,8 @@ const updateExchangePlayerQuery = async (data, fastify, request) => {
     tp."wrDisplayName" AS "displayName",
     tp."wrIsSystemPlayer" AS "isSystemPlayer",
     tp."wrImagePath" AS "imagePath",
-    tp."wrTpId" AS "tpId"
+    tp."wrTpId" AS "tpId",
+    tp."wrIsMen" AS "isMen"
   FROM update_data tp
   LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
   LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
