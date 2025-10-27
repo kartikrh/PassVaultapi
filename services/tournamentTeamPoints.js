@@ -15,7 +15,7 @@ const {
   getTournamentPointsByGroupNameQuery,
   getTournamentTeamPointsQuery,
 } = require("../repository/TableTournmentTeamPoints");
-const { callClientAPI, ServiceType, APIEndpointModuleType, callEntitySportAPI, extractGroupDataFromArray, teamRemarkType } = require("../utilities");
+const { callClientAPI, ServiceType, APIEndpointModuleType, callEntitySportAPI, extractGroupDataFromArray, teamRemarkType, checkEntitySportAPIEndpointIsActive } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 const { updateAutoImportDataService } = require("./autoImportData");
 
@@ -734,49 +734,30 @@ const importTournamentTeamPointFromEntitySportService = async (request, fastify)
     importStartTime: new Date()
   }, fastify, request);
 
-  const response = await callEntitySportAPI(
-    {
-      serviceType: ServiceType.entitySport,
-      moduleType: APIEndpointModuleType.getCompetitionInfo,
-      data: {
-        module: "competitionInfo",
-        type: "get",
-        cid: refId
-      }
-    },
-    request,
-    fastify
-  );
-
-  if (response && response.data && response.data.result) {
-    const result = response.data.result.response;
-    await addEditTournamentTeamPointDataService(result, checkCompetition?.competitionId, fastify, request);
-
-    await updateAutoImportDataService({
-      ...request,
-      body: {
-        ...request.body,
-        isImported: false,
-        importEndTime: new Date(),
-        id: insertAutoImportData.id
-      }
-    }, fastify);
-
-    return `Tournament team point data imported successfully`;
-
-  } else {
-    await updateAutoImportDataService({
-      ...request,
-      body: {
-        ...request.body,
-        isImported: false,
-        importEndTime: new Date(),
-        id: insertAutoImportData.id
-      }
-    }, fastify);
-    throw new Error("Error fetching Competition info data from EntitySport API");
+  const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getCompetitionDataByIdFromEntity);
+  if (!checkEntitySportAPIEndpoint.data) {
+    throw new Error(checkEntitySportAPIEndpoint.message);
   }
 
+  const url = checkEntitySportAPIEndpoint.data.replace("{cid}", refId);
+  const entitySportCompetitionInfo = await callEntitySportAPI(url, request, fastify);
+
+  let entitySportCompetitionInfoResponse = entitySportCompetitionInfo?.data?.result;
+  if (!entitySportCompetitionInfoResponse) {
+    throw new Error("Invalid response from Entit-Sport API");
+  }
+
+  await addEditTournamentTeamPointDataService(entitySportCompetitionInfoResponse, checkCompetition?.competitionId, fastify, request);
+
+  await updateAutoImportDataService({
+      ...request,
+      body: {
+        ...request.body,
+        isImported: false,
+        importEndTime: new Date(),
+        id: insertAutoImportData.id
+      }
+    }, fastify);
 };
 
 module.exports = {
