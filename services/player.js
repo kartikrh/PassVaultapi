@@ -389,7 +389,7 @@ const updatePlayerService = async (request, fastify) => {
   }
 
   if ("isMen" in request.body) {
-    body.isMen = request.body?.isMen ;
+    body.isMen = request.body?.isMen;
   }
 
   if (request.body.eventTypeId) {
