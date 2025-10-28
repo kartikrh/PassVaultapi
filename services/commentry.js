@@ -23436,7 +23436,7 @@ const matchImportService = async (data, fastify, request = null) => {
         pitchCondition: matchInfoResponse?.pitch_details?.pitch_condition ?? checkPitchDetails?.pitchCondition,
         battingCondition: matchInfoResponse?.pitch_details?.batting_condition ?? checkPitchDetails?.battingCondition,
         paceBowlingCondition: matchInfoResponse?.pitch_details?.pace_bowling_condition ?? checkPitchDetails?.paceBowlingCondition,
-        spineBowlingCondition: matchInfoResponse?.pitch_details?.spine_bowling_condition ?? checkPitchDetails?.spineBowlingCondition,
+        spineBowlingConniton: matchInfoResponse?.pitch_details?.spine_bowling_condition ?? checkPitchDetails?.spineBowlingCondition,
         commentaryId: checkCommentary.commentaryId,
         id: checkPitchDetails?.id
       };
@@ -23452,7 +23452,7 @@ const matchImportService = async (data, fastify, request = null) => {
         pitchCondition: matchInfoResponse?.pitch_details?.pitch_condition,
         battingCondition: matchInfoResponse?.pitch_details?.batting_condition,
         paceBowlingCondition: matchInfoResponse?.pitch_details?.pace_bowling_condition,
-        spineBowlingCondition: matchInfoResponse?.pitch_details?.spine_bowling_condition,
+        spineBowlingConniton: matchInfoResponse?.pitch_details?.spine_bowling_condition,
         commentaryId: checkCommentary.commentaryId
       };
 

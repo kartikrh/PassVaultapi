@@ -1942,6 +1942,11 @@ const countNulls = (obj) => {
   return count;
 }
 
+async function roundToNearestMinutes(minutes) {
+    const date = new Date();
+    const ms = 1000 * 60 * minutes;
+    return new Date(Math.round(date.getTime() / ms) * ms);
+};
 
 module.exports = {    
   ERROR_CODES,
@@ -2057,5 +2062,6 @@ module.exports = {
   ICCMatchType,
   playersMergeImageService,
   cleanEmptyStrings,
-  countNulls
+  countNulls,
+  roundToNearestMinutes
 };

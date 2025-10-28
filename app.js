@@ -41,6 +41,8 @@ const {webPushset} = require("./WebPushHandler/index.js");
 const { updateMarket } = require("./utilities/marketUpdate.js");
 const cron = require('node-cron');
 const { entitySportAutoImportProcess } = require("./utilities/entitySportAutoImport.js");
+const { entitySportAutoUpdateCommentary } = require("./utilities/entitySportAutoUpdateCommentary.js");
+const { entitySportAutoUpdateCommentaryTime } = require("./utilities/entityConst.js");
 // const { nodeProfilingIntegration } = require('@sentry/profiling-node');
 // const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 // Pass --options via CLI arguments in command to enable these options.
@@ -155,6 +157,14 @@ module.exports = async function (fastify, opts) {
     cron.schedule('0,30 * * * * *', async () => {
       try {
         await entitySportAutoImportProcess(fastify);
+      } catch (error) {
+        console.error(new Date(), "Error during scheduled task:", error);
+      }
+    });
+
+    cron.schedule(`*/${entitySportAutoUpdateCommentaryTime} * * * *`, async () => {
+      try {
+        await entitySportAutoUpdateCommentary(fastify);
       } catch (error) {
         console.error(new Date(), "Error during scheduled task:", error);
       }
