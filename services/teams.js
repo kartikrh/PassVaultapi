@@ -650,6 +650,7 @@ const UpdateTeamFromEntityService = async (request, fastify) => {
         }
 
         const { team, players } = entitySportTeamPlayerResponse;
+        const isMen = team?.sex === "male";
 
         const entitySocketData = global.tblEntitySockets[0];
         const allPlayers = Object.values(players).flat();
@@ -708,6 +709,7 @@ const UpdateTeamFromEntityService = async (request, fastify) => {
               bowlingTypeId: extractBowlingStyle(player.bowling_type, player.bowling_style),
               image: playerImageData.fullPath,
               imagePath: playerImageData.imagePath,
+              isMen
             };
 
             const insertPlayer = await insertPlayerQuery(data, fastify, request);

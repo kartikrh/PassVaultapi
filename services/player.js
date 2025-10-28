@@ -388,6 +388,10 @@ const updatePlayerService = async (request, fastify) => {
     body.isLeftArmFielding = request.body.isLeftArmFielding;
   }
 
+  if ("isMen" in request.body) {
+    body.isMen = request.body?.isMen;
+  }
+
   if (request.body.eventTypeId) {
     const checkEventTypeId = global.tblEventTypes.find(
       (item) => item.eventTypeId === request.body.eventTypeId
@@ -768,8 +772,10 @@ const activeInactivePlayerService = async (request, fastify) => {
 
 const updatePlayerBatBowlHistory = async (playerId, playerBattingData, playerBowlingData, request, fastify) => {
   const commentaryPlayerBattingArray = [], newPlayerBattingDataArray = [];
+  const playerData = global.tblPlayers.find(item => item.playerId === playerId);
+  const isMen = playerData?.isMen;
   for (const matchTypeData of Object.keys(playerBattingData)) {
-    let matchType = global.tblMatchTypes.find(item => item.entityEnum === ICCMatchType.men[matchTypeData]);
+    let matchType = global.tblMatchTypes.find(item => item.entityEnum === ICCMatchType[isMen ? "men": "women"][matchTypeData]);
     if (matchType) {
       const commentaryPlayerBattingHistory = global.tblCommPlayerBatHist.filter(item => item.playerId === playerId && item.matchTypeId === matchType?.matchTypeId);
       if (commentaryPlayerBattingHistory?.length > 0) {
@@ -793,7 +799,7 @@ const updatePlayerBatBowlHistory = async (playerId, playerBattingData, playerBow
         countOf4: run4 || 0,
         countOf6: run6 || 0,
         average: average || 0,
-        strikeRate: parseInt(strike) || 0,
+        strikeRate: strike || 0,
         catchCount: catches || 0,
         stumpCount: stumpings || 0,
         fastest50Balls: fastest50balls || 0,

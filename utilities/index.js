@@ -1529,11 +1529,17 @@ const ICCMatchType = {
     t20i: matchTypesEntity.T20I,
     t20: matchTypesEntity.T20,
     lista: matchTypesEntity["List A"],
-    t10: matchTypesEntity.T10
+    t10: matchTypesEntity.T10,
+    firstclass: matchTypesEntity["First Class"],
+    test: matchTypesEntity.TEST
   },
   women: {
     odis: matchTypesEntity["Women ODI"],
     t20s: matchTypesEntity["Women T20"],
+    test: matchTypesEntity["Woman Test"],
+    odi: matchTypesEntity["Women ODI"],
+    t20i: matchTypesEntity["Women T20"],
+    t10: matchTypesEntity["TB-10"],
   },
 };
 

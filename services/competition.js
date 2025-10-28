@@ -873,7 +873,7 @@ const upCompStatusService = async (request, fastify) => {
   return `Competition status updated successfully`;
 };
 
-const upsertPlayers = async (entitySocketData, players, playerTpId, request, fastify) => {
+const upsertPlayers = async (entitySocketData, players, playerTpId, isMen, request, fastify) => {
   let checkPlayer = global.tblPlayers.find(item => item.tpId === playerTpId);
   if (!checkPlayer) {
     const getPlayerFromEntity = players?.find(p => p.pid === playerTpId);
@@ -913,7 +913,8 @@ const upsertPlayers = async (entitySocketData, players, playerTpId, request, fas
         bowlingStyleId: getPlayerFromEntity.bowling_type ? EntityBowlingStyleType[getPlayerFromEntity.bowling_type.toLowerCase()] : null,
         bowlingTypeId: extractBowlingStyle(getPlayerFromEntity.bowling_type, getPlayerFromEntity.bowling_style),
         image: entitySocketData?.defaultPlayerImage || null,
-        imagePath: entitySocketData?.defaultPlayerImagePath || null
+        imagePath: entitySocketData?.defaultPlayerImagePath || null,
+        isMen
       };
       const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
       global.tblPlayers.push(insertPlayer);
@@ -936,7 +937,7 @@ const upsertPlayers = async (entitySocketData, players, playerTpId, request, fas
   return checkPlayer;
 }
 
-const insertTeamPlayersByTeamId = async (teamId, teamTpId, request, fastify) => {
+const insertTeamPlayersByTeamId = async (teamId, teamTpId, isMen, request, fastify) => {
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getTeamDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
     throw new Error(checkEntitySportAPIEndpoint.message);
@@ -955,7 +956,7 @@ const insertTeamPlayersByTeamId = async (teamId, teamTpId, request, fastify) => 
   const newPlayers = [];
   const entityTeamPlayers = Object.values(entitySportTeamPlayersResponse).flat();
   for (const player of entityTeamPlayers) {
-    const upsertPlayer = await upsertPlayers(entitySocketData, entityTeamPlayers, player?.pid, request, fastify);
+    const upsertPlayer = await upsertPlayers(entitySocketData, entityTeamPlayers, player?.pid, isMen, request, fastify);
     newPlayers.push(upsertPlayer);
   }
 
@@ -988,7 +989,7 @@ const insertTeamPlayersByTeamId = async (teamId, teamTpId, request, fastify) => 
   return updatedTeamPlayers?.map(item => item.tpId);
 }
 
-const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlaying11Squad, players, matchTypeId, fastify, request) => {
+const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlaying11Squad, players, matchTypeId, isMen, fastify, request) => {
   let commentaryPlayers = global.tblCommentaryPlayers.filter(item => item.commentaryId === commentaryId && item.teamId === teamId);
   const playersInTeamsSet = new Set(commentaryPlayers.map(player => player.tpId));
   const filteredPlayerIds = teamPlaying11Squad?.filter(pid => !playersInTeamsSet.has(pid));
@@ -1004,7 +1005,7 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
   for (const playerId of filteredPlayerIds) {
     const teamPlayerData = playersInTeams.find(item => item.teamId === teamId && item.tpId === Number(playerId));
     if (!teamPlayerData) {
-      const upsertPlayer = await upsertPlayers(entitySocketData, players, playerId, request, fastify);
+      const upsertPlayer = await upsertPlayers(entitySocketData, players, playerId, isMen, request, fastify);
       newPlayers.push(upsertPlayer);
     }
   }
@@ -1276,7 +1277,7 @@ const competitionImportService = async (data, fastify, request) => {
       const entitySportCompetitionTeam = entitySportCompetitionSquadResponse?.find(t => t.team_id === team);
       if (entitySportCompetitionTeam && entitySportCompetitionTeam.players && entitySportCompetitionTeam.players.length > 0) {
         for (const player of entitySportCompetitionTeam.players) {
-          const upsertPlayer = await upsertPlayers(entitySocketData, entitySportCompetitionTeam.players, player?.pid, request, fastify);
+          const upsertPlayer = await upsertPlayers(entitySocketData, entitySportCompetitionTeam.players, player?.pid, checkCompetition.isMen, request, fastify);
           players.push(upsertPlayer);
         }
       }
@@ -1472,7 +1473,7 @@ const competitionImportService = async (data, fastify, request) => {
         teamASquad = teamASquad.map(item => item.tpId);
 
         if (teamASquad.length === 0) {
-          teamASquad = await insertTeamPlayersByTeamId(teamA.teamId, teamA.tpId, request, fastify);
+          teamASquad = await insertTeamPlayersByTeamId(teamA.teamId, teamA.tpId, checkCompetition.isMen, request, fastify);
         }
       }
 
@@ -1483,7 +1484,7 @@ const competitionImportService = async (data, fastify, request) => {
         teamBSquad = teamBSquad.map(item => item.tpId);
 
         if (teamBSquad.length === 0) {
-          teamBSquad = await insertTeamPlayersByTeamId(teamB.teamId, teamB.tpId, request, fastify);
+          teamBSquad = await insertTeamPlayersByTeamId(teamB.teamId, teamB.tpId, checkCompetition.isMen, request, fastify);
         }
       }
 
@@ -1515,8 +1516,8 @@ const competitionImportService = async (data, fastify, request) => {
           global.tblCommentaryTeams.push(teamACommentaryTeam, teamBCommentaryTeam);
         }
 
-        await insertCommentaryPlayersByTeam(i, checkCommentary.commentaryId, teamA.teamId, teamASquad, entitySportMatchResponse?.players, matchType?.matchTypeId, fastify, request);
-        await insertCommentaryPlayersByTeam(i, checkCommentary.commentaryId, teamB.teamId, teamBSquad, entitySportMatchResponse?.players, matchType?.matchTypeId, fastify, request);
+        await insertCommentaryPlayersByTeam(i, checkCommentary.commentaryId, teamA.teamId, teamASquad, entitySportMatchResponse?.players, matchType?.matchTypeId, checkCompetition.isMen, fastify, request);
+        await insertCommentaryPlayersByTeam(i, checkCommentary.commentaryId, teamB.teamId, teamBSquad, entitySportMatchResponse?.players, matchType?.matchTypeId, checkCompetition.isMen, fastify, request);
       }
     }
   }
