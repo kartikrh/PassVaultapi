@@ -23401,7 +23401,7 @@ const matchImportService = async (data, fastify, request = null) => {
         temp: matchWeather?.temp ?? checkWeather?.temp,
         humidity: matchWeather?.humidity ?? checkWeather?.humidity,
         visibility: matchWeather?.visibility ?? checkWeather?.visibility,
-        windSpeed: matchWeather?.wind_speed ?? checkWeather?.clouds,
+        windSpeed: matchWeather?.wind_speed ?? checkWeather?.windSpeed,
         clouds: matchWeather?.clouds ?? checkWeather?.clouds,
         id: checkWeather?.id
       };
@@ -23436,7 +23436,7 @@ const matchImportService = async (data, fastify, request = null) => {
         pitchCondition: matchInfoResponse?.pitch_details?.pitch_condition ?? checkPitchDetails?.pitchCondition,
         battingCondition: matchInfoResponse?.pitch_details?.batting_condition ?? checkPitchDetails?.battingCondition,
         paceBowlingCondition: matchInfoResponse?.pitch_details?.pace_bowling_condition ?? checkPitchDetails?.paceBowlingCondition,
-        spineBowlingConniton: matchInfoResponse?.pitch_details?.spine_bowling_condition ?? checkPitchDetails?.spineBowlingConniton,
+        spineBowlingCondition: matchInfoResponse?.pitch_details?.spine_bowling_condition ?? checkPitchDetails?.spineBowlingCondition,
         commentaryId: checkCommentary.commentaryId,
         id: checkPitchDetails?.id
       };
@@ -23452,7 +23452,7 @@ const matchImportService = async (data, fastify, request = null) => {
         pitchCondition: matchInfoResponse?.pitch_details?.pitch_condition,
         battingCondition: matchInfoResponse?.pitch_details?.batting_condition,
         paceBowlingCondition: matchInfoResponse?.pitch_details?.pace_bowling_condition,
-        spineBowlingConniton: matchInfoResponse?.pitch_details?.spine_bowling_condition,
+        spineBowlingCondition: matchInfoResponse?.pitch_details?.spine_bowling_condition,
         commentaryId: checkCommentary.commentaryId
       };
 
@@ -23470,6 +23470,8 @@ const matchImportService = async (data, fastify, request = null) => {
   if (teamB && !nullTeamtpIds.includes(teamB)) {
     teamBData = await insertTeamAndPlayers(teamB, eventType, request, fastify);
   }
+
+  const isMen = !teamAData?.teamName?.toLowerCase().includes("women");
 
   if (teamAData && teamBData) {
     let onfieldUmpires = null, thirdUmpire = null;
@@ -23587,8 +23589,8 @@ const matchImportService = async (data, fastify, request = null) => {
         global.tblCommentaryTeams.push(teamACommentaryTeam, teamBCommentaryTeam);
       }
 
-      await insertCommentaryPlayersByTeam(i, checkCommentary.commentaryId, teamAData.teamId, teamASquad, entitySportMatchResponse?.players, matchType?.matchTypeId, fastify, request);
-      await insertCommentaryPlayersByTeam(i, checkCommentary.commentaryId, teamBData.teamId, teamBSquad, entitySportMatchResponse?.players, matchType?.matchTypeId, fastify, request);
+      await insertCommentaryPlayersByTeam(i, checkCommentary.commentaryId, teamAData.teamId, teamASquad, entitySportMatchResponse?.players, matchType?.matchTypeId, isMen, fastify, request);
+      await insertCommentaryPlayersByTeam(i, checkCommentary.commentaryId, teamBData.teamId, teamBSquad, entitySportMatchResponse?.players, matchType?.matchTypeId, isMen, fastify, request);
     }
   } else {
     errorLogger(
