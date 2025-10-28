@@ -67,6 +67,11 @@ const allPlayerService = async (request,fastify) => {
   // else {
   //   return _player;
   // }
+
+  if ("isMen" in request.body) {
+    _player = _player.filter(_p => _p.isMen === request.body.isMen);
+  }
+
   const updatedPlayers = _player.map((item) => {
     const country = global.tblCountryCodes.find(elem => elem.id === item.countryId);
     return {
