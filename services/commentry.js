@@ -23621,17 +23621,18 @@ const clientSocketCountService = async (fastify) => {
         socket.client.emit("updateRoomUserCount", { message: "Send me user counts" });
         socket.client.once("countData", async (data) => {
           for (const elem of data) {
+            // console.log("elememeeee", elem)
             const currentCount = Number(elem.count) || 0;
-
-            await updateCommentaryViewsQuery({
-              views: currentCount,
-              commentaryId: elem.commentaryId,
-            }, fastify);
-
-            const index = global.tblCommentaries.findIndex(item => item.commentaryId == elem.commentaryId);
-            if (index !== -1) {
-              const oldCount = Number(global.tblCommentaries[index].views) || 0;
-              global.tblCommentaries[index].views = oldCount + currentCount;
+            if(elem.commentaryId) {
+              await updateCommentaryViewsQuery({
+                views: currentCount,
+                commentaryId: elem.commentaryId,
+              }, fastify);
+              const index = global.tblCommentaries.findIndex(item => item.commentaryId == elem.commentaryId);
+              if (index !== -1) {
+                const oldCount = Number(global.tblCommentaries[index].views) || 0;
+                global.tblCommentaries[index].views = oldCount + currentCount;
+              }
             }
           }
 
