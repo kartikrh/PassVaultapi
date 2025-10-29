@@ -1906,42 +1906,6 @@ const playersMergeImageService = async (type, request, fastify) => {
   return "All Player image(s) and Jersey image(s) merge process started";
 };
 
-const cleanEmptyStrings = (obj) => {
-  if (Array.isArray(obj)) {
-    return obj.map(cleanEmptyStrings);
-  } else if (obj !== null && typeof obj === 'object') {
-    const cleaned = {};
-    for (const [key, value] of Object.entries(obj)) {
-      if (!value || value === '') {
-        cleaned[key] = null;
-      } else if (typeof value === 'object') {
-        cleaned[key] = cleanEmptyStrings(value);
-      } else {
-        cleaned[key] = value;
-      }
-    }
-    return cleaned;
-  }
-  return obj;
-}
-
-const countNulls = (obj) => {
-  let count = 0;
-
-  if (Array.isArray(obj)) {
-    for (const item of obj) {
-      count += countNulls(item);
-    }
-  } else if (obj !== null && typeof obj === 'object') {
-    for (const value of Object.values(obj)) {
-      if (value === null) count++;
-      else if (typeof value === 'object') count += countNulls(value);
-    }
-  }
-
-  return count;
-}
-
 async function roundToNearestMinutes(minutes) {
     const date = new Date();
     const ms = 1000 * 60 * minutes;
@@ -2061,7 +2025,5 @@ module.exports = {
   checkEntitySportAPIEndpointIsActive,
   ICCMatchType,
   playersMergeImageService,
-  cleanEmptyStrings,
-  countNulls,
   roundToNearestMinutes
 };
