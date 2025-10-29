@@ -1508,6 +1508,8 @@ const RefType = {
   Match: 3,
   Team: 4,
   Player: 5,
+  TeamUpdate: 6,
+  PlayerUpdate: 7
 };
 const SourceID = {
   Prediction: 1,

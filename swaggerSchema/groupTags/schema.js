@@ -10590,6 +10590,26 @@ const AutoImportData = {
       }
     }
   },
+  saveAll: {
+    schema: {
+      tags: ["AutoImportData"],
+      description: "save All AutoImportData",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          refType: { type: "integer" },
+          refIds: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1
+          },
+          sourceId: { type: "integer" },
+        },
+        required: ["refType", "refIds", "sourceId"],
+      },
+    },
+  },
 }
 const EntitySport = {
   Teams : {
