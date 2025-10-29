@@ -6,6 +6,7 @@ const {
     deleteAutoImportDataQuery,
     allAutoImportDataLogsQuery,
 } = require("../repository/TableAutoImportData");
+const { RefType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 
 const getAllAutoImportDataService = async (request, fastify) => {
@@ -82,7 +83,9 @@ const insertAllAutoImportDataService = async (request, fastify) => {
 
     const alreadyAddedIds = [];
 
-    for (const refId of refIds) {
+    const tpIds = global[refType === RefType.TeamUpdate ? "tblTeams" : "tblPlayers"].filter(item => refIds.includes(item[RefType.TeamUpdate ? "teamId" : "playerId"]) && item.tpId !== null)?.map(item => item.tpId);
+
+    for (const refId of tpIds) {
         const result = await insertAutoImportDataService({
             ...request,
             body: {
