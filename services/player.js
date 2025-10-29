@@ -21,7 +21,6 @@ const {
   storeImageOnServer,
   generateImageName,
   removeImageFromServer,
-  getImageFromUrl,
 } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
@@ -30,7 +29,7 @@ const { deleteAwardsByPlayerIdQuery } = require("../repository/TableCommentaryAw
 const { bowlingStyleChangeOnCommPlayersQuery } = require("../repository/TableCommentary");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const configConstants = require("../utilities/configConstants");
-const { trimTextData, callEntitySportAPI, ServiceType, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, RefType, EventType, checkEntitySportAPIEndpointIsActive, ICCMatchType, cleanEmptyStrings, countNulls } = require("../utilities/index");
+const { trimTextData, callEntitySportAPI, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, RefType, EventType, checkEntitySportAPIEndpointIsActive, ICCMatchType } = require("../utilities/index");
 const { getAutoImportDataByIdQuery, insertAutoImportDataQuery } = require("../repository/TableAutoImportData");
 const { updateAutoImportDataService } = require("./autoImportData");
 const { errorLogger } = require("../utilities/logger");
@@ -780,7 +779,7 @@ const updatePlayerBatBowlHistory = async (playerId, playerBattingData, playerBow
   const playerData = global.tblPlayers.find(item => item.playerId === playerId);
   const isMen = playerData?.isMen;
   for (const matchTypeData of Object.keys(playerBattingData)) {
-    let matchType = global.tblMatchTypes.find(item => item.entityEnum === ICCMatchType[isMen ? "men": "women"][matchTypeData]);
+    let matchType = global.tblMatchTypes.find(item => item.entityEnum === ICCMatchType[isMen ? "men" : "women"][matchTypeData]);
     if (matchType) {
       const commentaryPlayerBattingHistory = global.tblCommPlayerBatHist.filter(item => item.playerId === playerId && item.matchTypeId === matchType?.matchTypeId);
       if (commentaryPlayerBattingHistory?.length > 0) {
@@ -873,7 +872,7 @@ const updatePlayerBatBowlHistory = async (playerId, playerBattingData, playerBow
 
   const commentaryPlayerBowlingArray = [], newPlayerBowlingDataArray = [];
   for (const matchTypeData of Object.keys(playerBowlingData)) {
-    let matchType = global.tblMatchTypes.find(item => item.entityEnum === ICCMatchType.men[matchTypeData]);
+    let matchType = global.tblMatchTypes.find(item => item.entityEnum === ICCMatchType[isMen ? "men" : "women"][matchTypeData]);
     if (matchType) {
       const commentaryPlayerBowlingHistory = global.tblCommPlayerBowlHist.filter(item => item.playerId === playerId && item.matchTypeId === matchType?.matchTypeId);
       if (commentaryPlayerBowlingHistory?.length > 0) {
