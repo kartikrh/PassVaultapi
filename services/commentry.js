@@ -23621,6 +23621,7 @@ const clientSocketCountService = async (fastify) => {
         socket.client.emit("updateRoomUserCount", { message: "Send me user counts" });
         socket.client.once("countData", async (data) => {
           for (const elem of data) {
+            // console.log("elememeeee", elem)
             const currentCount = Number(elem.count) || 0;
             if(elem.commentaryId) {
               await updateCommentaryViewsQuery({
