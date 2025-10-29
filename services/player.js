@@ -67,6 +67,11 @@ const allPlayerService = async (request,fastify) => {
   // else {
   //   return _player;
   // }
+
+  if ("isMen" in request.body) {
+    _player = _player.filter(_p => _p.isMen === request.body.isMen);
+  }
+
   const updatedPlayers = _player.map((item) => {
     const country = global.tblCountryCodes.find(elem => elem.id === item.countryId);
     return {
@@ -1001,38 +1006,48 @@ const UpdatePlayerFromEntityService = async (request, fastify) => {
 
         let changedValues = { ...entry };
 
-        const entityPlayerTypeId = EntityPlayerType[playing_role];
-        if (entityPlayerTypeId && playerTypeId !== entityPlayerTypeId) {
-          changedValues.playerTypeId = entityPlayerTypeId;
+        if (playing_role) {
+          const entityPlayerTypeId = EntityPlayerType[playing_role];
+          if (entityPlayerTypeId && playerTypeId !== entityPlayerTypeId) {
+            changedValues.playerTypeId = entityPlayerTypeId;
+          }
+
+          const entityIsKeeper = playing_role === "wk";
+          if ("isKipper" in entry && isKipper !== entityIsKeeper) {
+            changedValues.isKipper = entityIsKeeper;
+          }
         }
+
         if (title && playerName !== title) {
           changedValues.playerName = title;
         }
+
         if (short_name && displayName !== short_name) {
           changedValues.displayName = short_name;
         }
-        const entityIsKeeper = playing_role === "wk";
-        if ("isKipper" in entry && isKipper !== entityIsKeeper) {
-          changedValues.isKipper = entityIsKeeper;
-        }
+
         const entityBattingStyle = batting_style?.includes("Right");
         if ("isLeftHandedBatting" in entry && isLeftHandedBatting !== entityBattingStyle) {
           changedValues.isLeftHandedBatting = entityBattingStyle;
         }
+
         const entityBowlingStyle = bowling_style?.includes("Right");
         if ("isLeftArmFielding" in entry && isLeftArmFielding !== entityBowlingStyle) {
           changedValues.isLeftArmFielding = entityBowlingStyle;
         }
+
         const EntityBowlingStyleTypeId = EntityBowlingStyleType[bowling_type?.toLowerCase()];
         if (EntityBowlingStyleTypeId && bowlingStyleId !== EntityBowlingStyleTypeId) {
           changedValues.bowlingStyleId = EntityBowlingStyleTypeId;
         }
+
         const entityBowlingStyleId = extractBowlingStyle(bowling_type, bowling_style);
         if (entityBowlingStyleId && bowlingTypeId !== entityBowlingStyleId) {
           changedValues.bowlingTypeId = entityBowlingStyleId;
         }
+
         const countryData = global.tblCountryCodes.find(item => item.countryName.toLowerCase() === nationality?.toLowerCase());
-        if (countryId && countryId !== countryData?.id) {
+        if (nationality && countryId !== countryData?.id) {
           const checkCountry = global.tblCountryCodes.find(item => item.countryName.toLowerCase() === nationality?.toLowerCase());
           if (checkCountry) {
             changedValues.countryId = checkCountry?.id

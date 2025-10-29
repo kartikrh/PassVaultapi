@@ -1727,6 +1727,7 @@ const Player = {
           isActive: { type: "boolean" },
           eventTypeId: { type: "integer" },
           teamId: { type: "integer" },
+          isMen: { type: "boolean" }
         },
       },
     },

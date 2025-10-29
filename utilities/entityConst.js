@@ -14,8 +14,22 @@ const nullTeamtpIds = [
    127775
 ]
 
+const entitySportAutoUpdateCommentaryTime = 15; //minutes
+
+const intervalTimesForUpdateCommentary = [48, 24, 12, 6, 3, 1]; //hours
+
+const autoUpdateCommentaryDataStatus = {
+   start: 1,
+   noupdate: 2,
+   success: 3,
+   failed: 4
+}
+
 module.exports = {
    entityConstant,
    PlayerType,
-   nullTeamtpIds
+   nullTeamtpIds,
+   entitySportAutoUpdateCommentaryTime,
+   intervalTimesForUpdateCommentary,
+   autoUpdateCommentaryDataStatus
 }
