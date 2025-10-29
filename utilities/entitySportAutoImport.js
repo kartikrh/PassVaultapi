@@ -2,8 +2,8 @@ const { RefType } = require(".");
 const { getAllAutoImportDataQuery, updateAutoImportDataQuery } = require("../repository/TableAutoImportData");
 const { matchImportService } = require("../services/commentry");
 const { competitionImportService } = require("../services/competition");
-const { playerImportService } = require("../services/player");
-const { teamImportService } = require("../services/teams");
+const { playerImportService, UpdatePlayerFromEntityService } = require("../services/player");
+const { teamImportService, UpdateTeamFromEntityService } = require("../services/teams");
 const { errorLogger } = require("./logger");
 
 const entitySportAutoImportProcess = async (fastify) => {
@@ -86,13 +86,22 @@ const entitySportAutoImportProcess = async (fastify) => {
             if (result) return true;
         }
 
+        for (const teamUpdate of grouped?.[RefType.TeamUpdate.toString()] || []) {
+            const result = await processImport(teamUpdate, UpdateTeamFromEntityService, 'tid');
+            if (result) return true;
+        }
+
+        for (const playerUpdate of grouped?.[RefType.PlayerUpdate.toString()] || []) {
+            const result = await processImport(playerUpdate, UpdatePlayerFromEntityService, 'pid');
+            if (result) return true;
+        }
     } catch (err) {
         console.error("Error in autoImportProcess", err);
         errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/entitySportAutoImport.js/entitySportAutoImport",
-          null
+            fastify,
+            err.message,
+            "ERROR --> services/entitySportAutoImport.js/entitySportAutoImport",
+            null
         );
     }
 };

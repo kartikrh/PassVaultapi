@@ -6,6 +6,7 @@ const {
     deleteAutoImportData,
     allAutoImportDataLogs,
     getAutoImportDataById,
+    insertAllAutoImportData,
 } = require("../../../controller/users/admin/autoImportData");
 const { AutoImportData } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -39,5 +40,10 @@ module.exports = async (fastify, opts) => {
         schema: AutoImportData.deleteImportData.schema,
         preHandler: [(request, reply) => authorize(request, reply, fastify)],
         handler: (request, reply) => deleteAutoImportData(request, reply, fastify),
+    });
+    fastify.post("/saveAll", {
+        schema: AutoImportData.saveAll.schema,
+        preHandler: [(request, reply) => authorize(request, reply, fastify)],
+        handler: (request, reply) => insertAllAutoImportData(request, reply, fastify),
     });
 }

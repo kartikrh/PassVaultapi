@@ -5,7 +5,8 @@ const {
     updateAutoImportDataQuery,
     deleteAutoImportDataQuery,
     allAutoImportDataLogsQuery,
-} = require("../repository/TableAutoImportData")
+} = require("../repository/TableAutoImportData");
+const { errorLogger } = require("../utilities/logger");
 
 const getAllAutoImportDataService = async (request, fastify) => {
     const result = await getAllAutoImportDataQuery(request, fastify);
@@ -76,6 +77,33 @@ const allAutoImportDataLogsService = async (request, fastify) => {
     return await allAutoImportDataLogsQuery(request.body || {}, request, fastify);
 };
 
+const insertAllAutoImportDataService = async (request, fastify) => {
+    const { refType, refIds, sourceId } = request.body;
+
+    const alreadyAddedIds = [];
+
+    for (const refId of refIds) {
+        const result = await insertAutoImportDataService({
+            ...request,
+            body: {
+                refId,
+                refType,
+                sourceId
+            }
+        }, fastify);
+
+        if (result === "Data Already added") {
+            alreadyAddedIds.push(refId);
+        }
+    }
+
+    if (alreadyAddedIds.length > 0) {
+        errorLogger(fastify, `${alreadyAddedIds.join(", ")} : This refIds of type ${refType} is already added`, "/services/autoImportData.js/insertAllAutoImportDataService", request);
+    }
+
+    return "All selected data added in AutoImport successfully";
+}
+
 module.exports = {
     getAllAutoImportDataService,
     getAutoImportDataByIdService,
@@ -83,4 +111,5 @@ module.exports = {
     updateAutoImportDataService,
     deleteAutoImportDataService,
     allAutoImportDataLogsService,
+    insertAllAutoImportDataService
 }
