@@ -44,6 +44,7 @@ const getAllDuplicatePlayers = async (request, reply, fastify) => {
         const result = await getAllDuplicatePlayersService(fastify, request);
         reply.status(200).send(success(result, 200));
     } catch (err) {
+        // console.log("err", err)
         errorLogger(fastify, err.message, commonPath + "/getAllDuplicatePlayers", request);
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
