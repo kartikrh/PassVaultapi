@@ -23622,16 +23622,16 @@ const clientSocketCountService = async (fastify) => {
         socket.client.once("countData", async (data) => {
           for (const elem of data) {
             const currentCount = Number(elem.count) || 0;
-
+            if(elem.commentaryId) {
             await updateCommentaryViewsQuery({
               views: currentCount,
               commentaryId: elem.commentaryId,
             }, fastify);
-
             const index = global.tblCommentaries.findIndex(item => item.commentaryId == elem.commentaryId);
             if (index !== -1) {
               const oldCount = Number(global.tblCommentaries[index].views) || 0;
               global.tblCommentaries[index].views = oldCount + currentCount;
+              }
             }
           }
 
