@@ -991,7 +991,7 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
     playerNewTpId = entitySportSearchPlayerResponse?.pid;
   }
 
-  const url = checkEntitySportAPIEndpoint.data.replace("{pid}", playerNewTpId ? playerNewTpId : data.pid);
+  const url = checkEntitySportAPIEndpoint.data.replace("{pid}", playerNewTpId ? playerNewTpId : checkPlayerData.tpId);
   const entitySportPlayer = await callEntitySportAPI(url, request, fastify);
 
   const entitySportPlayerResponse = entitySportPlayer?.data?.result;
