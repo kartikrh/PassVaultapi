@@ -21,7 +21,6 @@ const {
   storeImageOnServer,
   generateImageName,
   removeImageFromServer,
-  getImageFromUrl,
 } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
@@ -30,7 +29,7 @@ const { deleteAwardsByPlayerIdQuery } = require("../repository/TableCommentaryAw
 const { bowlingStyleChangeOnCommPlayersQuery } = require("../repository/TableCommentary");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const configConstants = require("../utilities/configConstants");
-const { trimTextData, callEntitySportAPI, ServiceType, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, RefType, EventType, checkEntitySportAPIEndpointIsActive, ICCMatchType, cleanEmptyStrings, countNulls } = require("../utilities/index");
+const { trimTextData, callEntitySportAPI, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, RefType, EventType, checkEntitySportAPIEndpointIsActive, ICCMatchType } = require("../utilities/index");
 const { getAutoImportDataByIdQuery, insertAutoImportDataQuery } = require("../repository/TableAutoImportData");
 const { updateAutoImportDataService } = require("./autoImportData");
 const { errorLogger } = require("../utilities/logger");
@@ -67,6 +66,11 @@ const allPlayerService = async (request,fastify) => {
   // else {
   //   return _player;
   // }
+
+  if ("isMen" in request.body) {
+    _player = _player.filter(_p => _p.isMen === request.body.isMen);
+  }
+
   const updatedPlayers = _player.map((item) => {
     const country = global.tblCountryCodes.find(elem => elem.id === item.countryId);
     return {
@@ -386,6 +390,10 @@ const updatePlayerService = async (request, fastify) => {
 
   if ("isLeftArmFielding" in request.body) {
     body.isLeftArmFielding = request.body.isLeftArmFielding;
+  }
+
+  if ("isMen" in request.body) {
+    body.isMen = request.body?.isMen;
   }
 
   if (request.body.eventTypeId) {
@@ -768,8 +776,10 @@ const activeInactivePlayerService = async (request, fastify) => {
 
 const updatePlayerBatBowlHistory = async (playerId, playerBattingData, playerBowlingData, request, fastify) => {
   const commentaryPlayerBattingArray = [], newPlayerBattingDataArray = [];
+  const playerData = global.tblPlayers.find(item => item.playerId === playerId);
+  const isMen = playerData?.isMen;
   for (const matchTypeData of Object.keys(playerBattingData)) {
-    let matchType = global.tblMatchTypes.find(item => item.entityEnum === ICCMatchType.men[matchTypeData]);
+    let matchType = global.tblMatchTypes.find(item => item.entityEnum === ICCMatchType[isMen ? "men" : "women"][matchTypeData]);
     if (matchType) {
       const commentaryPlayerBattingHistory = global.tblCommPlayerBatHist.filter(item => item.playerId === playerId && item.matchTypeId === matchType?.matchTypeId);
       if (commentaryPlayerBattingHistory?.length > 0) {
@@ -793,7 +803,7 @@ const updatePlayerBatBowlHistory = async (playerId, playerBattingData, playerBow
         countOf4: run4 || 0,
         countOf6: run6 || 0,
         average: average || 0,
-        strikeRate: parseInt(strike) || 0,
+        strikeRate: strike || 0,
         catchCount: catches || 0,
         stumpCount: stumpings || 0,
         fastest50Balls: fastest50balls || 0,
@@ -862,7 +872,7 @@ const updatePlayerBatBowlHistory = async (playerId, playerBattingData, playerBow
 
   const commentaryPlayerBowlingArray = [], newPlayerBowlingDataArray = [];
   for (const matchTypeData of Object.keys(playerBowlingData)) {
-    let matchType = global.tblMatchTypes.find(item => item.entityEnum === ICCMatchType.men[matchTypeData]);
+    let matchType = global.tblMatchTypes.find(item => item.entityEnum === ICCMatchType[isMen ? "men" : "women"][matchTypeData]);
     if (matchType) {
       const commentaryPlayerBowlingHistory = global.tblCommPlayerBowlHist.filter(item => item.playerId === playerId && item.matchTypeId === matchType?.matchTypeId);
       if (commentaryPlayerBowlingHistory?.length > 0) {
@@ -952,139 +962,116 @@ const updatePlayerBatBowlHistory = async (playerId, playerBattingData, playerBow
   }
 }
 
-const UpdatePlayerFromEntityService = async (request, fastify) => {
+const UpdatePlayerFromEntityService = async (data, fastify, request) => {
+  const checkPlayerData = global.tblPlayers.find(item => item.tpId === data.pid);
+  if (!checkPlayerData) {
+    throw new Error(`Player not found. tpId: ${data.pid}`);
+  }
+
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getPlayerDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
     throw new Error(checkEntitySportAPIEndpoint.message);
   }
 
-  const { playerIds } = request.body;
+  const url = checkEntitySportAPIEndpoint.data.replace("{pid}", data.pid);
+  const entitySportPlayer = await callEntitySportAPI(url, request, fastify);
 
-  const playerData = global.tblPlayers.filter(
-    (item) => playerIds.includes(item.playerId) && item.tpId !== null
+  const entitySportPlayerResponse = entitySportPlayer?.data?.result;
+  if (!entitySportPlayerResponse) {
+    throw new Error("Invalid response from Entit-Sport API");
+  }
+
+  const entitySportPlayerInfoResponse = entitySportPlayerResponse?.player;
+
+  const { playerId, playerTypeId, playerName, displayName, isKipper, isLeftHandedBatting, isLeftArmFielding, bowlingStyleId, bowlingTypeId, countryId } = checkPlayerData;
+  const { playing_role, title, short_name, batting_style, bowling_style, bowling_type, nationality } = entitySportPlayerInfoResponse;
+
+  let changedValues = { ...checkPlayerData };
+
+  if (playing_role) {
+    const entityPlayerTypeId = EntityPlayerType[playing_role];
+    if (entityPlayerTypeId && playerTypeId !== entityPlayerTypeId) {
+      changedValues.playerTypeId = entityPlayerTypeId;
+    }
+
+    const entityIsKeeper = playing_role === "wk";
+    if ("isKipper" in checkPlayerData && isKipper !== entityIsKeeper) {
+      changedValues.isKipper = entityIsKeeper;
+    }
+  }
+
+  if (title && playerName !== title) {
+    changedValues.playerName = title;
+  }
+
+  if (short_name && displayName !== short_name) {
+    changedValues.displayName = short_name;
+  }
+
+  const entityBattingStyle = batting_style?.includes("Right");
+  if ("isLeftHandedBatting" in checkPlayerData && isLeftHandedBatting !== entityBattingStyle) {
+    changedValues.isLeftHandedBatting = entityBattingStyle;
+  }
+
+  const entityBowlingStyle = bowling_style?.includes("Right");
+  if ("isLeftArmFielding" in checkPlayerData && isLeftArmFielding !== entityBowlingStyle) {
+    changedValues.isLeftArmFielding = entityBowlingStyle;
+  }
+
+  const EntityBowlingStyleTypeId = EntityBowlingStyleType[bowling_type?.toLowerCase()];
+  if (EntityBowlingStyleTypeId && bowlingStyleId !== EntityBowlingStyleTypeId) {
+    changedValues.bowlingStyleId = EntityBowlingStyleTypeId;
+  }
+
+  const entityBowlingStyleId = extractBowlingStyle(bowling_type, bowling_style);
+  if (entityBowlingStyleId && bowlingTypeId !== entityBowlingStyleId) {
+    changedValues.bowlingTypeId = entityBowlingStyleId;
+  }
+
+  const countryData = global.tblCountryCodes.find(item => item.countryName.toLowerCase() === nationality?.toLowerCase());
+  if (nationality && countryId !== countryData?.id) {
+    const checkCountry = global.tblCountryCodes.find(item => item.countryName.toLowerCase() === nationality?.toLowerCase());
+    if (checkCountry) {
+      changedValues.countryId = checkCountry?.id
+    } else {
+      const insertCountryData = {
+        countryName: nationality || null,
+        isActive: true,
+      };
+      const insertCountryCode = await insertCountryCodeQuery(insertCountryData, fastify, request);
+      global.tblCountryCodes.push(insertCountryCode);
+      changedValues.countryId = insertCountryCode?.id
+    }
+  }
+
+  const isChanged = (
+    changedValues.playerTypeId !== playerTypeId ||
+    changedValues.playerName !== playerName ||
+    changedValues.displayName !== displayName ||
+    changedValues.isKipper !== isKipper ||
+    changedValues.isLeftHandedBatting !== isLeftHandedBatting ||
+    changedValues.isLeftArmFielding !== isLeftArmFielding ||
+    changedValues.bowlingStyleId !== bowlingStyleId ||
+    changedValues.bowlingTypeId !== bowlingTypeId ||
+    changedValues.countryId !== countryId
   );
 
-  for (const entry of playerData) {
+  await updatePlayerBatBowlHistory(playerId, entitySportPlayerResponse?.batting, entitySportPlayerResponse?.bowling, request, fastify);
+
+  if (isChanged) {
+    changedValues.userId = request.userTokenInfo.WrUserId;
     try {
-      const whereCondition = `"wrRefId" = ${entry.tpId} AND "wrRefType" = ${RefType.Player} AND "wrSourceId" = 3 AND "wrIsImported" = true`;
-      const validateCompImportData = await getAutoImportDataByIdQuery(whereCondition, request, fastify);
-      if (!validateCompImportData) {
-        const insertAutoImportBody = {
-          refId: entry.tpId,
-          refType: RefType.Player,
-          sourceId: 3
-        }
-        const insertAutoImportData = await insertAutoImportDataQuery({
-          ...insertAutoImportBody,
-          isImportStart: true,
-          importStartTime: new Date()
-        }, fastify, request);
-
-        const url = checkEntitySportAPIEndpoint.data.replace("{pid}", entry.tpId);
-        const entitySportPlayer = await callEntitySportAPI(url, request, fastify);
-
-        const entitySportPlayerResponse = entitySportPlayer?.data?.result;
-        if (!entitySportPlayerResponse) {
-          throw new Error("Invalid response from Entit-Sport API");
-        }
-
-        const entitySportPlayerInfoResponse = entitySportPlayerResponse?.player;
-
-        const { playerId, playerTypeId, playerName, displayName, isKipper, isLeftHandedBatting, isLeftArmFielding, bowlingStyleId, bowlingTypeId, countryId } = entry;
-        const { playing_role, title, short_name, batting_style, bowling_style, bowling_type, nationality } = entitySportPlayerInfoResponse;
-
-        let changedValues = { ...entry };
-
-        const entityPlayerTypeId = EntityPlayerType[playing_role];
-        if (entityPlayerTypeId && playerTypeId !== entityPlayerTypeId) {
-          changedValues.playerTypeId = entityPlayerTypeId;
-        }
-        if (title && playerName !== title) {
-          changedValues.playerName = title;
-        }
-        if (short_name && displayName !== short_name) {
-          changedValues.displayName = short_name;
-        }
-        const entityIsKeeper = playing_role === "wk";
-        if ("isKipper" in entry && isKipper !== entityIsKeeper) {
-          changedValues.isKipper = entityIsKeeper;
-        }
-        const entityBattingStyle = batting_style?.includes("Right");
-        if ("isLeftHandedBatting" in entry && isLeftHandedBatting !== entityBattingStyle) {
-          changedValues.isLeftHandedBatting = entityBattingStyle;
-        }
-        const entityBowlingStyle = bowling_style?.includes("Right");
-        if ("isLeftArmFielding" in entry && isLeftArmFielding !== entityBowlingStyle) {
-          changedValues.isLeftArmFielding = entityBowlingStyle;
-        }
-        const EntityBowlingStyleTypeId = EntityBowlingStyleType[bowling_type?.toLowerCase()];
-        if (EntityBowlingStyleTypeId && bowlingStyleId !== EntityBowlingStyleTypeId) {
-          changedValues.bowlingStyleId = EntityBowlingStyleTypeId;
-        }
-        const entityBowlingStyleId = extractBowlingStyle(bowling_type, bowling_style);
-        if (entityBowlingStyleId && bowlingTypeId !== entityBowlingStyleId) {
-          changedValues.bowlingTypeId = entityBowlingStyleId;
-        }
-        const countryData = global.tblCountryCodes.find(item => item.countryName.toLowerCase() === nationality?.toLowerCase());
-        if (countryId && countryId !== countryData?.id) {
-          const checkCountry = global.tblCountryCodes.find(item => item.countryName.toLowerCase() === nationality?.toLowerCase());
-          if (checkCountry) {
-            changedValues.countryId = checkCountry?.id
-          } else {
-            const insertCountryData = {
-              countryName: nationality || null,
-              isActive: true,
-            };
-            const insertCountryCode = await insertCountryCodeQuery(insertCountryData, fastify, request);
-            global.tblCountryCodes.push(insertCountryCode);
-            changedValues.countryId = insertCountryCode?.id
-          }
-        }
-
-        const isChanged = (
-          changedValues.playerTypeId !== playerTypeId ||
-          changedValues.playerName !== playerName ||
-          changedValues.displayName !== displayName ||
-          changedValues.isKipper !== isKipper ||
-          changedValues.isLeftHandedBatting !== isLeftHandedBatting ||
-          changedValues.isLeftArmFielding !== isLeftArmFielding ||
-          changedValues.bowlingStyleId !== bowlingStyleId ||
-          changedValues.bowlingTypeId !== bowlingTypeId ||
-          changedValues.countryId !== countryId
-        );
-
-        await updatePlayerBatBowlHistory(playerId, entitySportPlayerResponse?.batting, entitySportPlayerResponse?.bowling, request, fastify);
-
-        if (isChanged) {
-          changedValues.userId = request.userTokenInfo.WrUserId;
-          try {
-            const updatePlayerData = await updatePlayerQuery(changedValues, fastify, request);
-            delete changedValues.userId;
-            const index = global.tblPlayers.findIndex(
-              (item) => item.playerId === entry.playerId
-            );
-            if (index !== -1) {
-              global.tblPlayers[index] = updatePlayerData[0];
-            }
-          } catch (err) {
-            errorLogger(fastify, `Failed to update player id: ${entry.playerId} data: ${err.message}`, "/services/teams.js/updatePlayerData", request);
-            continue;
-          }
-        }
-
-        await updateAutoImportDataService({
-          ...request,
-          body: {
-            ...insertAutoImportBody,
-            isImported: false,
-            importEndTime: new Date(),
-            id: insertAutoImportData.id
-          }
-        }, fastify);
+      const updatePlayerData = await updatePlayerQuery(changedValues, fastify, request);
+      delete changedValues.userId;
+      const index = global.tblPlayers.findIndex(
+        (item) => item.playerId === checkPlayerData.playerId
+      );
+      if (index !== -1) {
+        global.tblPlayers[index] = updatePlayerData[0];
       }
     } catch (err) {
-      errorLogger(fastify, `Failed to fetch or process player id: ${entry.playerId} data: ${err.message}`, "/services/player.js/UpdatePlayerFromEntityService", request);
-      continue;
+      errorLogger(fastify, `Failed to update player id: ${checkPlayerData.playerId} error: ${err.message}`, "/services/player.js/UpdatePlayerFromEntityService", request);
+      throw new Error(`Failed to update player id: ${checkPlayerData.playerId} error: ${err.message}`)
     }
   }
 
@@ -1181,6 +1168,19 @@ const mergePlayerNullImageService = async (request, fastify) => {
   return result;
 };
 
+const updatePlayerHomeTeamService = async (request, fastify) => {
+  const { playerId, homeTeamId } = request.body;
+  await updateTeamPlayerHomeTeamQuery(
+    {
+      refPlayerId: parseInt(playerId),
+      teamId: parseInt(homeTeamId),
+    },
+    fastify,
+    request
+  );
+  return "Player Home Team updated successfully";
+};
+
 module.exports = {
   allPlayerService,
   playerByIdService,
@@ -1200,4 +1200,5 @@ module.exports = {
   playerImportService,
   allPlayersMergeImageService,
   mergePlayerNullImageService,
+  updatePlayerHomeTeamService
 };

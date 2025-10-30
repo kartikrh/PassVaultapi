@@ -1508,6 +1508,8 @@ const RefType = {
   Match: 3,
   Team: 4,
   Player: 5,
+  TeamUpdate: 6,
+  PlayerUpdate: 7
 };
 const SourceID = {
   Prediction: 1,
@@ -1529,11 +1531,17 @@ const ICCMatchType = {
     t20i: matchTypesEntity.T20I,
     t20: matchTypesEntity.T20,
     lista: matchTypesEntity["List A"],
-    t10: matchTypesEntity.T10
+    t10: matchTypesEntity.T10,
+    firstclass: matchTypesEntity["First Class"],
+    test: matchTypesEntity.TEST
   },
   women: {
     odis: matchTypesEntity["Women ODI"],
     t20s: matchTypesEntity["Women T20"],
+    test: matchTypesEntity["Woman Test"],
+    odi: matchTypesEntity["Women ODI"],
+    t20i: matchTypesEntity["Women T20"],
+    t10: matchTypesEntity["TB-10"],
   },
 };
 
@@ -1900,42 +1908,11 @@ const playersMergeImageService = async (type, request, fastify) => {
   return "All Player image(s) and Jersey image(s) merge process started";
 };
 
-const cleanEmptyStrings = (obj) => {
-  if (Array.isArray(obj)) {
-    return obj.map(cleanEmptyStrings);
-  } else if (obj !== null && typeof obj === 'object') {
-    const cleaned = {};
-    for (const [key, value] of Object.entries(obj)) {
-      if (!value || value === '') {
-        cleaned[key] = null;
-      } else if (typeof value === 'object') {
-        cleaned[key] = cleanEmptyStrings(value);
-      } else {
-        cleaned[key] = value;
-      }
-    }
-    return cleaned;
-  }
-  return obj;
-}
-
-const countNulls = (obj) => {
-  let count = 0;
-
-  if (Array.isArray(obj)) {
-    for (const item of obj) {
-      count += countNulls(item);
-    }
-  } else if (obj !== null && typeof obj === 'object') {
-    for (const value of Object.values(obj)) {
-      if (value === null) count++;
-      else if (typeof value === 'object') count += countNulls(value);
-    }
-  }
-
-  return count;
-}
-
+async function roundToNearestMinutes(minutes) {
+    const date = new Date();
+    const ms = 1000 * 60 * minutes;
+    return new Date(Math.round(date.getTime() / ms) * ms);
+};
 
 module.exports = {    
   ERROR_CODES,
@@ -2050,6 +2027,5 @@ module.exports = {
   checkEntitySportAPIEndpointIsActive,
   ICCMatchType,
   playersMergeImageService,
-  cleanEmptyStrings,
-  countNulls
+  roundToNearestMinutes
 };

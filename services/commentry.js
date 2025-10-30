@@ -269,12 +269,12 @@ const allCommentaryService = async (request, fastify) => {
       result = result.filter((item) => {
         const eventDate = new Date(item.eventDate);
 
-        // if (item.commentaryStatus === 1) {
-        //   return eventDate >= start && eventDate <= end;
-        // }
-        if (item.commentaryStatus === 3) {
+        if ([2, 3, 5].includes(item.commentaryStatus)) {
           return eventDate <= end;
         }
+        // if (item.commentaryStatus === 3) {
+        //   return eventDate <= end;
+        // }
 
         return eventDate >= start && eventDate <= end;
       });
@@ -7555,6 +7555,7 @@ const commentaryDetailsByEventIdService = async (
       res: result.result,
       isvirtual: result.isVirtual,
       cid : result.commentaryId,
+      eventNo: result?.eventNo,
       ...weatherAndPitchData,
     },
     cbb,
@@ -8567,6 +8568,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       overDelay: item?.overDelay || 0,
       inningDelay: item?.inningDelay || 0,
       tossDelay: item?.tossDelay || 0,
+      eventNo: item?.eventNo || "",
       ...weatherAndPitchData,
       // mr: mr
       // bowT : item.bowlingTeam || null,
@@ -8773,6 +8775,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
     isTest: com.isTest,
     isActive: com.isActive,
     etyId: eventType?.eventTypeId,
+    eventNo: com?.eventNo,
     ...weatherAndPitchData,
   };
   return comDetails;
@@ -12544,6 +12547,10 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
             jerseyPlayerImage: curr.jerseyPlayerImage,
             jerseyPlayerImagePath: curr.jerseyPlayerImagePath,
             bowlingType: curr?.bowlingType,
+            isPlay: curr?.isPlay,
+            onStrike: curr?.onStrike,
+            isBatterOut: curr?.isBatterOut,
+            isBatterRetir: curr?.isBatterRetir,
           };
         })
     );
@@ -23142,9 +23149,6 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
 
   const insertCompetition = await insertCompetitionQuery({
     ...request,
-    userTokenInfo: {
-      WrUserId: -5
-    },
     body: competitionData
   }, fastify);
   global.tblCompetitions.push(insertCompetition);
@@ -23167,6 +23171,7 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
   }
 
   const teamData = entitySportTeamPlayersResponse?.team;
+  const isMen = teamData?.sex === "male";
   const teamPlayerData = Object.values(entitySportTeamPlayersResponse?.players).flat()
   const entitySocketData = global.tblEntitySockets[0];
 
@@ -23260,7 +23265,8 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
           bowlingStyleId: player.bowling_type ? EntityBowlingStyleType[player.bowling_type.toLowerCase()] : null,
           bowlingTypeId: extractBowlingStyle(player.bowling_type, player.bowling_style),
           image: entitySocketData?.defaultPlayerImage || null,
-          imagePath: entitySocketData?.defaultPlayerImagePath || null
+          imagePath: entitySocketData?.defaultPlayerImagePath || null,
+          isMen
         };
         const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
         global.tblPlayers.push(insertPlayer);
@@ -23348,7 +23354,7 @@ const matchImportService = async (data, fastify, request = null) => {
   const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
   let checkCountry, checkVenue;
   if (matchInfoResponse?.venue?.country && matchInfoResponse?.venue?.country !== "") {
-    const checkCountry = global.tblCountryCodes.find(item => item.countryName === matchInfoResponse?.venue?.country);
+    checkCountry = global.tblCountryCodes.find(item => item.countryName === matchInfoResponse?.venue?.country);
     if (!checkCountry) {
       const countryData = {
         countryName: matchInfoResponse?.venue?.country || null,
@@ -23356,9 +23362,10 @@ const matchImportService = async (data, fastify, request = null) => {
       };
       const insertCountryCode = await insertCountryCodeQuery(countryData, fastify, request);
       global.tblCountryCodes.push(insertCountryCode);
+      checkCountry = insertCountryCode;
     }
 
-    let checkVenue = global.tblVenues.find(item => item.countryId === checkCountry?.id && item.city === matchInfoResponse?.venue?.location && item.name === matchInfoResponse?.venue?.name);
+    checkVenue = global.tblVenues.find(item => item.countryId === checkCountry?.id && item.city === matchInfoResponse?.venue?.location && item.name === matchInfoResponse?.venue?.name);
     if (!checkVenue) {
       const venueData = {
         countryId: checkCountry?.id,
@@ -23382,6 +23389,77 @@ const matchImportService = async (data, fastify, request = null) => {
       global.tblVenues[index] = checkVenue;
     }
   }
+  
+  if (matchInfoResponse?.weather && matchInfoResponse?.weather.length > 0) {
+    const checkWeather = global.tblWeather.find(item => item.commentaryId === checkCommentary.commentaryId);
+    if (checkWeather) {
+      const matchWeather = matchInfoResponse?.weather[0];
+      const weatherData = {
+        weatherCondition: matchWeather?.weather ?? checkWeather?.weatherCondition,
+        description: matchWeather?.weather_desc ?? checkWeather?.description,
+        commentaryId: checkCommentary.commentaryId ?? checkWeather?.commentaryId,
+        temp: matchWeather?.temp ?? checkWeather?.temp,
+        humidity: matchWeather?.humidity ?? checkWeather?.humidity,
+        visibility: matchWeather?.visibility ?? checkWeather?.visibility,
+        windSpeed: matchWeather?.wind_speed ?? checkWeather?.windSpeed,
+        clouds: matchWeather?.clouds ?? checkWeather?.clouds,
+        id: checkWeather?.id
+      };
+      const updateWeather = await updateWeatherQuery(weatherData, fastify, request);
+      const index = global.tblWeather.findIndex(item => item?.commentaryId === checkCommentary.commentaryId);
+      if (index !== -1) {
+        global.tblWeather[index] = updateWeather[0]
+      } else {
+        global.tblWeather.push(updateWeather[0]);
+      }
+    } else {
+      const matchWeather = matchInfoResponse?.weather[0];
+      const weatherData = {
+        weatherCondition: matchWeather?.weather,
+        description: matchWeather?.weather_desc,
+        commentaryId: checkCommentary.commentaryId,
+        temp: matchWeather?.temp,
+        humidity: matchWeather?.humidity,
+        visibility: matchWeather?.visibility,
+        windSpeed: matchWeather?.wind_speed,
+        clouds: matchWeather?.clouds
+      };
+      const insertWeather = await insertWeatherQuery(weatherData, fastify, request);
+      global.tblWeather.push(insertWeather);
+    }
+  }
+
+  if (matchInfoResponse?.pitch_details && (matchInfoResponse?.pitch_details?.pitch_condition != "" || matchInfoResponse?.pitch_details?.batting_condition != "" || matchInfoResponse?.pitch_details?.pace_bowling_condition != "" || matchInfoResponse?.pitch_details?.spine_bowling_condition != "")) {
+    const checkPitchDetails = global.tblPitchConditions.find(item => item?.commentaryId === checkCommentary.commentaryId);
+    if (checkPitchDetails) {
+      const pitchConditionData = {
+        pitchCondition: matchInfoResponse?.pitch_details?.pitch_condition ?? checkPitchDetails?.pitchCondition,
+        battingCondition: matchInfoResponse?.pitch_details?.batting_condition ?? checkPitchDetails?.battingCondition,
+        paceBowlingCondition: matchInfoResponse?.pitch_details?.pace_bowling_condition ?? checkPitchDetails?.paceBowlingCondition,
+        spineBowlingConniton: matchInfoResponse?.pitch_details?.spine_bowling_condition ?? checkPitchDetails?.spineBowlingCondition,
+        commentaryId: checkCommentary.commentaryId,
+        id: checkPitchDetails?.id
+      };
+      const updatePitch = await updatePitchConditionQuery(pitchConditionData, fastify, request);
+      const index = global.tblPitchConditions.findIndex(item => item?.commentaryId === request.body.commentaryId);
+      if (index !== -1) {
+        global.tblPitchConditions[index] = updatePitch[0]
+      } else {
+        global.tblPitchConditions.push(updatePitch[0]);
+      }
+    } else {
+      const pitchConditionData = {
+        pitchCondition: matchInfoResponse?.pitch_details?.pitch_condition,
+        battingCondition: matchInfoResponse?.pitch_details?.batting_condition,
+        paceBowlingCondition: matchInfoResponse?.pitch_details?.pace_bowling_condition,
+        spineBowlingConniton: matchInfoResponse?.pitch_details?.spine_bowling_condition,
+        commentaryId: checkCommentary.commentaryId
+      };
+
+      const insertPitchDetails = await insertPitchConditionQuery(pitchConditionData, fastify, request);
+      global.tblPitchConditions.push(insertPitchDetails);
+    }
+  }
 
   const teamA = matchInfoResponse?.teama?.team_id;
   const teamB = matchInfoResponse?.teamb?.team_id;
@@ -23392,6 +23470,8 @@ const matchImportService = async (data, fastify, request = null) => {
   if (teamB && !nullTeamtpIds.includes(teamB)) {
     teamBData = await insertTeamAndPlayers(teamB, eventType, request, fastify);
   }
+
+  const isMen = !teamAData?.teamName?.toLowerCase().includes("women");
 
   if (teamAData && teamBData) {
     let onfieldUmpires = null, thirdUmpire = null;
@@ -23438,7 +23518,7 @@ const matchImportService = async (data, fastify, request = null) => {
       isCountInPoint: checkCompetition?.isPointTable,
       countryId: checkCountry?.id,
       venueId: checkVenue?.id,
-      scoringType: null
+      scoringType: ScoringTypes.Entity
     }
 
     if (!checkCommentary) {
@@ -23509,8 +23589,8 @@ const matchImportService = async (data, fastify, request = null) => {
         global.tblCommentaryTeams.push(teamACommentaryTeam, teamBCommentaryTeam);
       }
 
-      await insertCommentaryPlayersByTeam(i, checkCommentary.commentaryId, teamAData.teamId, teamASquad, entitySportMatchResponse?.players, matchType?.matchTypeId, fastify, request);
-      await insertCommentaryPlayersByTeam(i, checkCommentary.commentaryId, teamBData.teamId, teamBSquad, entitySportMatchResponse?.players, matchType?.matchTypeId, fastify, request);
+      await insertCommentaryPlayersByTeam(i, checkCommentary.commentaryId, teamAData.teamId, teamASquad, entitySportMatchResponse?.players, matchType?.matchTypeId, isMen, fastify, request);
+      await insertCommentaryPlayersByTeam(i, checkCommentary.commentaryId, teamBData.teamId, teamBSquad, entitySportMatchResponse?.players, matchType?.matchTypeId, isMen, fastify, request);
     }
   } else {
     errorLogger(
@@ -23532,29 +23612,27 @@ const clientSocketCountService = async (fastify) => {
   
     cron.schedule(cronExpression, async () => {
       try {
-        console.log("1111....", socket.cronJob)
         if (!global.clientSocketIo.includes(socket)) {
           if (socket.cronJob && typeof socket.cronJob.stop === 'function') {
             socket.cronJob.stop();
           }
           return;
         }
-        console.log("222222-----")
         socket.client.emit("updateRoomUserCount", { message: "Send me user counts" });
         socket.client.once("countData", async (data) => {
-          console.log("scoket data-----", data)
           for (const elem of data) {
+            // console.log("elememeeee", elem)
             const currentCount = Number(elem.count) || 0;
-
-            await updateCommentaryViewsQuery({
-              views: currentCount,
-              commentaryId: elem.commentaryId,
-            }, fastify);
-
-            const index = global.tblCommentaries.findIndex(item => item.commentaryId == elem.commentaryId);
-            if (index !== -1) {
-              const oldCount = Number(global.tblCommentaries[index].views) || 0;
-              global.tblCommentaries[index].views = oldCount + currentCount;
+            if(elem.commentaryId) {
+              await updateCommentaryViewsQuery({
+                views: currentCount,
+                commentaryId: elem.commentaryId,
+              }, fastify);
+              const index = global.tblCommentaries.findIndex(item => item.commentaryId == elem.commentaryId);
+              if (index !== -1) {
+                const oldCount = Number(global.tblCommentaries[index].views) || 0;
+                global.tblCommentaries[index].views = oldCount + currentCount;
+              }
             }
           }
 

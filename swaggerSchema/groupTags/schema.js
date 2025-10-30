@@ -1727,6 +1727,7 @@ const Player = {
           isActive: { type: "boolean" },
           eventTypeId: { type: "integer" },
           teamId: { type: "integer" },
+          isMen: { type: "boolean" }
         },
       },
     },
@@ -1815,6 +1816,7 @@ const Player = {
             items: { type: "string" },
           },
           isSystemPlayer: { type: "boolean" },
+          isMen: { type: "boolean" },
         },
         required: ["playerId"],
       },
@@ -1921,6 +1923,21 @@ const Player = {
       },
     },
   },
+  updateHomeTeam: {
+    schema: {
+      tags: ["Player"],
+      security: [{ bearerAuth: [] }],
+      description: "Update Player home team",
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+          homeTeamId: { type: "integer" }
+        },
+        required: ["playerId", "homeTeamId"]
+      },
+    },
+  }
 };
 
 const MatchType = {
@@ -10587,6 +10604,26 @@ const AutoImportData = {
         required : ["page", "limit"]
       }
     }
+  },
+  saveAll: {
+    schema: {
+      tags: ["AutoImportData"],
+      description: "save All AutoImportData",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          refType: { type: "integer" },
+          refIds: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1
+          },
+          sourceId: { type: "integer" },
+        },
+        required: ["refType", "refIds", "sourceId"],
+      },
+    },
   },
 }
 const EntitySport = {

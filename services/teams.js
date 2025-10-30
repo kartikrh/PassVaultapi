@@ -3,7 +3,6 @@ const {
   insertTeamPlayerQuery,
   deleteTeamPlayerByTeamIdQuery,
   getTeamPlayerByTeamIdQuery,
-  getHomeTeamPlayerByPlayerIdQuery,
   updateTeamPlayerHomeTeamQuery,
 } = require("../repository/TableTeamPlayer");
 const {
@@ -25,11 +24,8 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { deletePlayersByTeamIdQuery } = require("../repository/TableTournamentsTeamPlayers")
 const { deletePointsByTeamIdQuery } = require("../repository/TableTournmentTeamPoints")
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
-const { trimTextData, RefType, callEntitySportAPI, ServiceType, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, EventType, checkEntitySportAPIEndpointIsActive } = require("../utilities/index");
-const { getAutoImportDataByIdQuery, insertAutoImportDataQuery } = require("../repository/TableAutoImportData");
+const { trimTextData, callEntitySportAPI, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, EventType, checkEntitySportAPIEndpointIsActive } = require("../utilities/index");
 const { insertPlayerQuery } = require("../repository/TablePlayer");
-const { updateAutoImportDataService } = require("./autoImportData");
-const { errorLogger } = require("../utilities/logger");
 const { insertTeamAndPlayers } = require("./commentry");
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const allTeamsService = async () => {
@@ -612,155 +608,119 @@ const mergeTeamJerseyAndPlayerImageService = async (request, fastify) => {
   return "Player image(s) and Jersey image(s) merged successfully";
 };
 
-const UpdateTeamFromEntityService = async (request, fastify) => {
+const UpdateTeamFromEntityService = async (data, fastify, request) => {
+  const checkTeamData = global.tblTeams.find(item => item.tpId === data.tid);
+  if (!checkTeamData) {
+    throw new Error(`Team not found. tpId: ${data.tid}`);
+  }
+
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getTeamDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
     throw new Error(checkEntitySportAPIEndpoint.message);
   }
 
-  const { teamIds } = request.body;
+  const url = checkEntitySportAPIEndpoint.data.replace("{tid}", checkTeamData.tpId);
+  const entitySportTeamPlayer = await callEntitySportAPI(url, request, fastify);
 
-  const teamData = global.tblTeams.filter((item) => teamIds.includes(item.teamId) && item.tpId !== null);
+  let entitySportTeamPlayerResponse = entitySportTeamPlayer?.data?.result?.items;
+  if (!entitySportTeamPlayerResponse) {
+    throw new Error("Invalid response from Entit-Sport API");
+  }
+
+  const { team, players } = entitySportTeamPlayerResponse;
+  const isMen = team?.sex === "male";
   let eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLocaleLowerCase());
 
-  let updateCount = 0;
-
-  for (const entry of teamData) {
-    try {
-      const whereCondition = `"wrRefId" = ${entry.tpId} AND "wrRefType" = ${RefType.Team} AND "wrSourceId" = 3 AND "wrIsImported" = true`;
-      const validateCompImportData = await getAutoImportDataByIdQuery(whereCondition, request, fastify);
-      if (!validateCompImportData) {
-        const insertAutoImportBody = {
-          refId: entry.tpId,
-          refType: RefType.Team,
-          sourceId: 3
+  const entitySocketData = global.tblEntitySockets[0];
+  const allPlayers = Object.values(players).flat();
+  const seen = new Set();
+  const upsertedPlayers = [];
+  const uniquePlayers = allPlayers.filter(player => !seen.has(player.pid) && seen.add(player.pid));
+  for (const player of uniquePlayers) {
+    let playerData = global.tblPlayers.find(item => item.tpId === player.pid);
+    if (!playerData) {
+      let getCountry = null;
+      if (player?.nationality) {
+        getCountry = global.tblCountryCodes.find(item => item.countryName.toLowerCase() === player?.nationality.toLowerCase());
+        if (!getCountry) {
+          const insertCountryData = {
+            countryName: player?.nationality || null,
+            isActive: true,
+          };
+          const insertCountryCode = await insertCountryCodeQuery(insertCountryData, fastify, request);
+          global.tblCountryCodes.push(insertCountryCode);
+          getCountry = insertCountryCode;
         }
-        const insertAutoImportData = await insertAutoImportDataQuery({
-          ...insertAutoImportBody,
-          isImportStart: true,
-          importStartTime: new Date()
-        }, fastify, request);
-
-        const url = checkEntitySportAPIEndpoint.data.replace("{tid}", entry.tpId);
-        const entitySportTeamPlayer = await callEntitySportAPI(url, request, fastify);
-
-        let entitySportTeamPlayerResponse = entitySportTeamPlayer?.data?.result?.items;
-        if (!entitySportTeamPlayerResponse) {
-          throw new Error("Invalid response from Entit-Sport API");
-        }
-
-        const { team, players } = entitySportTeamPlayerResponse;
-
-        const entitySocketData = global.tblEntitySockets[0];
-        const allPlayers = Object.values(players).flat();
-        const seen = new Set();
-        const upsertedPlayers = [];
-        const uniquePlayers = allPlayers.filter(player => !seen.has(player.pid) && seen.add(player.pid));
-        for (const player of uniquePlayers) {
-          let playerData = global.tblPlayers.find(item => item.tpId === player.pid);
-          if (!playerData) {
-            let getCountry = null;
-            if (player?.nationality) {
-              getCountry = global.tblCountryCodes.find(item => item.countryName.toLowerCase() === player?.nationality.toLowerCase());
-              if (!getCountry) {
-                const insertCountryData = {
-                  countryName: player?.nationality || null,
-                  isActive: true,
-                };
-                const insertCountryCode = await insertCountryCodeQuery(insertCountryData, fastify, request);
-                global.tblCountryCodes.push(insertCountryCode);
-                getCountry = insertCountryCode;
-              }
-            }
-            let playerImageData = player?.logo_url;
-            if (!playerImageData) {
-              playerImageData = {
-                fullPath: entitySocketData?.defaultTeamImage || null,
-                imagePath: entitySocketData?.defaultTeamImagePath || null
-              }
-            } else {
-              const getImageDataFromUrl = await getImageFromUrl({
-                type: ImgModuleConfig.Players.type,
-                imageUrl: playerImageData
-              });
-
-              if (getImageDataFromUrl && getImageDataFromUrl.fullPath) {
-                playerImageData = getImageDataFromUrl
-              }
-            }
-            const data = {
-              eventTypeId: eventType?.eventTypeId || eventType['Cricket'],
-              playerTypeId: EntityPlayerType[player?.playing_role],
-              playerName: player?.title,
-              displayName: player?.short_name,
-              countryId: getCountry?.id,
-              isActive: true,
-              isKipper: player?.playing_role === 'wk' ? true : false,
-              isLeftHandedBatting: !player.batting_style.includes('Right'),
-              isLeftArmFielding: !player.bowling_style.includes('Right'),
-              userId: request.userTokenInfo.WrUserId,
-              batsmanAverage: 0.0,
-              batsmanStrikeRate: 0.0,
-              bowlerAverage: 0.0,
-              bowlerEconomy: 0.0,
-              tpId: player?.pid || null,
-              bowlingStyleId: player.bowling_type ? EntityBowlingStyleType[player.bowling_type.toLowerCase()] : null,
-              bowlingTypeId: extractBowlingStyle(player.bowling_type, player.bowling_style),
-              image: playerImageData.fullPath,
-              imagePath: playerImageData.imagePath,
-            };
-
-            const insertPlayer = await insertPlayerQuery(data, fastify, request);
-            global.tblPlayers.push(insertPlayer);
-            playerData = insertPlayer;
-          }
-          upsertedPlayers.push(playerData);
-        }
-
-        const teamPlayerByTeamId = await getAllPlayersByTeamIdQuery(entry.teamId, fastify, request);
-        const uniqueUpsertedPlayers = [...new Map(upsertedPlayers.map(player => [player.playerId, player])).values()];
-        if (uniqueUpsertedPlayers.length > 0 && entry.teamId) {
-          for (const player of uniqueUpsertedPlayers) {
-            const checkPlayerExistsInTeam = teamPlayerByTeamId.find(item => item.playerId === player.playerId);
-            if (!checkPlayerExistsInTeam) {
-              await insertTeamPlayerQuery({
-                teamId: entry.teamId,
-                refPlayerId: player?.playerId,
-                tpId: player?.tpId,
-                userId: -5,
-                jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage || null,
-                jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
-              }, fastify, request);
-              await updateTeamPlayerHomeTeamQuery({
-                refPlayerId: player?.playerId,
-                teamId: entry.teamId
-              }, fastify, request);
-            }
-            updateCount++;
-          }
-        }
-
-        await updateAutoImportDataService({
-          ...request,
-          body: {
-            ...insertAutoImportBody,
-            isImported: false,
-            importEndTime: new Date(),
-            id: insertAutoImportData.id
-          }
-        }, fastify);
       }
-    } catch (err) {
-      errorLogger(fastify, `Failed to fetch or process team id: ${entry.teamId} data: ${err.message}`, "/services/teams.js/UpdateTeamFromEntityService", request);
-      continue;
+      let playerImageData = player?.logo_url;
+      if (!playerImageData) {
+        playerImageData = {
+          fullPath: entitySocketData?.defaultTeamImage || null,
+          imagePath: entitySocketData?.defaultTeamImagePath || null
+        }
+      } else {
+        const getImageDataFromUrl = await getImageFromUrl({
+          type: ImgModuleConfig.Players.type,
+          imageUrl: playerImageData
+        });
+
+        if (getImageDataFromUrl && getImageDataFromUrl.fullPath) {
+          playerImageData = getImageDataFromUrl
+        }
+      }
+      const data = {
+        eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
+        playerTypeId: EntityPlayerType[player?.playing_role],
+        playerName: player?.title,
+        displayName: player?.short_name,
+        countryId: getCountry?.id,
+        isActive: true,
+        isKipper: player?.playing_role === 'wk' ? true : false,
+        isLeftHandedBatting: !player.batting_style.includes('Right'),
+        isLeftArmFielding: !player.bowling_style.includes('Right'),
+        userId: request.userTokenInfo.WrUserId,
+        batsmanAverage: 0.0,
+        batsmanStrikeRate: 0.0,
+        bowlerAverage: 0.0,
+        bowlerEconomy: 0.0,
+        tpId: player?.pid || null,
+        bowlingStyleId: player.bowling_type ? EntityBowlingStyleType[player.bowling_type.toLowerCase()] : null,
+        bowlingTypeId: extractBowlingStyle(player.bowling_type, player.bowling_style),
+        image: playerImageData.fullPath,
+        imagePath: playerImageData.imagePath,
+        isMen
+      };
+
+      const insertPlayer = await insertPlayerQuery(data, fastify, request);
+      global.tblPlayers.push(insertPlayer);
+      playerData = insertPlayer;
+    }
+    upsertedPlayers.push(playerData);
+  }
+
+  const teamPlayerByTeamId = await getAllPlayersByTeamIdQuery(checkTeamData.teamId, fastify, request);
+  const uniqueUpsertedPlayers = [...new Map(upsertedPlayers.map(player => [player.playerId, player])).values()];
+  if (uniqueUpsertedPlayers.length > 0 && checkTeamData.teamId) {
+    for (const player of uniqueUpsertedPlayers) {
+      const checkPlayerExistsInTeam = teamPlayerByTeamId.find(item => item.playerId === player.playerId);
+      if (!checkPlayerExistsInTeam) {
+        await insertTeamPlayerQuery({
+          teamId: checkTeamData.teamId,
+          refPlayerId: player?.playerId,
+          tpId: player?.tpId,
+          userId: -2,
+          jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage || null,
+          jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
+        }, fastify, request);
+        await updateTeamPlayerHomeTeamQuery({
+          refPlayerId: player?.playerId,
+          teamId: checkTeamData.teamId
+        }, fastify, request);
+      }
     }
   }
 
-  if (updateCount > 0) {
-    return `Team data updated successfully`;
-  }
-
-  return "No update found in team data";
+  return "Team data updated successfully";
 };
 
 const teamImportService = async (data, fastify, request = null) => {

@@ -230,7 +230,9 @@ const updateCommPlayerBattingHistoryQuery = async(data, fastify, request) => {
           "wr6Count" = $14,
           "wrCatchCount" = $15,
           "wrStumpCount" = $16,
-          "wrOutCount" = $17
+          "wrOutCount" = $17,
+          "wrFastest50Balls" = $19,
+          "wrFastest100Balls" = $20
         WHERE "wrId" = $18
         `,
       {
@@ -253,6 +255,8 @@ const updateCommPlayerBattingHistoryQuery = async(data, fastify, request) => {
           data.stumpCount,
           data.outCount,
           data.id,
+          data.fastest50Balls,
+          data.fastest100Balls,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -286,7 +290,10 @@ const updateCommPlayerBowlingHistoryQuery = async(data, fastify, request) => {
           "wrStrikeRate" = $12,
           "wr4Wickets" = $13,
           "wr5Wickets" = $14,
-          "wr10Wickets" = $15
+          "wr10Wickets" = $15,
+          "wrOverCount" = $17,
+          "wrHattrickCount" = $18,
+          "wrExpensiveOverRuns" = $19
         WHERE "wrId" = $16
         `,
       {
@@ -307,6 +314,9 @@ const updateCommPlayerBowlingHistoryQuery = async(data, fastify, request) => {
           data.wickets5,
           data.wickets10,
           data.id,
+          data.overCount,
+          data.hattrickCount,
+          data.expensiveOverRuns,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -504,7 +514,9 @@ const upPlayerBatHistQuery = async (data, request , fastify) =>{
       "wr6Count" = $12,
       "wrCatchCount" = $13,
       "wrStumpCount" = $14,
-      "wrOutCount" = $15
+      "wrOutCount" = $15,
+      "wrFastest50Balls" = $17,
+      "wrFastest100Balls" = $18
       WHERE "wrId" = $16
       RETURNING
           "wrId" as "id",
@@ -528,7 +540,9 @@ const upPlayerBatHistQuery = async (data, request , fastify) =>{
           "wrStumpCount" as "stumpCount",
           "wrCreatedBy" as "createdBy",
           "wrCreatedAt" as "createdAt",
-          "wrOutCount" as "outCount"`
+          "wrOutCount" as "outCount",
+          "wrFastest50Balls" as "fastest50Balls",
+          "wrFastest100Balls" as "fastest100Balls"`
     const result = await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
       bind: [
@@ -548,6 +562,8 @@ const upPlayerBatHistQuery = async (data, request , fastify) =>{
         data.stumpCount,
         data.outCount,
         data.id,
+        data.fastest50Balls,
+        data.fastest100Balls,
       ],
     });
     return result;
@@ -650,7 +666,10 @@ const upPlayerBallHistQuery = async (data, request , fastify) =>{
       "wrStrikeRate" = $10,
       "wr4Wickets" = $11,
       "wr5Wickets" = $12,
-      "wr10Wickets" = $13
+      "wr10Wickets" = $13,
+      "wrOverCount" = $15,
+      "wrHattrickCount" = $16,
+      "wrExpensiveOverRuns" = $17
       WHERE "wrId" = $14
       RETURNING
           "wrId" as "id",
@@ -672,7 +691,10 @@ const upPlayerBallHistQuery = async (data, request , fastify) =>{
           "wr5Wickets" as "wickets5",
           "wr10Wickets" as "wickets10",
           "wrCreatedBy" as "createdBy",
-          "wrCreatedAt" as "createdAt"`;
+          "wrCreatedAt" as "createdAt",
+          "wrOverCount" as "overCount",
+          "wrHattrickCount" as "hattrickCount",
+          "wrExpensiveOverRuns" as "expensiveOverRuns"`;
     const result = await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
       bind: [
@@ -690,6 +712,9 @@ const upPlayerBallHistQuery = async (data, request , fastify) =>{
         data.wickets5,
         data.wickets10,
         data.id,
+        data.overCount,
+        data.hattrickCount,
+        data.expensiveOverRuns,
       ],
     });
     return result[0];
