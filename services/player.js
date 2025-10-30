@@ -1002,8 +1002,12 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
     }
   }
 
-  if (!playerNewTpId) {
-    throw new Error("Invalid response from Entit-Sport API");
+  if (!checkPlayerData.tpId) {
+    if (!playerNewTpId) {
+      throw new Error("Invalid response from Entit-Sport API");
+    }
+  } else {
+    playerNewTpId = checkPlayerData.tpId;
   }
 
   const url = checkEntitySportAPIEndpoint.data.replace("{pid}", playerNewTpId);
