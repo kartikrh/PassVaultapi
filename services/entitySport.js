@@ -1703,7 +1703,7 @@ const matchCompleteService = async (data , fastify,comDetails) =>{
   return true
 
 }
-const handleStoreBall = async (data , fastify, comDetails) => {
+const handleStoreBall = async (data, fastify, comDetails) => {
   const {response , battingTeam} = data;
   let com = response.live.commentaries;
   let storedCom =com.slice(-5);
@@ -1720,7 +1720,9 @@ const handleStoreBall = async (data , fastify, comDetails) => {
   let playersMap = {};
   let upOvers = [];
   let deleteBallByBallIds = [];
+  let deleteOverIds = []
   let oversMap = {};
+  let partnershipMap = {};
   let upTeams = []
   for (let c of storedCom){
     let updateBall = {}
@@ -1731,6 +1733,148 @@ const handleStoreBall = async (data , fastify, comDetails) => {
     if(String(c.score) == "w" ){
       event = "wicket"
       // wicket code
+      let index = global.tblCommentaryBallByBall.findIndex((i)=>i.tpId == c.event_id)
+      if(index == -1) continue; // skip not created ball
+      let BallByBall = global.tblCommentaryBallByBall.find((i)=> i.tpId == c.event_id)
+      let afterBalls = global.tblCommentaryBallByBall.filter(
+        (i) =>
+          i.commentaryBallByBallId >= BallByBall.commentaryBallByBallId &&
+          i.commentaryId == comDetails.commentaryId &&
+          i.currentInnings == comDetails.currentInnings
+      );
+      for (const b1 of afterBalls) {
+        deleteBallByBallIds.push(b1.commentaryBallByBallId);
+
+        // Update batting team
+        battingTeam.teamWicket = battingTeam.teamWicket > 0 ? battingTeam.teamWicket - 1 : 0;
+        let previousBall = Math.max(0, c.ball - 1);
+        battingTeam.teamOver = `${c.over}.${previousBall}`;
+
+        // Update overs
+        const overNumber = Number(c.over);
+        const overKey = `${comDetails.commentaryId}-${comDetails.currentInnings}-${battingTeam.teamId}-${overNumber}`;
+        let over = global.tblOvers.find((i) => i.overId == b1.overId);
+        if (over && over?.ballCount >= 1) {
+          over.totalWicket = Math.max(0, (over.totalWicket || 0) - 1);
+          over.ballCount = Math.max(0, (over.ballCount || 0) - 1);
+          over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+          if(c?.run == 0){
+            over.dotBall = (over.dotBall || 0) - 1;
+          }
+          oversMap[overKey] = over;
+        } else {
+          deleteOverIds.push(over?.overId)
+        }
+
+        // Update bowler stats
+        const bowlerId = b1.bowlerId;
+        const bowlerData = global.tblCommentaryPlayers.find(
+          (item) => item.commentaryPlayerId == bowlerId
+        );
+
+        if (bowlerData) {
+          const currentWickets = bowlerData?.bowlerTotalWicket || 0;
+          const tBalls = bowlerData?.bowlerTotalBall || 0;
+        
+          playersMap[bowlerId] = {
+            ...playerTpIdObj[bowlerId],
+            ...bowlerData,
+            bowlerTotalWicket: currentWickets > 0 ? currentWickets - 1 : 0,
+            bowlerTotalBall: tBalls > 0 ? tBalls - 1 : 0 
+          };
+          if(c?.run == 0){
+            playersMap[bowlerId].bowlerDotBall = playersMap[bowlerId].bowlerDotBall > 0 ? playersMap[bowlerId].bowlerDotBall - 1 : 0;
+          }
+        }
+      
+        // Reset the batter who was out
+        const partnershipData = global.tblCommentaryPartnership
+          .filter(item =>
+            item.commentaryId === comDetails?.commentaryId &&
+            item.currentInnings === comDetails?.currentInnings &&
+            item.teamId === battingTeam?.teamId
+          )
+          .sort((a, b) => b.order - a.order)
+          .slice(0, 2); ;
+        
+        const [currentPartnership, prevPartnership] = partnershipData;
+        
+        let newBatterId = null;
+        let replacedBatterId = null;
+        // let commonBatterId = null;
+        
+        if (currentPartnership && prevPartnership) {
+          const currBatters = [currentPartnership.batter1Id, currentPartnership.batter2Id].filter(Boolean);
+          const prevBatters = [prevPartnership.batter1Id, prevPartnership.batter2Id].filter(Boolean);
+          
+          // commonBatterId = currBatters.find(id => prevBatters.includes(id)) || null;
+          newBatterId = currBatters.find(id => !prevBatters.includes(id)) || null;
+          replacedBatterId = prevBatters.find(id => !currBatters.includes(id)) || null;
+        }
+        const onStrikeValue = global.tblCommentaryPlayers.find(item => item.commentaryPlayerId == newBatterId)?.onStrike ?? false;
+        if (newBatterId && replacedBatterId) {
+          const batters = global.tblCommentaryPlayers.filter(
+            (item) => [newBatterId, replacedBatterId].includes(item.commentaryPlayerId)
+          );
+
+          for (const bat of batters) {
+            const isNewBatter = bat.commentaryPlayerId === newBatterId;
+            const isReplacedBatter = bat.commentaryPlayerId === replacedBatterId;
+            if(bat?.onStrike == true && b1?.run == 0){
+              playersMap[bowlerId].bowlerDotBall = playersMap[bowlerId].bowlerDotBall > 0 ? playerTpIdObj[bowlerId].bowlerDotBall - 1 : 0;
+            }
+
+            let batterUpdate = {
+              ...bat,
+              isBatterOut: null,
+              wicketType: null,
+              bowlerId: 0,
+              fielderId1: 0,
+              fielderId2: 0,
+            };
+
+            if (isNewBatter) {
+              batterUpdate = { ...batterUpdate, isPlay: false, onStrike: false };
+            } else if (isReplacedBatter) {
+              batterUpdate = { ...batterUpdate, isPlay: true, onStrike: onStrikeValue };
+            }
+
+            playersMap[batterUpdate.commentaryPlayerId] = batterUpdate;
+          }
+        }
+        // if(c?.run == 0){
+        //   playersMap[c.batsman_id].batDotBall = playersMap[c.batsman_id].batDotBall > 0 ? playersMap[c.batsman_id].batDotBall - 1 : 0;
+        // }
+        //Set old partnership active true        
+        const oldPartnership = partnershipData[1];        
+        if (oldPartnership) {
+          const key = `${comDetails.commentaryId}-${comDetails.currentInnings}-${battingTeam.teamId}`;
+          partnershipMap[key] = { ...oldPartnership, isActive: true };
+        }
+      }
+
+      let plyArr = Object.values(playersMap);
+      let overArr = Object.values(oversMap)
+      let partnershipArr = Object.values(partnershipMap)
+      result = {
+        commentaryId : comDetails.commentaryId,
+        commentaryPlayers : plyArr,
+        deleteBallByBallIds : deleteBallByBallIds,
+        commentaryOvers : overArr,
+        commentaryTeams : [battingTeam],
+        commentaryPartnership: partnershipArr,
+        deleteOverIds: deleteOverIds
+      }
+      await syncEntitySportCommentaryService({
+        commentaryId: comDetails.commentaryId,
+        commentaryPlayers: plyArr,
+        deleteBallByBallIds: deleteBallByBallIds,
+        commentaryOvers: overArr,
+        commentaryTeams: [battingTeam],
+        commentaryPartnership: partnershipArr,
+        deleteOverIds: deleteOverIds,
+        commentaryDetails: comDetails
+      },fastify,request);
     }
     if(event == "ball" ){
       let index = global.tblCommentaryBallByBall.findIndex((i)=>i.tpId == c.event_id)
@@ -1832,11 +1976,13 @@ const handleStoreBall = async (data , fastify, comDetails) => {
 
       let plyArr = Object.values(playersMap);
       let overArr = Object.values(oversMap)
+      let partnershipArr = Object.values(partnershipMap)
       return {
         commentaryId : comDetails.commentaryId,
         commentaryPlayers : plyArr,
         deleteBallByBallIds : deleteBallByBallIds,
         commentaryOvers : overArr,
+        commentaryPartnership: partnershipArr,
         commentaryTeams : [battingTeam]
       }
       // await syncEntitySportCommentaryService({
