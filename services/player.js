@@ -1168,6 +1168,19 @@ const mergePlayerNullImageService = async (request, fastify) => {
   return result;
 };
 
+const updatePlayerHomeTeamService = async (request, fastify) => {
+  const { playerId, homeTeamId } = request.body;
+  await updateTeamPlayerHomeTeamQuery(
+    {
+      refPlayerId: parseInt(playerId),
+      teamId: parseInt(homeTeamId),
+    },
+    fastify,
+    request
+  );
+  return "Player Home Team updated successfully";
+};
+
 module.exports = {
   allPlayerService,
   playerByIdService,
@@ -1187,4 +1200,5 @@ module.exports = {
   playerImportService,
   allPlayersMergeImageService,
   mergePlayerNullImageService,
+  updatePlayerHomeTeamService
 };

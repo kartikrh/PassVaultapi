@@ -1923,6 +1923,21 @@ const Player = {
       },
     },
   },
+  updateHomeTeam: {
+    schema: {
+      tags: ["Player"],
+      security: [{ bearerAuth: [] }],
+      description: "Update Player home team",
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+          homeTeamId: { type: "integer" }
+        },
+        required: ["playerId", "homeTeamId"]
+      },
+    },
+  }
 };
 
 const MatchType = {

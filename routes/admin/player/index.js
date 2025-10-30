@@ -23,6 +23,7 @@ const {
   UpdatePlayerFromEntity,
   allPlayersMergeImage,
   mergePlayerNullImage,
+  updatePlayerHomeTeam,
 } = require("../../../controller/users/admin/teamsAndPlayer/players");
 const {
   getTeamList,
@@ -226,5 +227,16 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => mergePlayerNullImage(request, reply, fastify),
+  });
+  fastify.post("/updateHomeTeam", {
+    schema: Player.updateHomeTeam.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) => checkPermission(request, reply, fastify, {
+        tabName: "Players",
+        mode: "edit",
+      }),
+    ],
+    handler: (request, reply) => updatePlayerHomeTeam(request, reply, fastify),
   });
 };
