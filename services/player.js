@@ -39,7 +39,7 @@ const { deleteCommentaryBattingHistoryService, deleteCommentaryBowlingHistorySer
 const { savePlayerBatHistQuery, savePlayerBallHistQuery } = require("../repository/TableCommPlayerHistory");
 
 const allPlayerService = async (request,fastify) => {
-  const { isActive, eventTypeId , teamId} = request.body;
+  const { isActive, eventTypeId, teamId, isMen } = request.body;
   const body = {
     isActive: isActive === undefined ? true : isActive,
     eventTypeId: eventTypeId === undefined ? 0 : eventTypeId,
@@ -67,8 +67,8 @@ const allPlayerService = async (request,fastify) => {
   //   return _player;
   // }
 
-  if ("isMen" in request.body) {
-    _player = _player.filter(_p => _p.isMen === request.body.isMen);
+  if ("isMen" in request.body && isMen !== null) {
+    _player = _player.filter(_p => _p.isMen === isMen);
   }
 
   const updatedPlayers = _player.map((item) => {
