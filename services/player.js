@@ -68,7 +68,7 @@ const allPlayerService = async (request,fastify) => {
   // }
 
   if ("isMen" in request.body && isMen !== null) {
-     _player = _player.filter(_p => _p.isMen === isMen);
+    _player = _player.filter(_p => _p.isMen === isMen);
   }
 
   const updatedPlayers = _player.map((item) => {
