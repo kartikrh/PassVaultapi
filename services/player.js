@@ -39,7 +39,7 @@ const { deleteCommentaryBattingHistoryService, deleteCommentaryBowlingHistorySer
 const { savePlayerBatHistQuery, savePlayerBallHistQuery } = require("../repository/TableCommPlayerHistory");
 
 const allPlayerService = async (request,fastify) => {
-  const { isActive, eventTypeId , teamId} = request.body;
+  const { isActive, eventTypeId, teamId, isMen } = request.body;
   const body = {
     isActive: isActive === undefined ? true : isActive,
     eventTypeId: eventTypeId === undefined ? 0 : eventTypeId,
@@ -67,8 +67,8 @@ const allPlayerService = async (request,fastify) => {
   //   return _player;
   // }
 
-  if ("isMen" in request.body) {
-    _player = _player.filter(_p => _p.isMen === request.body.isMen);
+  if ("isMen" in request.body && isMen !== null) {
+    _player = _player.filter(_p => _p.isMen === isMen);
   }
 
   const updatedPlayers = _player.map((item) => {
@@ -963,30 +963,90 @@ const updatePlayerBatBowlHistory = async (playerId, playerBattingData, playerBow
 }
 
 const UpdatePlayerFromEntityService = async (data, fastify, request) => {
-  const checkPlayerData = global.tblPlayers.find(item => item.tpId === data.pid);
+  let checkPlayerData = global.tblPlayers.find(item => item.playerId === data.pid);
   if (!checkPlayerData) {
-    throw new Error(`Player not found. tpId: ${data.pid}`);
+    errorLogger(fastify, `Player not found. playerId: ${data.pid}`, "/services/player.js/UpdatePlayerFromEntityService - checkPlayerData", request);
+    return false;
   }
 
+  let playerNewTpId = null;
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getPlayerDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
-    throw new Error(checkEntitySportAPIEndpoint.message);
+    errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/player.js/UpdatePlayerFromEntityService - checkEntitySportAPIEndpoint", request);
+    return false;
   }
 
-  const url = checkEntitySportAPIEndpoint.data.replace("{pid}", data.pid);
+  if (!checkPlayerData.tpId) {
+    const checkEntitySportAPIEndpoint2 = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.searchPlayerDataFromEntity);
+    if (!checkEntitySportAPIEndpoint2.data) {
+      errorLogger(fastify, checkEntitySportAPIEndpoint2.message, "/services/player.js/UpdatePlayerFromEntityService - checkEntitySportAPIEndpoint2", request);
+      return false;
+    }
+
+    let url2 = checkEntitySportAPIEndpoint2.data + "?search=" + encodeURIComponent(checkPlayerData.playerName);
+
+    const getCountryShortName = global.tblCountryCodes.find(item => item.id === checkPlayerData.countryId)?.shortName;
+    if (getCountryShortName) {
+      url2 += "&country=" + getCountryShortName.substring(0, 2);
+    }
+    const entitySportSearchPlayer = await callEntitySportAPI(url2, request, fastify);
+
+    if (!entitySportSearchPlayer?.data?.result) {
+      errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/player.js/UpdatePlayerFromEntityService - entitySportSearchPlayer", {
+        ...request,
+        originalUrl: url
+      }, entitySportSearchPlayer?.data);
+      return false;
+    }
+
+    if (entitySportSearchPlayer?.data?.result?.total_items === "1") {
+      playerNewTpId = entitySportSearchPlayer?.data?.result?.items[0]?.pid;
+    } else if (Number(entitySportSearchPlayer?.data?.result?.total_items) > 1) {
+      const entityPlayerData = entitySportSearchPlayer?.data?.result?.items.filter(item => item.title === checkPlayerData.playerName && item.shortName === checkPlayerData.shortName);
+      if (entityPlayerData?.length === 1) {
+        playerNewTpId = entityPlayerData?.pid;
+      }
+    }
+  }
+
+  if (!checkPlayerData.tpId) {
+    if (!playerNewTpId) {
+      errorLogger(fastify, `Player data not found for playerId: ${checkPlayerData.playerId}`, "/services/player.js/UpdatePlayerFromEntityService - checkPlayerData.tpId", request, checkPlayerData);
+      return false;
+    }
+  } else {
+    playerNewTpId = checkPlayerData.tpId;
+  }
+
+  const url = checkEntitySportAPIEndpoint.data.replace("{pid}", playerNewTpId);
   const entitySportPlayer = await callEntitySportAPI(url, request, fastify);
 
   const entitySportPlayerResponse = entitySportPlayer?.data?.result;
   if (!entitySportPlayerResponse) {
-    throw new Error("Invalid response from Entit-Sport API");
+    errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/player.js/UpdatePlayerFromEntityService - entitySportPlayerResponse", {
+      ...request,
+      originalUrl: url
+    }, entitySportPlayer?.data);
+    return false;
   }
 
   const entitySportPlayerInfoResponse = entitySportPlayerResponse?.player;
+  if (!entitySportPlayerInfoResponse) {
+    errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/player.js/UpdatePlayerFromEntityService - entitySportPlayerInfoResponse", {
+      ...request,
+      originalUrl: url
+    }, entitySportPlayer?.data);
+    return false;
+  }
 
-  const { playerId, playerTypeId, playerName, displayName, isKipper, isLeftHandedBatting, isLeftArmFielding, bowlingStyleId, bowlingTypeId, countryId } = checkPlayerData;
+  const { playerId, playerTypeId, playerName, displayName, isKipper, isLeftHandedBatting, isLeftArmFielding, bowlingStyleId, bowlingTypeId, countryId, tpId } = checkPlayerData;
   const { playing_role, title, short_name, batting_style, bowling_style, bowling_type, nationality } = entitySportPlayerInfoResponse;
 
   let changedValues = { ...checkPlayerData };
+
+  if (!tpId && playerNewTpId) {
+    changedValues.tpId = playerNewTpId;
+  }
 
   if (playing_role) {
     const entityPlayerTypeId = EntityPlayerType[playing_role];
@@ -1053,7 +1113,8 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
     changedValues.isLeftArmFielding !== isLeftArmFielding ||
     changedValues.bowlingStyleId !== bowlingStyleId ||
     changedValues.bowlingTypeId !== bowlingTypeId ||
-    changedValues.countryId !== countryId
+    changedValues.countryId !== countryId ||
+    changedValues.tpId !== tpId
   );
 
   await updatePlayerBatBowlHistory(playerId, entitySportPlayerResponse?.batting, entitySportPlayerResponse?.bowling, request, fastify);
@@ -1071,7 +1132,7 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
       }
     } catch (err) {
       errorLogger(fastify, `Failed to update player id: ${checkPlayerData.playerId} error: ${err.message}`, "/services/player.js/UpdatePlayerFromEntityService", request);
-      throw new Error(`Failed to update player id: ${checkPlayerData.playerId} error: ${err.message}`)
+      return false;
     }
   }
 
@@ -1081,7 +1142,8 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
 const playerImportService = async (data, fastify, request = null) => {
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getPlayerDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
-    throw new Error(checkEntitySportAPIEndpoint.message);
+    errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/player.js/playerImportService - checkEntitySportAPIEndpoint", request);
+    return false;
   }
 
   const url = checkEntitySportAPIEndpoint.data.replace("{pid}", data.pid);
@@ -1090,7 +1152,11 @@ const playerImportService = async (data, fastify, request = null) => {
   let entitySportPlayerResponse = entitySportPlayer?.data?.result?.player;
   let entitySportPlayerStatisticsResponse = entitySportPlayer?.data?.result;
   if (!entitySportPlayerResponse) {
-    throw new Error("Invalid response from Entit-Sport API");
+    errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/player.js/playerImportService - entitySportPlayerStatisticsResponse", {
+      ...request,
+      originalUrl: url
+    }, entitySportPlayer?.data);
+    return false;
   }
 
   const entitySocketData = global.tblEntitySockets[0];
