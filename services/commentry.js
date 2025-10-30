@@ -23159,7 +23159,8 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
 const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getTeamDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
-    throw new Error(checkEntitySportAPIEndpoint.message);
+    errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/commentary.js/insertTeamAndPlayers - checkEntitySportAPIEndpoint", request);
+    return false;
   }
 
   const url = checkEntitySportAPIEndpoint.data.replace("{tid}", teamTpId);
@@ -23167,7 +23168,11 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
 
   let entitySportTeamPlayersResponse = entitySportTeamPlayers?.data?.result?.items;
   if (!entitySportTeamPlayersResponse) {
-    throw new Error("Invalid response from Entit-Sport API");
+    errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/commentary.js/insertTeamAndPlayers - entitySportTeamPlayersResponse", {
+      ...request,
+      originalUrl: url
+    }, entitySportTeamPlayers?.data);
+    return false;
   }
 
   const teamData = entitySportTeamPlayersResponse?.team;
@@ -23317,7 +23322,8 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
 const matchImportService = async (data, fastify, request = null) => {
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getMatchDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
-    throw new Error(checkEntitySportAPIEndpoint.message);
+    errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/commentary.js/matchImportService - checkEntitySportAPIEndpoint", request);
+    return false;
   }
 
   const url = checkEntitySportAPIEndpoint.data.replace("{mid}", data.mid);
@@ -23325,7 +23331,11 @@ const matchImportService = async (data, fastify, request = null) => {
 
   let entitySportMatchResponse = entitySportMatch?.data?.result;
   if (!entitySportMatchResponse) {
-    throw new Error("Invalid response from Entit-Sport API");
+    errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/commentary.js/matchImportService - entitySportMatchResponse", {
+      ...request,
+      originalUrl: url
+    }, entitySportMatch?.data);
+    return false;
   }
 
   let checkCommentary = global.tblCommentaries.find(item => item.tpId === data.mid);

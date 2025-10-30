@@ -965,19 +965,22 @@ const updatePlayerBatBowlHistory = async (playerId, playerBattingData, playerBow
 const UpdatePlayerFromEntityService = async (data, fastify, request) => {
   let checkPlayerData = global.tblPlayers.find(item => item.playerId === data.pid);
   if (!checkPlayerData) {
-    throw new Error(`Player not found. playerId: ${data.pid}`);
+    errorLogger(fastify, `Player not found. playerId: ${data.pid}`, "/services/player.js/UpdatePlayerFromEntityService - checkPlayerData", request);
+    return false;
   }
 
   let playerNewTpId = null;
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getPlayerDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
-    throw new Error(checkEntitySportAPIEndpoint.message);
+    errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/player.js/UpdatePlayerFromEntityService - checkEntitySportAPIEndpoint", request);
+    return false;
   }
 
   if (!checkPlayerData.tpId) {
     const checkEntitySportAPIEndpoint2 = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.searchPlayerDataFromEntity);
     if (!checkEntitySportAPIEndpoint2.data) {
-      throw new Error(checkEntitySportAPIEndpoint2.message);
+      errorLogger(fastify, checkEntitySportAPIEndpoint2.message, "/services/player.js/UpdatePlayerFromEntityService - checkEntitySportAPIEndpoint2", request);
+      return false;
     }
 
     let url2 = checkEntitySportAPIEndpoint2.data + "?search=" + encodeURIComponent(checkPlayerData.playerName);
@@ -989,7 +992,11 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
     const entitySportSearchPlayer = await callEntitySportAPI(url2, request, fastify);
 
     if (!entitySportSearchPlayer?.data?.result) {
-      throw new Error("Invalid response from Entit-Sport API");
+      errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/player.js/UpdatePlayerFromEntityService - entitySportSearchPlayer", {
+        ...request,
+        originalUrl: url
+      }, entitySportSearchPlayer?.data);
+      return false;
     }
 
     if (entitySportSearchPlayer?.data?.result?.total_items === "1") {
@@ -1004,7 +1011,8 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
 
   if (!checkPlayerData.tpId) {
     if (!playerNewTpId) {
-      throw new Error("Invalid response from Entit-Sport API");
+      errorLogger(fastify, `Player data not found for playerId: ${checkPlayerData.playerId}`, "/services/player.js/UpdatePlayerFromEntityService - checkPlayerData.tpId", request, checkPlayerData);
+      return false;
     }
   } else {
     playerNewTpId = checkPlayerData.tpId;
@@ -1015,7 +1023,11 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
 
   const entitySportPlayerResponse = entitySportPlayer?.data?.result;
   if (!entitySportPlayerResponse) {
-    throw new Error("Invalid response from Entit-Sport API");
+    errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/player.js/UpdatePlayerFromEntityService - entitySportPlayerResponse", {
+      ...request,
+      originalUrl: url
+    }, entitySportPlayer?.data);
+    return false;
   }
 
   const entitySportPlayerInfoResponse = entitySportPlayerResponse?.player;
@@ -1113,7 +1125,7 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
       }
     } catch (err) {
       errorLogger(fastify, `Failed to update player id: ${checkPlayerData.playerId} error: ${err.message}`, "/services/player.js/UpdatePlayerFromEntityService", request);
-      throw new Error(`Failed to update player id: ${checkPlayerData.playerId} error: ${err.message}`)
+      return false;
     }
   }
 
@@ -1123,7 +1135,8 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
 const playerImportService = async (data, fastify, request = null) => {
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getPlayerDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
-    throw new Error(checkEntitySportAPIEndpoint.message);
+    errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/player.js/playerImportService - checkEntitySportAPIEndpoint", request);
+    return false;
   }
 
   const url = checkEntitySportAPIEndpoint.data.replace("{pid}", data.pid);
@@ -1132,7 +1145,11 @@ const playerImportService = async (data, fastify, request = null) => {
   let entitySportPlayerResponse = entitySportPlayer?.data?.result?.player;
   let entitySportPlayerStatisticsResponse = entitySportPlayer?.data?.result;
   if (!entitySportPlayerResponse) {
-    throw new Error("Invalid response from Entit-Sport API");
+    errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/player.js/playerImportService - entitySportPlayerStatisticsResponse", {
+      ...request,
+      originalUrl: url
+    }, entitySportPlayer?.data);
+    return false;
   }
 
   const entitySocketData = global.tblEntitySockets[0];

@@ -611,12 +611,14 @@ const mergeTeamJerseyAndPlayerImageService = async (request, fastify) => {
 const UpdateTeamFromEntityService = async (data, fastify, request) => {
   const checkTeamData = global.tblTeams.find(item => item.tpId === data.tid);
   if (!checkTeamData) {
-    throw new Error(`Team not found. tpId: ${data.tid}`);
+    errorLogger(fastify, `Team not found. tpId: ${data.tid}`, "/services/teams.js/UpdateTeamFromEntityService - checkTeamData", request);
+    return false;
   }
 
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getTeamDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
-    throw new Error(checkEntitySportAPIEndpoint.message);
+    errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/teams.js/UpdateTeamFromEntityService - checkEntitySportAPIEndpoint", request);
+    return false;
   }
 
   const url = checkEntitySportAPIEndpoint.data.replace("{tid}", checkTeamData.tpId);
@@ -624,7 +626,11 @@ const UpdateTeamFromEntityService = async (data, fastify, request) => {
 
   let entitySportTeamPlayerResponse = entitySportTeamPlayer?.data?.result?.items;
   if (!entitySportTeamPlayerResponse) {
-    throw new Error("Invalid response from Entit-Sport API");
+    errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/teams.js/UpdateTeamFromEntityService - entitySportTeamPlayerResponse", {
+      ...request,
+      originalUrl: url
+    }, entitySportTeamPlayer?.data);
+    return false;
   }
 
   const { team, players } = entitySportTeamPlayerResponse;
