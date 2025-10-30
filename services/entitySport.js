@@ -856,73 +856,79 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     let upOvers = [];
     let upTeams = [];
     const playersMap = {}; // key: commentaryPlayerId
-
-    let boIncrease = false;
     let ltSetOrder = 0;
-    if(response.live.batsmen){
-      for(let p of response.live?.batsmen){
-        let comP = playerTpIdObj[p.batsman_id]
-        if(comP){
+    // Find the current max batter order from global data
+    const existingBatters = global.tblCommentaryPlayers.filter(i =>
+      i.commentaryId === comDetails.commentaryId &&
+      i.currentInnings === comDetails.currentInnings &&
+      i.teamId === battingTeam.teamId &&
+      i.batterOrder != null
+    );
+
+    ltSetOrder = existingBatters.length
+      ? Math.max(...existingBatters.map(i => i.batterOrder))
+      : 0;
+
+    if (response.live?.batsmen) {
+      for (let p of response.live.batsmen) {
+        let comP = playerTpIdObj[p.batsman_id];
+        if (comP) {
           let batterOrder = comP.batterOrder;
-          if(comP.batterOrder == undefined || comP.batterOrder == null ){
-              // get latest batter order 
-              if(ltSetOrder != 0){
-                batterOrder =ltSetOrder + 1
-              }
-              else {
-                 let bO = global.tblCommentaryPlayers.filter((i)=> i.commentaryId == comDetails.commentaryId &&
-                  i.currentInnings == comDetails.currentInnings &&
-                  i.teamId == battingTeam.teamId &&
-                  i.batterOrder != null
-                )
-                .sort((a,b)=> b.batterOrder - a.batterOrder)[0]?.batterOrder || 0
-                batterOrder = bO + 1
-                ltSetOrder = batterOrder
-              }
+
+          if (batterOrder == null) {
+            ltSetOrder += 1;
+            batterOrder = ltSetOrder;
           }
+
           playersMap[p.batsman_id] = {
-              ...comP,
-              isPlay : true,
-              batRun : p.runs,
-              batBall : p.balls_faced,
-              // batDotBall,
-              batFour : p.fours,
-              batSix : p.sixes,
-              batterOrder,
-          }
+            ...comP,
+            isPlay: true,
+            batRun: p.runs,
+            batBall: p.balls_faced,
+            batFour: p.fours,
+            batSix: p.sixes,
+            batterOrder,
+          };
         }
       }
     }
-    if(response.live?.bowlers){
-      for (let b of response.live?.bowlers){
-        let comP = playerTpIdObj[b.bowler_id] 
-        if(comP){
+    let ltSetBowlerOrder = 0;
+    // find the latest bowler order already stored for this innings/team
+    const existingBowlers = global.tblCommentaryPlayers.filter(i =>
+      i.commentaryId === comDetails.commentaryId &&
+      i.currentInnings === comDetails.currentInnings &&
+      i.teamId === bowlingTeam.teamId &&
+      i.bowlerOrder != null
+    );
+
+    ltSetBowlerOrder = existingBowlers.length
+      ? Math.max(...existingBowlers.map(i => i.bowlerOrder))
+      : 0;
+
+    if (response.live?.bowlers) {
+      for (let p of response.live.bowlers) {
+        let comP = playerTpIdObj[p.bowler_id];
+        if (comP) {
           let bowlerOrder = comP.bowlerOrder;
-          if(comP.bowlerOrder == undefined || comP.bowlerOrder == null ){
-              // get latest bowler order
-              let bO = global.tblCommentaryPlayers.filter((i)=> i.commentaryId == comDetails.commentaryId &&
-                  i.currentInnings == comDetails.currentInnings &&
-                  i.teamId == bowlingTeam.teamId &&
-                  i.bowlerOrder != null
-              ).sort((a,b)=> b.bowlerOrder - a.bowlerOrder)[0]?.bowlerOrder || 0
-              bowlerOrder = bO + 1
+
+          // assign order only if not set yet
+          if (bowlerOrder == null) {
+            ltSetBowlerOrder += 1;
+            bowlerOrder = ltSetBowlerOrder;
           }
-          playersMap[b.bowler_id] = {
-              ...comP,
-              bowlerRun : b.runs_conceded,
-              bowlerOver : b.overs,  
-              // bowlerTotalBall,
-              isPlay : true,
-              onStrike : null,
-              bowlerOrder
-              // bowlerDotBall,
-              // bowlerFour,
-              // bowlerSix
-          }
+
+          playersMap[p.bowler_id] = {
+            ...comP,
+            isPlay: true,
+            bowlOver: p.overs,
+            bowlRun: p.runs_conceded,
+            bowlWicket: p.wickets,
+            bowlerOrder,
+          };
         }
       }
     }
-  
+   
    
     const oversMap = {}; // key: `${teamId}_${overNumber}`
     const ballByBall = [];
@@ -938,6 +944,14 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
       if(comDetails.commentaryStatus == commentaryStatus.INNINGCHANGE){
         upComDetails.commentaryStatus = commentaryStatus.INPROGRESS
       }
+      // get last 5 elem of update
+      // let storeBall = commentaries.filter((i)=> i.event == "ball" && i.score != "w")
+      // let res =await handleStoreBall({
+      //   response,
+      //   battingTeam
+      // },fastify,comDetails)
+      // return res;
+
       for (let c of commentaries){
         let updateBall = {}
         let ball = 1;
@@ -1689,6 +1703,154 @@ const matchCompleteService = async (data , fastify,comDetails) =>{
   return true
 
 }
+const handleStoreBall = async (data , fastify, comDetails) => {
+  const {response , battingTeam} = data;
+  let com = response.live.commentaries;
+  let storedCom =com.slice(-5);
+  let tpIds = storedCom.map((i)=>i.event_id)
+  let playerTpIdObj = {};
+  let comPlayers = global.tblCommentaryPlayers.filter((cp)=> cp.commentaryId == comDetails.commentaryId && cp.currentInnings == comDetails.currentInnings)
+  for (let cp of comPlayers){
+      playerTpIdObj[cp.tpId] = {
+          ...cp,
+          playerName : cp.playerName,
+          playerId : cp.playerId,
+      };
+  }
+  let playersMap = {};
+  let upOvers = [];
+  let deleteBallByBallIds = [];
+  let oversMap = {};
+  let upTeams = []
+  for (let c of storedCom){
+    let updateBall = {}
+    let ball = 1;
+    let tpId = c.event_id;
+    let event = c.event;
+    let isBoundary = c.run == 4 || c.run ==6 ? true : false
+    if(String(c.score) == "w" ){
+      event = "wicket"
+      // wicket code
+    }
+    if(event == "ball" ){
+      let index = global.tblCommentaryBallByBall.findIndex((i)=>i.tpId == c.event_id)
+      if(index == -1) continue; // skip not created ball
+      let ball = global.tblCommentaryBallByBall.find((i)=> i.tpId == c.event_id)
+      if(ball.ballRun == c.run){
+        continue;
+      }
+      // delete this ball and other ball
+      let ballAfterThis = global.tblCommentaryBallByBall.filter((i)=> i.commentaryBallByBallId >= ball.commentaryBallByBallId &&
+      i.commentaryId == comDetails.commentaryId && i.currentInnings == comDetails.currentInnings) 
+      // let ballIds = ballAfterThis.map((i)=> i.commentaryBallByBallId)
+      for(let b1 of ballAfterThis){
+        const overNumber = Number(c.over);
+        const overKey = `${comDetails.commentaryId}-${comDetails.currentInnings}-${battingTeam.teamId}-${overNumber}`;
+        let over = oversMap[overKey];
+        over = global.tblOvers.find((i)=>i.overId == b1.overId)
+        oversMap[overKey] = over
+        deleteBallByBallIds.push(b1.commentaryBallByBallId)
+        let tpBall = com.find((i)=>i.event_id == b1.tpId)
+        let tpId = tpBall.event_id;
+        // let event = c.event;
+        if(String(tpBall.score) == "w" ){
+          event = "wicket"
+          continue;
+          // write code fro delete wicket
+        }
+        if(event == "ball"){
+            if(tpBall.score && String(tpBall.score).includes('wd')){
+              isWide = true;
+              let run = +matchType.valueOfWideBall || 0;
+              battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
+              let previousBall = c.ball - 1; 
+              battingTeam.teamOver = `${c.over}.${previousBall}`
+              battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - 1 : 0;
+              over.ballCount = over.ballCount > 0 ? over.ballCount -1 : 0;
+              over.totalRun = over.totalRun > 0 ?  over.totalRun -1 :0;
+              over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+              over.totalWideBall = over.totalWideBall > 0 ? over.totalWideBall - 1 : 0;
+              over.totalWideRun = over.totalWideRun > 0 ? over.totalWideRun - run :0;
+              if(!playersMap[c.bowler_id]){
+                playersMap[c.bowler_id] = {
+                  ...playerTpIdObj[c.bowler_id]
+                }
+              }
+              // if(!playersMap[c])
+            }
+            else {  
+                let run = b1.ballRun
+                battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
+                // reducse teamOver
+                let previousBall = c.ball - 1;
+                battingTeam.teamOver = `${c.over}.${previousBall}`
+                battingTeam.teamLegByRuns =  battingTeam.teamLegByRuns > 0 ? ( battingTeam.teamLegByRuns || 0) - parseInt(b1.teamLegByRuns) : 0;
+                battingTeam.teamNoBallRuns =battingTeam.teamNoBallRuns > 0 ? ( battingTeam.teamNoBallRuns || 0) - parseInt(b1.teamNoBallRuns) :0;
+                battingTeam.teamByRuns =battingTeam.teamByRuns > 0 ? ( battingTeam.teamByRuns || 0) - parseInt(b1.teamByRuns) : 0;
+                over.ballCount = over.ballCount > 0 ? over.ballCount - 1 :0;
+                over.totalRun = over.totalRun > 0 ?  over.totalRun -1 :0;
+                over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+                if(!playersMap[tpBall.bowler_id]){
+                  playersMap[tpBall.bowler_id] =  {
+                    ...playerTpIdObj[tpBall.bowler_id]
+                  }
+                }
+                if(!playersMap[tpBall.batsman_id]){
+                  playersMap[tpBall.batsman_id] = {
+                    ...playerTpIdObj[tpBall.batsman_id]
+                  }
+                }
+                playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
+                playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
+                playersMap[tpBall.batsman_id].runs = playersMap[tpBall.batsman_id].runs > 0 ? playersMap[tpBall.batsman_id].runs -1 : 0;
+                playersMap[tpBall.batsman_id].batBall = playersMap[tpBall.batsman_id].batBall > 0 ? playersMap[tpBall.batsman_id].batBall -1 : 0;
+                // playersMap[tpBall.batsman_id].batDotBall =playersMap[tpBall.batsman_id].batDotBall > 0 ?playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
+                // playersMap[tpBall.batsman_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 :0;
+                let isBoundary = run == 4 || run ==6 ? true : false;
+                if(run == 0){
+                  over.dotBall = over.dotBall - 1;
+                  playersMap[tpBall.batsman_id].batDotBall =playersMap[tpBall.batsman_id].batDotBall > 0 ?playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
+                  playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 :0;
+                  // playersMap[tpBall.batsman_id] = {
+                  //   ...playerTpIdObj[tpBall.batsman_id],
+                  //   batDotBall : playersMap[tpBall.batsman_id].batDotBall > 0 ?playersMap[tpBall.batsman_id].batDotBall - 1 : 0,
+                  //   bowlerDotBall: playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 :0
+                  // }
+                }
+                else if(isBoundary){
+                  if(run ==4){
+                    playersMap[tpBall.bowler_id].bowlerFour = playersMap[tpBall.bowler_id].bowlerFour > 0? playersMap[tpBall.bowler_id].bowlerFour - 1 : 0 
+                  }
+                  if(run == 6){
+                    over.totalSix -= 1;
+                    playersMap[tpBall.bowler_id].bowlerSix =  playersMap[tpBall.bowler_id].bowlerSix > 0? playersMap[tpBall.bowler_id].bowlerSix - 1 : 0 
+                  }
+                }
+            }
+          } 
+        }
+
+      let plyArr = Object.values(playersMap);
+      let overArr = Object.values(oversMap)
+      return {
+        commentaryId : comDetails.commentaryId,
+        commentaryPlayers : plyArr,
+        deleteBallByBallIds : deleteBallByBallIds,
+        commentaryOvers : overArr,
+        commentaryTeams : [battingTeam]
+      }
+      // await syncEntitySportCommentaryService({
+      //   commentaryId : comDetails.commentaryId,
+      //   commentaryPlayers : plyArr,
+      //   deleteBallByBallIds : deleteBallByBallIds,
+      //   commentaryOvers : overArr,
+      //   commentaryTeams : [battingTeam],
+      // },fastify,request)
+
+    }
+  }
+  return true;
+}
 module.exports = {
     saveTeamsService,
     savePlayersService,
@@ -1698,5 +1860,6 @@ module.exports = {
     saveVenueService,
     setEntityComService,
     setEntityCom2Service,
-    saveTournamentTeamPlayerService
+    saveTournamentTeamPlayerService,
+    handleStoreBall
 }
