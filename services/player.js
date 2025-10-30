@@ -963,17 +963,35 @@ const updatePlayerBatBowlHistory = async (playerId, playerBattingData, playerBow
 }
 
 const UpdatePlayerFromEntityService = async (data, fastify, request) => {
-  const checkPlayerData = global.tblPlayers.find(item => item.tpId === data.pid);
+  let checkPlayerData = global.tblPlayers.find(item => item.playerId === data.pid);
   if (!checkPlayerData) {
-    throw new Error(`Player not found. tpId: ${data.pid}`);
+    throw new Error(`Player not found. playerId: ${data.pid}`);
   }
 
+  let playerNewTpId = null;
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getPlayerDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
     throw new Error(checkEntitySportAPIEndpoint.message);
   }
 
-  const url = checkEntitySportAPIEndpoint.data.replace("{pid}", data.pid);
+  if (!checkPlayerData.tpId) {
+    const checkEntitySportAPIEndpoint2 = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.searchPlayerDataFromEntity);
+    if (!checkEntitySportAPIEndpoint2.data) {
+      throw new Error(checkEntitySportAPIEndpoint2.message);
+    }
+
+    let url2 = checkEntitySportAPIEndpoint2.data + "?search=" + encodeURIComponent(checkPlayerData.playerName);
+    const entitySportSearchPlayer = await callEntitySportAPI(url2, request, fastify);
+    const entitySportSearchPlayerResponse = entitySportSearchPlayer?.data?.result?.total_items === "1" ? entitySportSearchPlayer?.data?.result?.items[0] : null;
+
+    if (!entitySportSearchPlayerResponse) {
+      throw new Error("Invalid response from Entit-Sport API");
+    }
+
+    playerNewTpId = entitySportSearchPlayerResponse?.pid;
+  }
+
+  const url = checkEntitySportAPIEndpoint.data.replace("{pid}", playerNewTpId ? playerNewTpId : data.pid);
   const entitySportPlayer = await callEntitySportAPI(url, request, fastify);
 
   const entitySportPlayerResponse = entitySportPlayer?.data?.result;
@@ -983,10 +1001,14 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
 
   const entitySportPlayerInfoResponse = entitySportPlayerResponse?.player;
 
-  const { playerId, playerTypeId, playerName, displayName, isKipper, isLeftHandedBatting, isLeftArmFielding, bowlingStyleId, bowlingTypeId, countryId } = checkPlayerData;
+  const { playerId, playerTypeId, playerName, displayName, isKipper, isLeftHandedBatting, isLeftArmFielding, bowlingStyleId, bowlingTypeId, countryId, tpId } = checkPlayerData;
   const { playing_role, title, short_name, batting_style, bowling_style, bowling_type, nationality } = entitySportPlayerInfoResponse;
 
   let changedValues = { ...checkPlayerData };
+
+  if (!tpId && playerNewTpId) {
+    changedValues.tpId = playerNewTpId;
+  }
 
   if (playing_role) {
     const entityPlayerTypeId = EntityPlayerType[playing_role];
@@ -1053,7 +1075,8 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
     changedValues.isLeftArmFielding !== isLeftArmFielding ||
     changedValues.bowlingStyleId !== bowlingStyleId ||
     changedValues.bowlingTypeId !== bowlingTypeId ||
-    changedValues.countryId !== countryId
+    changedValues.countryId !== countryId ||
+    changedValues.tpId !== tpId
   );
 
   await updatePlayerBatBowlHistory(playerId, entitySportPlayerResponse?.batting, entitySportPlayerResponse?.bowling, request, fastify);

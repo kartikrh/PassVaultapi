@@ -79,18 +79,15 @@ const allAutoImportDataLogsService = async (request, fastify) => {
 };
 
 const insertAllAutoImportDataService = async (request, fastify) => {
-    const { refType, refIds, sourceId } = request.body;
+    let { refType, refIds, sourceId } = request.body;
 
     const alreadyAddedIds = [];
 
-    let tpIds = [];
     if (refType === RefType.TeamUpdate) {
-        tpIds = global.tblTeams.filter(item => refIds.includes(item.teamId) && item.tpId !== null)?.map(item => item.tpId);
-    } else {
-        tpIds = global.tblPlayers.filter(item => refIds.includes(item.playerId) && item.tpId !== null)?.map(item => item.tpId);
+        refIds = global.tblTeams.filter(item => refIds.includes(item.teamId) && item.tpId !== null)?.map(item => item.tpId);
     }
 
-    for (const refId of tpIds) {
+    for (const refId of refIds) {
         const result = await insertAutoImportDataService({
             ...request,
             body: {
