@@ -981,17 +981,32 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
     }
 
     let url2 = checkEntitySportAPIEndpoint2.data + "?search=" + encodeURIComponent(checkPlayerData.playerName);
-    const entitySportSearchPlayer = await callEntitySportAPI(url2, request, fastify);
-    const entitySportSearchPlayerResponse = entitySportSearchPlayer?.data?.result?.total_items === "1" ? entitySportSearchPlayer?.data?.result?.items[0] : null;
 
-    if (!entitySportSearchPlayerResponse) {
+    const getCountryShortName = global.tblCountryCodes.find(item => item.id === checkPlayerData.countryId)?.shortName;
+    if (getCountryShortName) {
+      url2 += "&country=" + getCountryShortName.substring(0, 2);
+    }
+    const entitySportSearchPlayer = await callEntitySportAPI(url2, request, fastify);
+
+    if (!entitySportSearchPlayer?.data?.result) {
       throw new Error("Invalid response from Entit-Sport API");
     }
 
-    playerNewTpId = entitySportSearchPlayerResponse?.pid;
+    if (entitySportSearchPlayer?.data?.result?.total_items === "1") {
+      playerNewTpId = entitySportSearchPlayer?.data?.result?.items[0]?.pid;
+    } else if (Number(entitySportSearchPlayer?.data?.result?.total_items) > 1) {
+      const entityPlayerData = entitySportSearchPlayer?.data?.result?.items.filter(item => item.title === checkPlayerData.playerName && item.shortName === checkPlayerData.shortName);
+      if (entityPlayerData?.length === 1) {
+        playerNewTpId = entityPlayerData?.pid;
+      }
+    }
   }
 
-  const url = checkEntitySportAPIEndpoint.data.replace("{pid}", playerNewTpId ? playerNewTpId : checkPlayerData.tpId);
+  if (!playerNewTpId) {
+    throw new Error("Invalid response from Entit-Sport API");
+  }
+
+  const url = checkEntitySportAPIEndpoint.data.replace("{pid}", playerNewTpId);
   const entitySportPlayer = await callEntitySportAPI(url, request, fastify);
 
   const entitySportPlayerResponse = entitySportPlayer?.data?.result;
