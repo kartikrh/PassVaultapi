@@ -1771,12 +1771,22 @@ const handleStoreBall = async (data , fastify, comDetails) => {
               over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
               over.totalWideBall = over.totalWideBall > 0 ? over.totalWideBall - 1 : 0;
               over.totalWideRun = over.totalWideRun > 0 ? over.totalWideRun - run :0;
-              if(!playersMap[c.bowler_id]){
-                playersMap[c.bowler_id] = {
-                  ...playerTpIdObj[c.bowler_id]
+              if(!playersMap[tpBall.bowler_id]){
+                playersMap[tpBall.bowler_id] = {
+                  ...playerTpIdObj[tpBall.bowler_id]
                 }
               }
-              // if(!playersMap[c])
+              if(!playersMap[tpBall.batsman_id]){
+                playersMap[tpBall.batsman_id] = {
+                  ...playerTpIdObj[tpBall.batsman_id]
+                }
+              }
+              playersMap[tpBall.bowler_id].bowlerWideBall = playersMap[tpBall.bowler_id].bowlerWideBall > 0 ? playersMap[tpBall.bowler_id].bowlerWideBall - 1: 0;
+              playersMap[tpBall.bowler_id].bowlerWideBallRun = playersMap[tpBall.bowler_id].bowlerWideBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerWideBallRun - run :0;
+              playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run :0;
+              playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - run :0;
+              
+              
             }
             else {  
                 let run = b1.ballRun
