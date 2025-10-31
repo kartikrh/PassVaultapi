@@ -76,7 +76,7 @@ const createEntitySocketService = async (request, fastify) => {
     if (request.body.defaultPlayerImage?.length) {
         const { fullPath, imagePath } = await processImage(
             request.body.defaultPlayerImage,
-            ImgModuleConfig.Players
+            ImgModuleConfig.Default
         );
         request.body.defaultPlayerImage = fullPath;
         request.body.defaultPlayerImagePath = imagePath;
@@ -85,7 +85,7 @@ const createEntitySocketService = async (request, fastify) => {
     if (request.body.defaultTeamImage?.length) {
         const { fullPath, imagePath } = await processImage(
             request.body.defaultTeamImage,
-            ImgModuleConfig.Teams
+            ImgModuleConfig.Default
         );
         request.body.defaultTeamImage = fullPath;
         request.body.defaultTeamImagePath = imagePath;
@@ -94,7 +94,7 @@ const createEntitySocketService = async (request, fastify) => {
     if (request.body.defaultJerseyImage?.length) {
         const { fullPath, imagePath } = await processImage(
             request.body.defaultJerseyImage,
-            ImgModuleConfig.Teams
+            ImgModuleConfig.Default
         );
         request.body.defaultJerseyImage = fullPath;
         request.body.defaultJerseyImagePath = imagePath;
@@ -103,7 +103,7 @@ const createEntitySocketService = async (request, fastify) => {
     if (request.body.defaultPlayerJerseyImage?.length) {
         const { fullPath, imagePath } = await processImage(
             request.body.defaultPlayerJerseyImage,
-            ImgModuleConfig.Teams
+            ImgModuleConfig.Default
         );
         request.body.defaultPlayerJerseyImage = fullPath;
         request.body.defaultPlayerJerseyImagePath = imagePath;
@@ -177,7 +177,7 @@ const updateEntitySocketService = async (request, fastify) => {
     if (request.body.defaultPlayerImage?.length) {
         const { fullPath, imagePath } = await processImage(
             request.body.defaultPlayerImage,
-            ImgModuleConfig.Players
+            ImgModuleConfig.Default
         );
         body.defaultPlayerImage = fullPath;
         body.defaultPlayerImagePath = imagePath;
@@ -186,7 +186,7 @@ const updateEntitySocketService = async (request, fastify) => {
     if (request.body.defaultTeamImage?.length) {
         const { fullPath, imagePath } = await processImage(
             request.body.defaultTeamImage,
-            ImgModuleConfig.Teams
+            ImgModuleConfig.Default
         );
         body.defaultTeamImage = fullPath;
         body.defaultTeamImagePath = imagePath;
@@ -195,7 +195,7 @@ const updateEntitySocketService = async (request, fastify) => {
     if (request.body.defaultJerseyImage?.length) {
         const { fullPath, imagePath } = await processImage(
             request.body.defaultJerseyImage,
-            ImgModuleConfig.Teams
+            ImgModuleConfig.Default
         );
         body.defaultJerseyImage = fullPath;
         body.defaultJerseyImagePath = imagePath;
@@ -204,7 +204,7 @@ const updateEntitySocketService = async (request, fastify) => {
     if (request.body.defaultPlayerJerseyImage?.length) {
         const { fullPath, imagePath } = await processImage(
             request.body.defaultPlayerJerseyImage,
-            ImgModuleConfig.Teams
+            ImgModuleConfig.Default
         );
         body.defaultPlayerJerseyImage = fullPath;
         body.defaultPlayerJerseyImagePath = imagePath;
@@ -245,6 +245,7 @@ const deleteEntitySocketService = async (request, fastify) => {
           await removeImageFromServer({ path: validateId.defaultPlayerJerseyImage });
         }
       }
+      
     }
   
     await deleteEntitySocketQuery(

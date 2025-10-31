@@ -1067,7 +1067,8 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
 const competitionImportService = async (data, fastify, request) => {
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getCompetitionDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
-    throw new Error(checkEntitySportAPIEndpoint.message);
+    errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/competition.js/competitionImportService - checkEntitySportAPIEndpoint", request);
+    return false;
   }
 
   const url = checkEntitySportAPIEndpoint.data.replace("{cid}", data.cid);
@@ -1075,7 +1076,11 @@ const competitionImportService = async (data, fastify, request) => {
 
   let entitySportCompetitionResponse = entitySportCompetition?.data?.result;
   if (!entitySportCompetitionResponse) {
-    throw new Error("Invalid response from Entit-Sport API");
+    errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/competition.js/competitionImportService - entitySportCompetitionResponse", {
+      ...request,
+      originalUrl: url
+    }, entitySportCompetition?.data);
+    return false;
   }
 
   if (entitySportCompetitionResponse?.status === "result") {
@@ -1140,7 +1145,8 @@ const competitionImportService = async (data, fastify, request) => {
   let allCompetitionMatch = [];
   const checkEntitySportAPIEndpoint2 = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getCompetitionMatchDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint2.data) {
-    throw new Error(checkEntitySportAPIEndpoint2.message);
+    errorLogger(fastify, checkEntitySportAPIEndpoint2.message, "/services/competition.js/competitionImportService - checkEntitySportAPIEndpoint2", request);
+    return false;
   }
 
   let page = 1, totalPages = 1;
@@ -1153,12 +1159,16 @@ const competitionImportService = async (data, fastify, request) => {
     const entitySportCompetitionMatch = await callEntitySportAPI(url2, request, fastify);
     let entitySportCompetitionMatchResponse = entitySportCompetitionMatch?.data?.result;
     if (!entitySportCompetitionMatchResponse) {
-      throw new Error("Invalid response from Entit-Sport API");
+      errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/competition.js/competitionImportService - entitySportCompetitionMatchResponse", {
+        ...request,
+        originalUrl: url2
+      }, entitySportCompetitionMatch?.data);
+    } else {
+      if (page === 1) {
+        totalPages = entitySportCompetitionMatchResponse?.total_pages || 1;
+      }
+      allCompetitionMatch.push(...entitySportCompetitionMatchResponse?.items)
     }
-    if (page === 1) {
-      totalPages = entitySportCompetitionMatchResponse?.total_pages || 1;
-    }
-    allCompetitionMatch.push(...entitySportCompetitionMatchResponse?.items)
     page++;
   }
 
@@ -1212,7 +1222,8 @@ const competitionImportService = async (data, fastify, request) => {
 
   const checkEntitySportAPIEndpoint3 = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getCompetitionSquadDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint3.data) {
-    throw new Error(checkEntitySportAPIEndpoint3.message);
+    errorLogger(fastify, checkEntitySportAPIEndpoint3.message, "/services/competition.js/competitionImportService - checkEntitySportAPIEndpoint3", request);
+    return false;
   }
 
   const url3 = checkEntitySportAPIEndpoint3.data.replace("{cid}", data.cid);
@@ -1451,7 +1462,8 @@ const competitionImportService = async (data, fastify, request) => {
 
       const checkEntitySportAPIEndpoint4 = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getMatchDataByIdFromEntity);
       if (!checkEntitySportAPIEndpoint4.data) {
-        throw new Error(checkEntitySportAPIEndpoint4.message);
+        errorLogger(fastify, checkEntitySportAPIEndpoint4.message, "/services/competition.js/competitionImportService - checkEntitySportAPIEndpoint4", request);
+        return false;
       }
 
       const url4 = checkEntitySportAPIEndpoint4.data.replace("{mid}", match?.match_id);
@@ -1459,7 +1471,11 @@ const competitionImportService = async (data, fastify, request) => {
 
       let entitySportMatchResponse = entitySportMatch?.data?.result;
       if (!entitySportMatchResponse) {
-        throw new Error("Invalid response from Entit-Sport API");
+        errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/competition.js/competitionImportService - entitySportMatchResponse", {
+          ...request,
+          originalUrl: url4
+        }, entitySportMatch?.data);
+        return false;
       }
 
       const matchPlaying11Squad = entitySportMatchResponse?.["match-playing11"];
