@@ -4,6 +4,8 @@ const { io } = require("socket.io-client");
 const { clientSocketActionType, clientSocketStatus } = require("../utilities");
 const { updateClientSocketStatusQuery, updateReconnectCountQuery } = require("../repository/TableClientSocket");
 const { errorLogger } = require("../utilities/logger");
+const { updateCommentaryViewsQuery } = require("../repository/TableCommentary");
+const cron = require('node-cron');
 const { clientSocketCountService } = require("../services/commentry")
 
 const connectClients = async (fastify, clientSocketId = undefined) => {
@@ -23,7 +25,6 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
       );
     }
     const promises = clientUrls.map((urlConfig) => {
-     return new Promise((resolve, reject) => {
       const existing = global.clientSocketIo.find(c => c.url === urlConfig.url);
       if (existing) {
         existing.client.disconnect(true);
@@ -53,14 +54,39 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
             ...urlConfig,
             client,
         });
+        const socketObj = { ...urlConfig, client };
         // update status in global.tblClientSocket
         let index = global.tblClientSocket.findIndex((c) => c.clientSocketId === urlConfig.clientSocketId);
         global.tblClientSocket[index].status = clientSocketStatus.connected;      
-        resolve();
+        if(socketObj && socketObj?.isUpdateView == true) {
+          const intervalMinutes = Number(socketObj.updateInterval) || 5;
+          const cronExpression = `*/${intervalMinutes} * * * *`;
+          
+          socketObj.cronJob = cron.schedule(cronExpression, async () => {
+            try {
+              socketObj.client.emit("updateRoomUserCount", { message: "Send me user counts" });
+              socketObj.client.once("countData", async (data) => {
+                for (const elem of data) {
+                  const currentCount = Number(elem.count) || 0;
+                  if (elem.commentaryId) {
+                    await updateCommentaryViewsQuery({ views: currentCount, commentaryId: elem.commentaryId }, fastify);
+                    const index = global.tblCommentaries.findIndex(i => i.commentaryId == elem.commentaryId);
+                    if (index !== -1) {
+                      const oldCount = Number(global.tblCommentaries[index].views) || 0;
+                      global.tblCommentaries[index].views = oldCount + currentCount;
+                    }
+                  }
+                }
+                socketObj.client.emit("updateCommentaryCounts", data);
+              });
+            } catch (error) {
+              console.error(new Date(), "Error during scheduled task:", error);
+            }
+          });
+        }
       });
       client.on("connect_error", (error) => {
         console.log(`Connection error ${urlConfig.url}: ${error}`);
-        // reject(error);
       });
       client.on("disconnect", () => {
         console.log(`Disconnected from ${urlConfig.url}`);
@@ -205,10 +231,8 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
       //   global.tblClientSocket[index].status = clientSocketStatus.reconnected;
       // });
     });
-   });
     // Wait for all client connections to be established
     await Promise.all(promises);
-    clientSocketCountService(fastify);
   } catch (error) {
     console.log("Error connecting clients:", error);
     errorLogger(
