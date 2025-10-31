@@ -66,6 +66,9 @@ const mergeAndSaveImage = async (data, fastify) => {
   try {
     let playerBuffer = await convertToPng(data.playerImage, fastify, data);
     let jerseyBuffer =  await convertToPng(data.jersey, fastify, data);
+    if (!playerBuffer || !jerseyBuffer) {
+      return;
+    }
 
     const backgroundImage = path.resolve("bgMergeImage", "bgMergeImage.png");
     const CANVAS_WIDTH = parseInt(
