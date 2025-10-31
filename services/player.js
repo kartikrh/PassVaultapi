@@ -1002,7 +1002,7 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
     if (entitySportSearchPlayer?.data?.result?.total_items === "1") {
       playerNewTpId = entitySportSearchPlayer?.data?.result?.items[0]?.pid;
     } else if (Number(entitySportSearchPlayer?.data?.result?.total_items) > 1) {
-      const entityPlayerData = entitySportSearchPlayer?.data?.result?.items.filter(item => item.title === checkPlayerData.playerName && item.shortName === checkPlayerData.shortName);
+      const entityPlayerData = entitySportSearchPlayer?.data?.result?.items.filter(item => item.title === checkPlayerData.playerName && item.short_name === checkPlayerData.displayName);
       if (entityPlayerData?.length === 1) {
         playerNewTpId = entityPlayerData?.pid;
       }
