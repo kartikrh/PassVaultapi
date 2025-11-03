@@ -838,7 +838,7 @@ const allEntityUpdateLogsQuery = async (body ,request, fastify) => {
     try {
         const { startDate, endDate, page = 1, limit = 20, commentaryId } = body;
         const {skip , take} = getPagination(page, limit);
-        let where = startDate && endDate ? `WHERE "wrCreateDate" BETWEEN '${startDate}' AND '${endDate}'` : '';
+        let where = startDate && endDate ? `WHERE logs."wrCreateDate" BETWEEN '${startDate}' AND '${endDate}'` : '';
         where = commentaryId ? (where ? `${where} AND logs."wrCommentaryId" = ${commentaryId}` : `WHERE logs."wrCommentaryId" = ${commentaryId}`) : where;
         const query = `
             SELECT 
@@ -864,7 +864,7 @@ const allEntityUpdateLogsQuery = async (body ,request, fastify) => {
 
         const totalRecordsQuery = `
             SELECT COUNT(*) as "count"
-            FROM "tblAutoUpdateCommentaryData"
+            FROM "tblAutoUpdateCommentaryData" logs
             ${where}
         `;
 
@@ -896,7 +896,7 @@ const actionLogsQuery = async (body ,request, fastify) => {
     try {
         const { startDate, endDate, page = 1, limit = 20, commentaryId } = body;
         const {skip , take} = getPagination(page, limit);
-        let where = startDate && endDate ? `WHERE "wrCreatedAt" BETWEEN '${startDate}' AND '${endDate}'` : '';
+        let where = startDate && endDate ? `WHERE logs."wrCreatedAt" BETWEEN '${startDate}' AND '${endDate}'` : '';
         where = commentaryId ? (where ? `${where} AND logs."wrCommentaryId" = ${commentaryId}` : `WHERE logs."wrCommentaryId" = ${commentaryId}`) : where;
         const query = `
             SELECT 
@@ -926,7 +926,7 @@ const actionLogsQuery = async (body ,request, fastify) => {
 
         const totalRecordsQuery = `
             SELECT COUNT(*) as "count"
-            FROM "tblCommActionLogs"
+            FROM "tblCommActionLogs" logs
             ${where}
         `;
 
