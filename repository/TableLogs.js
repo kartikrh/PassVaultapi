@@ -836,9 +836,10 @@ const allUndoLogsByUserWiseQuery = async (data, request, fastify) => {
 
 const allEntityUpdateLogsQuery = async (body ,request, fastify) => {
     try {
-        const { startDate, endDate, page = 1, limit = 20 } = body;
+        const { startDate, endDate, page = 1, limit = 20, commentaryId } = body;
         const {skip , take} = getPagination(page, limit);
         const where = startDate && endDate ? `WHERE "wrCreateDate" BETWEEN '${startDate}' AND '${endDate}'` : '';
+        where = commentaryId ? (where ? `${where} AND logs."wrCommentaryId" = ${commentaryId}` : `WHERE logs."wrCommentaryId" = ${commentaryId}`) : where;
         const query = `
             SELECT 
                 logs."wrId" as "id",
