@@ -920,9 +920,9 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           playersMap[p.bowler_id] = {
             ...comP,
             isPlay: true,
-            bowlOver: p.overs,
-            bowlRun: p.runs_conceded,
-            bowlWicket: p.wickets,
+            bowlerOver: p.overs,
+            bowlerRun: p.runs_conceded,
+            bowlerWicket: p.wickets,
             bowlerOrder,
           };
         }
@@ -2241,6 +2241,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
             }
             else if (isBoundary) {
               if (run == 4) {
+                over.totalFour = over.totalFour > 0 ? over.totalFour - 1 : 0
                 playersMap[tpBall.bowler_id].bowlerFour = playersMap[tpBall.bowler_id].bowlerFour > 0 ? playersMap[tpBall.bowler_id].bowlerFour - 1 : 0
               }
               if (run == 6) {
@@ -2781,6 +2782,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
             }
             else if (isBoundary) {
               if (run == 4) {
+                over.totalFour = over.totalFour > 0 ? over.totalFour - 1 : 0
                 playersMap[tpBall.bowler_id].bowlerFour = playersMap[tpBall.bowler_id].bowlerFour > 0 ? playersMap[tpBall.bowler_id].bowlerFour - 1 : 0
               }
               if (run == 6) {
