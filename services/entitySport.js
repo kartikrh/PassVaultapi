@@ -875,7 +875,6 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     ltSetOrder = existingBatters.length
       ? Math.max(...existingBatters?.map(i => i.batterOrder))
       : 0;
-
     if (response.live?.batsmen) {
       for (let p of response.live.batsmen) {
         let comP = playerTpIdObj[p.batsman_id];
