@@ -1081,7 +1081,7 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
     if (commentaryPlayerData) {
       const updatedData = {
         ...commentaryPlayerData,
-        isInPlayingEleven: isAllPlaying11 ? teamPlaying11Squad?.find(item => Number(item.player_id) === teamPlayerData?.tpId)?.playing11 === "true" : true
+        isInPlayingEleven: isAllPlaying11 ? teamPlaying11Squad?.find(item => Number(item.player_id) === pid)?.playing11 === "true" : true
       };
       await updateCommentaryPlayerById(updatedData, request, fastify);
 
