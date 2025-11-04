@@ -23391,13 +23391,6 @@ const matchImportService = async (data, fastify, request = null) => {
 
   const matchInfoResponse = entitySportMatchResponse?.match_info;
   let matchType = global.tblMatchTypes.find(item => item.entityEnum === matchInfoResponse.format);
-   errorLogger(
-      fastify,
-      `Temp log ${matchInfoResponse.format} `,
-      "services/commentry.js/matchImportService",
-      request,
-      matchType
-    );
   if (!matchType) {
     errorLogger(
       fastify,
