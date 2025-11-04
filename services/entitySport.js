@@ -519,8 +519,8 @@ const setEntityCom2Service = async (request , fastify) =>{
                     playerId : cp.playerId,
                 };
             }
-            let tpBatsMan = response.live.batsmen;
-            let tpBowler = response.live.bowlers;
+            let tpBatsMan = response.live.batsmen || [];
+            let tpBowler = response.live.bowlers || [];
             let bowler;
             let strikePlayer;
             let nonStrikePlayer;

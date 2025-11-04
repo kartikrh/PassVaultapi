@@ -11978,6 +11978,7 @@ const revertCommentaryService = async (request, fastify) => {
   const index = global.tblCommentaries.findIndex(
     (item) => item?.commentaryId === commentaryId
   );
+  
   if (index == -1) {
     throw new Error("Commentary with this id not Found");
   }
