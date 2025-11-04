@@ -776,6 +776,12 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     //     item.currentInnings == comDetails.currentInnings &&
     //     item.teamId == battingTeam.teamId
     // );
+    if (commentaries.length > 0) {
+      let res =await handleStoreBall({
+          response,
+          battingTeam
+      }, fastify, comDetails, request)
+    }
     // store ballbyball
     let playerTpIdObj = {};
     let comPlayers = global.tblCommentaryPlayers.filter((cp)=> cp.commentaryId == comDetails.commentaryId && cp.currentInnings == comDetails.currentInnings)
@@ -920,9 +926,9 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           playersMap[p.bowler_id] = {
             ...comP,
             isPlay: true,
-            bowlOver: p.overs,
-            bowlRun: p.runs_conceded,
-            bowlWicket: p.wickets,
+            bowlerOver: p.overs,
+            bowlerRun: p.runs_conceded,
+            bowlerWicket: p.wickets,
             bowlerOrder,
           };
         }
@@ -946,10 +952,10 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
       }
       // get last 5 elem of update
       // let storeBall = commentaries.filter((i)=> i.event == "ball" && i.score != "w")
-      let res =await handleStoreBall({
-        response,
-        battingTeam
-      },fastify,comDetails, request)
+      // let res =await handleStoreBall({
+      //   response,
+      //   battingTeam
+      // },fastify,comDetails, request)
       // return res;
 
       for (let c of commentaries){
@@ -1192,6 +1198,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                 if(c.run == 4){
                   updateBall.ballIsBoundry = true;
                   updateBall.ballFour = 1;
+                  over.totalFour = over.totalFour + 1;
                   // strikerPly.batFour = strikerPly.batFour + 1;
                   // bowler.bowlerFour = bowler.bowlerFour + 1;
                   playersMap[c.bowler_id].bowlerFour = (playersMap[c.bowler_id].bowlerFour || 0) + 1
@@ -1334,14 +1341,14 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           let nonStrike = response.live.batsmen.find((i)=> i.batsman_id != c.batsman_id).batsman_id
           let nonStrikePId = playerTpIdObj[nonStrike]?.commentaryPlayerId;
           if(playersMap[c.bowler_id]){
-            playersMap[c.bowler_id].bowlerOver = ((playersMap[c.bowler_id].bowlerOver || 0) + 0.1).toFixed(1) 
+            // playersMap[c.bowler_id].bowlerOver = ((playersMap[c.bowler_id].bowlerOver || 0) + 0.1).toFixed(1) 
             playersMap[c.bowler_id].bowlerTotalWicket = (playersMap[c.bowler_id].bowlerTotalWicket || 0) + 1
             playersMap[c.bowler_id].bowlerTotalBall = (playersMap[c.bowler_id].bowlerTotalBall || 0) + 1
           }
           else {
             playersMap[c.bowler_id] = {
               ...playerTpIdObj[c.bowler_id],
-              bowlerOver :((playerTpIdObj[c.bowler_id].bowlerOver || 0) + 0.1).toFixed(1),
+              // bowlerOver :((playerTpIdObj[c.bowler_id].bowlerOver || 0) + 0.1).toFixed(1),
               isPlay : true,
               bowlerTotalWicket : playerTpIdObj[c.bowler_id].bowlerTotalWicket ? playerTpIdObj[c.bowler_id].bowlerTotalWicket + 1 : 1,
               bowlerTotalBall : playerTpIdObj[c.bowler_id].bowlerTotalBall ? playerTpIdObj[c.bowler_id].bowlerTotalBall + 1 : 1,  
@@ -1439,8 +1446,8 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               fielderId2: wicketData.fielder2,
               isPlay: null,
               onStrike: null,
-              batBall: (playersMap[c.batsman]?.batBall || 0) + 1,
-              batDotBall: (playersMap[c.batsman] || 0) + 1,
+              // batBall: (playersMap[c.batsman_id]?.batBall || 0) + 1,
+              batDotBall: (playersMap[c.batsman_id]?.batDotBall || 0) + 1,
             }
           }
           else {
@@ -1454,8 +1461,10 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               fielderId2: wicketData.fielder2,
               isPlay: null,
               onStrike: null,
-              batBall: 1,
-              batDotBall: 1,
+              // batBall: (playerTpIdObj[c.batsman_id].batBall || 0) + 1,
+              batDotBall: (playerTpIdObj[c.batsman_id].batDotBall || 0) + 1,
+              // batBall: 1,
+              // batDotBall: 1,
             }
           }
           let updateBall = {
@@ -2240,6 +2249,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
             }
             else if (isBoundary) {
               if (run == 4) {
+                over.totalFour = over.totalFour > 0 ? over.totalFour - 1 : 0
                 playersMap[tpBall.bowler_id].bowlerFour = playersMap[tpBall.bowler_id].bowlerFour > 0 ? playersMap[tpBall.bowler_id].bowlerFour - 1 : 0
               }
               if (run == 6) {
@@ -2514,9 +2524,10 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
             else if (isBoundary) {
               if (run == 4) {
                 playersMap[tpBall.bowler_id].bowlerFour = playersMap[tpBall.bowler_id].bowlerFour > 0 ? playersMap[tpBall.bowler_id].bowlerFour - 1 : 0
+                over.totalFour = over.totalFour > 0 ? over.totalFour - 1 : 0
               }
               if (run == 6) {
-                over.totalSix -= 1;
+                over.totalSix = over.totalSix > 0 ? over.totalSix - 1 : 0;
                 playersMap[tpBall.bowler_id].bowlerSix = playersMap[tpBall.bowler_id].bowlerSix > 0 ? playersMap[tpBall.bowler_id].bowlerSix - 1 : 0
               }
             }
@@ -2779,6 +2790,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
             }
             else if (isBoundary) {
               if (run == 4) {
+                over.totalFour = over.totalFour > 0 ? over.totalFour - 1 : 0
                 playersMap[tpBall.bowler_id].bowlerFour = playersMap[tpBall.bowler_id].bowlerFour > 0 ? playersMap[tpBall.bowler_id].bowlerFour - 1 : 0
               }
               if (run == 6) {
@@ -2838,6 +2850,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
     commentaryOvers : overArr,
     commentaryPartnership: partnershipArr,
     commentaryTeams : [battingTeam],
+    deleteOverIds: deleteOverIds
   },fastify,request)
   
   return true;
