@@ -1344,6 +1344,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             // playersMap[c.bowler_id].bowlerOver = ((playersMap[c.bowler_id].bowlerOver || 0) + 0.1).toFixed(1) 
             playersMap[c.bowler_id].bowlerTotalWicket = (playersMap[c.bowler_id].bowlerTotalWicket || 0) + 1
             playersMap[c.bowler_id].bowlerTotalBall = (playersMap[c.bowler_id].bowlerTotalBall || 0) + 1
+            playersMap[c.bowler_id].bowlerDotBall = (playersMap[c.bowler_id].bowlerDotBall || 0) + 1
           }
           else {
             playersMap[c.bowler_id] = {
@@ -1352,6 +1353,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               isPlay : true,
               bowlerTotalWicket : playerTpIdObj[c.bowler_id].bowlerTotalWicket ? playerTpIdObj[c.bowler_id].bowlerTotalWicket + 1 : 1,
               bowlerTotalBall : playerTpIdObj[c.bowler_id].bowlerTotalBall ? playerTpIdObj[c.bowler_id].bowlerTotalBall + 1 : 1,  
+              bowlerDotBall : playerTpIdObj[c.bowler_id].bowlerDotBall ? playerTpIdObj[c.bowler_id].bowlerDotBall + 1 : 1,  
             }
           }
           let wicketData = {
@@ -1772,7 +1774,13 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
 
           playersMap[tpBall.bowler_id].bowlerTotalWicket = playersMap[tpBall.bowler_id].bowlerTotalWicket > 0 ? playersMap[tpBall.bowler_id].bowlerTotalWicket - 1 : 0;
           playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
-          
+          playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playersMap[tpBall.bowler_id].bowlerDotBall - 1 : 0;
+          let o = parseFloat(playersMap[tpBall.bowler_id].bowlerOver || 0);
+          let overs = Math.floor(o);
+          let balls = Math.round((o % 1) * 10);
+          let val = parseFloat(`${balls ? overs : overs - 1}.${balls ? balls - 1 : 5}`);
+          playersMap[tpBall.bowler_id].bowlerOver = Math.max(0, val);
+
           playersMap[tpBall.batsman_id].isBatterOut = null;
           playersMap[tpBall.batsman_id].wicketType = 0;
           playersMap[tpBall.batsman_id].bowlerId = 0;
@@ -1998,9 +2006,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
               deleteOverIds.push(over.overId);
             } else {
               over.teamScore = `${battingTeam.teamScore || 0}/${battingTeam.teamWicket || 0}`;
-              if (c.run == 0) {
-                over.dotBall = Math.max(0, (over.dotBall || 0) - 1);
-              }
+              over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
               oversMap[overKey] = over;
             }
           }
@@ -2019,6 +2025,12 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
 
           playersMap[tpBall.bowler_id].bowlerTotalWicket = playersMap[tpBall.bowler_id].bowlerTotalWicket > 0 ? playersMap[tpBall.bowler_id].bowlerTotalWicket - 1 : 0;
           playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
+          playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playersMap[tpBall.bowler_id].bowlerDotBall - 1 : 0;
+          let o = parseFloat(playersMap[tpBall.bowler_id].bowlerOver || 0);
+          let overs = Math.floor(o);
+          let balls = Math.round((o % 1) * 10);
+          let val = parseFloat(`${balls ? overs : overs - 1}.${balls ? balls - 1 : 5}`);
+          playersMap[tpBall.bowler_id].bowlerOver = Math.max(0, val);
           
           playersMap[tpBall.batsman_id].isBatterOut = null;
           playersMap[tpBall.batsman_id].wicketType = 0;
@@ -2265,9 +2277,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
               deleteOverIds.push(over.overId);
             } else {
               over.teamScore = `${battingTeam.teamScore || 0}/${battingTeam.teamWicket || 0}`;
-              if (c.run == 0) {
-                over.dotBall = Math.max(0, (over.dotBall || 0) - 1);
-              }
+              over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
               oversMap[overKey] = over;
             }
           }
@@ -2286,7 +2296,13 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
 
           playersMap[tpBall.bowler_id].bowlerTotalWicket = playersMap[tpBall.bowler_id].bowlerTotalWicket > 0 ? playersMap[tpBall.bowler_id].bowlerTotalWicket - 1 : 0;
           playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
-          
+          playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playersMap[tpBall.bowler_id].bowlerDotBall - 1 : 0;
+          let o = parseFloat(playersMap[tpBall.bowler_id].bowlerOver || 0);
+          let overs = Math.floor(o);
+          let balls = Math.round((o % 1) * 10);
+          let val = parseFloat(`${balls ? overs : overs - 1}.${balls ? balls - 1 : 5}`);
+          playersMap[tpBall.bowler_id].bowlerOver = Math.max(0, val);
+
           playersMap[tpBall.batsman_id].isBatterOut = null;
           playersMap[tpBall.batsman_id].wicketType = 0;
           playersMap[tpBall.batsman_id].bowlerId = 0;
@@ -2500,14 +2516,15 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
   let plyArr = Object.values(playersMap);
   let overArr = Object.values(oversMap)
   let partnershipArr = Object.values(partnershipMap)
-  // const result = {
-  //   commentaryId: comDetails.commentaryId,
-  //   commentaryPlayers: plyArr,
-  //   deleteBallByBallIds: deleteBallByBallIds,
-  //   commentaryOvers: overArr,
-  //   commentaryPartnership: partnershipArr,
-  //   commentaryTeams: [battingTeam]
-  // }
+  const result = {
+    commentaryId: comDetails.commentaryId,
+    commentaryPlayers: plyArr,
+    deleteBallByBallIds: deleteBallByBallIds,
+    commentaryOvers: overArr,
+    commentaryPartnership: partnershipArr,
+    deleteOverIds: deleteOverIds,
+    commentaryTeams: [battingTeam]
+  }
   // console.log("result", result)
   if(deleteBallByBallIds.length > 0 || deleteOverIds.length > 0){
     await syncEntitySportCommentaryService({
