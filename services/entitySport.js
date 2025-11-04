@@ -1192,6 +1192,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                 if(c.run == 4){
                   updateBall.ballIsBoundry = true;
                   updateBall.ballFour = 1;
+                  over.totalFour = over.totalFour + 1;
                   // strikerPly.batFour = strikerPly.batFour + 1;
                   // bowler.bowlerFour = bowler.bowlerFour + 1;
                   playersMap[c.bowler_id].bowlerFour = (playersMap[c.bowler_id].bowlerFour || 0) + 1
@@ -2514,9 +2515,10 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
             else if (isBoundary) {
               if (run == 4) {
                 playersMap[tpBall.bowler_id].bowlerFour = playersMap[tpBall.bowler_id].bowlerFour > 0 ? playersMap[tpBall.bowler_id].bowlerFour - 1 : 0
+                over.totalFour = over.totalFour > 0 ? over.totalFour - 1 : 0
               }
               if (run == 6) {
-                over.totalSix -= 1;
+                over.totalSix = over.totalSix > 0 ? over.totalSix - 1 : 0;
                 playersMap[tpBall.bowler_id].bowlerSix = playersMap[tpBall.bowler_id].bowlerSix > 0 ? playersMap[tpBall.bowler_id].bowlerSix - 1 : 0
               }
             }
