@@ -88,6 +88,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
               if(isLog == "false") { return true; }
               await createDataQuery({data : payload, matchId : payload.response.match_id}, fastify);
               await setEntityCom2Service(request, fastify);
+              
             } else {
               return true;
             }
