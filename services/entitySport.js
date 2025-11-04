@@ -779,7 +779,8 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     if (commentaries.length > 0) {
       let res =await handleStoreBall({
           response,
-          battingTeam
+          battingTeam,
+          matchType
       }, fastify, comDetails, request)
     }
     // store ballbyball
@@ -1680,7 +1681,7 @@ const matchCompleteService = async (data , fastify,comDetails) =>{
 
 }
 const handleStoreBall = async (data, fastify, comDetails, request) => {
-  const { response, battingTeam } = data;
+  const { response, battingTeam ,matchType } = data;
   let com = response.live.commentaries;
   let storedCom = com.slice(-5) 
   // console.log("storedCom" ,storedCom)
@@ -2509,7 +2510,8 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
   //   commentaryTeams: [battingTeam]
   // }
   // console.log("result", result)
-  await syncEntitySportCommentaryService({
+  if(deleteBallByBallIds.length > 0 || deleteOverIds.length > 0){
+    await syncEntitySportCommentaryService({
     commentaryId : comDetails.commentaryId,
     commentaryPlayers : plyArr,
     deleteBallByBallIds : deleteBallByBallIds,
@@ -2517,7 +2519,9 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
     commentaryPartnership: partnershipArr,
     commentaryTeams : [battingTeam],
     deleteOverIds: deleteOverIds
-  },fastify,request)
+    },fastify,request)
+  
+  }
   
   return true;
 }
