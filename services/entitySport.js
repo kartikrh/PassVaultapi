@@ -2510,7 +2510,8 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
   //   commentaryTeams: [battingTeam]
   // }
   // console.log("result", result)
-  await syncEntitySportCommentaryService({
+  if(deleteBallByBallIds.length > 0 || deleteOverIds.length > 0){
+    await syncEntitySportCommentaryService({
     commentaryId : comDetails.commentaryId,
     commentaryPlayers : plyArr,
     deleteBallByBallIds : deleteBallByBallIds,
@@ -2518,7 +2519,9 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
     commentaryPartnership: partnershipArr,
     commentaryTeams : [battingTeam],
     deleteOverIds: deleteOverIds
-  },fastify,request)
+    },fastify,request)
+  
+  }
   
   return true;
 }
