@@ -870,10 +870,10 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
       i.currentInnings === comDetails.currentInnings &&
       i.teamId === battingTeam.teamId &&
       i.batterOrder != null
-    );
+    ) || []
 
     ltSetOrder = existingBatters.length
-      ? Math.max(...existingBatters.map(i => i.batterOrder))
+      ? Math.max(...existingBatters?.map(i => i.batterOrder))
       : 0;
 
     if (response.live?.batsmen) {
@@ -906,10 +906,10 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
       i.currentInnings === comDetails.currentInnings &&
       i.teamId === bowlingTeam.teamId &&
       i.bowlerOrder != null
-    );
+    ) ||[]
 
     ltSetBowlerOrder = existingBowlers.length
-      ? Math.max(...existingBowlers.map(i => i.bowlerOrder))
+      ? Math.max(...existingBowlers?.map(i => i.bowlerOrder))
       : 0;
 
     if (response.live?.bowlers) {
