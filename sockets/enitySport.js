@@ -84,10 +84,10 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
             // console.log("Received entity data from Backend A:", payload);
             const request = { body: payload };
             if (payload.api_type && payload.api_type == "match_push_obj") {
-              await setEntityCom2Service(request, fastify);
               let isLog = global.tblConfigs.find((c) => c.key == configConstants.ISENTITYDATALOG)?.value || "false";
               if(isLog == "false") { return true; }
               await createDataQuery({data : payload, matchId : payload.response.match_id}, fastify);
+              await setEntityCom2Service(request, fastify);
             } else {
               return true;
             }
