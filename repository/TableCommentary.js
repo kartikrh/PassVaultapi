@@ -3181,7 +3181,7 @@ const updateCommentaryPlayersQuery = async (data, fastify, request) => {
           data.currentInnings,
           data.tpId,
           data.bowlingType,
-          data.isPlayInEvent,
+          data?.isPlayInEvent,
         ],
         type: fastify.db.QueryTypes.UPDATE,
       }
