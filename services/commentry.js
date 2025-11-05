@@ -5774,6 +5774,8 @@ const addTeamPlayerService = async (request, fastify) => {
     );
     return;
   }
+
+  const playerTpId = global.tblPlayers.find(item => item.playerId === playerId);
   const playerData = await insertCommentaryPlayersQuery(
     {
       commentaryId,
@@ -5782,6 +5784,7 @@ const addTeamPlayerService = async (request, fastify) => {
       displayOrder: maxDisplayOrder + 1,
       matchTypeId: commentary.matchTypeId,
       currentInnings,
+      tpId: playerTpId?.tpId
     },
     fastify,
     request
@@ -23597,26 +23600,26 @@ const matchImportService = async (data, fastify, request = null) => {
     let teamASquad = matchPlaying11Squad?.teama?.squads?.length > 0 ? matchPlaying11Squad?.teama?.squads : [];
     let teamBSquad = matchPlaying11Squad?.teamb?.squads?.length > 0 ? matchPlaying11Squad?.teamb?.squads : [];
 
-    if (teamASquad.length > 0) {
-      teamASquad = teamASquad.map(item => Number(item.player_id));
-    } else {
+    if (teamASquad.length === 0) {
       teamASquad = await getAllPlayersByTeamIdQuery(teamAData.teamId, fastify, request);
-      teamASquad = teamASquad.map(item => item.tpId);
-
       if (teamASquad.length === 0) {
         teamASquad = await insertTeamPlayersByTeamId(teamAData.teamId, teamAData.tpId, request, fastify);
       }
+      teamASquad = teamASquad?.map(item => ({
+        player_id: `${item.tpId}`,
+        playing11: `${true}`
+      }))
     }
 
-    if (teamBSquad.length > 0) {
-      teamBSquad = teamBSquad.map(item => Number(item.player_id));
-    } else {
+    if (teamBSquad.length === 0) {
       teamBSquad = await getAllPlayersByTeamIdQuery(teamBData.teamId, fastify, request);
-      teamBSquad = teamBSquad.map(item => item.tpId);
-
       if (teamBSquad.length === 0) {
         teamBSquad = await insertTeamPlayersByTeamId(teamBData.teamId, teamBData.tpId, request, fastify);
       }
+      teamBSquad = teamBSquad?.map(item => ({
+        player_id: `${item.tpId}`,
+        playing11: `${true}`
+      }))
     }
 
     for (let i = 1; i <= noOfInning; i++) {

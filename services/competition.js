@@ -21,7 +21,7 @@ const {storeImageOnServer, removeImageFromServer, generateImageName, getImageFro
 const { PROJECT_NAME, ENTITYDEFAULTTEAMIMG, ENTITYDEFAULTTEAMIMGPATH, ENTITYDEFAULTJERSEYIMG, ENTITYDEFAULTJERSEYIMGPATH } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
 const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive, matchStatusEntity, error, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, parseUmpires, ScoringTypes } = require("../utilities");
-const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryTeams, getCommentaryTeamsQuery, insertCommentaryPlayers } = require("../repository/TableCommentary")
+const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryTeams, getCommentaryTeamsQuery, insertCommentaryPlayers, deleteCommentaryPlayersByPlayerId, updateCommentaryPlayerById } = require("../repository/TableCommentary")
 const { deleteTournamentTeamPlayersByCompIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
 const { addEditTournamentTeamPointDataService } = require("./tournamentTeamPoints");
@@ -985,14 +985,13 @@ const insertTeamPlayersByTeamId = async (teamId, teamTpId, isMen, request, fasti
     }
   }
 
-  const updatedTeamPlayers = await getAllPlayersByTeamIdQuery(teamId, fastify, request);
-  return updatedTeamPlayers?.map(item => item.tpId);
+  return await getAllPlayersByTeamIdQuery(teamId, fastify, request);
 }
 
 const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlaying11Squad, players, matchTypeId, isMen, fastify, request) => {
   let commentaryPlayers = global.tblCommentaryPlayers.filter(item => item.commentaryId === commentaryId && item.teamId === teamId && item.currentInnings === i);
   const playersInTeamsSet = new Set(commentaryPlayers.map(player => player.tpId));
-  const filteredPlayerIds = teamPlaying11Squad?.filter(pid => !playersInTeamsSet.has(pid));
+  const filteredPlayerIds = teamPlaying11Squad?.filter(pid => !playersInTeamsSet.has(Number(pid.player_id)))?.map(item => Number(item.player_id));
 
   const entitySocketData = global.tblEntitySockets[0];
   const playersInTeams = await getAllPlayersByTeamIdQuery(
@@ -1018,7 +1017,7 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
       const checkPlayerExistsInTeam = teamPlayerByTeamId.find(item => item.playerId === player.playerId);
       if (!checkPlayerExistsInTeam) {
         await insertTeamPlayerQuery({
-          teamId: teamId,
+          teamId,
           refPlayerId: player?.playerId,
           tpId: player?.tpId || null,
           userId: -2,
@@ -1027,7 +1026,7 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
         }, fastify, request);
         await updateTeamPlayerHomeTeamQuery({
           refPlayerId: player?.playerId,
-          teamId: teamId
+          teamId
         }, fastify, request);
       }
     }
@@ -1039,6 +1038,7 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
     request
   );
 
+  const isAllPlaying11 = teamPlaying11Squad?.find(item => item.playing11 === "true");
   for (const playerId of filteredPlayerIds) {
     const teamPlayerData = updatedPlayersInTeams.find(item => item.teamId === teamId && item.tpId === Number(playerId));
     if (!teamPlayerData) {
@@ -1058,8 +1058,37 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
         tpId: teamPlayerData?.tpId,
         jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage || null,
         jerseyPlayerImagePath: teamPlayerData?.jerseyPlayerImagePath || null,
+        isInPlaying11: isAllPlaying11 ? teamPlaying11Squad?.find(item => Number(item.player_id) === teamPlayerData?.tpId)?.playing11 === "true" : true
       }, i, fastify, request);
       global.tblCommentaryPlayers.push(insertCommentaryPlayerData[0]);
+    }
+  }
+
+  const playerTpIds = teamPlaying11Squad?.map(item => Number(item.player_id));
+  let playersNotInTeam = commentaryPlayers.filter(player => !playerTpIds.includes(player.tpId));
+  if (playersNotInTeam && playersNotInTeam.length > 0) {
+    playersNotInTeam = playersNotInTeam.map(item => item.playerId);
+    await deleteCommentaryPlayersByPlayerId({
+      commentaryId,
+      playerIds: playersNotInTeam?.map(item => item.playerId)
+    }, request, fastify);
+
+    global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(item => !(item.commentaryId === commentaryId && playersNotInTeam.includes(item.playerId)));
+  }
+
+  for (const pid of playerTpIds) {
+    const commentaryPlayerData = global.tblCommentaryPlayers.find(item => item.commentaryId === commentaryId && item.teamId === teamId && item.currentInnings === i && item.tpId === pid);
+    if (commentaryPlayerData) {
+      const updatedData = {
+        ...commentaryPlayerData,
+        isInPlayingEleven: isAllPlaying11 ? teamPlaying11Squad?.find(item => Number(item.player_id) === pid)?.playing11 === "true" : true
+      };
+      await updateCommentaryPlayerById(updatedData, request, fastify);
+
+      const index = global.tblCommentaryPlayers.findIndex(item => item.commentaryId === commentaryId && item.teamId === teamId && item.currentInnings === i && item.tpId === pid);
+      if (index !== -1) {
+        global.tblCommentaryPlayers[index] = updatedData;
+      }
     }
   }
 }
@@ -1482,26 +1511,26 @@ const competitionImportService = async (data, fastify, request) => {
       let teamASquad = matchPlaying11Squad?.teama?.squads?.length > 0 ? matchPlaying11Squad?.teama?.squads : [];
       let teamBSquad = matchPlaying11Squad?.teamb?.squads?.length > 0 ? matchPlaying11Squad?.teamb?.squads : [];
 
-      if (teamASquad.length > 0) {
-        teamASquad = teamASquad.map(item => Number(item.player_id));
-      } else {
+      if (teamASquad.length === 0) {
         teamASquad = await getAllPlayersByTeamIdQuery(teamA.teamId, fastify, request);
-        teamASquad = teamASquad.map(item => item.tpId);
-
         if (teamASquad.length === 0) {
-          teamASquad = await insertTeamPlayersByTeamId(teamA.teamId, teamA.tpId, checkCompetition.isMen, request, fastify);
+          teamASquad = await insertTeamPlayersByTeamId(teamA.teamId, teamA.tpId, request, fastify);
         }
+        teamASquad = teamASquad?.map(item => ({
+          player_id: `${item.tpId}`,
+          playing11: `${true}`
+        }))
       }
 
-      if (teamBSquad.length > 0) {
-        teamBSquad = teamBSquad.map(item => Number(item.player_id));
-      } else {
+      if (teamBSquad.length === 0) {
         teamBSquad = await getAllPlayersByTeamIdQuery(teamB.teamId, fastify, request);
-        teamBSquad = teamBSquad.map(item => item.tpId);
-
         if (teamBSquad.length === 0) {
-          teamBSquad = await insertTeamPlayersByTeamId(teamB.teamId, teamB.tpId, checkCompetition.isMen, request, fastify);
+          teamBSquad = await insertTeamPlayersByTeamId(teamB.teamId, teamB.tpId, request, fastify);
         }
+        teamBSquad = teamBSquad?.map(item => ({
+          player_id: `${item.tpId}`,
+          playing11: `${true}`
+        }))
       }
 
       for (let i = 1; i <= noOfInning; i++) {
