@@ -4045,6 +4045,7 @@ const saveCommentaryDetailsAPIQuery = async (data, fastify, request) => {
     );
 
     return result[0];
+
   } catch (err) {
     errorLogger(
       fastify,
