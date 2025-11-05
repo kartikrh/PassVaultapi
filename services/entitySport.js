@@ -1922,7 +1922,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
             // playersMap[tpBall.batsman_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 :0;
             let isBoundary = run == 4 || run == 6 ? true : false;
             if (run == 0) {
-              over.dotBall = over.dotBall - 1;
+              over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
               playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
               playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 : 0;
               // playersMap[tpBall.batsman_id] = {
@@ -2205,7 +2205,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
             // playersMap[tpBall.batsman_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 :0;
             let isBoundary = run == 4 || run == 6 ? true : false;
             if (run == 0) {
-              over.dotBall = over.dotBall - 1;
+              over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
               playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
               playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 : 0;
               // playersMap[tpBall.batsman_id] = {
@@ -2335,7 +2335,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           
 
           if (c.run == 0) {
-            over.dotBall = over.dotBall - 1;
+            over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
             playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
             playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 : 0;
           }
@@ -2483,7 +2483,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
             // playersMap[tpBall.batsman_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 :0;
             let isBoundary = run == 4 || run == 6 ? true : false;
             if (run == 0) {
-              over.dotBall = over.dotBall - 1;
+              over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
               playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
               playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 : 0;
               // playersMap[tpBall.batsman_id] = {
