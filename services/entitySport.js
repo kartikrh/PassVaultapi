@@ -1931,6 +1931,9 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
                 playersMap[tpBall.bowler_id].bowlerSix = playersMap[tpBall.bowler_id].bowlerSix > 0 ? playersMap[tpBall.bowler_id].bowlerSix - 1 : 0
               }
             }
+            if (over.ballCount === 0) {
+              deleteOverIds.push(over.overId);
+            }
         }
           if (b1.ballType == BALL_TYPE.WIDE  && b1.ballIsWicket == false) {
             isWide = true;
@@ -1959,7 +1962,9 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
             playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
             playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - run : 0;
 
-
+            if (over.ballCount === 0) {
+              deleteOverIds.push(over.overId);
+            }
           }
       }
     }
@@ -2209,6 +2214,9 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
                 playersMap[tpBall.bowler_id].bowlerSix = playersMap[tpBall.bowler_id].bowlerSix > 0 ? playersMap[tpBall.bowler_id].bowlerSix - 1 : 0
               }
             }
+            if (over.ballCount === 0) {
+              deleteOverIds.push(over.overId);
+            }
           // }
         }
         if (b1.ballType == BALL_TYPE.WIDE) {
@@ -2237,7 +2245,11 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
             playersMap[tpBall.bowler_id].bowlerWideBallRun = playersMap[tpBall.bowler_id].bowlerWideBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerWideBallRun - run : 0;
             playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
             playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - run : 0;
-        }
+            
+            if (over.ballCount === 0) {
+              deleteOverIds.push(over.overId);
+            }
+          }
       }      
     }
     if (event == "wide") {
@@ -2480,6 +2492,9 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
                 playersMap[tpBall.bowler_id].bowlerSix = playersMap[tpBall.bowler_id].bowlerSix > 0 ? playersMap[tpBall.bowler_id].bowlerSix - 1 : 0
               }
             }
+            if (over.ballCount === 0) {
+              deleteOverIds.push(over.overId);
+            }
           // }
         }
         if (b1.ballType == BALL_TYPE.WIDE && b1.ballIsWicket == false) {
@@ -2508,7 +2523,11 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
             playersMap[tpBall.bowler_id].bowlerWideBallRun = playersMap[tpBall.bowler_id].bowlerWideBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerWideBallRun - run : 0;
             playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
             playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - run : 0;
-        }
+            
+            if (over.ballCount === 0) {
+              deleteOverIds.push(over.overId);
+            }
+          }
       } 
        
     }
@@ -2516,15 +2535,15 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
   let plyArr = Object.values(playersMap);
   let overArr = Object.values(oversMap)
   let partnershipArr = Object.values(partnershipMap)
-  const result = {
-    commentaryId: comDetails.commentaryId,
-    commentaryPlayers: plyArr,
-    deleteBallByBallIds: deleteBallByBallIds,
-    commentaryOvers: overArr,
-    commentaryPartnership: partnershipArr,
-    deleteOverIds: deleteOverIds,
-    commentaryTeams: [battingTeam]
-  }
+  // const result = {
+  //   commentaryId: comDetails.commentaryId,
+  //   commentaryPlayers: plyArr,
+  //   deleteBallByBallIds: deleteBallByBallIds,
+  //   commentaryOvers: overArr,
+  //   commentaryPartnership: partnershipArr,
+  //   deleteOverIds: deleteOverIds,
+  //   commentaryTeams: [battingTeam]
+  // }
   // console.log("result", result)
   if(deleteBallByBallIds.length > 0 || deleteOverIds.length > 0){
     await syncEntitySportCommentaryService({
