@@ -234,8 +234,16 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                         global.tblCommentaryTeams.push(teamACommentaryTeam, teamBCommentaryTeam);
                                     }
 
-                                    await insertCommentaryPlayersByTeam(i, commentary.commentaryId, team1Id, teamASquad, entitySportMatchResponse?.players, matchType?.matchTypeId, getTeamIsMen, fastify, null);
-                                    await insertCommentaryPlayersByTeam(i, commentary.commentaryId, team2Id, teamBSquad, entitySportMatchResponse?.players, matchType?.matchTypeId, getTeamIsMen, fastify, null);
+                                    await insertCommentaryPlayersByTeam(i, commentary.commentaryId, team1Id, teamASquad, entitySportMatchResponse?.players, matchType?.matchTypeId, getTeamIsMen, fastify, {
+                                        userTokenInfo: {
+                                            WrUserId: -2
+                                        }
+                                    });
+                                    await insertCommentaryPlayersByTeam(i, commentary.commentaryId, team2Id, teamBSquad, entitySportMatchResponse?.players, matchType?.matchTypeId, getTeamIsMen, fastify, {
+                                        userTokenInfo: {
+                                            WrUserId: -2
+                                        }
+                                    });
                                 }
 
                                 if (entitySportMatchResponse?.weather && entitySportMatchResponse?.weather.length > 0) {
