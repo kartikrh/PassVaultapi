@@ -514,8 +514,7 @@ const insertCommentaryPlayers = async (
           (select tp."wrBowlingType" from "tblPlayers" tp where tp."wrPlayerId" = $3),
           $8,
           $9,
-          $10,
-          $11
+          $10
         )
         RETURNING *   
       ) 
@@ -580,8 +579,7 @@ const insertCommentaryPlayers = async (
         tpt."wrPlayerType" AS "playerType",
         tcp."wrJerseyPlayerImage" AS "jerseyPlayerImage",
         tcp."wrJerseyPlayerImagePath" AS "jerseyPlayerImagePath",
-        tcp."wrTpId" AS "tpId",
-        tcp."wrIsPlayInEvent" as "isPlayInEvent"
+        tcp."wrTpId" AS "tpId"
       FROM insert_data tcp
       LEFT JOIN "tblPlayers" tp ON tcp."wrPlayerId" = tp."wrPlayerId"
       LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId";
@@ -599,7 +597,6 @@ const insertCommentaryPlayers = async (
           data?.jerseyPlayerImage || null,
           data?.jerseyPlayerImagePath || null,
           data?.isInPlaying11 || null,
-          data?.isPlayInEvent || null
         ],
       }
     );
