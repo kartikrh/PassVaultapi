@@ -579,7 +579,8 @@ const insertCommentaryPlayers = async (
         tpt."wrPlayerType" AS "playerType",
         tcp."wrJerseyPlayerImage" AS "jerseyPlayerImage",
         tcp."wrJerseyPlayerImagePath" AS "jerseyPlayerImagePath",
-        tcp."wrTpId" AS "tpId"
+        tcp."wrTpId" AS "tpId",
+        tcp."wrIsPlayInEvent" as "isPlayInEvent"
       FROM insert_data tcp
       LEFT JOIN "tblPlayers" tp ON tcp."wrPlayerId" = tp."wrPlayerId"
       LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId";
@@ -596,7 +597,8 @@ const insertCommentaryPlayers = async (
           data.tpId || null,
           data?.jerseyPlayerImage || null,
           data?.jerseyPlayerImagePath || null,
-          data?.isInPlaying11 || null
+          data?.isInPlaying11 || null,
+          data?.isPlayInEvent || null
         ],
       }
     );
@@ -1881,7 +1883,8 @@ const getAllCommentaryPlayerQuery = async (fastify) => {
         tpt."wrPlayerType" as "playerType",
         tcp."wrJerseyPlayerImage" as "jerseyPlayerImage",
         tcp."wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
-        tcp."wrTpId" as "tpId"
+        tcp."wrTpId" as "tpId",
+        tcp."wrIsPlayInEvent" as "isPlayInEvent"
     from "tblCommentaryPlayers" AS tcp
     LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
     LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
@@ -1980,7 +1983,8 @@ const getAllCommentaryPlayerDataQuery = async (whereCondition = null, fastify) =
         tcp."wrJerseyPlayerImage" as "jerseyPlayerImage",
         tcp."wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
         tp."wrDisplayName" as "displayName",
-        tcp."wrTpId" as "tpId"
+        tcp."wrTpId" as "tpId",
+        tcp."wrIsPlayInEvent" as "isPlayInEvent"
     from "tblCommentaryPlayers" AS tcp
     LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
     LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
@@ -3120,7 +3124,8 @@ const updateCommentaryPlayersQuery = async (data, fastify, request) => {
       "wrBatterOrder" = $45,
       "wrBowlerOrder" = $46,
       "wrTpId" = $49,
-      "wrBowlingType" = $50
+      "wrBowlingType" = $50,
+      "wrIsPlayInEvent" = $51
       where "wrCommentaryPlayerId" = $47
       AND "wrCurrentInnings" = $48
       `,
@@ -3176,6 +3181,7 @@ const updateCommentaryPlayersQuery = async (data, fastify, request) => {
           data.currentInnings,
           data.tpId,
           data.bowlingType,
+          data?.isPlayInEvent,
         ],
         type: fastify.db.QueryTypes.UPDATE,
       }
@@ -8492,7 +8498,8 @@ const getAllCommentaryPlayerQueryById = async (data, request, fastify) => {
           tpt."wrPlayerType" as "playerType",
           tcp."wrJerseyPlayerImage" as "jerseyPlayerImage",
           tcp."wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
-          tcp."wrTpId" as "tpId"
+          tcp."wrTpId" as "tpId",
+          tcp."wrIsPlayInEvent" as "isPlayInEvent"
       FROM "tblCommentaryPlayers" AS tcp
       LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
       LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
