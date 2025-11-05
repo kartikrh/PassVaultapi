@@ -514,7 +514,8 @@ const insertCommentaryPlayers = async (
           (select tp."wrBowlingType" from "tblPlayers" tp where tp."wrPlayerId" = $3),
           $8,
           $9,
-          $10
+          $10,
+          $11
         )
         RETURNING *   
       ) 
