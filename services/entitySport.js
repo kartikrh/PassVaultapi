@@ -18,7 +18,7 @@ const { compStatus, commentaryStatus } = require("../utilities")
 const { buildOverData, buildPartnershipData, buildComPlayers, genEtPartnership, generateOverEt, generateBallET, generateDisplayStatus, getBowlerOnlyRuns, generateWicket, generateRemainingRuns } = require("../utilities/comFunction")
 const { virtualOverQuery, virtualBallByBallQuery, virtualPartnershipQuery } = require("../repository/TableVirtual")
 const { default: fastify } = require("fastify")
-const { commentaryLogger } = require("../utilities/logger")
+const { commentaryLogger, errorLogger } = require("../utilities/logger")
 const { playerMarketQuery } = require("../repository/TableEventMarkets")
 const { playerBattingHistSummarycalculationService } = require("./playerHistory")
 const commentary = require("../routes/admin/commentary")
@@ -570,8 +570,18 @@ const setEntityCom2Service = async (request , fastify) =>{
                 })
             }
             // create partnership
-            let part = response.live.live_inning.current_partnership;
-            let batters = part.batsmen.map((i)=>i.batsman_id)
+            let part = response.live.live_inning?.current_partnership;
+            let batters = part?.batsmen?.map((i)=>i.batsman_id)
+            if(!part){
+              errorLogger(
+                fastify,
+                "Current Partnership is not in Data",
+                "services/entitySport.js/setEntityCom2Service",
+                null,
+                request.body
+              )
+              return true;
+            }
             let [b1, b2] = batters;
             let partExist = global.tblCommentaryPartnership.find((i)=>
                 i.commentaryId == comDetails.commentaryId &&
