@@ -5774,6 +5774,8 @@ const addTeamPlayerService = async (request, fastify) => {
     );
     return;
   }
+
+  const playerTpId = global.tblPlayers.find(item => item.playerId === playerId);
   const playerData = await insertCommentaryPlayersQuery(
     {
       commentaryId,
@@ -5782,6 +5784,7 @@ const addTeamPlayerService = async (request, fastify) => {
       displayOrder: maxDisplayOrder + 1,
       matchTypeId: commentary.matchTypeId,
       currentInnings,
+      tpId: playerTpId?.tpId
     },
     fastify,
     request
@@ -11978,6 +11981,7 @@ const revertCommentaryService = async (request, fastify) => {
   const index = global.tblCommentaries.findIndex(
     (item) => item?.commentaryId === commentaryId
   );
+  
   if (index == -1) {
     throw new Error("Commentary with this id not Found");
   }
@@ -22389,6 +22393,8 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
             commentaryDetails,
             commentaryId,
             isEndInnings,
+            deleteBallByBallIds,
+            deleteOverIds,
         } = data;
 
         let commentaryIndex,
@@ -22562,26 +22568,55 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
         }
 
         let updatedData = await fastify.db.query(
-            `CALL proc_entitycom_v1($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
-            {
-                bind: [
-                  commentaryTeams ? JSON.stringify(commentaryTeams) : null,
-                  commentaryPlayers ? JSON.stringify(commentaryPlayers) : null,
-                  commentaryOvers ? JSON.stringify(commentaryOvers) : null,
-                  commentaryBallByBall ? JSON.stringify(commentaryBallByBall) : null,
-                  commentaryWicket ? JSON.stringify(commentaryWicket) : null,
-                  commentaryPartnership ? JSON.stringify(commentaryPartnership) : null,
-                  commentaryDetails ? JSON.stringify(commentaryDetails) : null,
-                  commentaryId,
-                  null, // commentaryWicketDetails,
-                  null, // commentaryOverDetails,
-                  null, // commentaryDetailsDetails,
-                  null, // commentaryBallByBallDetails,
-                  null, // commentaryPartnershipDetails,
-                ],
-                type: fastify.db.QueryTypes.SELECT,
-            }
+          `CALL proc_entitycom_v1($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
+          {
+            bind: [
+              commentaryTeams ? JSON.stringify(commentaryTeams) : null,
+              commentaryPlayers ? JSON.stringify(commentaryPlayers) : null,
+              commentaryOvers ? JSON.stringify(commentaryOvers) : null,
+              commentaryBallByBall ? JSON.stringify(commentaryBallByBall) : null,
+              commentaryWicket ? JSON.stringify(commentaryWicket) : null,
+              commentaryPartnership ? JSON.stringify(commentaryPartnership) : null,
+              commentaryDetails ? JSON.stringify(commentaryDetails) : null,
+              commentaryId,
+              null,
+              null,
+              null,
+              null,
+              null,
+              deleteBallByBallIds || null,
+              deleteOverIds || null,
+              (deleteBallByBallIds?.length || deleteOverIds?.length) ? true : false,
+              -2,
+              // (deleteBallByBallIds?.length || deleteOverIds?.length)
+              //   ? (request?.userTokenInfo?.WrUserId ?? null)
+              //   : null,
+            ],
+            type: fastify.db.QueryTypes.SELECT,
+          }
         );
+
+        // let updatedData = await fastify.db.query(
+        //     `CALL proc_entitycom_v1($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+        //     {
+        //         bind: [
+        //           commentaryTeams ? JSON.stringify(commentaryTeams) : null,
+        //           commentaryPlayers ? JSON.stringify(commentaryPlayers) : null,
+        //           commentaryOvers ? JSON.stringify(commentaryOvers) : null,
+        //           commentaryBallByBall ? JSON.stringify(commentaryBallByBall) : null,
+        //           commentaryWicket ? JSON.stringify(commentaryWicket) : null,
+        //           commentaryPartnership ? JSON.stringify(commentaryPartnership) : null,
+        //           commentaryDetails ? JSON.stringify(commentaryDetails) : null,
+        //           commentaryId,
+        //           null, // commentaryWicketDetails,
+        //           null, // commentaryOverDetails,
+        //           null, // commentaryDetailsDetails,
+        //           null, // commentaryBallByBallDetails,
+        //           null, // commentaryPartnershipDetails,
+        //         ],
+        //         type: fastify.db.QueryTypes.SELECT,
+        //     }
+        // );
         // if got object then push in global obj else update the global
         updatedData = updatedData[0];
         const response = {};
@@ -22966,6 +23001,23 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
             data: response.commentaryPartnershipDetails,
           });
         }
+
+        if (deleteBallByBallIds && deleteBallByBallIds.length > 0) {
+          global.tblCommentaryWicket = global.tblCommentaryWicket.filter(
+            (item) => !deleteBallByBallIds.includes(item?.commentaryBallByBallId)
+          );
+          global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter(
+            (item) => !deleteBallByBallIds.includes(item?.commentaryBallByBallId)
+          );
+          global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
+            (item) => !deleteBallByBallIds.includes(item?.commentaryBallByBallId)
+          );
+        }
+        if (deleteOverIds && deleteOverIds.length > 0) {
+          global.tblOvers = global.tblOvers.filter(
+            (item) => !deleteOverIds.includes(item?.overId)
+          );
+        }
         // call the getscore and emit the event data
         if (
             global?.clientSocketIo !== undefined &&
@@ -23073,6 +23125,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                 null
             );
         });
+        console.log("errorroorroororor", error)
         throw new Error(error.message);
     }
 };
@@ -23547,26 +23600,26 @@ const matchImportService = async (data, fastify, request = null) => {
     let teamASquad = matchPlaying11Squad?.teama?.squads?.length > 0 ? matchPlaying11Squad?.teama?.squads : [];
     let teamBSquad = matchPlaying11Squad?.teamb?.squads?.length > 0 ? matchPlaying11Squad?.teamb?.squads : [];
 
-    if (teamASquad.length > 0) {
-      teamASquad = teamASquad.map(item => Number(item.player_id));
-    } else {
+    if (teamASquad.length === 0) {
       teamASquad = await getAllPlayersByTeamIdQuery(teamAData.teamId, fastify, request);
-      teamASquad = teamASquad.map(item => item.tpId);
-
       if (teamASquad.length === 0) {
-        teamASquad = await insertTeamPlayersByTeamId(teamAData.teamId, teamAData.tpId, request, fastify);
+        teamASquad = await insertTeamPlayersByTeamId(teamAData.teamId, teamAData.tpId, checkCompetition?.isMen, request, fastify);
       }
+      teamASquad = teamASquad?.map(item => ({
+        player_id: `${item.tpId}`,
+        playing11: `${true}`
+      }))
     }
 
-    if (teamBSquad.length > 0) {
-      teamBSquad = teamBSquad.map(item => Number(item.player_id));
-    } else {
+    if (teamBSquad.length === 0) {
       teamBSquad = await getAllPlayersByTeamIdQuery(teamBData.teamId, fastify, request);
-      teamBSquad = teamBSquad.map(item => item.tpId);
-
       if (teamBSquad.length === 0) {
-        teamBSquad = await insertTeamPlayersByTeamId(teamBData.teamId, teamBData.tpId, request, fastify);
+        teamBSquad = await insertTeamPlayersByTeamId(teamBData.teamId, teamBData.tpId, checkCompetition?.isMen, request, fastify);
       }
+      teamBSquad = teamBSquad?.map(item => ({
+        player_id: `${item.tpId}`,
+        playing11: `${true}`
+      }))
     }
 
     for (let i = 1; i <= noOfInning; i++) {
@@ -23631,7 +23684,6 @@ const clientSocketCountService = async (fastify) => {
         socket.client.emit("updateRoomUserCount", { message: "Send me user counts" });
         socket.client.once("countData", async (data) => {
           for (const elem of data) {
-            // console.log("elememeeee", elem)
             const currentCount = Number(elem.count) || 0;
             if(elem.commentaryId) {
               await updateCommentaryViewsQuery({

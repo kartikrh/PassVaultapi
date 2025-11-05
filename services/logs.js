@@ -8,6 +8,8 @@ const {
     allResultLogsQuery,
     allEMLogsQuery,
     allAutoImportDataLogsQuery,
+    allEntityUpdateLogsQuery,
+    actionLogsQuery,
 } = require("../repository/TableLogs");
 const { allCommentaryDRSLogsQuery } = require("../repository/TableCommentaryDRSLogs");
 
@@ -131,6 +133,12 @@ const allCommentaryDRSLogsService = async(request, fastify) => {
 const allAutoImportDataLogsService = async(request, fastify) => {
     return await allAutoImportDataLogsQuery(request.body || {},request, fastify);
 };
+const allEntityUpdateLogsService = async (request, fastify) => {
+    return await allEntityUpdateLogsQuery(request.body || {},request, fastify);
+};
+const actionLogsService = async (request, fastify) => {
+    return await actionLogsQuery(request.body || {},request, fastify);
+};
 module.exports = {
     allResponseLogs,
     allThirdPartyApiLogs,
@@ -144,4 +152,6 @@ module.exports = {
     getEMLogsService,
     allCommentaryDRSLogsService,
     allAutoImportDataLogsService,
+    allEntityUpdateLogsService,
+    actionLogsService,
 };
