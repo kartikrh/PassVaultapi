@@ -2268,7 +2268,10 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
       let index = global.tblCommentaryBallByBall.findIndex((i) => i.tpId == c.event_id);
       if (index == -1) continue; // skip not created ball
       let ball = global.tblCommentaryBallByBall.find((i) => i.tpId == c.event_id);
-      if (!ball.ballIsWicket && ball.ballType == BALL_TYPE.WIDE && ball.ballRun == c.run) {
+      // if (!ball.ballIsWicket && ball.ballType == BALL_TYPE.WIDE && ball.ballRun == c.run) {
+      //   continue;
+      // }
+      if (!ball.ballIsWicket && ball.ballType == BALL_TYPE.WIDE && ball.ballExtraRun == c.run) {
         continue;
       }
       let ballAfterThis = global.tblCommentaryBallByBall.filter((i) => i.commentaryBallByBallId >= ball.commentaryBallByBallId &&
