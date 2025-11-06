@@ -894,6 +894,7 @@ const upsertPlayers = async (entitySocketData, players, playerTpId, isMen, reque
           getCountry = insertCountryCode;
         }
       }
+        console.log("🚀 ~ upsertPlayers ~ getPlayerFromEntity:", getPlayerFromEntity)
       let insertPlayerData = {
         eventTypeId: EventType['Cricket'],
         playerTypeId: EntityPlayerType[getPlayerFromEntity?.playing_role],

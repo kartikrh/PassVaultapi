@@ -1039,6 +1039,7 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
     return false;
   }
 
+  console.log("🚀 ~ UpdatePlayerFromEntityService ~ entitySportPlayerInfoResponse:", entitySportPlayerInfoResponse)
   const { playerId, playerTypeId, playerName, displayName, isKipper, isLeftHandedBatting, isLeftArmFielding, bowlingStyleId, bowlingTypeId, countryId, tpId } = checkPlayerData;
   const { playing_role, title, short_name, batting_style, bowling_style, bowling_type, nationality } = entitySportPlayerInfoResponse;
 
