@@ -3,11 +3,12 @@ const { errorLogger } = require("./logger");
 const { entitySportAutoUpdateCommentaryTime, intervalTimesForUpdateCommentary, autoUpdateCommentaryDataStatus } = require('./entityConst');
 const { getAllAutoUpdateCommentaryDataQuery, insertAutoUpdateCommentaryDataQuery, updateAutoUpdateCommentaryDataQuery } = require('../repository/TableAutoUpdateCommentaryData');
 const { updateCommentaryQuery, insertCommentaryTeams, getCommentaryTeamsQuery } = require('../repository/TableCommentary');
-const { insertCommentaryPlayersByTeam } = require('../services/competition');
+const { insertCommentaryPlayersByTeam, insertTeamPlayersByTeamId } = require('../services/competition');
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { updateWeatherQuery, insertWeatherQuery } = require("../repository/TableWeather");
 const { updatePitchConditionQuery, insertPitchConditionQuery } = require("../repository/TablePitchCondition");
 const { insertVenueQuery } = require("../repository/TableVenue");
+const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 
 const entitySportAutoUpdateCommentary = async (fastify) => {
     try {
@@ -130,7 +131,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
 
                                     if (existingVenue) {
                                         if (existingVenue.id !== venueId) {
-                                        changedValues.venueId = existingVenue.id;
+                                            changedValues.venueId = existingVenue.id;
                                         }
                                     } else {
                                         const newVenueData = {
@@ -195,14 +196,26 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                 let teamASquad = matchPlaying11Squad?.teama?.squads?.length > 0 ? matchPlaying11Squad?.teama?.squads : [];
                                 let teamBSquad = matchPlaying11Squad?.teamb?.squads?.length > 0 ? matchPlaying11Squad?.teamb?.squads : [];
 
-                                if (teamASquad.length > 0) {
-                                    teamASquad = teamASquad.map(item => Number(item.player_id));
-                                    isChanged = true;
+                                if (teamASquad.length === 0) {
+                                    teamASquad = await getAllPlayersByTeamIdQuery(team1Id, fastify, null);
+                                    if (teamASquad.length === 0) {
+                                        teamASquad = await insertTeamPlayersByTeamId(team1Id, teama?.team_id, getTeamIsMen, null, fastify);
+                                    }
+                                    teamASquad = teamASquad?.map(item => ({
+                                        player_id: `${item.tpId}`,
+                                        playing11: `${true}`
+                                    }))
                                 }
 
-                                if (teamBSquad.length > 0) {
-                                    teamBSquad = teamBSquad.map(item => Number(item.player_id));
-                                    isChanged = true;
+                                if (teamBSquad.length === 0) {
+                                    teamBSquad = await getAllPlayersByTeamIdQuery(team2Id, fastify, null);
+                                    if (teamBSquad.length === 0) {
+                                        teamBSquad = await insertTeamPlayersByTeamId(team2Id, teamb?.team_id, getTeamIsMen, null, fastify);
+                                    }
+                                    teamBSquad = teamBSquad?.map(item => ({
+                                        player_id: `${item.tpId}`,
+                                        playing11: `${true}`
+                                    }))
                                 }
 
                                 for (let i = 1; i <= noOfInning; i++) {
