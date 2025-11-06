@@ -875,8 +875,8 @@ const upCompStatusService = async (request, fastify) => {
 
 const upsertPlayers = async (entitySocketData, players, playerTpId, isMen, request, fastify) => {
   let checkPlayer = global.tblPlayers.find(item => item.tpId === playerTpId);
-  if (!checkPlayer) {
-    const getPlayerFromEntity = players?.find(p => p.pid === playerTpId);
+  const getPlayerFromEntity = players?.find(p => p.pid === playerTpId);
+  if (!checkPlayer && getPlayerFromEntity) {
     checkPlayer = global.tblPlayers.find((item) => item.tpId == null
       && item.playerName.toLowerCase() === getPlayerFromEntity?.title.replace(/'/g, "''").toLowerCase() &&
       item.displayName.trim().replace(/'/g, "''").toLowerCase() == getPlayerFromEntity?.short_name.toLowerCase())
@@ -894,7 +894,7 @@ const upsertPlayers = async (entitySocketData, players, playerTpId, isMen, reque
           getCountry = insertCountryCode;
         }
       }
-        console.log("🚀 ~ upsertPlayers ~ getPlayerFromEntity:", getPlayerFromEntity)
+
       let insertPlayerData = {
         eventTypeId: EventType['Cricket'],
         playerTypeId: EntityPlayerType[getPlayerFromEntity?.playing_role],
