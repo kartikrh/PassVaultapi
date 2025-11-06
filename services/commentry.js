@@ -23304,7 +23304,7 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
             getCountry = insertCountryCode;
           }
         }
-          console.log("🚀 ~ insertTeamAndPlayers ~ player:", player)
+
         let insertPlayerData = {
           eventTypeId: EventType['Cricket'],
           playerTypeId: EntityPlayerType[player?.playing_role],
