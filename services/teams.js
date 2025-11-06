@@ -674,7 +674,7 @@ const UpdateTeamFromEntityService = async (data, fastify, request) => {
           playerImageData = getImageDataFromUrl
         }
       }
-      console.log("🚀 ~ UpdateTeamFromEntityService ~ player:", player)
+
       const data = {
         eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
         playerTypeId: EntityPlayerType[player?.playing_role],
