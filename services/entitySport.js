@@ -503,9 +503,11 @@ const setEntityCom2Service = async (request , fastify) =>{
         }
         comDetails = global.tblCommentaries.find((i) => i.commentaryId == comDetails.commentaryId)
         if(comDetails.commentaryStatus == commentaryStatus.TOSSDONE){
+            const entityInning = response?.scorecard?.innings || [];
+            const bTeam = entityInning.find(inn => inn.number === comDetails.currentInnings);
             // set player
             let batTeam = global.tblCommentaryTeams.find((i)=> i.commentaryId == comDetails.commentaryId && i.currentInnings == comDetails.currentInnings 
-            && i.tpId == response.live.live_inning.batting_team_id)
+            && (i.tpId == response.live?.live_inning?.batting_team_id || i.tpId == bTeam?.batting_team_id))
             if(!batTeam){
                 throw new Error("Bat Team not found")
             }
@@ -571,7 +573,6 @@ const setEntityCom2Service = async (request , fastify) =>{
             }
             // create partnership
             let part = response.live.live_inning?.current_partnership;
-            let batters = part?.batsmen?.map((i)=>i.batsman_id)
             if(!part){
               errorLogger(
                 fastify,
@@ -582,6 +583,7 @@ const setEntityCom2Service = async (request , fastify) =>{
               )
               return true;
             }
+            let batters = part?.batsmen?.map((i)=>i.batsman_id)
             let [b1, b2] = batters;
             let partExist = global.tblCommentaryPartnership.find((i)=>
                 i.commentaryId == comDetails.commentaryId &&
