@@ -62,6 +62,7 @@ const entitySportAutoImportProcess = async (fastify) => {
                     await importEnd(autoImport);
                 }
             } catch (err) {
+                console.log("🚀 ~ processImport ~ err:", err)
                 errorLogger(fastify, err.message, `DB ERROR --> utilities/entitySportAutoImport.js/processImport/${importFn.name}`, null);
             }
         };
