@@ -1340,7 +1340,6 @@ const registerClientAppQuery = async (data,request,fastify) => {
     });
     return rs[0];
   } catch (error) {
-    console.log("errrr", error)
     errorLogger(
       fastify,
       error.message,
