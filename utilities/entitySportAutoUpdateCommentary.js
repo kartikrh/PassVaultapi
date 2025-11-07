@@ -238,11 +238,13 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                         }, fastify);
                                         const teamACommentaryTeam = await getCommentaryTeamsQuery({
                                             commentaryId: commentary.commentaryId,
-                                            teamId: team1Id
+                                            teamId: team1Id,
+                                            currentInnings: i
                                         }, fastify, null);
                                         const teamBCommentaryTeam = await getCommentaryTeamsQuery({
                                             commentaryId: commentary.commentaryId,
-                                            teamId: team2Id
+                                            teamId: team2Id,
+                                            currentInnings: i
                                         }, fastify, null);
                                         global.tblCommentaryTeams.push(teamACommentaryTeam, teamBCommentaryTeam);
                                     }

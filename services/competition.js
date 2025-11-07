@@ -1553,11 +1553,13 @@ const competitionImportService = async (data, fastify, request) => {
           }, fastify);
           const teamACommentaryTeam = await getCommentaryTeamsQuery({
             commentaryId: checkCommentary.commentaryId,
-            teamId: teamA?.teamId
+            teamId: teamA?.teamId,
+            currentInnings: i
           }, fastify, request);
           const teamBCommentaryTeam = await getCommentaryTeamsQuery({
             commentaryId: checkCommentary.commentaryId,
-            teamId: teamB?.teamId
+            teamId: teamB?.teamId,
+            currentInnings: i
           }, fastify, request);
           global.tblCommentaryTeams.push(teamACommentaryTeam, teamBCommentaryTeam);
         }
