@@ -9,6 +9,46 @@ const { errorLogger } = require("../utilities/logger");
 const { setEntityCom2Service } = require("../services/entitySport");
 const configConstants = require("../utilities/configConstants");
 const { createDataQuery } = require("../repository/TableEntityDataLog");
+const commentaryQueue = new Map();
+let isProcessingQueue = false;
+
+function addToQueue(payload, fastify) {
+  if (!payload?.response?.match_id) return;let resul
+  const matchId = payload.response.match_id;
+
+  // Replace existing queued item if same matchId (avoid duplicates)
+  commentaryQueue.set(matchId, { payload, fastify });
+  processTimeout = setTimeout(() => {
+    if (!isProcessingQueue) processQueue();
+  }, 100);
+
+}
+async function processQueue() {
+  if (isProcessingQueue) return; // Prevent multiple loops
+  isProcessingQueue = true;
+
+  while (commentaryQueue.size > 0) {
+    const [matchId, { payload, fastify }] = commentaryQueue.entries().next().value;
+    commentaryQueue.delete(matchId);
+
+    try {
+      const request = { body: payload };
+      await setEntityCom2Service(request, fastify);
+    } catch (err) {
+      errorLogger(
+        fastify,
+        err.message,
+        "Sockets/entitySports.js/processQueue"
+      )
+      console.error(`Error processing matchId ${matchId}:`, err);
+    }
+
+    // Optional small delay to ease DB load
+    await new Promise((r) => setTimeout(r, 50));
+  }
+
+  isProcessingQueue = false;
+}
 
 const connectEntitySport = async (fastify, entitySocketId = undefined) => {
   try {
@@ -87,7 +127,9 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
               let isLog = global.tblConfigs.find((c) => c.key == configConstants.ISENTITYDATALOG)?.value || "false";
               if(isLog == "false") { return true; }
               await createDataQuery({data : payload, matchId : payload.response.match_id}, fastify);
-              await setEntityCom2Service(request, fastify);
+              // await setEntityCom2Service(request, fastify);
+              addToQueue(payload, fastify);
+
               
             } else {
               return true;
