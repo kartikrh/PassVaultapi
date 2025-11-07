@@ -74,8 +74,10 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
                     await updateCommentaryViewsQuery({ views: currentCount, commentaryId: elem.commentaryId }, fastify);
                     const index = global.tblCommentaries.findIndex(i => i.commentaryId == elem.commentaryId);
                     if (index !== -1) {
-                      const oldCount = Number(global.tblCommentaries[index].views) || 0;
-                      global.tblCommentaries[index].views = oldCount + currentCount;
+                      // const oldCount = Number(global.tblCommentaries[index].views) || 0;
+                      // global.tblCommentaries[index].views = oldCount + currentCount;
+                      const newCount = Number(elem.totalCount) + currentCount
+                      global.tblCommentaries[index].views = newCount;
                       console.log("currentCount", currentCount)
                       console.log("oldCount", oldCount)
                     }
