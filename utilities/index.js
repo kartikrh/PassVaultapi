@@ -1511,7 +1511,8 @@ const RefType = {
   Team: 4,
   Player: 5,
   TeamUpdate: 6,
-  PlayerUpdate: 7
+  PlayerUpdate: 7,
+  tournamentTeamPointUpdate: 8
 };
 const SourceID = {
   Prediction: 1,

@@ -4,6 +4,7 @@ const { matchImportService } = require("../services/commentry");
 const { competitionImportService } = require("../services/competition");
 const { playerImportService, UpdatePlayerFromEntityService } = require("../services/player");
 const { teamImportService, UpdateTeamFromEntityService } = require("../services/teams");
+const { importUpdateTournamentTeamPointFromEntitySportService } = require("../services/tournamentTeamPoints");
 const { errorLogger } = require("./logger");
 
 const entitySportAutoImportProcess = async (fastify) => {
@@ -94,6 +95,11 @@ const entitySportAutoImportProcess = async (fastify) => {
 
         for (const playerUpdate of grouped?.[RefType.PlayerUpdate.toString()] || []) {
             const result = await processImport(playerUpdate, UpdatePlayerFromEntityService, 'pid');
+            if (result) return true;
+        }
+
+        for (const tournamentTeamPointUpdate of grouped?.[RefType.tournamentTeamPointUpdate.toString()] || []) {
+            const result = await processImport(tournamentTeamPointUpdate, importUpdateTournamentTeamPointFromEntitySportService, 'cid');
             if (result) return true;
         }
     } catch (err) {
