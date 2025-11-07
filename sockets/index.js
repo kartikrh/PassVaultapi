@@ -79,7 +79,7 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
                       const newCount = Number(elem.totalCount) + currentCount
                       global.tblCommentaries[index].views = newCount;
                       console.log("currentCount", currentCount)
-                      console.log("oldCount", oldCount)
+                      console.log("totalCount", Number(elem.totalCount))
                     }
                   }
                 }
