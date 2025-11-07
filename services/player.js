@@ -1068,12 +1068,12 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
     changedValues.displayName = short_name;
   }
 
-  const entityBattingStyle = batting_style?.includes("Right");
+  const entityBattingStyle = batting_style?.toLowerCase().includes("left");
   if ("isLeftHandedBatting" in checkPlayerData && isLeftHandedBatting !== entityBattingStyle) {
     changedValues.isLeftHandedBatting = entityBattingStyle;
   }
 
-  const entityBowlingStyle = bowling_style?.includes("Right");
+  const entityBowlingStyle = bowling_style?.toLowerCase().includes("left");
   if ("isLeftArmFielding" in checkPlayerData && isLeftArmFielding !== entityBowlingStyle) {
     changedValues.isLeftArmFielding = entityBowlingStyle;
   }
