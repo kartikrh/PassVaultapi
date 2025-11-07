@@ -1297,7 +1297,6 @@ const registerClientAppQuery = async (data,request,fastify) => {
         "wrUserName" as "userName",
         "wrPassword" as "password",
         "wrIsAllowMultiLogin" as "isAllowMultiLogin",
-        "wrCreatedDate" as "createdDate",
         "wrCreatedBy" as "createdBy",
         "wrModifyBy" as "modifyBy",
         "wrModifyDate" as "modifyDate",
@@ -1317,7 +1316,7 @@ const registerClientAppQuery = async (data,request,fastify) => {
         "wrDeletedBy" as "deletedBy",
         "wrDeletedAt" as "deletedAt",
         "wrCountryCode" as "countryCode",
-         "wrCreatedDate" as "createdDate"
+        a."wrCreatedDate" as "createdDate"
       FROM insert_data a
       LEFT JOIN "tblEncryptedData" et on a."wrClientID"=et."wrKey"
     `;
@@ -1341,6 +1340,7 @@ const registerClientAppQuery = async (data,request,fastify) => {
     });
     return rs[0];
   } catch (error) {
+    console.log("errrr", error)
     errorLogger(
       fastify,
       error.message,
