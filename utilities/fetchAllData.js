@@ -335,6 +335,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     console.log("Okkkk - Data Synchronized successfully");
 
     if (reply) {
+      
       reply.status(200).send({
         status: 200,
         message: "Data fetched successfully",
