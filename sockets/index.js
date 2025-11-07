@@ -65,7 +65,6 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
           socketObj.cronJob = cron.schedule(cronExpression, async () => {
             try {
               socketObj.client.emit("updateRoomUserCount", { message: "Send me user counts" });
-              socketObj.client.removeAllListeners("countData");
               socketObj.client.once("countData", async (data) => {
                 for (const elem of data) {
                   const currentCount = Number(elem.count) || 0;
