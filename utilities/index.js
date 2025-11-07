@@ -41,6 +41,7 @@ const virtualError = (message, errorCode, status) => {
   return {
     success: false,
     status: status,
+    // return
     // error: {
     //   code: errorCode,
     //   message: message || "Internal Server Error",
