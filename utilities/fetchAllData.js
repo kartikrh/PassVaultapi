@@ -336,6 +336,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.isAllDataLoadedInGlobal = true;
 
     if (reply) {
+      
       reply.status(200).send({
         status: 200,
         message: "Data fetched successfully",
