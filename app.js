@@ -49,6 +49,7 @@ const { entitySportAutoUpdateCommentaryTime } = require("./utilities/entityConst
 module.exports.options = {};
 global.tblData = {};
 global.marketData = {};
+global.isAllDataLoadedInGlobal = false;
 if (process.env.ENABLE_SENTRY === "TRUE") {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
@@ -156,17 +157,21 @@ module.exports = async function (fastify, opts) {
 
     cron.schedule('0,30 * * * * *', async () => {
       try {
-        await entitySportAutoImportProcess(fastify);
+        if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
+          await entitySportAutoImportProcess(fastify);
+        }
       } catch (error) {
-        console.error(new Date(), "Error during scheduled task:", error);
+        console.error("Error during scheduled task - entitySportAutoImportProcess:", error);
       }
     });
 
     cron.schedule(`*/${entitySportAutoUpdateCommentaryTime} * * * *`, async () => {
       try {
-        await entitySportAutoUpdateCommentary(fastify);
+        if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive && global.tblEntitySockets?.[0]?.isAutoUpdateCommentary) {
+          await entitySportAutoUpdateCommentary(fastify);
+        }
       } catch (error) {
-        console.error(new Date(), "Error during scheduled task:", error);
+        console.error("Error during scheduled task - entitySportAutoUpdateCommentary:", error);
       }
     });
 
