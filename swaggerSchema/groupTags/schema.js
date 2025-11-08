@@ -11072,6 +11072,17 @@ const EntitySocket = {
     },
   },
 }
+
+const AutoUpdatePlayerStatisticsData = {
+  getAll: {
+    schema: {
+      tags: ["Auto Update Player Statistics"],
+      description: "get all commentary player statistics update data",
+      security: [{ bearerAuth: [] }]
+    },
+  }
+}
+
 module.exports = {
   Auth,
   Tabs,
@@ -11152,4 +11163,5 @@ module.exports = {
   ICCRanking,
   Report,
   EntitySocket,
+  AutoUpdatePlayerStatisticsData
 };
