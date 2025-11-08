@@ -215,6 +215,7 @@ const { getImageFromUrl } = require("../utilities/Images");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { insertTeamPlayersByTeamId, insertCommentaryPlayersByTeam } = require("./competition");
 const cron = require('node-cron');
+const { insertAutoUpdatePlayerStatisticsDataService } = require("./autoUpdatePlayerStatisticsData");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -4108,23 +4109,52 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             );
           });
         }
-        // if (commentaryData && commentaryData?.isTest == false) {
-        //   setPlayerHistoryService(
-        //     {
-        //       commentaryId: [commentaryId],
-        //     },
-        //     request,
-        //     fastify
-        //   ).catch((err) => {
-        //     console.log("setPlayerHistoryService console savedetails", err);
-        //     errorLogger(
-        //       fastify,
-        //       err.message,
-        //       "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - setPlayerHistoryService",
-        //       request
-        //     );
-        //   });
-        // }
+        if (commentaryData && commentaryData?.isTest === false) {
+          try {
+            const result = await fastify.db.query(
+              `SELECT * FROM fn_insert_auto_update_player_statistics_by_commentary(:commentaryId, :createdBy)`,
+              {
+                replacements: {
+                  commentaryId,
+                  createdBy: request?.userTokenInfo?.WrUserId || -3
+                },
+                type: fastify.db.QueryTypes.SELECT
+              }
+            );
+
+            if (result && result.length > 0) {
+              const notInsertedCPIds = result.map(r => r.status === "skipped")?.map(r => r.player_id);
+              errorLogger(
+                fastify,
+                `CommentaryId: ${commentaryId} and PlayerId: ${notInsertedCPIds.join(", ")} skipped`,
+                "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - fn_insert_auto_update_player_statistics_by_commentary",
+                request
+              );
+            }
+          } catch (error) {
+            errorLogger(
+              fastify,
+              `Error in fn_insert_auto_update_player_statistics_by_commentary for CommentaryId: ${commentaryId} => ${error.message}`,
+              "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - fn_insert_auto_update_player_statistics_by_commentary",
+              request
+            );
+          }
+          // setPlayerHistoryService(
+          //   {
+          //     commentaryId: [commentaryId],
+          //   },
+          //   request,
+          //   fastify
+          // ).catch((err) => {
+          //   console.log("setPlayerHistoryService console savedetails", err);
+          //   errorLogger(
+          //     fastify,
+          //     err.message,
+          //     "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - setPlayerHistoryService",
+          //     request
+          //   );
+          // });
+        }
         const tipsData = global.tblTips
           .filter(
             (item) =>
