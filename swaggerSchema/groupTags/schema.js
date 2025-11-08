@@ -4038,6 +4038,21 @@ const Commentary = {
       },
     },
   },
+  undoCommentaryInning : {
+    schema: {
+      tags: ["Commentary"],
+      description: "undo Commentary inning",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          undoInning: { type: "integer" },
+        },
+        required: ["commentaryId", "undoInning"],
+      },
+    }
+  },
 };
 
 const Compitition = {
