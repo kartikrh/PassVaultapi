@@ -23787,19 +23787,19 @@ const undoCommentaryInningService = async (request, fastify) => {
 
   // remvoe over for this commentary inning
   global.tblOvers = global.tblOvers.filter(
-    (item) => item?.commentaryId !== commentaryId && item?.currentInnings !== undoInning
+    (item) => !(item?.commentaryId === commentaryId && item?.currentInnings === undoInning)
   );
   // remove ball by ball for this commentary inning
   global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
-    (item) => item?.commentaryId !== commentaryId && item?.currentInnings !== undoInning
+    (item) => !(item?.commentaryId === commentaryId && item?.currentInnings === undoInning)
   );
   // remove partnership for this commentary inning
   global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter(
-    (item) => item?.commentaryId !== commentaryId && item?.currentInnings !== undoInning
+    (item) => !(item?.commentaryId === commentaryId && item?.currentInnings === undoInning)
   );
   // remove wicket for this commentary inning
   global.tblCommentaryWicket = global.tblCommentaryWicket.filter(
-    (item) => item?.commentaryId !== commentaryId && item?.currentInnings !== undoInning
+    (item) => !(item?.commentaryId === commentaryId && item?.currentInnings === undoInning)
   );
 
   commentaryLogger(
