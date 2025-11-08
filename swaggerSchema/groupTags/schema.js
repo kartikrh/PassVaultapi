@@ -4053,6 +4053,23 @@ const Commentary = {
       },
     }
   },
+  undoCommentary: {
+    schema: {
+      tags: ["Commentary"],
+      description: "undo Commentary details",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          commentaryDetails: { type: "object" },
+          commentaryTeams: { type: "array", items: { type: "object" } },
+          commentaryPlayers: { type: "array", items: { type: "object" } },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
 };
 
 const Compitition = {
