@@ -83,7 +83,7 @@ const { updatePitchConditionQuery, insertPitchConditionQuery } = require("../rep
 // };
 
 const allCompetitionService = async (request) => {
-  const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type, isVirtual, pythonId, countryId } = request.body;
+  const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type, isVirtual, pythonId, countryId, commentaryStatus } = request.body;
 
   const filterObject = {};
 
@@ -101,9 +101,21 @@ const allCompetitionService = async (request) => {
   //   return global.tblCompetitions.filter((item) => item.isActive === true);
   // }
 
-  const result = global.tblCompetitions.filter((item) => {
+  let result = global.tblCompetitions.filter((item) => {
     return Object.entries(filterObject).every(([key, value]) => item[key] === value);
   });
+
+  if (commentaryStatus === undefined) {
+    result = result.filter(
+      (item) => ![4, 10].includes(item?.commStatus)
+    );
+  } else if (commentaryStatus && commentaryStatus != 0) {
+    result = result.filter(
+      (item) => item?.commStatus == commentaryStatus
+    );
+  } else if (commentaryStatus == 0) {
+    result = result;
+  }
 
   const compData = result.map(item => {
     const eventType = global.tblEventTypes.find(elem => elem.eventTypeId == item.eventTypeId)?.eventType || null;
