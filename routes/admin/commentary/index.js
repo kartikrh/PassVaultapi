@@ -109,6 +109,7 @@ const {
   marketOddsdata,
   updateStreamURL,
   bowlingTypeChange,
+  undoCommentaryInning,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -1468,5 +1469,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request , reply) => updateStreamURL(request, reply, fastify)
+  });
+  fastify.post("/undoInning", {
+    schema: Commentary.undoCommentaryInning.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
+          mode: "edit",
+        }),
+    ],
+    handler: (request , reply) => undoCommentaryInning(request, reply, fastify)
   });
 };

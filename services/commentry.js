@@ -23710,6 +23710,117 @@ const clientSocketCountService = async (fastify) => {
   };
 }
 
+const undoCommentaryInningService = async (request, fastify) => {
+  const startTime = new Date();
+  const { commentaryId, undoInning } = request.body;
+
+  const index = global.tblCommentaries.findIndex(
+    (item) => item?.commentaryId === commentaryId && item?.currentInnings == undoInning
+  );
+  
+  if (index == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  let result = await fastify.db.query(
+    ` 
+      CALL proc_undo_inning($1, $2, $3, $4, $5)
+    `,
+    {
+      bind: [
+        commentaryId,
+        undoInning,
+        request.userTokenInfo.WrUserId,
+        null,
+        null,
+      ],
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
+  let res = result[0];
+
+
+  if (res) {
+    global.tblCommentaries[index].commentaryStatus = 2;
+    global.tblCommentaries[index].target = null;
+    global.tblCommentaries[index].winnerId = null;
+    global.tblCommentaries[index].winnerName = null;
+    global.tblCommentaries[index].rmk = false;
+    global.tblCommentaries[index].winRmk = null;
+    global.tblCommentaries[index].updateTime = new Date();
+    global.tblCommentaries[index].commentaryResult = null;
+    global.tblCommentaries[index].commentaryCloseTime = null;
+
+    const ct = global.tblCommentaryTeams.filter(
+      (item) => item?.commentaryId === commentaryId && item.currentInnings == undoInning
+    );
+    const cp = global.tblCommentaryPlayers.filter(
+      (item) => item?.commentaryId === commentaryId && item.currentInnings == undoInning
+    );
+    if (ct.length > 0) {
+      for (let team of ct) {
+        let teamIndex = global.tblCommentaryTeams.findIndex(
+          (item) => item.commentaryTeamId === team.commentaryTeamId
+        );
+        if (teamIndex !== -1) {
+          let updatedData = res.commentary_team_data.find(
+            (item) => item.commentaryTeamId === team.commentaryTeamId
+          );
+          global.tblCommentaryTeams[teamIndex] = updatedData;
+        }
+      }
+    }
+    if (cp.length > 0) {
+      for (let player of cp) {
+        let playerIndex = global.tblCommentaryPlayers.findIndex(
+          (item) => item.commentaryPlayerId === player.commentaryPlayerId
+        );
+        if (playerIndex !== -1) {
+          let updatedData = res.commentary_player_data.find(
+            (item) => item.commentaryPlayerId === player.commentaryPlayerId
+          );
+          global.tblCommentaryPlayers[playerIndex] = updatedData;
+        }
+      }
+    }
+  }
+
+  // remvoe over for this commentary inning
+  global.tblOvers = global.tblOvers.filter(
+    (item) => item?.commentaryId !== commentaryId && item?.currentInnings !== undoInning
+  );
+  // remove ball by ball for this commentary inning
+  global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
+    (item) => item?.commentaryId !== commentaryId && item?.currentInnings !== undoInning
+  );
+  // remove partnership for this commentary inning
+  global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter(
+    (item) => item?.commentaryId !== commentaryId && item?.currentInnings !== undoInning
+  );
+  // remove wicket for this commentary inning
+  global.tblCommentaryWicket = global.tblCommentaryWicket.filter(
+    (item) => item?.commentaryId !== commentaryId && item?.currentInnings !== undoInning
+  );
+
+  commentaryLogger(
+    {
+      commentaryId: commentaryId,
+      requestBody: request.body,
+      response: {
+        message: "Commentary Inning undo successfully",
+      },
+      global: null,
+      extra: null,
+      apiName: "/undoInning",
+      reqStartTime: startTime,
+    },
+    request,
+    fastify
+  );
+
+  return "Commentary inning undo successfully";
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -23828,4 +23939,5 @@ module.exports = {
   matchImportService,
   insertTeamAndPlayers,
   clientSocketCountService,
+  undoCommentaryInningService,
 };
