@@ -23951,6 +23951,7 @@ const undoCommentaryService = async (request, fastify) => {
       commentaryPlayers,
       commentaryDetails,
       commentaryOvers,
+      commentaryPartnership,
       deleteCommentaryBallByBallId,
       deleteOverId,
       deleteWicketId,
@@ -24061,6 +24062,17 @@ const undoCommentaryService = async (request, fastify) => {
       }
     }
 
+    if (commentaryPartnership) {
+      partnershipIndex = global.tblCommentaryPartnership.findIndex(
+        (item) =>
+          item?.commentaryPartnershipId ==
+          commentaryPartnership.commentaryPartnershipId
+      );
+      if (partnershipIndex === -1) {
+        throw new Error("Partnership with this id not Found");
+      }
+    }
+
     let deleteKey =
       (deleteCommentaryBallByBallId?.length ?? 0) > 0 ||
       (deleteOverId?.length ?? 0) > 0 ||
@@ -24068,7 +24080,7 @@ const undoCommentaryService = async (request, fastify) => {
       (deletePartnershipId?.length ?? 0) > 0;
 
     let updatedData = await fastify.db.query(
-      `CALL proc_undo_commentary_details($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+      `CALL proc_undo_commentary_details($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
       {
         bind: [
           commentaryId,
@@ -24076,6 +24088,7 @@ const undoCommentaryService = async (request, fastify) => {
           commentaryTeams ? JSON.stringify(commentaryTeams) : null,
           commentaryPlayers ? JSON.stringify(commentaryPlayers) : null,
           commentaryOvers ? JSON.stringify(commentaryOvers) : null,
+          commentaryPartnership ? JSON.stringify(commentaryPartnership) : null,
           deleteCommentaryBallByBallId?.length ? deleteCommentaryBallByBallId : null,
           deleteOverId?.length ? deleteOverId : null,
           deleteWicketId?.length ? deleteWicketId : null,
@@ -24621,6 +24634,47 @@ const undoCommentaryService = async (request, fastify) => {
       });
     }
 
+    if (commentaryPartnership) {
+      global.tblCommentaryPartnership[partnershipIndex] = commentaryPartnership
+      response.commentaryPartnershipDetails = commentaryPartnership;
+
+      if (response.commentaryPartnershipDetails) {
+        try {
+          const partnership = response.commentaryPartnershipDetails;
+          const _player1 = commentaryPlayers.filter(
+            (item) => item.commentaryPlayerId === partnership.batter1Id
+          );
+          if (_player1.length > 0) {
+            response.commentaryPartnershipDetails.player1image =
+              _player1[0].playerimage;
+            response.commentaryPartnershipDetails.player1jerseyandimage =
+              _player1[0].jerseyPlayerImage;
+            response.commentaryPartnershipDetails.player1jerseyandimagepath =
+              _player1[0].jerseyPlayerImagePath;
+          }
+
+          // Find player 2 image
+          const _player2 = commentaryPlayers.filter(
+            (item) => item.commentaryPlayerId === partnership.batter2Id
+          );
+          if (_player2.length > 0) {
+            response.commentaryPartnershipDetails.player2image =
+              _player2[0].playerimage;
+            response.commentaryPartnershipDetails.player2jerseyandimage =
+              _player2[0].jerseyPlayerImage;
+            response.commentaryPartnershipDetails.player2jerseyandimagepath =
+              _player2[0].jerseyPlayerImagePath;
+          }
+        } catch (error) { }
+      }
+
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module: "commentaryPartnership",
+        type: "update",
+        data: response.commentaryPartnershipDetails,
+      });
+    }
+
     if (
       commentaryDetails &&
       commentaryData.isPredictMarket == true &&
@@ -24887,7 +24941,11 @@ const undoCommentaryService = async (request, fastify) => {
         commentaryId: commentaryId,
         requestBody: request.body,
         response: response,
-        global: null,
+        global: {
+            partnership: global.tblCommentaryPartnership.filter(
+              (item) => item?.commentaryId === commentaryId
+            ),
+          },
         extra: null,
         apiName: "/undoDetails",
         reqStartTime: startTime,
@@ -24921,7 +24979,11 @@ const undoCommentaryService = async (request, fastify) => {
           response: {
             error: error.message,
           },
-          global: null,
+          global: {
+            partnership: global.tblCommentaryPartnership.filter(
+              (item) => item?.commentaryId === commentaryId
+            ),
+          },
           extra: null,
           apiName: "/undoDetails",
           reqStartTime: startTime,
