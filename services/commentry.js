@@ -13504,6 +13504,49 @@ const notiConfigContentReplaceService = async (
     }
   }
 
+  const title = data?.title.replace(/\{(.*?)\}/g, (_, key) => {
+    const normalizedKey = key.toLowerCase();
+    const batsmanname = eventName === EventName.WICKET 
+      ? wicketData?.batterName ?? ""
+      : batterNameForBoundary;
+    const valueMap = {
+      eventname: commentary.eventName ?? "",
+      eventtype: commentary.eventType ?? "",
+      eventdate: commentary.eventDate ?? "",
+      location: commentary.location ?? "",
+      battingteam: battingTeam?.teamName ?? "",
+      bowlername: wicketData?.bowlerName ?? "",
+      batsmanname: batsmanname ?? "",
+      // bowlername: playerName?.bowlerName ?? "",
+      // batsmanname: playerName?.batterName ?? "",
+      batsmanrun: (wicketData?.playerRun != null) ? wicketData?.playerRun : "",
+      batsmanball: (wicketData?.playerBalls != null) ? wicketData?.playerBalls : "",
+      wickettype: wicketType[wicketData?.wicketType] ?? "",
+      // batsmanrun: (playerName?.playerRun != null) ? playerName?.playerRun : "",
+      // wickettype: wicketType[playerName?.wicketType] ?? "",
+      bowlingteam: bowlingTeam?.teamName ?? "",
+      trilscore: battingTeam?.teamScore ?? "",
+      rmk: commentary.rmk ?? "",
+      wonremark: commentary.winRmk ?? "",
+      winnername: commentary?.winnerName ?? "",
+      winnerid: commentary?.winnerId ?? 0,
+      boundarytype: cId ?? "",
+      team1name: commentary?.team1Name ?? "",
+      team2name: commentary?.team2Name ?? "",
+      matchtype: commentary?.matchType ?? "",
+      competition: commentary?.competition ?? "",
+      result: commentary?.result ?? "",
+      eventtype: commentary?.eventType ?? "",
+      displaystatus: commentary?.displayStatus ?? "",
+      eventno: commentary?.eventNo ?? "",
+      tosswonby: tossWonBy,
+      runs: battingTeam?.teamScore ?? "0",
+      wickets: battingTeam?.teamWicket ?? "0",
+      overs: battingTeam?.teamOver ?? "0.0",
+    };
+
+    return valueMap[normalizedKey] ?? "";
+  });
 
   const content = data.content.replace(/\{(.*?)\}/g, (_, key) => {
     const normalizedKey = key.toLowerCase();
@@ -13555,12 +13598,13 @@ const notiConfigContentReplaceService = async (
       global?.clientSocketIo.length > 0
     ) {
       global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("notificationSend", { ...data, content ,eventId : commentary.eventRefId ?? null});
+        socket.client.emit("notificationSend", { ...data, title, content ,eventId : commentary.eventRefId ?? null});
       });
       let notificationData = {
         title: commentary.eventName,
         description: content,
         commentaryId: commentary.commentaryId,
+        // subTitle: title,
       };
       await insertNotificationViaNotiConfigQuery(
         notificationData,
