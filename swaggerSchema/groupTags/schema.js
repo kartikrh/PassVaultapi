@@ -4083,7 +4083,7 @@ const Compitition = {
         properties: {
           isActive: { type: "boolean" },
           eventTypeId: { type: "integer" },
-          commentaryStatus: { type: "integer" },
+          commStatus: { type: "integer" },
         },
       },
     },
