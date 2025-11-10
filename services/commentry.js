@@ -13503,7 +13503,13 @@ const notiConfigContentReplaceService = async (
         batterNameForBoundary = strikerPlayer?.playerName || "";
     }
   }
-
+  let date = commentary.eventDate;
+  if (date) {
+    if (date instanceof Date) {
+        date = date.toISOString();
+    }
+    date = date?.split('T')[0] || '';
+  }
   const title = data?.title.replace(/\{(.*?)\}/g, (_, key) => {
     const normalizedKey = key.toLowerCase();
     const batsmanname = eventName === EventName.WICKET 
@@ -13513,6 +13519,7 @@ const notiConfigContentReplaceService = async (
       eventname: commentary.eventName ?? "",
       eventtype: commentary.eventType ?? "",
       eventdate: commentary.eventDate ?? "",
+      date: date ?? "",
       location: commentary.location ?? "",
       battingteam: battingTeam?.teamName ?? "",
       bowlername: wicketData?.bowlerName ?? "",
@@ -13557,6 +13564,7 @@ const notiConfigContentReplaceService = async (
       eventname: commentary.eventName ?? "",
       eventtype: commentary.eventType ?? "",
       eventdate: commentary.eventDate ?? "",
+      date: date ?? "",
       location: commentary.location ?? "",
       battingteam: battingTeam?.teamName ?? "",
       bowlername: wicketData?.bowlerName ?? "",
