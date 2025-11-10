@@ -927,7 +927,8 @@ const upsertPlayers = async (entitySocketData, players, playerTpId, isMen, reque
         bowlingTypeId: extractBowlingStyle(getPlayerFromEntity.bowling_type, getPlayerFromEntity.bowling_style),
         image: entitySocketData?.defaultPlayerImage || null,
         imagePath: entitySocketData?.defaultPlayerImagePath || null,
-        isMen
+        isMen,
+        birthDate: getPlayerFromEntity?.birthdate || null
       };
       const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
       global.tblPlayers.push(insertPlayer);
