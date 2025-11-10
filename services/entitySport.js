@@ -301,6 +301,7 @@ const saveTournamentTeamPlayerService = async (request, fastify) => {
     return "Tournament Team Players Data Updated successfully."
 }
 const setEntityCom2Service = async (request , fastify) =>{
+  console.log("setEntityCom2Service.-,")
     const {response} = request.body
     let comDetails =global.tblCommentaries.find((c)=> c.tpId == response?.match_id)
     if(!comDetails){

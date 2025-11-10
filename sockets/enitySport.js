@@ -19,6 +19,7 @@ function addToQueue(payload, fastify) {
   // Replace existing queued item if same matchId (avoid duplicates)
   commentaryQueue.set(matchId, { payload, fastify });
   processTimeout = setTimeout(() => {
+    console.log("addToQueue----")
     if (!isProcessingQueue) processQueue();
   }, 100);
 
@@ -32,6 +33,7 @@ async function processQueue() {
     commentaryQueue.delete(matchId);
 
     try {
+      console.log("processQueue,,,,,")
       const request = { body: payload };
       await setEntityCom2Service(request, fastify);
     } catch (err) {
@@ -128,6 +130,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
               if(isLog == "false") { return true; }
               await createDataQuery({data : payload, matchId : payload.response.match_id}, fastify);
               // await setEntityCom2Service(request, fastify);
+              console.log("entityScoreData...")
               addToQueue(payload, fastify);
 
               
