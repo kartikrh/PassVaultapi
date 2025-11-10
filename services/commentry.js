@@ -23355,7 +23355,8 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
           bowlingTypeId: extractBowlingStyle(player.bowling_type, player.bowling_style),
           image: entitySocketData?.defaultPlayerImage || null,
           imagePath: entitySocketData?.defaultPlayerImagePath || null,
-          isMen
+          isMen,
+          birthDate: player?.birthdate || null,
         };
         const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
         global.tblPlayers.push(insertPlayer);

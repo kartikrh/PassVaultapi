@@ -695,7 +695,8 @@ const UpdateTeamFromEntityService = async (data, fastify, request) => {
         bowlingTypeId: extractBowlingStyle(player.bowling_type, player.bowling_style),
         image: playerImageData.fullPath,
         imagePath: playerImageData.imagePath,
-        isMen
+        isMen,
+        birthDate: player?.birthdate || null,
       };
 
       const insertPlayer = await insertPlayerQuery(data, fastify, request);
