@@ -1527,8 +1527,10 @@ const competitionImportService = async (data, fastify, request) => {
 
       if (teamASquad.length === 0) {
         teamASquad = await getAllPlayersByTeamIdQuery(teamA.teamId, fastify, request);
+        teamASquad = teamASquad.filter(item => item.tpId != null);
         if (teamASquad.length === 0) {
           teamASquad = await insertTeamPlayersByTeamId(teamA.teamId, teamA.tpId, checkCompetition?.isMen, request, fastify);
+          teamASquad = teamASquad.filter(item => item.tpId != null);
         }
         teamASquad = teamASquad?.map(item => ({
           player_id: `${item.tpId}`,
@@ -1538,8 +1540,10 @@ const competitionImportService = async (data, fastify, request) => {
 
       if (teamBSquad.length === 0) {
         teamBSquad = await getAllPlayersByTeamIdQuery(teamB.teamId, fastify, request);
+        teamBSquad = teamBSquad.filter(item => item.tpId != null);
         if (teamBSquad.length === 0) {
           teamBSquad = await insertTeamPlayersByTeamId(teamB.teamId, teamB.tpId, checkCompetition?.isMen, request, fastify);
+          teamBSquad = teamBSquad.filter(item => item.tpId != null);
         }
         teamBSquad = teamBSquad?.map(item => ({
           player_id: `${item.tpId}`,
