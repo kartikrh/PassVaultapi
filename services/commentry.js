@@ -13503,13 +13503,7 @@ const notiConfigContentReplaceService = async (
         batterNameForBoundary = strikerPlayer?.playerName || "";
     }
   }
-  let date = commentary.eventDate;
-  if (date) {
-    if (date instanceof Date) {
-        date = date.toISOString();
-    }
-    date = date?.split('T')[0] || '';
-  }
+  const date = commentary?.eventDate ? convertDate(commentary.eventDate, "ddd MMM D YYYY") : "";
   const title = data?.title.replace(/\{(.*?)\}/g, (_, key) => {
     const normalizedKey = key.toLowerCase();
     const batsmanname = eventName === EventName.WICKET 
