@@ -7,6 +7,7 @@ const getAllNotificationConfigsQuery = async (fastify) => {
                 "wrId" as "id",
                 "wrEventName" as "eventName",
                 "wrContent" as "content",
+                "wrTitle" as "title",
                 "wrIsActive" as "isActive",
                 "wrCreatedAt" as "createdAt",
                 "wrCreatedBy" as "createdBy",
@@ -31,10 +32,10 @@ const insertNotificationConfigQuery = async (data, fastify, request) => {
         const result = await fastify.db.query(
             `WITH insert_data AS (
             INSERT INTO "tblNotificationConfig" (
-            "wrEventName", "wrContent", "wrIsActive", "wrCreatedAt", "wrCreatedBy"
+            "wrEventName", "wrContent", "wrIsActive", "wrCreatedAt", "wrCreatedBy", "wrTitle"
             ) 
             VALUES (
-                $1, $2, $3, NOW(), $4
+                $1, $2, $3, NOW(), $4, $5
             )
             RETURNING *
             )
@@ -46,7 +47,8 @@ const insertNotificationConfigQuery = async (data, fastify, request) => {
                 "wrCreatedAt" as "createdAt",
                 "wrCreatedBy" as "createdBy",
                 "wrUpdatedBy" as "updatedBy",
-                "wrUpdatedAt" as "updatedAt"
+                "wrUpdatedAt" as "updatedAt",
+                "wrTitle" as "title"
             FROM insert_data;`,
             {
                 type: fastify.db.QueryTypes.SELECT,
@@ -55,6 +57,7 @@ const insertNotificationConfigQuery = async (data, fastify, request) => {
                     data.content,
                     data.isActive,
                     request.userTokenInfo.WrUserId,
+                    data.title,
                 ],
             }
         );
@@ -79,7 +82,8 @@ const updateNotificationConfigQuery = async (data, fastify, request) => {
                 "wrContent" = $2,
                 "wrIsActive" = $3,
                 "wrUpdatedBy" = $4,
-                "wrUpdatedAt" = NOW()
+                "wrUpdatedAt" = NOW(),
+                "wrTitle" = $6
             WHERE "wrId" = $5
             RETURNING 
                 "wrId" as "id",
@@ -89,7 +93,8 @@ const updateNotificationConfigQuery = async (data, fastify, request) => {
                 "wrCreatedAt" as "createdAt",
                 "wrCreatedBy" as "createdBy",
                 "wrUpdatedBy" as "updatedBy",
-                "wrUpdatedAt" as "updatedAt";`,
+                "wrUpdatedAt" as "updatedAt",
+                "wrTitle" as "title";`,
             {
                 type: fastify.db.QueryTypes.UPDATE,
                 bind: [
@@ -97,7 +102,8 @@ const updateNotificationConfigQuery = async (data, fastify, request) => {
                     data.content,
                     data.isActive,
                     request.userTokenInfo.WrUserId,
-                    data.id
+                    data.id,
+                    data.title,
                 ],
             }
         );
@@ -163,6 +169,7 @@ const getNotificationConfigsByEventNameQuery = async (eventName, fastify) => {
                 "wrId" as "id",
                 "wrEventName" as "eventName",
                 "wrContent" as "content",
+                "wrTitle" as "title",
                 "wrIsActive" as "isActive",
                 "wrCreatedAt" as "createdAt",
                 "wrCreatedBy" as "createdBy",
