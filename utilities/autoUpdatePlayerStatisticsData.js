@@ -145,7 +145,7 @@ const autoUpdatePlayerStatisticsDataProcess = async (fastify) => {
                     const totalRuns = overs.reduce((a, o) => a + (o.totalRun || 0), 0);
                     const totalBalls = overs.reduce((a, o) => a + (o.ballCount || 0), 0);
 
-                    const oversCount = totalBalls > 0 ? Math.floor(totalBalls / 6) + (totalBalls % 6) / 6 : 0;
+                    const oversCount = totalBalls > 0 ? Math.floor(totalBalls / 6) + ((totalBalls % 6) / 10) : 0;
                     const economy = oversCount > 0 ? totalRuns / oversCount : 0;
                     const average = totalWickets > 0 ? totalRuns / totalWickets : 0;
                     const strikeRate = totalWickets > 0 ? totalBalls / totalWickets : 0;
