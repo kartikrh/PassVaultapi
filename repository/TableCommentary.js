@@ -1401,8 +1401,8 @@ const getCommentaryByIdQuery = async (request, fastify) => {
 
 const getCommentaryTeamsQuery = async (data, fastify, request) => {
   try {
-    const { commentaryId, teamId } = data;
-
+    const { commentaryId, teamId, currentInnings } = data;
+    const params = currentInnings ? [commentaryId, teamId, currentInnings] : [commentaryId, teamId];
     const result = await fastify.db.query(
       `select 
         tct."wrCommentaryTeamId" as "commentaryTeamId",
@@ -1443,10 +1443,11 @@ const getCommentaryTeamsQuery = async (data, fastify, request) => {
         tct."wrSubInning" as "subInning",
         tct."wrTpId" as "tpId"
     FROM "tblCommentaryTeams" AS tct
-    WHERE tct."wrCommentaryId" = $1 AND tct."wrTeamId" = $2 AND tct."wrIsDelete" = false;`,
+    WHERE tct."wrCommentaryId" = $1 AND tct."wrTeamId" = $2 AND tct."wrIsDelete" = false ${currentInnings ? 'AND tct."wrCurrentInnings" = $3' : ''};`,
       {
         type: fastify.db.QueryTypes.SELECT,
-        bind: [commentaryId, teamId],
+        // bind: [commentaryId, teamId, currentInnings],
+        bind: params,
       }
     );
 

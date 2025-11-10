@@ -43,6 +43,8 @@ const cron = require('node-cron');
 const { entitySportAutoImportProcess } = require("./utilities/entitySportAutoImport.js");
 const { entitySportAutoUpdateCommentary } = require("./utilities/entitySportAutoUpdateCommentary.js");
 const { entitySportAutoUpdateCommentaryTime } = require("./utilities/entityConst.js");
+const { autoUpdatePlayerStatisticsDataProcess } = require("./utilities/autoUpdatePlayerStatisticsData.js");
+const { ISPLAYERCALCULATIONON } = require("./utilities/configConstants.js");
 // const { nodeProfilingIntegration } = require('@sentry/profiling-node');
 // const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 // Pass --options via CLI arguments in command to enable these options.
@@ -172,6 +174,16 @@ module.exports = async function (fastify, opts) {
         }
       } catch (error) {
         console.error("Error during scheduled task - entitySportAutoUpdateCommentary:", error);
+      }
+    });
+
+    cron.schedule(`*/30 * * * * *`, async () => {
+      try {
+        if (global.isAllDataLoadedInGlobal && global.tblConfigs.find((item) => item.key === ISPLAYERCALCULATIONON).value === "true") {
+          await autoUpdatePlayerStatisticsDataProcess(fastify);
+        }
+      } catch (error) {
+        console.error("Error during scheduled task - autoUpdatePlayerStatisticsDataProcess:", error);
       }
     });
 

@@ -4038,6 +4038,38 @@ const Commentary = {
       },
     },
   },
+  undoCommentaryInning : {
+    schema: {
+      tags: ["Commentary"],
+      description: "undo Commentary inning",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          undoInning: { type: "integer" },
+        },
+        required: ["commentaryId", "undoInning"],
+      },
+    }
+  },
+  undoCommentary: {
+    schema: {
+      tags: ["Commentary"],
+      description: "undo Commentary details",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" },
+          commentaryDetails: { type: "object" },
+          commentaryTeams: { type: "array", items: { type: "object" } },
+          commentaryPlayers: { type: "array", items: { type: "object" } },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  },
 };
 
 const Compitition = {
@@ -4051,6 +4083,7 @@ const Compitition = {
         properties: {
           isActive: { type: "boolean" },
           eventTypeId: { type: "integer" },
+          commentaryStatus: { type: "integer" },
         },
       },
     },
@@ -11056,6 +11089,17 @@ const EntitySocket = {
     },
   },
 }
+
+const AutoUpdatePlayerStatisticsData = {
+  getAll: {
+    schema: {
+      tags: ["Auto Update Player Statistics"],
+      description: "get all commentary player statistics update data",
+      security: [{ bearerAuth: [] }]
+    },
+  }
+}
+
 module.exports = {
   Auth,
   Tabs,
@@ -11136,4 +11180,5 @@ module.exports = {
   ICCRanking,
   Report,
   EntitySocket,
+  AutoUpdatePlayerStatisticsData
 };

@@ -103,6 +103,8 @@ const {
   overTypeChangeOnOversService,
   updateStreamURLService,
   bowlingTypeChangeService,
+  undoCommentaryInningService,
+  undoCommentaryService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService, getAllCommentariesDataServiceV1, getAllCommentariesDataV2Service } = require("../../../../services/score");
@@ -1387,6 +1389,24 @@ const updateStreamURL = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
+const undoCommentaryInning = async (request, reply, fastify) => {
+  try {
+    const result = await undoCommentaryInningService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/undoCommentaryInning", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
+const undoCommentary = async (request, reply, fastify) => {
+  try {
+    const result = await undoCommentaryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/undoCommentary", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -1507,4 +1527,6 @@ module.exports = {
   marketOddsdata,
   updateStreamURL,
   bowlingTypeChange,
+  undoCommentaryInning,
+  undoCommentary,
 }

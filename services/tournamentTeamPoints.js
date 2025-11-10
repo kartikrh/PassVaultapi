@@ -714,50 +714,29 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
   }
 }
 
-const importTournamentTeamPointFromEntitySportService = async (request, fastify) => {
-  const { refId, refType, sourceId } = request.body;
+const importUpdateTournamentTeamPointFromEntitySportService = async (data, fastify, request) => {
+  const competitionTpId = data.cid;
 
-  const checkCompetition = global.tblCompetitions.find(item => item.tpId === refId);
+  const checkCompetition = global.tblCompetitions.find(item => item.tpId === competitionTpId);
   if (!checkCompetition) {
-    throw new Error("Competition not found for this id");
+    throw new Error(`Competition not found for tpid: ${competitionTpId}`);
   }
-
-  const whereCondition = `"wrRefId" = ${refId} AND "wrRefType" = ${refType} AND "wrSourceId" = ${sourceId} AND "wrIsImported" = true`;
-  const validateCompImportData = await getAutoImportDataByIdQuery(whereCondition, request, fastify);
-  if (validateCompImportData) {
-    return "Data Already added";
-  }
-
-  const insertAutoImportData = await insertAutoImportDataQuery({
-    ...request.body,
-    isImportStart: true,
-    importStartTime: new Date()
-  }, fastify, request);
 
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getCompetitionDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
     throw new Error(checkEntitySportAPIEndpoint.message);
   }
 
-  const url = checkEntitySportAPIEndpoint.data.replace("{cid}", refId);
+  const url = checkEntitySportAPIEndpoint.data.replace("{cid}", competitionTpId);
   const entitySportCompetitionInfo = await callEntitySportAPI(url, request, fastify);
 
   let entitySportCompetitionInfoResponse = entitySportCompetitionInfo?.data?.result;
   if (!entitySportCompetitionInfoResponse) {
-    throw new Error("Invalid response from Entit-Sport API");
+    throw new Error("Invalid response from Entit-Sport API - entitySportCompetitionInfo");
   }
 
   await addEditTournamentTeamPointDataService(entitySportCompetitionInfoResponse, checkCompetition?.competitionId, fastify, request);
-
-  await updateAutoImportDataService({
-      ...request,
-      body: {
-        ...request.body,
-        isImported: false,
-        importEndTime: new Date(),
-        id: insertAutoImportData.id
-      }
-    }, fastify);
+  return true;
 };
 
 module.exports = {
@@ -771,5 +750,5 @@ module.exports = {
   netRunRateRe_calculationService,
   getAllTournamentTeamPointsService,
   addEditTournamentTeamPointDataService,
-  importTournamentTeamPointFromEntitySportService
+  importUpdateTournamentTeamPointFromEntitySportService
 };

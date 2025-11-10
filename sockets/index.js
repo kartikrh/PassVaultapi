@@ -65,18 +65,18 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
           socketObj.cronJob = cron.schedule(cronExpression, async () => {
             try {
               socketObj.client.emit("updateRoomUserCount", { message: "Send me user counts" });
+              socketObj.client.removeAllListeners("countData");
               socketObj.client.once("countData", async (data) => {
                 for (const elem of data) {
                   const currentCount = Number(elem.count) || 0;
                   if (elem.commentaryId) {
-                    console.log("elem", elem)
                     await updateCommentaryViewsQuery({ views: currentCount, commentaryId: elem.commentaryId }, fastify);
                     const index = global.tblCommentaries.findIndex(i => i.commentaryId == elem.commentaryId);
                     if (index !== -1) {
-                      const oldCount = Number(global.tblCommentaries[index].views) || 0;
-                      global.tblCommentaries[index].views = oldCount + currentCount;
-                      console.log("currentCount", currentCount)
-                      console.log("oldCount", oldCount)
+                      // const oldCount = Number(global.tblCommentaries[index].views) || 0;
+                      // global.tblCommentaries[index].views = oldCount + currentCount;
+                      const newCount = Number(elem.totalCount) + currentCount
+                      global.tblCommentaries[index].views = newCount;
                     }
                   }
                 }

@@ -215,6 +215,7 @@ const { getImageFromUrl } = require("../utilities/Images");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { insertTeamPlayersByTeamId, insertCommentaryPlayersByTeam } = require("./competition");
 const cron = require('node-cron');
+const { insertAutoUpdatePlayerStatisticsDataService } = require("./autoUpdatePlayerStatisticsData");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -4108,23 +4109,52 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             );
           });
         }
-        // if (commentaryData && commentaryData?.isTest == false) {
-        //   setPlayerHistoryService(
-        //     {
-        //       commentaryId: [commentaryId],
-        //     },
-        //     request,
-        //     fastify
-        //   ).catch((err) => {
-        //     console.log("setPlayerHistoryService console savedetails", err);
-        //     errorLogger(
-        //       fastify,
-        //       err.message,
-        //       "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - setPlayerHistoryService",
-        //       request
-        //     );
-        //   });
-        // }
+        if (commentaryData && commentaryData?.isTest === false) {
+          try {
+            const result = await fastify.db.query(
+              `SELECT * FROM fn_insert_auto_update_player_statistics_by_commentary(:commentaryId, :createdBy)`,
+              {
+                replacements: {
+                  commentaryId,
+                  createdBy: request?.userTokenInfo?.WrUserId || -3
+                },
+                type: fastify.db.QueryTypes.SELECT
+              }
+            );
+
+            if (result && result.length > 0) {
+              const notInsertedCPIds = result.map(r => r.status === "skipped")?.map(r => r.player_id);
+              errorLogger(
+                fastify,
+                `CommentaryId: ${commentaryId} and PlayerId: ${notInsertedCPIds.join(", ")} skipped`,
+                "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - fn_insert_auto_update_player_statistics_by_commentary",
+                request
+              );
+            }
+          } catch (error) {
+            errorLogger(
+              fastify,
+              `Error in fn_insert_auto_update_player_statistics_by_commentary for CommentaryId: ${commentaryId} => ${error.message}`,
+              "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - fn_insert_auto_update_player_statistics_by_commentary",
+              request
+            );
+          }
+          // setPlayerHistoryService(
+          //   {
+          //     commentaryId: [commentaryId],
+          //   },
+          //   request,
+          //   fastify
+          // ).catch((err) => {
+          //   console.log("setPlayerHistoryService console savedetails", err);
+          //   errorLogger(
+          //     fastify,
+          //     err.message,
+          //     "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - setPlayerHistoryService",
+          //     request
+          //   );
+          // });
+        }
         const tipsData = global.tblTips
           .filter(
             (item) =>
@@ -23325,7 +23355,8 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
           bowlingTypeId: extractBowlingStyle(player.bowling_type, player.bowling_style),
           image: entitySocketData?.defaultPlayerImage || null,
           imagePath: entitySocketData?.defaultPlayerImagePath || null,
-          isMen
+          isMen,
+          birthDate: player?.birthdate || null,
         };
         const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
         global.tblPlayers.push(insertPlayer);
@@ -23644,11 +23675,13 @@ const matchImportService = async (data, fastify, request = null) => {
         }, fastify);
         const teamACommentaryTeam = await getCommentaryTeamsQuery({
           commentaryId: checkCommentary.commentaryId,
-          teamId: teamAData?.teamId
+          teamId: teamAData?.teamId,
+          currentInnings: i
         }, fastify, request);
         const teamBCommentaryTeam = await getCommentaryTeamsQuery({
           commentaryId: checkCommentary.commentaryId,
-          teamId: teamBData?.teamId
+          teamId: teamBData?.teamId,
+          currentInnings: i
         }, fastify, request);
         global.tblCommentaryTeams.push(teamACommentaryTeam, teamBCommentaryTeam);
       }
@@ -23707,6 +23740,1120 @@ const clientSocketCountService = async (fastify) => {
     });
   };
 }
+
+const undoCommentaryInningService = async (request, fastify) => {
+  const startTime = new Date();
+  const { commentaryId, undoInning } = request.body;
+
+  const index = global.tblCommentaries.findIndex(
+    (item) => item?.commentaryId === commentaryId && item?.currentInnings == undoInning
+  );
+  
+  if (index == -1) {
+    throw new Error("Commentary with this id not Found");
+  }
+
+  let result = await fastify.db.query(
+    ` 
+      CALL proc_undo_inning($1, $2, $3, $4, $5)
+    `,
+    {
+      bind: [
+        commentaryId,
+        undoInning,
+        request.userTokenInfo.WrUserId,
+        null,
+        null,
+      ],
+      type: fastify.db.QueryTypes.SELECT,
+    }
+  );
+  let res = result[0];
+
+
+  if (res) {
+    global.tblCommentaries[index].commentaryStatus = 2;
+    global.tblCommentaries[index].target = null;
+    global.tblCommentaries[index].winnerId = null;
+    global.tblCommentaries[index].winnerName = null;
+    global.tblCommentaries[index].rmk = false;
+    global.tblCommentaries[index].winRmk = null;
+    global.tblCommentaries[index].updateTime = new Date();
+    global.tblCommentaries[index].commentaryResult = null;
+    global.tblCommentaries[index].commentaryCloseTime = null;
+
+    const ct = global.tblCommentaryTeams.filter(
+      (item) => item?.commentaryId === commentaryId && item.currentInnings == undoInning
+    );
+    const cp = global.tblCommentaryPlayers.filter(
+      (item) => item?.commentaryId === commentaryId && item.currentInnings == undoInning
+    );
+    if (ct.length > 0) {
+      for (let team of ct) {
+        let teamIndex = global.tblCommentaryTeams.findIndex(
+          (item) => item.commentaryTeamId === team.commentaryTeamId
+        );
+        if (teamIndex !== -1) {
+          let updatedData = res.commentary_team_data.find(
+            (item) => item.commentaryTeamId === team.commentaryTeamId
+          );
+          global.tblCommentaryTeams[teamIndex] = updatedData;
+        }
+      }
+    }
+    if (cp.length > 0) {
+      for (let player of cp) {
+        let playerIndex = global.tblCommentaryPlayers.findIndex(
+          (item) => item.commentaryPlayerId === player.commentaryPlayerId
+        );
+        if (playerIndex !== -1) {
+          let updatedData = res.commentary_player_data.find(
+            (item) => item.commentaryPlayerId === player.commentaryPlayerId
+          );
+          global.tblCommentaryPlayers[playerIndex] = updatedData;
+        }
+      }
+    }
+  }
+
+  // remvoe over for this commentary inning
+  global.tblOvers = global.tblOvers.filter(
+    (item) => !(item?.commentaryId === commentaryId && item?.currentInnings === undoInning)
+  );
+  // remove ball by ball for this commentary inning
+  global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
+    (item) => !(item?.commentaryId === commentaryId && item?.currentInnings === undoInning)
+  );
+  // remove partnership for this commentary inning
+  global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter(
+    (item) => !(item?.commentaryId === commentaryId && item?.currentInnings === undoInning)
+  );
+  // remove wicket for this commentary inning
+  global.tblCommentaryWicket = global.tblCommentaryWicket.filter(
+    (item) => !(item?.commentaryId === commentaryId && item?.currentInnings === undoInning)
+  );
+
+  commentaryLogger(
+    {
+      commentaryId: commentaryId,
+      requestBody: request.body,
+      response: {
+        message: "Commentary Inning undo successfully",
+      },
+      global: null,
+      extra: null,
+      apiName: "/undoInning",
+      reqStartTime: startTime,
+    },
+    request,
+    fastify
+  );
+
+  return "Commentary inning undo successfully";
+};
+
+const undoCommentaryService = async (request, fastify) => {
+  const startTime = new Date();
+  try {
+    let {
+      commentaryTeams,
+      commentaryPlayers,
+      commentaryDetails,
+      deleteCommentaryBallByBallId,
+      deleteOverId,
+      deleteWicketId,
+      deletePartnershipId,
+      commentaryId,
+    } = request.body;
+
+    let commentaryIndex,
+      overIndex,
+      ballByBallIndex,
+      wicketIndex,
+      partnershipIndex;
+    let _sendPrePlayers = [];
+    let commentaryData;
+    let _resFromPredictAPI;
+    let callPredictions = [];
+    let sendPartnership = [];
+    let pythonURI;
+    if (commentaryId) {
+      commentaryData = global.tblCommentaries.find(
+        (item) => item?.commentaryId === commentaryId
+      );
+      if (!commentaryData) {
+        throw new Error("Commentary with this id not Found");
+      }
+      pythonURI = commentaryData.pythonURI ?? null;
+    }
+
+    let previousCommentaryStatus, statusToUpdate, balltypeOfdeleteBall;
+    let strikeTeamForEndInnings;
+    // if (isEndInnings && isEndInnings == true) {
+    //   strikeTeamForEndInnings = global.tblCommentaryTeams.find(
+    //     (item) =>
+    //       item?.commentaryId === commentaryId &&
+    //       item.teamStatus === 1 &&
+    //       item.currentInnings === commentaryData.currentInnings
+    //   );
+    //   await notiConfigContentReplaceService(
+    //     EventName.INNINGCOMPLETED,
+    //     commentaryData.commentaryId,
+    //     request,
+    //     fastify
+    //   );
+    // }
+    // validate CommentaryId
+    if (commentaryDetails) {
+      commentaryIndex = global.tblCommentaries.findIndex(
+        (item) => item?.commentaryId === commentaryDetails.commentaryId
+      );
+      if (commentaryIndex === -1) {
+        throw new Error("Commentary with this id not Found");
+      }
+      previousCommentaryStatus = commentaryData?.commentaryStatus;
+      statusToUpdate = commentaryDetails?.commentaryStatus;
+    }
+
+    // validate commentaryTeams
+    if (commentaryTeams) {
+      commentaryTeams.forEach((team) => {
+        const index = global.tblCommentaryTeams.findIndex(
+          (item) =>
+            item?.commentaryId === commentaryId &&
+            item.commentaryTeamId === team.commentaryTeamId
+        );
+        if (index === -1) {
+          throw new Error("Commentary Team with this id not Found");
+        }
+      });
+    }
+
+    // validate commentaryPlayers
+    if (commentaryPlayers) {
+      commentaryPlayers = commentaryPlayers.filter(
+        (player) =>
+          player.commentaryPlayerId != null ||
+          player.commentaryPlayerId != undefined
+      );
+      commentaryPlayers.forEach((player) => {
+        if (player.commentaryPlayerId) {
+          const index = global.tblCommentaryPlayers.findIndex(
+            (item) => item.commentaryPlayerId === player.commentaryPlayerId && item.commentaryId === commentaryId
+          );
+          if (index === -1) {
+            throw new Error("Commentary Player with this id not Found");
+          }
+        }
+      });
+    }
+
+    let deleteKey =
+      (deleteCommentaryBallByBallId?.length ?? 0) > 0 ||
+      (deleteOverId?.length ?? 0) > 0 ||
+      (deleteWicketId?.length ?? 0) > 0 ||
+      (deletePartnershipId?.length ?? 0) > 0;
+
+    let updatedData = await fastify.db.query(
+      `CALL proc_undo_commentary_details($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      {
+        bind: [
+          commentaryId,
+          commentaryDetails ? JSON.stringify(commentaryDetails) : null,
+          commentaryTeams ? JSON.stringify(commentaryTeams) : null,
+          commentaryPlayers ? JSON.stringify(commentaryPlayers) : null,
+          deleteCommentaryBallByBallId?.length ? deleteCommentaryBallByBallId : null,
+          deleteOverId?.length ? deleteOverId : null,
+          deleteWicketId?.length ? deleteWicketId : null,
+          deletePartnershipId?.length ? deletePartnershipId : null,
+          deleteKey,
+          deleteKey ? request.userTokenInfo.WrUserId : null,
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    updatedData = updatedData[0];
+    const response = {};
+
+    const sendDataForSocketUpdate = {};
+    sendDataForSocketUpdate.commentaryId = commentaryId;
+    sendDataForSocketUpdate.eventRefId = commentaryData.eventRefId;
+    sendDataForSocketUpdate.dataToUpdate = [];
+    const setEventSnap = [];
+    const teamPoint = [];
+
+    if (commentaryDetails) {
+      global.tblCommentaries[commentaryIndex] = {
+        ...global.tblCommentaries[commentaryIndex],
+        displayStatus: commentaryDetails.displayStatus,
+        updateTime: commentaryDetails.updateTime,
+        modifyDate: commentaryDetails.modifyDate,
+        commentaryStatus: commentaryDetails.commentaryStatus,
+        commentaryCloseTime:
+          commentaryDetails.commentaryStatus == 4 ? new Date() : null,
+        tossWonBy: commentaryDetails.tossWonBy,
+        choseTo: commentaryDetails.choseTo,
+        winnerId: commentaryDetails.winnerId,
+        winnerName: commentaryDetails.winnerName,
+        result: commentaryDetails.result || "",
+        currentInnings: commentaryDetails.currentInnings,
+        rmk: commentaryDetails.rmk,
+        winRmk: commentaryDetails.winRmk,
+        tossRmk: commentaryDetails.tossRmk,
+      };
+      const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
+
+      response.commentaryDetails = {
+        ...global.tblCommentaries[commentaryIndex],
+        displayStatus: commentaryDetails.displayStatus,
+        updateTime: commentaryDetails.updateTime,
+        modifyDate: commentaryDetails.modifyDate,
+        commentaryStatus: commentaryDetails.commentaryStatus,
+        commentaryCloseTime:
+          commentaryDetails.commentaryStatus == 4 ? new Date() : null,
+        tossWonBy: commentaryDetails.tossWonBy,
+        choseTo: commentaryDetails.choseTo,
+        winnerId: commentaryDetails.winnerId,
+        winnerName: commentaryDetails.winnerName,
+        result: commentaryDetails.result || "",
+        currentInnings: commentaryDetails.currentInnings,
+        isPredict: commentaryDetails.isPredictMarket,
+        rmk: commentaryDetails.rmk,
+        winRmk: commentaryDetails.winRmk,
+        tossRmk: commentaryDetails.tossRmk,
+        ...weatherAndPitchData,
+      };
+      if (commentaryDetails.commentaryStatus == 2) {
+        await notiConfigContentReplaceService(
+          EventName.WINTOSS,
+          commentaryDetails.commentaryId,
+          request,
+          fastify
+        );
+      }
+      // if (previousCommentaryStatus != statusToUpdate ) {
+      //   callDataProvider(
+      //     {
+      //       commentaryId: commentaryId,
+      //       serviceType: ServiceType.dataProviderAPI,
+      //       moduleType: APIEndpointModuleType.commentaryUpdate,
+      //       type: statusToUpdate == 4 ? "close" : "update",
+      //     },
+      //     fastify
+      //   ).catch((err) => {
+      //     console.log("call Data Provider console", err);
+      //     errorLogger(
+      //       fastify,
+      //       err.message,
+      //       "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+      //       request
+      //     );
+      //   });
+      // }
+      // if (previousCommentaryStatus != statusToUpdate) {
+      //   const cData = await getMatchDataByCId(
+      //     {
+      //       commentaryId: commentaryId,
+      //     },
+      //     request,
+      //     fastify
+      //   );
+
+      //   callClientAPI(
+      //     {
+      //       serviceType: ServiceType.clientAPI,
+      //       moduleType: APIEndpointModuleType.commentaryUpdate,
+      //       data: cData,
+      //     },
+      //     request,
+      //     fastify
+      //   ).catch((err) => {
+      //     console.log("call client api console", err);
+      //     errorLogger(
+      //       fastify,
+      //       err.message,
+      //       "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+      //       request
+      //     );
+      //   });
+      // }
+      // if (previousCommentaryStatus != statusToUpdate && statusToUpdate == 4) {
+      //   await notiConfigContentReplaceService(
+      //     EventName.EVENTCOMPLETED,
+      //     commentaryData.commentaryId,
+      //     request,
+      //     fastify
+      //   );
+      //   let com = global.tblCompetitions.find(
+      //     (item) => item.competitionId === commentaryData.competitionId
+      //   );
+      //   if (com && com.isEventSnap == true) {
+      //     setEventSnap.push({
+      //       commentaryId: commentaryId,
+      //       eventRefId: commentaryData.eventRefId,
+      //       competitionId: commentaryData.competitionId,
+      //       eventTypeId: commentaryData.eventTypeId,
+      //     });
+      //   }
+      //   if (
+      //     com &&
+      //     com.isPointTable == true &&
+      //     commentaryData?.isTest == false
+      //   ) {
+      //     teamPoint.push({
+      //       commentaryId: commentaryId,
+      //       competitionId: commentaryData.competitionId,
+      //       team1Id: commentaryData.team1Id,
+      //       team2Id: commentaryData.team2Id,
+      //       winnerId: commentaryDetails.winnerId,
+      //     });
+      //   }
+      //   if (setEventSnap.length > 0) {
+      //     setCompEventSnapSerice(setEventSnap, request, fastify).catch(
+      //       (err) => {
+      //         console.log("setCompEventSnapSerice console savedetails", err);
+      //         errorLogger(
+      //           fastify,
+      //           err.message,
+      //           "ERROR --> services/commentary.js/saveDetails - syncCommentaryStatsWithAPIAndSocket - setEventSnap",
+      //           request
+      //         );
+      //       }
+      //     );
+      //   }
+      //   if (teamPoint.length > 0) {
+      //     setTeamPointService(teamPoint, request, fastify).catch((err) => {
+      //       console.log("setTeamPointService console savedetails", err);
+      //       errorLogger(
+      //         fastify,
+      //         err.message,
+      //         "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - setTeamPointService",
+      //         request
+      //       );
+      //     });
+      //   }
+
+      //   const tipsData = global.tblTips
+      //     .filter(
+      //       (item) =>
+      //         item.commentaryId === commentaryDetails.commentaryId ||
+      //         item.eventRefId === commentaryDetails.eventRefId
+      //     )
+      //     .map((elem) => elem.id);
+      //   if (tipsData.length > 0) {
+      //     global.tblTips = global.tblTips.filter(
+      //       (item) => !tipsData.includes(item.id)
+      //     );
+      //     callClientAPI(
+      //       {
+      //         serviceType: ServiceType.clientAPI,
+      //         moduleType: APIEndpointModuleType.updateSeoModule,
+      //         data: {
+      //           module: "tips",
+      //           type: "delete",
+      //           data: {
+      //             id: tipsData,
+      //           },
+      //         },
+      //       },
+      //       request,
+      //       fastify
+      //     )
+      //   }
+      // }
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module: "commentaryDetails",
+        type: "update",
+        data: response.commentaryDetails,
+      });
+    }
+    if (commentaryTeams) {
+      response.commentaryTeams = [];
+      commentaryTeams.forEach((team) => {
+        const index = global.tblCommentaryTeams.findIndex(
+          (item) =>
+            item?.commentaryId === team.commentaryId &&
+            item.commentaryTeamId === team.commentaryTeamId
+        );
+        team.crr = parseFloat(team?.crr) || 0;
+        team.rrr = parseFloat(team?.rrr) || 0;
+        if(team.commentaryId !== commentaryId) {
+          errorLogger(
+            fastify,
+            `Commentary ID mismatch for team ${team.teamName}. Expected: ${commentaryId}, Found: ${team.commentaryId}`,
+            "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+            request
+          );
+        }
+        else {
+           global.tblCommentaryTeams[index] = {
+          ...team,
+          teamPredictionPercentage:
+            global.tblCommentaryTeams[index].teamPredictionPercentage,
+          };
+          response.commentaryTeams.push(global.tblCommentaryTeams[index]);
+        }
+      });
+      try {
+        response.commentaryTeams.forEach(async (team) => {
+          const _teamsC1 = global.tblTeams.filter(
+            (item) => item.teamId === team.teamId
+          );
+          if (_teamsC1.length > 0) {
+            team.image = _teamsC1[0].image;
+            team.jersey = _teamsC1[0].jersey;
+            team.nimage = _teamsC1[0].imagePath;
+            team.njersey = _teamsC1[0].jerseyPath;
+          }
+        });
+      } catch (error) { }
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module: "commentaryTeams",
+        type: "update",
+        data: response.commentaryTeams.map((team) => ({
+          ...team,
+          crr: parseFloat(team?.crr) || 0,
+          rrr: parseFloat(team?.rrr) || 0,
+        })),
+      });
+    }
+    // if(updateTeamStatus && updateTeamStatus != null){
+    //   response.updateTeamStatus = [];
+    //   updateTeamStatus.forEach((team) => {
+    //     const index = global.tblCommentaryTeams.findIndex(
+    //       (item) =>
+    //         item?.commentaryId === team.commentaryId &&
+    //         item.commentaryTeamId === team.commentaryTeamId
+    //     );
+    //     if(team.commentaryId !== commentaryId) {
+    //       errorLogger(
+    //         fastify,
+    //         `Commentary ID mismatch for team ${team.teamName}. Expected: ${commentaryId}, Found: ${team.commentaryId}`,
+    //         "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+    //         request
+    //       );
+    //     }
+    //     else {
+    //       global.tblCommentaryTeams[index] = {
+    //         ...global.tblCommentaryTeams[index],
+    //       ...team,
+    //       teamPredictionPercentage:
+    //         global.tblCommentaryTeams[index].teamPredictionPercentage,
+    //       };
+    //       response.updateTeamStatus.push(global.tblCommentaryTeams[index]);
+    //     }
+    //   });
+    //   try {
+    //     response.updateTeamStatus.forEach(async (team) => {
+    //       const _teamsC1 = global.tblTeams.filter(
+    //         (item) => item.teamId === team.teamId
+    //       );
+    //       if (_teamsC1.length > 0) {
+    //         team.image = _teamsC1[0].image;
+    //         team.jersey = _teamsC1[0].jersey;
+    //         team.nimage = _teamsC1[0].imagePath;
+    //         team.njersey = _teamsC1[0].jerseyPath;
+    //       }
+    //     });
+    //   } catch (error) { }
+    //   sendDataForSocketUpdate.dataToUpdate.push({
+    //     module: "commentaryTeams",
+    //     type: "update",
+    //     data: response.updateTeamStatus.map((team) => ({
+    //       ...team,
+    //       crr: parseFloat(team?.crr) || 0,
+    //       rrr: parseFloat(team?.rrr) || 0,
+    //     })),
+    //   });
+    // }
+    
+    if (deleteCommentaryBallByBallId.length > 0) {
+      global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
+        (item) => !deleteCommentaryBallByBallId.includes(item?.commentaryBallByBallId)
+      );
+      try {
+        _deleteBallID = {};
+        _deleteBallID.commentaryBallByBallId = deleteCommentaryBallByBallId;
+        _deleteBallID.commentaryId = commentaryId;
+        await deleteMarketOddsBallByBall(_deleteBallID, fastify, request);
+      } catch (error) {
+        console.log(new Date(), "delete market odds ball by ball console", error);
+        errorLogger(
+          fastify,
+          error.message,
+          "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+          request
+        );
+      }
+
+      // call predictscore
+      const strikeTeam = global.tblCommentaryTeams.find(
+        (item) => item?.commentaryId === commentaryId && item.teamStatus === 1
+      );
+      const nonStrikeTeam = global.tblCommentaryTeams.find(
+        (item) => item?.commentaryId === commentaryId && item.teamStatus === 2
+      );
+      const previousBall = global.tblCommentaryBallByBall
+        .filter(
+          (item) =>
+            item?.commentaryId === commentaryId &&
+            item.ballType > 0 &&
+            item.currentInnings === commentaryData.currentInnings &&
+            item.teamId === strikeTeam.teamId
+        )
+        .sort((a, b) => b.commentaryBallByBallId - a.commentaryBallByBallId)[0];
+      // if (balltypeOfdeleteBall > 0 && previousBall) {
+      //   if (commentaryData.isPredictMarket && isCallPredict == true) {
+      //     const decimalOverCount = parseFloat(previousBall.overCount);
+      //     const _wkt = previousBall.ballIsWicket;
+      //     callPredictorMarket(
+      //       {
+      //         commentary_id: commentaryData.commentaryId,
+      //         match_type_id: commentaryData.matchTypeId,
+      //         ball: decimalOverCount,
+      //         run: previousBall.ballRun,
+      //         total_score: strikeTeam.teamScore,
+      //         strike_team_id: strikeTeam.teamId,
+      //         wicket: _wkt === true ? 1 : 0,
+      //         total_wicket: strikeTeam.teamWicket,
+      //         ball_by_ball_id: deleteCommentaryBallByBallId
+      //           ? parseInt(deleteCommentaryBallByBallId)
+      //           : null,
+      //         ballType: previousBall?.ballType ?? null,
+      //         target: nonStrikeTeam?.teamScore != null ? parseInt(nonStrikeTeam.teamScore, 10) + 1 : null,
+      //       },
+      //       "/api/v1/undoscore",
+      //       fastify,
+      //       request,
+      //       pythonURI
+      //     ).catch((err) => {
+      //       errorLogger(
+      //         fastify,
+      //         err.message,
+      //         "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+      //         request
+      //       );
+      //     });
+      //   }
+      // }
+    }
+    if (deleteOverId.length > 0) {
+      global.tblOvers = global.tblOvers.filter(
+        (item) => !deleteOverId.includes(item?.overId)
+      );
+    }
+    if (deleteWicketId.length > 0) {
+      global.tblCommentaryWicket = global.tblCommentaryWicket.filter(
+        (item) => !deleteWicketId.includes(item?.commentaryWicketId)
+      );
+    }
+    if (deletePartnershipId.length > 0) {
+      global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter(
+        (item) => !deletePartnershipId.includes(item?.commentaryPartnershipId)
+      );
+    }
+    if (commentaryPlayers) {
+      response.commentaryPlayers = [];
+      commentaryPlayers.forEach((player) => {
+        const index = global.tblCommentaryPlayers.findIndex(
+          (item) => item.commentaryPlayerId === player.commentaryPlayerId
+        );
+        // get display name
+        let ds = global.tblPlayers.find((i) => i.playerId == player.playerId);
+        global.tblCommentaryPlayers[index] = player;
+        if( player.commentaryId !== commentaryId) {
+          errorLogger(
+            fastify,
+            `Commentary ID mismatch for player ${player.playerName}. Expected: ${commentaryId}, Found: ${player.commentaryId}`,
+            "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+            request
+          );
+        }
+        else {
+           response.commentaryPlayers.push({
+          ...global.tblCommentaryPlayers[index],
+          displayName: ds?.displayName,
+        });
+        }
+       
+      });
+      let _plyers = commentaryPlayers.filter(
+        (_fil) => _fil.isPlay === true && _fil.onStrike !== null
+      );
+      _plyers.forEach((player) => {
+        let _sendPrePlayer = {};
+        _sendPrePlayer.player_id = player.commentaryPlayerId;
+        _sendPrePlayer.player_name = player.playerName;
+        _sendPrePlayer.team_id = player.teamId;
+        _sendPrePlayer.batRun = player.batRun || "0";
+        _sendPrePlayer.isWicket = player.isBatterOut === false ? 0 : 1;
+        _sendPrePlayer.current_boundaries =
+          (isNaN(parseInt(player.batFour ?? 0, 10))
+            ? 0
+            : parseInt(player.batFour ?? 0, 10)) +
+          (isNaN(parseInt(player.batSix ?? 0, 10))
+            ? 0
+            : parseInt(player.batSix ?? 0, 10));
+        _sendPrePlayer.balls_faced = player.batBall || 0;
+        _sendPrePlayers.push(_sendPrePlayer);
+      });
+
+      try {
+        commentaryPlayers.forEach(async (player) => {
+          if (player.bowlerOver !== null && player.bowlerOver !== undefined) {
+            player.bowlerOver = player.bowlerOver.toString();
+          }
+          if (player.bowlerEconomy === "NaN") {
+            player.bowlerEconomy = null;
+          }
+          const _player = global.tblPlayers.filter(
+            (item) => item.playerId === player.playerId
+          );
+          if (_player.length > 0) {
+            player.playerimage = _player[0].image;
+            player.playerType = _player[0].playerType;
+            player.isKipper = _player[0].isKipper;
+          }
+        });
+      } catch (error) { }
+
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module: "commentaryPlayers",
+        type: "update",
+        data: response.commentaryPlayers,
+      });
+    }
+    // if (
+    //   updatedData.commentaryBallByBallDetails &&
+    //   commentaryData.isPredictMarket &&
+    //   updatedData.commentaryBallByBallDetails.ballType != 0 &&
+    //   updatedData.commentaryBallByBallDetails.ballType != 8 &&
+    //   isCallPredict == true
+    // ) {
+    //   let strikeTeam = global.tblCommentaryTeams.find(
+    //     (item) =>
+    //       item?.commentaryId === commentaryBallByBall.commentaryId &&
+    //       item.teamStatus === 1
+    //   );
+    //   let over = global.tblOvers.find((i)=>i?.overId == updatedData?.commentaryBallByBallDetails?.overId)
+    //   let nonStrikeTeam = global.tblCommentaryTeams.find(
+    //     (item) =>
+    //       item?.commentaryId === commentaryBallByBall.commentaryId &&
+    //       item.teamStatus === 2
+    //   );
+    //   let target = commentaryData.target ?? null;
+    //   let decimalOverCount = parseFloat(commentaryBallByBall.overCount);
+    //   let _wkt = commentaryBallByBall.ballIsWicket;
+    //   let partnership = updatedData.commentaryPartnershipDetails;
+    //   let boundary = (partnership?.totalSix || 0) + (partnership?.totalFour || 0);
+    //   if (partnership)
+    //     sendPartnership.push({
+    //       partnership_no: partnership?.order || 0,
+    //       partnership_boundaries: boundary,
+    //       total_balls: partnership?.totalBalls || 0,
+    //       total_runs: partnership?.totalRuns || 0,
+    //     })
+    //   const predictionPayload = {
+    //     playerpredictscore: {
+    //       commentary_id: commentaryData.commentaryId,
+    //       match_type_id: commentaryData.matchTypeId,
+    //       event_id: commentaryData.eventRefId,
+    //       current_team_id: strikeTeam.teamId,
+    //       total_score: strikeTeam.teamScore,
+    //       current_ball: decimalOverCount || 0,
+    //       player_details: _sendPrePlayers,
+    //       ball_by_ball_id: updatedData.commentaryBallByBallDetails
+    //         .commentaryBallByBallId
+    //         ? parseInt(
+    //           updatedData.commentaryBallByBallDetails.commentaryBallByBallId
+    //         )
+    //         : null,
+    //       partnership_details: sendPartnership,
+    //     },
+    //     predictscore: {
+    //       commentary_id: commentaryData.commentaryId,
+    //       match_type_id: commentaryData.matchTypeId,
+    //       ball: decimalOverCount,
+    //       run: commentaryBallByBall.ballRun,
+    //       total_score: strikeTeam.teamScore,
+    //       strike_team_id: strikeTeam.teamId,
+    //       wicket: _wkt === true ? 1 : 0,
+    //       over_type : over?.overType || 0,
+    //       commentary_player_id : commentaryBallByBall?.bowlerId || 0,
+    //       bowling_style : commentaryBallByBall?.bowlingType || 0,
+    //       total_wicket: strikeTeam.teamWicket,
+    //       ball_by_ball_id: updatedData.commentaryBallByBallDetails
+    //         .commentaryBallByBallId
+    //         ? parseInt(
+    //           updatedData.commentaryBallByBallDetails.commentaryBallByBallId
+    //         )
+    //         : null,
+    //       ballType: commentaryBallByBall?.ballType ?? null,
+    //       target: nonStrikeTeam?.teamScore != null ? parseInt(nonStrikeTeam.teamScore, 10) + 1 : null,
+    //     },
+    //     commentary_id: commentaryId,
+    //     target: target
+    //   };
+    //   let isNodePrediction =
+    //     global.tblConfigs.find(
+    //       (item) => item.key === configConstants.ISPREDICATIONFROMNODE
+    //     )?.value || "false";
+    //   if (isNodePrediction == "true") {
+    //     processPredictScoreMarket(predictionPayload, fastify)
+    //   }
+    //   else {
+    //     callPredictorMarket(
+    //       predictionPayload,
+    //       "/api/v1/predictscore",
+    //       fastify,
+    //       request,
+    //       pythonURI
+    //     );
+    //   }
+    // }
+
+    // if (deleteCommentaryBallByBallId.length > 0) {
+    //   response.deleteCommentaryBallByBallId = true;
+    //   sendDataForSocketUpdate.dataToUpdate.push({
+    //     // module: "deleteCommentaryBallByBallId",
+    //     // type: "delete",
+    //     // data: deleteCommentaryBallByBallId,
+    //     module: "commentaryBallByBall",
+    //     type: "delete",
+    //     data: { commentaryBallByBallId: deleteCommentaryBallByBallId },
+    //   });
+    // }
+    // if (deleteOverId) {
+    //   response.deleteOverId = true;
+    //   sendDataForSocketUpdate.dataToUpdate.push({
+    //     // module: "deleteOverId",
+    //     // type: "delete",
+    //     // data: deleteOverId,
+    //     module: "commentaryOvers",
+    //     type: "delete",
+    //     data: { overId: deleteOverId },
+    //   });
+    // }
+    // if (
+    //   commentaryDetails &&
+    //   commentaryData.isPredictMarket == true &&
+    //   previousCommentaryStatus == 1 &&
+    //   statusToUpdate == 2
+    // ) {
+    //   handleMarketCloseService(
+    //     {
+    //       commentaryId: commentaryDetails.commentaryId,
+    //       inningsId: commentaryDetails.currentInnings,
+    //     },
+    //     request,
+    //     fastify
+    //   ).catch((err) => {
+    //     console.log(new Date(), "handle market closes services console", err);
+    //     errorLogger(
+    //       fastify,
+    //       err.message,
+    //       "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+    //       request
+    //     );
+    //   });
+    //   if (isCallPredict == true) {
+    //     let isNodePrediction = global.tblConfigs.find((item) => item.key === configConstants.ISPREDICATIONFROMNODE)?.value || "false";
+    //     if (isNodePrediction !== "true") {
+    //       let key1 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTBALLFACED);
+    //       let key2 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERBOUNDARIES);
+    //       let key3 = global.tblConfigs.find((item) => item.key === configConstants.DEFAULTPLAYERRUNS);
+    //       callPredictorMarket(
+    //         {
+    //           commentary_id: commentaryDetails.commentaryId,
+    //           match_type_id: commentaryDetails.matchTypeId,
+    //           event_id: commentaryDetails.eventRefId,
+    //           default_ball_faced: parseInt(key1?.value) || 0,
+    //           default_player_boundaries: parseInt(key2?.value) || 0,
+    //           default_player_runs: parseInt(key3?.value) || 0,
+    //         },
+    //         "/api/v1/loadcommentary",
+    //         fastify,
+    //         request,
+    //         pythonURI
+    //       ).catch((err) => {
+    //         errorLogger(
+    //           fastify,
+    //           err.message,
+    //           "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+    //           request
+    //         );
+    //       });
+    //     }
+
+    //   }
+    //   setLineRatioInComService(
+    //     {
+    //       commentaryId: commentaryDetails.commentaryId,
+    //       matchTypeId: commentaryData.matchTypeId,
+    //     },
+    //     request,
+    //     fastify
+    //   ).catch((err) => {
+    //     console.log("setLineRatioInComService console", err);
+    //     errorLogger(
+    //       fastify,
+    //       err.message,
+    //       "ERROR --> services/commentary.js/setLineRatioInComService",
+    //       request
+    //     );
+    //   });
+    // }
+
+    // if (
+    //   commentaryDetails &&
+    //   commentaryData.isPredictMarket == true &&
+    //   statusToUpdate == 4
+    // ) {
+    //   const eventMarket = await closeEventMarketByCIdQuery(
+    //     {
+    //       commentaryId: commentaryDetails.commentaryId,
+    //     },
+    //     fastify
+    //   );
+    //   if (eventMarket.length > 0) {
+    //     for (const updatedItem of eventMarket) {
+    //       let index = global.tblEventMarketsV2.findIndex(
+    //         (item) => item.eventMarketId === updatedItem.marketId
+    //       );
+    //       if (index !== -1) {
+    //         global.tblEventMarketsV2[index] = {
+    //           ...global.tblEventMarketsV2[index],
+    //           ...updatedItem,
+    //         };
+    //       }
+    //     }
+    //   }
+
+    //   global.tblMarketRunnerV2
+    //     .filter((elem) =>
+    //       eventMarket.some((e) => e.marketId === elem.eventMarketId)
+    //     )
+    //     .forEach((elem) => {
+    //       elem.selectionStatus = EventMarketStatus.Close;
+    //     });
+
+    //   if (isCallPredict == true) {
+    //     callPredictorMarket(
+    //       {
+    //         commentary_id: commentaryDetails.commentaryId,
+    //       },
+    //       "/api/v1/endcommentary",
+    //       fastify,
+    //       request,
+    //       pythonURI
+    //     ).catch((err) => {
+    //       errorLogger(
+    //         fastify,
+    //         err.message,
+    //         "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+    //         request
+    //       );
+    //     });
+    //   }
+    //   let competition = global.tblCompetitions.find(
+    //     (item) => item.competitionId === commentaryDetails.competitionId
+    //   );
+    //   await notiConfigContentReplaceService(
+    //     EventName.EVENTCOMPLETED,
+    //     commentaryData.commentaryId,
+    //     request,
+    //     fastify
+    //   );
+    //   if (competition.isEventSnap == true) {
+    //     setCompEventSnapSerice(
+    //       [
+    //         {
+    //           commentaryId: commentaryDetails.commentaryId,
+    //           eventRefId: commentaryDetails.eventRefId,
+    //           competitionId: commentaryDetails.competitionId,
+    //           eventTypeId: commentaryDetails.eventTypeId,
+    //         },
+    //       ],
+    //       request,
+    //       fastify
+    //     ).catch((err) => {
+    //       console.log("setCompEventSnapSerice console", err);
+    //       errorLogger(
+    //         fastify,
+    //         err.message,
+    //         "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - setCompEventSnapSerice",
+    //         request
+    //       );
+    //     });
+    //   }
+    //   if (
+    //     competition.isPointTable == true &&
+    //     commentaryDetails.isTest == false
+    //   ) {
+    //     setTeamPointService(
+    //       [
+    //         {
+    //           commentaryId: commentaryDetails.commentaryId,
+    //           competitionId: commentaryDetails.competitionId,
+    //           team1Id: commentaryDetails.team1Id,
+    //           team2Id: commentaryDetails.team2Id,
+    //           winnerId: commentaryDetails.winnerId,
+    //         },
+    //       ],
+    //       request,
+    //       fastify
+    //     ).catch((err) => {
+    //       console.log("setTeamPointService console", err);
+    //       errorLogger(
+    //         fastify,
+    //         err.message,
+    //         "ERROR --> services/commentary.js/setTeamPointServicsyncCommentaryStatsWithAPIAndSocket - setTeamPointService",
+    //         request
+    //       );
+    //     });
+    //   }
+    // }
+
+    // // call the getscore and emit the event data
+    // if (
+    //   global?.clientSocketIo !== undefined &&
+    //   global?.clientSocketIo.length > 0
+    // ) {
+    //   commentaryDetailsByEventIdService(
+    //     {
+    //       ...request,
+    //       body: {
+    //         eventId: commentaryData.eventRefId,
+    //         commentaryId : commentaryData.commentaryId
+    //       },
+    //     },
+    //     fastify,
+    //     "callFromSocket"
+    //   ).catch((err) => {
+    //     console.log(new Date(), "err in commentaryDetailsByEventIdService", err);
+    //     errorLogger(
+    //       fastify,
+    //       err.message,
+    //       "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+    //       request
+    //     );
+    //   });
+    //   global.clientSocketIo.forEach((socket) => {
+    //     socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+    //   });
+    // }
+
+    // if (global.wss) {
+    //   let res = {};
+    //   res.eventname = "ShortScore";
+    //   res.connectionID = "";
+    //   let _ShortCommentry = setShortCommenrty(commentaryData.eventRefId);
+    //   _ShortCommentry = JSON.stringify(_ShortCommentry);
+    //   res.data = _ShortCommentry;
+    //   // Iterate over all connected clients and send the update
+    //   global.wss.clients.forEach(function each(client) {
+    //     if (client.readyState === WebSocket.OPEN) {
+    //       client.send(JSON.stringify(res));
+    //     }
+    //   });
+    // }
+
+    let strikeTeam;
+    strikeTeam = global.tblCommentaryTeams.find(
+      (item) =>
+        item?.commentaryId === commentaryData.commentaryId &&
+        item.teamStatus === 1
+    );
+    // if (deleteCommentaryBallByBallId || deleteOverId) {
+    //   const clientInRoom = global.socketIo.sockets.adapter.rooms.get(
+    //     `score-${commentaryId}`
+    //   );
+    //   if (clientInRoom?.size) {
+    //     global.socketIo.to(`score-${commentaryId}`).emit("undoCalled", {
+    //       commentaryId: commentaryId,
+    //       message: "Undo called for this commentary.",
+    //     });
+    //   }
+    // }
+    // if (isEndInnings && isEndInnings == true && isCallPredict == true) {
+    //   callPredictorMarket(
+    //     {
+    //       commentary_id: commentaryData.commentaryId,
+    //       match_type_id: commentaryData.matchTypeId,
+    //       strike_team_id: strikeTeamForEndInnings.teamId,
+    //     },
+    //     "/api/v1/endinnings",
+    //     fastify,
+    //     request,
+    //     pythonURI
+    //   ).catch((err) => {
+    //     errorLogger(
+    //       fastify,
+    //       err.message,
+    //       "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
+    //       request
+    //     );
+    //   });
+    // }
+    commentaryLogger(
+      {
+        commentaryId: commentaryId,
+        requestBody: request.body,
+        response: response,
+        global: null,
+        extra: null,
+        apiName: "/undoDetails",
+        reqStartTime: startTime,
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      console.log("commentary logger console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/undoCommentaryService",
+        request
+      );
+    });
+    response.callPredictions = callPredictions;
+    return response;
+  } catch (error) {
+    console.log(new Date(), "console value undo details", error);
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> services/commentary.js/undoCommentaryService-error",
+      request
+    );
+    try {
+      await commentaryLogger(
+        {
+          commentaryId: request.body.commentaryId,
+          requestBody: request.body,
+          response: {
+            error: error.message,
+          },
+          global: null,
+          extra: null,
+          apiName: "/undoDetails",
+          reqStartTime: startTime,
+        },
+        request,
+        fastify
+      )
+    } catch (err) {
+      console.log(new Date(), "commentary logger console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/undoCommentaryService-",
+        request
+      );
+    }
+    throw error;
+  }
+};
 
 module.exports = {
   allCommentaryService,
@@ -23826,4 +24973,6 @@ module.exports = {
   matchImportService,
   insertTeamAndPlayers,
   clientSocketCountService,
+  undoCommentaryInningService,
+  undoCommentaryService,
 };
