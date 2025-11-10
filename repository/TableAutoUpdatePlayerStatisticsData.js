@@ -225,7 +225,7 @@ const getCommentaryPlayerBattingHistoryByCommentaryPlayerCountQuery = async (req
             type: fastify.db.QueryTypes.SELECT
         });
 
-        return result?.count || 0;
+        return result?.[0]?.count || 0;
     } catch (err) {
         errorLogger(
             fastify,
@@ -446,7 +446,7 @@ const getCommentaryPlayerBowlingHistoryByCommentaryPlayerCountQuery = async (req
             type: fastify.db.QueryTypes.SELECT
         });
 
-        return result?.count || 0;
+        return result?.[0]?.count || 0;
     } catch (err) {
         errorLogger(
             fastify,
