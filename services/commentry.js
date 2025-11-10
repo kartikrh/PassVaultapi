@@ -23901,37 +23901,6 @@ const undoCommentaryInningService = async (request, fastify) => {
 
 const undoCommentaryService = async (request, fastify) => {
   const startTime = new Date();
-  request.body.commentaryOvers = {
-    "date": "2025-11-10T11:27:14.091635+00:00",
-    "over": 1,
-    "overId": 163661,
-    "teamId": 1721,
-    "dotBall": 2,
-    "bowlerId": 445593,
-    "isMaiden": false,
-    "overType": 1,
-    "totalRun": 5,
-    "totalSix": 0,
-    "ballCount": 5,
-    "teamScore": "12/1",
-    "totalFour": 0,
-    "isComplete": true,
-    "isPowerPlay": null,
-    "totalNoball": 0,
-    "totalWicket": 0,
-    "commentaryId": 1026,
-    "overTypeName": "None",
-    "totalByesRun": 0,
-    "totalPanelty": 0,
-    "totalWideRun": 0,
-    "powerPlayName": null,
-    "powerplayType": 1,
-    "totalWideBall": 0,
-    "currentInnings": 1,
-    "totalNoBallRun": 0,
-    "totalLegByesRun": 0,
-    "isOverInPowerplay": false
-}
   try {
     let {
       commentaryTeams,
