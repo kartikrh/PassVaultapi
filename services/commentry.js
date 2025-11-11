@@ -4123,13 +4123,15 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             );
 
             if (result && result.length > 0) {
-              const notInsertedCPIds = result.map(r => r.status === "skipped")?.map(r => r.player_id);
-              errorLogger(
-                fastify,
-                `CommentaryId: ${commentaryId} and PlayerId: ${notInsertedCPIds.join(", ")} skipped`,
-                "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - fn_insert_auto_update_player_statistics_by_commentary",
-                request
-              );
+              const notInsertedCPIds = result.filter(r => r.status === "skipped")?.map(r => r.player_id);
+              if (notInsertedCPIds.length > 0) {
+                errorLogger(
+                  fastify,
+                  `CommentaryId: ${commentaryId} and PlayerId: ${notInsertedCPIds.join(", ")} skipped`,
+                  "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - fn_insert_auto_update_player_statistics_by_commentary",
+                  request
+                );
+              }
             }
           } catch (error) {
             errorLogger(
