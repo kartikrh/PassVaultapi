@@ -24441,7 +24441,7 @@ const undoCommentaryService = async (request, fastify) => {
       });
     }
     
-    if (deleteCommentaryBallByBallId.length > 0) {
+    if (deleteCommentaryBallByBallId && deleteCommentaryBallByBallId.length > 0) {
       response.deleteCommentaryBallByBallId = true;
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "deleteCommentaryBallByBallIds",
@@ -24522,7 +24522,7 @@ const undoCommentaryService = async (request, fastify) => {
         (item) => !deleteCommentaryBallByBallId.includes(item?.commentaryBallByBallId)
       );
     }
-    if (deleteOverId.length > 0) {
+    if (deleteOverId && deleteOverId.length > 0) {
       response.deleteOverId = true;
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "deleteOverIds",
@@ -24532,7 +24532,7 @@ const undoCommentaryService = async (request, fastify) => {
         (item) => !deleteOverId.includes(item?.overId)
       );
     }
-    if (deleteWicketId.length > 0) {
+    if (deleteWicketId && deleteWicketId.length > 0) {
       response.deleteWicketId = true;
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "deleteWicketIds",
@@ -24542,7 +24542,7 @@ const undoCommentaryService = async (request, fastify) => {
         (item) => !deleteWicketId.includes(item?.commentaryWicketId)
       );
     }
-    if (deletePartnershipId.length > 0) {
+    if (deletePartnershipId && deletePartnershipId.length > 0) {
       response.deletePartnershipId = true;
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "deletePartnershipIds",
