@@ -83,7 +83,7 @@ const { updatePitchConditionQuery, insertPitchConditionQuery } = require("../rep
 // };
 
 const allCompetitionService = async (request) => {
-  const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type, isVirtual, pythonId, countryId, commentaryStatus } = request.body;
+  const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type, isVirtual, pythonId, countryId, commStatus } = request.body;
 
   const filterObject = {};
 
@@ -105,15 +105,15 @@ const allCompetitionService = async (request) => {
     return Object.entries(filterObject).every(([key, value]) => item[key] === value);
   });
 
-  if (commentaryStatus === undefined) {
+  if (commStatus === undefined) {
     result = result.filter(
-      (item) => ![4, 10].includes(item?.commStatus)
+      (item) => ![3].includes(item?.commStatus)
     );
-  } else if (commentaryStatus && commentaryStatus != 0) {
+  } else if (commStatus && commStatus != 0) {
     result = result.filter(
-      (item) => item?.commStatus == commentaryStatus
+      (item) => item?.commStatus == commStatus
     );
-  } else if (commentaryStatus == 0) {
+  } else if (commStatus == 0) {
     result = result;
   }
 
@@ -1527,8 +1527,10 @@ const competitionImportService = async (data, fastify, request) => {
 
       if (teamASquad.length === 0) {
         teamASquad = await getAllPlayersByTeamIdQuery(teamA.teamId, fastify, request);
+        teamASquad = teamASquad.filter(item => item.tpId != null);
         if (teamASquad.length === 0) {
           teamASquad = await insertTeamPlayersByTeamId(teamA.teamId, teamA.tpId, checkCompetition?.isMen, request, fastify);
+          teamASquad = teamASquad.filter(item => item.tpId != null);
         }
         teamASquad = teamASquad?.map(item => ({
           player_id: `${item.tpId}`,
@@ -1538,8 +1540,10 @@ const competitionImportService = async (data, fastify, request) => {
 
       if (teamBSquad.length === 0) {
         teamBSquad = await getAllPlayersByTeamIdQuery(teamB.teamId, fastify, request);
+        teamBSquad = teamBSquad.filter(item => item.tpId != null);
         if (teamBSquad.length === 0) {
           teamBSquad = await insertTeamPlayersByTeamId(teamB.teamId, teamB.tpId, checkCompetition?.isMen, request, fastify);
+          teamBSquad = teamBSquad.filter(item => item.tpId != null);
         }
         teamBSquad = teamBSquad?.map(item => ({
           player_id: `${item.tpId}`,

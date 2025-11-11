@@ -22,6 +22,7 @@ const editNotificationConfigService = async (request, fastify) => {
   const updateData = {
     eventName: request.body.eventName ?? validateId.eventName,
     content: request.body.content ?? validateId.content,
+    title: request.body?.title ?? validateId?.title,
     isActive: Boolean(request.body.isActive) ?? validateId.isActive,
     id: parseInt(request.body.id, 10),
   };
