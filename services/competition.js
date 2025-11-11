@@ -1589,15 +1589,19 @@ const competitionImportService = async (data, fastify, request) => {
 
   for (const team of competitionTeamTpIds) {
     let checkTeam = global.tblTeams.find(item => item.tpId === team);
-    const teamPlayerByTeamId = await getAllPlayersByTeamIdQuery(checkTeam.teamId, fastify, request);
-    await addTournamentTeamPlayersService({
-      ...request,
-      body: {
-        teamPlayers: teamPlayerByTeamId,
-        competitionId: checkCompetition?.competitionId,
-        teamId: checkTeam.teamId
-      }
-    }, fastify);
+    if (checkTeam) {
+      const teamPlayerByTeamId = await getAllPlayersByTeamIdQuery(checkTeam.teamId, fastify, request);
+      await addTournamentTeamPlayersService({
+        ...request,
+        body: {
+          teamPlayers: teamPlayerByTeamId,
+          competitionId: checkCompetition?.competitionId,
+          teamId: checkTeam.teamId
+        }
+      }, fastify);
+    } else {
+      errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/competition.js/competitionImportService - checkTeam", request, team);
+    }
   }
 
   await addEditTournamentTeamPointDataService(entitySportCompetitionResponse, checkCompetition?.competitionId, fastify, request);
