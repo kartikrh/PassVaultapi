@@ -4115,7 +4115,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
               `SELECT * FROM fn_insert_auto_update_player_statistics_by_commentary(:commentaryId, :createdBy)`,
               {
                 replacements: {
-                  commentaryId,
+                  commentaryId: commentaryData.commentaryId,
                   createdBy: request?.userTokenInfo?.WrUserId || -3
                 },
                 type: fastify.db.QueryTypes.SELECT
