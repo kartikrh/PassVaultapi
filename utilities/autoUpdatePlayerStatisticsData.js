@@ -67,14 +67,14 @@ const autoUpdatePlayerStatisticsDataProcess = async (fastify) => {
 
                 const highestScore = notOut ? `${totalRuns}*` : `${totalRuns}`;
 
-                // const fiftyBallsArray = batPlayer
-                //     .filter(it => it.batRun >= 50)
-                //     .map(it => it.batBall)
-                //     .filter(Boolean);
-                // const hundredBallsArray = batPlayer
-                //     .filter(it => it.batRun >= 100)
-                //     .map(it => it.batBall)
-                //     .filter(Boolean);
+                const fiftyBallsArray = batPlayer
+                    .filter(it => it.batRun >= 50)
+                    .map(it => it.batBall)
+                    .filter(Boolean);
+                const hundredBallsArray = batPlayer
+                    .filter(it => it.batRun >= 100)
+                    .map(it => it.batBall)
+                    .filter(Boolean);
 
                 const commBatHist = {
                     matchTypeId: getCommentaryData.matchTypeId,
@@ -98,8 +98,8 @@ const autoUpdatePlayerStatisticsDataProcess = async (fastify) => {
                     stumpCount: 0,
                     outCount: outs,
                     createdBy: -3,
-                    // fastest50Balls: fiftyBallsArray.length > 0 ? Math.min(...fiftyBallsArray) : 0,
-                    // fastest100Balls: hundredBallsArray.length > 0 ? Math.min(...hundredBallsArray) : 0
+                    fastest50Balls: fiftyBallsArray.length > 0 ? Math.min(...fiftyBallsArray) : 0,
+                    fastest100Balls: hundredBallsArray.length > 0 ? Math.min(...hundredBallsArray) : 0
                 };
 
                 await insertCommentaryPlayerBattingHistoryQuery(commBatHist, fastify);
@@ -145,6 +145,25 @@ const autoUpdatePlayerStatisticsDataProcess = async (fastify) => {
                 const economy = oversCount > 0 ? totalRuns / oversCount : 0;
                 const average = totalWickets > 0 ? totalRuns / totalWickets : 0;
                 const strikeRate = totalWickets > 0 ? totalBalls / totalWickets : 0;
+                const expensiveOverRuns = overs.length > 0 ? Math.max(...overs.map(o => o.totalRun || 0)) : 0;
+
+                const getCommentaryOverDetail = global.tblCommentaryBallByBall.filter(item => item.commentaryId === commentaryId && comPlayerIds.includes(item.bowlerId));
+                let hattrickCount = 0;
+                overs.forEach(over => {
+                    const overDetails = getCommentaryOverDetail.filter(item => item.commentaryId === commentaryId && comPlayerIds.includes(item.bowlerId) && item.overId === over.overId);
+                    let consecutiveWickets = 0;
+                    overDetails.forEach(ball => {
+                        if (ball.ballIsWicket) {
+                            consecutiveWickets++;
+                            if (consecutiveWickets === 3) {
+                                hattrickCount++;
+                                consecutiveWickets = 0;
+                            }
+                        } else {
+                            consecutiveWickets = 0;
+                        }
+                    });
+                });
 
                 const innings = [1, 2].map(inn => {
                     const filtered = overs.filter(o => o.currentInnings === inn);
@@ -188,7 +207,9 @@ const autoUpdatePlayerStatisticsDataProcess = async (fastify) => {
                     wickets10: totalWickets >= 10 ? 1 : 0,
                     catchCount: 0,
                     createdBy: -3,
-                    overCount: oversCount
+                    overCount: oversCount,
+                    expensiveOverRuns,
+                    hattrickCount
                 };
 
                 await insertCommentaryPlayerBowlingHistoryQuery(commBowlHist, fastify);
