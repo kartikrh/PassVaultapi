@@ -637,29 +637,6 @@ const setEntityCom2Service = async (request , fastify) =>{
                       updateBattingTeam : batTeam
                   })
               }    
-            } else {
-              let cp1 = playerTpIdObj[part.batsmen[0].batsman_id]
-              let cp2 = playerTpIdObj[part.batsmen[1].batsman_id]
-              partnership = genEtPartnership({
-                  currentPartnership :{
-                      batter1Id : cp1.commentaryPlayerId,
-                      batter1Name : cp1.playerName,
-                      batter2Id : cp2.commentaryPlayerId,
-                      batter2Name : cp2.playerName,
-                      totalRuns : part.runs,
-                      totalBalls : part.balls,
-                      // totalSix ,
-                      // totalFour,
-                      batter1Runs : part.batsmen[0].runs,
-                      batter2Runs :  part.batsmen[1].runs,
-                      batter1Balls : part.batsmen[0].balls,
-                      batter2Balls :part.batsmen[1].balls,
-                      order : response.live.live_inning.equations.wickets + 1,
-                      isActive : true
-                  },
-                  commentaryDetails : comDetails,
-                  updateBattingTeam : batTeam
-              })
             }
             // generate over
             const battingTeam = global.tblCommentaryTeams.find((i)=> i.commentaryId == comDetails.commentaryId 
