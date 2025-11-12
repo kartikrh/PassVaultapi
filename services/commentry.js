@@ -12636,8 +12636,7 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
   }
 
   commentaryTeams = Object.values(teamMap);
-  console.log("commentaryTeams", commentaryTeams);
-  
+
   return {
     commentaryDetails,
     commentaryTeams,
