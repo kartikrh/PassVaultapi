@@ -23376,14 +23376,14 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
     const newTeamData = {
       teamName: teamData?.title,
       teamShortName: teamData?.abbr,
-      country: teamData?.country,
       eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
       userId: -2,
       tpId: teamData?.tid || null,
       image: imageUrl.fullPath,
       imagePath: imageUrl.imagePath,
       jersey: entitySocketData?.defaultJerseyImage || null,
-      jerseyPath: entitySocketData?.defaultJerseyImagePath || null
+      jerseyPath: entitySocketData?.defaultJerseyImagePath || null,
+      isMen
     }
     const insertTeam = await insertTeamQuery(newTeamData, fastify, request);
     global.tblTeams.push(insertTeam);

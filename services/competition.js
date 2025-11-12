@@ -18,7 +18,7 @@ const {
   updateTpIdCompQuery,
 } = require("../repository/TableCompitition");
 const {storeImageOnServer, removeImageFromServer, generateImageName, getImageFromUrl } = require("../utilities/Images");
-const { PROJECT_NAME, ENTITYDEFAULTTEAMIMG, ENTITYDEFAULTTEAMIMGPATH, ENTITYDEFAULTJERSEYIMG, ENTITYDEFAULTJERSEYIMGPATH } = require("../utilities/configConstants");
+const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
 const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive, matchStatusEntity, error, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, parseUmpires, ScoringTypes } = require("../utilities");
 const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryTeams, getCommentaryTeamsQuery, insertCommentaryPlayers, deleteCommentaryPlayersByPlayerId, updateCommentaryPlayerById } = require("../repository/TableCommentary")
@@ -1300,14 +1300,14 @@ const competitionImportService = async (data, fastify, request) => {
         const teamData = {
           teamName: entitySportTeamResponse?.title,
           teamShortName: entitySportTeamResponse?.abbr,
-          country: entitySportTeamResponse?.country,
           eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
           userId: -2,
           tpId: entitySportTeamResponse?.tid || null,
           image: imageUrl.fullPath,
           imagePath: imageUrl.imagePath,
           jersey: entitySocketData?.defaultJerseyImage || null,
-          jerseyPath: entitySocketData?.defaultJerseyImagePath || null
+          jerseyPath: entitySocketData?.defaultJerseyImagePath || null,
+          isMen: entitySportTeamResponse?.sex === "male"
         }
         const insertTeam = await insertTeamQuery(teamData, fastify, request);
         global.tblTeams.push(insertTeam);
