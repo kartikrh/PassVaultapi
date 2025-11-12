@@ -12,6 +12,7 @@ const {
   getAllPlayersByTeamIdQuery,
   getAllCompetitionByTeamIdQuery,
   updateExchangeTeamQuery,
+  activeInactiveTeamQuery,
 } = require("../repository/TableTeams");
 const {
   removeImageFromServer,
@@ -736,6 +737,34 @@ const teamImportService = async (data, fastify, request = null) => {
   return await insertTeamAndPlayers(data.tid, eventType, request, fastify);
 }
 
+const activeInactiveTeamService = async (request, fastify) => {
+  const { teamId, isMen, isInternational } = request.body;
+  const index = global.tblTeams.findIndex(item => item.teamId === teamId);
+  if (index === -1) {
+    throw new Error("Team with this id not Found");
+  }
+
+  let updateData = {
+    ...global.tblTeams[index]
+  }
+
+  if ("isMen" in request.body) {
+    updateData.isMen = isMen;
+  }
+  if ("isInternational" in request.body) {
+    updateData.isInternational = isInternational;
+  }
+
+  const response = await activeInactiveTeamQuery(updateData, request, fastify);
+  if (!response || !response[0] || !response[0][0]) {
+    throw new Error("Failed to update team data teamId: " + teamId);
+  }
+
+  global.tblTeams[index] = response[0][0];
+
+  return `Team data updated successfully`;
+};
+
 module.exports = {
   allTeamsService,
   teamByIdService,
@@ -745,5 +774,6 @@ module.exports = {
   getTeamPointService,
   mergeTeamJerseyAndPlayerImageService,
   UpdateTeamFromEntityService,
-  teamImportService
+  teamImportService,
+  activeInactiveTeamService
 };

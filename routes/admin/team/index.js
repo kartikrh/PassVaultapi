@@ -13,6 +13,7 @@ const {
   getTeamPoint,
   mergeTeamJerseyAndPlayerImage,
   UpdateTeamFromEntity,
+  activeInactiveTeam,
 } = require("../../../controller/users/admin/teamsAndPlayer/teams");
 const { Teams, EventType, Player } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -140,5 +141,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => UpdateTeamFromEntity(request, reply, fastify),
+  });
+  fastify.post("/activeInactive", {
+    schema: Teams.activeInactive.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Teams",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => activeInactiveTeam(request, reply, fastify),
   });
 };
