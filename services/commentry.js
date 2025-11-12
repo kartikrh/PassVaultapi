@@ -124,6 +124,7 @@ const {
   EntityPlayerType,
   EntityBowlingStyleType,
   extractBowlingStyle,
+  RefType,
 } = require("../utilities");
 const {
   getAllPlayersByTeamIdQuery,
@@ -215,7 +216,7 @@ const { getImageFromUrl } = require("../utilities/Images");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { insertTeamPlayersByTeamId, insertCommentaryPlayersByTeam } = require("./competition");
 const cron = require('node-cron');
-const { insertAutoUpdatePlayerStatisticsDataService } = require("./autoUpdatePlayerStatisticsData");
+const { insertAutoImportDataService } = require("./autoImportData");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -23454,6 +23455,18 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
         const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
         global.tblPlayers.push(insertPlayer);
         checkPlayer = insertPlayer;
+
+        await insertAutoImportDataService({
+          ...request,
+          body: {
+            refId: insertPlayer?.playerId,
+            refType: RefType.PlayerUpdate,
+            sourceId: 3
+          },
+          userTokenInfo: {
+            WrUserId: request?.userTokenInfo?.WrUserId ?? -2
+          }
+        }, fastify);
       }
       else if (checkPlayer?.tpId === null || !checkPlayer?.tpId) {
         const data = {
@@ -23477,20 +23490,20 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
   if (uniqueUpsertedPlayers.length > 0 && checkTeam.teamId) {
     for (const player of uniqueUpsertedPlayers) {
       const checkPlayerExistsInTeam = teamPlayerByTeamId.find(item => item.playerId === player.playerId);
-        if (!checkPlayerExistsInTeam) {
-          await insertTeamPlayerQuery({
-            teamId: checkTeam?.teamId,
-            refPlayerId: player?.playerId,
-            tpId: player?.tpId,
-            userId: -2,
-            jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage || null,
-            jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
-          }, fastify, request);
-          await updateTeamPlayerHomeTeamQuery({
-            refPlayerId: player?.playerId,
-            teamId: checkTeam?.teamId
-          }, fastify, request);
-        }
+      if (!checkPlayerExistsInTeam) {
+        await insertTeamPlayerQuery({
+          teamId: checkTeam?.teamId,
+          refPlayerId: player?.playerId,
+          tpId: player?.tpId,
+          userId: -2,
+          jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage || null,
+          jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
+        }, fastify, request);
+        await updateTeamPlayerHomeTeamQuery({
+          refPlayerId: player?.playerId,
+          teamId: checkTeam?.teamId
+        }, fastify, request);
+      }
     }
   }
 

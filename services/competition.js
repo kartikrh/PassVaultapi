@@ -20,7 +20,7 @@ const {
 const {storeImageOnServer, removeImageFromServer, generateImageName, getImageFromUrl } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
-const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive, matchStatusEntity, error, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, parseUmpires, ScoringTypes } = require("../utilities");
+const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive, matchStatusEntity, error, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, parseUmpires, ScoringTypes, RefType } = require("../utilities");
 const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryTeams, getCommentaryTeamsQuery, insertCommentaryPlayers, deleteCommentaryPlayersByPlayerId, updateCommentaryPlayerById } = require("../repository/TableCommentary")
 const { deleteTournamentTeamPlayersByCompIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
@@ -35,6 +35,7 @@ const { errorLogger } = require("../utilities/logger");
 const { insertVenueQuery, updateVenueQuery } = require("../repository/TableVenue");
 const { insertWeatherQuery, updateWeatherQuery } = require("../repository/TableWeather");
 const { updatePitchConditionQuery, insertPitchConditionQuery } = require("../repository/TablePitchCondition");
+const { insertAutoImportDataService } = require("./autoImportData");
 
 // const allCompetitionService = async (request) => {
 //   const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type } = request.body;
@@ -933,6 +934,18 @@ const upsertPlayers = async (entitySocketData, players, playerTpId, isMen, reque
       const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
       global.tblPlayers.push(insertPlayer);
       checkPlayer = insertPlayer;
+
+      await insertAutoImportDataService({
+        ...request,
+        body: {
+          refId: insertPlayer?.playerId,
+          refType: RefType.PlayerUpdate,
+          sourceId: 3
+        },
+        userTokenInfo: {
+          WrUserId: request?.userTokenInfo?.WrUserId ?? -2
+        }
+      }, fastify);
     }
     else if (checkPlayer?.tpId === null || !checkPlayer?.tpId) {
       const data = {

@@ -25,10 +25,11 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { deletePlayersByTeamIdQuery } = require("../repository/TableTournamentsTeamPlayers")
 const { deletePointsByTeamIdQuery } = require("../repository/TableTournmentTeamPoints")
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
-const { trimTextData, callEntitySportAPI, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, EventType, checkEntitySportAPIEndpointIsActive } = require("../utilities/index");
+const { trimTextData, callEntitySportAPI, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, EventType, checkEntitySportAPIEndpointIsActive, RefType } = require("../utilities/index");
 const { insertPlayerQuery } = require("../repository/TablePlayer");
 const { insertTeamAndPlayers } = require("./commentry");
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
+const { insertAutoImportDataService } = require("./autoImportData");
 const allTeamsService = async () => {
   return global.tblTeams;
 };
@@ -703,6 +704,18 @@ const UpdateTeamFromEntityService = async (data, fastify, request) => {
       const insertPlayer = await insertPlayerQuery(data, fastify, request);
       global.tblPlayers.push(insertPlayer);
       playerData = insertPlayer;
+
+      await insertAutoImportDataService({
+        ...request,
+        body: {
+          refId: insertPlayer?.playerId,
+          refType: RefType.PlayerUpdate,
+          sourceId: 3
+        },
+        userTokenInfo: {
+          WrUserId: request?.userTokenInfo?.WrUserId ?? -2
+        }
+      }, fastify);
     }
     upsertedPlayers.push(playerData);
   }
