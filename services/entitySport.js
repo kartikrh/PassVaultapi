@@ -1491,7 +1491,6 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               // batBall: (playersMap[c.batsman_id]?.batBall || 0) + 1,
               batDotBall: (playersMap[c.batsman_id]?.batDotBall || 0) + 1,
             }
-            console.log("playersMap", playersMap[c.batsman_id])
           }
           else {
             playersMap[c.batsman_id] = {
@@ -1509,8 +1508,6 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               // batBall: 1,
               // batDotBall: 1,
             }
-            console.log("playerTpIdObj[c.batsman_id]", playerTpIdObj[c.batsman_id])
-
           }
           let updateBall = {
             ballIsWicket: true,
