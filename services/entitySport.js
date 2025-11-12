@@ -419,6 +419,7 @@ const setEntityCom2Service = async (request , fastify) =>{
             // set the toss
             const tossInfo = response.match_info.toss;
             // get in comteam
+            console.log("tossInfo", tossInfo)
             let team1 = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.tpId == tossInfo.winner && ct.currentInnings == comDetails.currentInnings)
             console.log("team1", team1)
             let team2 = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.commentaryTeamId != team1.commentaryTeamId && ct.currentInnings == comDetails.currentInnings)
