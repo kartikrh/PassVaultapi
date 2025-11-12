@@ -1883,7 +1883,8 @@ const getAllCommentaryPlayerQuery = async (fastify) => {
         tcp."wrJerseyPlayerImage" as "jerseyPlayerImage",
         tcp."wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
         tcp."wrTpId" as "tpId",
-        tcp."wrIsPlayInEvent" as "isPlayInEvent"
+        tcp."wrIsPlayInEvent" as "isPlayInEvent",
+        tcp."wrCreatedDate" as "createdDate"
     from "tblCommentaryPlayers" AS tcp
     LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
     LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"

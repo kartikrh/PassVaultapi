@@ -12588,6 +12588,8 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
             onStrike: curr?.onStrike,
             isBatterOut: curr?.isBatterOut,
             isBatterRetir: curr?.isBatterRetir,
+            isPlayInEvent: curr?.isPlayInEvent,
+            createdDate: curr?.createdDate,
           };
         })
     );
@@ -12634,7 +12636,8 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
   }
 
   commentaryTeams = Object.values(teamMap);
-
+  console.log("commentaryTeams", commentaryTeams);
+  
   return {
     commentaryDetails,
     commentaryTeams,
