@@ -1018,7 +1018,7 @@ const insertTeamPlayersByTeamId = async (teamId, teamTpId, isMen, request, fasti
 const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlaying11Squad, players, matchTypeId, isMen, fastify, request) => {
   let commentaryPlayers = global.tblCommentaryPlayers.filter(item => item.commentaryId === commentaryId && item.teamId === teamId && item.currentInnings === i);
   const playersInTeamsSet = new Set(commentaryPlayers.map(player => player.tpId));
-  const filteredPlayerIds = teamPlaying11Squad?.filter(pid => !playersInTeamsSet.has(Number(pid.player_id)))?.map(item => Number(item.player_id));
+  const filteredPlayerIds = [...new Set(teamPlaying11Squad?.filter(pid => !playersInTeamsSet.has(Number(pid.player_id)))?.map(item => Number(item.player_id)))];
 
   const entitySocketData = global.tblEntitySockets[0];
   const playersInTeams = await getAllPlayersByTeamIdQuery(
