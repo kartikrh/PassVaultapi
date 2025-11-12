@@ -471,6 +471,60 @@ const getAllTeamsByIdsQuery = async (whereCondition = undefined, fastify) => {
     throw new Error(err.message);
   }
 }
+
+const activeInactiveTeamQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `WITH update_data AS (
+        UPDATE "tblTeams" SET
+          "wrIsMen" = $1,
+          "wrIsInternational" = $2,
+          "wrModifyBy" = $3,
+          "wrModifyDate" = $4
+        WHERE "wrTeamId" = $5
+        returning *
+      )
+      SELECT 
+        "wrTeamId" as "teamId",
+        tt."wrEventTypeId" as "eventTypeId",
+        "wrTeamName" as "teamName",
+        "wrTeamShortName" as "teamShortName",
+        "WrTeamJersey" as "jersey",
+        tt."wrImage" as "image",
+        "wrEventType" AS "eventType",
+        "wrTeamColor" AS "teamColor",
+        "wrBackgroundColor" AS "backgroundColor",
+        tt."wrImagePath" AS "imagePath",
+        tt."wrJerseyPath" AS "jerseyPath",
+        tt."wrTpId" AS "tpId",
+        tt."wrCountryId" AS "countryId",
+        tt."wrIsMen" AS "isMen",
+        tt."wrIsInternational" AS "isInternational"
+      FROM "update_data" tt 
+      INNER JOIN "tblEventTypes" evt ON tt."wrEventTypeId" = evt."wrEventTypeId"
+      `,
+      {
+        bind: [
+          data.isMen,
+          data.isInternational,
+          request?.userTokenInfo?.WrUserId,
+          new Date(),
+          data.teamId
+        ],
+        type: fastify.db.QueryTypes.UPDATE
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeams.js/activeInactiveTeamQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   allTeamQuery,
   insertTeamQuery,
@@ -483,5 +537,6 @@ module.exports = {
   getAllTeamsByIdsQuery,
   getTeamsByIds,
   updateExchangeTeamQuery,
-  getTeamPlayerTournamentQuery
+  getTeamPlayerTournamentQuery,
+  activeInactiveTeamQuery
 };
