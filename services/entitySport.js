@@ -420,6 +420,7 @@ const setEntityCom2Service = async (request , fastify) =>{
             const tossInfo = response.match_info.toss;
             // get in comteam
             let team1 = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.tpId == tossInfo.winner && ct.currentInnings == comDetails.currentInnings)
+            console.log("team1", team1)
             let team2 = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.commentaryTeamId != team1.commentaryTeamId && ct.currentInnings == comDetails.currentInnings)
             if(!team1 || !team2){
                 throw new Error("Batting or Bowling team not found in commentary teams.")
