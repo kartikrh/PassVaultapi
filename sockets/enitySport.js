@@ -19,7 +19,6 @@ function addToQueue(payload, fastify) {
   // Replace existing queued item if same matchId (avoid duplicates)
   commentaryQueue.set(matchId, { payload, fastify });
   processTimeout = setTimeout(() => {
-    console.log("addToQueue----")
     if (!isProcessingQueue) processQueue();
   }, 100);
 
