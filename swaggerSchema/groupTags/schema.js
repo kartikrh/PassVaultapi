@@ -1952,7 +1952,21 @@ const Player = {
         required: ["playerId", "homeTeamId"]
       },
     },
-  }
+  },
+  getPlayerCompetitionById: {
+    schema: {
+      tags: ["Player"],
+      security: [{ bearerAuth: [] }],
+      description: "get Player competition list by id",
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+        },
+        required: ["playerId"],
+      },
+    },
+  },
 };
 
 const MatchType = {
