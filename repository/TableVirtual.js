@@ -51,7 +51,7 @@ const virtualOverQuery = async (data, request, fastify) => {
         data.commentaryId,
         data.teamId,
         data.over,
-        data.bowlerId,
+        data.bowlerId || null,
         data.ballCount,
         data.totalRun,
         data.totalFour,

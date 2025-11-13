@@ -301,9 +301,10 @@ const saveTournamentTeamPlayerService = async (request, fastify) => {
     return "Tournament Team Players Data Updated successfully."
 }
 const setEntityCom2Service = async (request , fastify) =>{
-  console.log("setEntityCom2Service.-,")
-    const {response} = request.body
-    let comDetails =global.tblCommentaries.find((c)=> c.tpId == response?.match_id)
+  try {
+        const {response} = request.body
+    // await new Promise((r) => setTimeout(r, 5000));
+    let comDetails = global.tblCommentaries.find((c)=> c.tpId == response?.match_id)
     if(!comDetails){
         // throw new Error("Commentary with this tp id not found.")
         return true;
@@ -419,9 +420,12 @@ const setEntityCom2Service = async (request , fastify) =>{
             // set the toss
             const tossInfo = response.match_info.toss;
             // get in comteam
-            console.log("tossInfo", tossInfo)
+            // console.log("tossInfo", tossInfo)
             let team1 = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.tpId == tossInfo.winner && ct.currentInnings == comDetails.currentInnings)
-            console.log("team1", team1)
+            // console.log("team1", team1)
+            if(!team1){
+                throw new Error("Team1 not found in commentary teams.")
+            }
             let team2 = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.commentaryTeamId != team1.commentaryTeamId && ct.currentInnings == comDetails.currentInnings)
             if(!team1 || !team2){
                 throw new Error("Batting or Bowling team not found in commentary teams.")
@@ -764,7 +768,16 @@ const setEntityCom2Service = async (request , fastify) =>{
     
     return true;
 
-
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "Error --> services/entitySport.js/setEntityCom2servie",
+      null,
+      request.body
+    )
+    return true;
+  }
 }
 const handleComArr = async (data , request , fastify , comDetails) =>{
     const {response} = data;
@@ -950,6 +963,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             bowlerOrder,
           };
         }
+        // set isPlay false for previous bowler
       }
     }
    
