@@ -745,8 +745,26 @@ const getPlayerCompetitionListByPlayerIdQuery = async (request, fastify) => {
     const result = await fastify.db.query(
       `
       SELECT json_build_object(
-        'ended', COALESCE(json_agg(c) FILTER (WHERE c."wrStatus" IN (3,4)), '[]'::json),
-        'notEnded', COALESCE(json_agg(c) FILTER (WHERE c."wrStatus" IN (1,2)), '[]'::json)
+        'ended', COALESCE(json_agg(
+          json_build_object(
+            'refID', c."wrRefID",
+            'competitionId', c."wrCompetitionId",
+            'competition', c."wrCompetition",
+            'tpId', c."wrTpId",
+            'startDate', c."wrStartDate",
+            'endDate', c."wrEndDate"
+          )
+        ) FILTER (WHERE c."wrStatus" IN (3,4)), '[]'::json),
+        'notEnded', COALESCE(json_agg(
+          json_build_object(
+            'refID', c."wrRefID",
+            'competitionId', c."wrCompetitionId",
+            'competition', c."wrCompetition",
+            'tpId', c."wrTpId",
+            'startDate', c."wrStartDate",
+            'endDate', c."wrEndDate"
+          )
+        ) FILTER (WHERE c."wrStatus" IN (1,2)), '[]'::json)
       ) AS competitions_json
       FROM "tblCompetitions" c
       WHERE c."wrStatus" IN (1,2,3,4)
