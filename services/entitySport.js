@@ -912,6 +912,11 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     if (response.live?.batsmen) {
       for (let p of response.live.batsmen) {
         let comP = playerTpIdObj[p.batsman_id];
+        let batterData = response?.scorecard?.innings
+          ?.find(i => i?.number === response?.live?.live_inning_number)?.batsmen
+          ?.find(i1 => i1?.batsman_id == p?.batsman_id && i1?.batting == "true");
+        let onStrikeData = batterData?.position === "striker";
+        let isPlayData = true
         if (comP) {
           let batterOrder = comP.batterOrder;
 
@@ -920,15 +925,22 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             batterOrder = ltSetOrder;
           }
 
+          if(comP?.isBatterOut == true) {
+            isPlayData = null;
+            onStrikeData = null; // or false
+          }
+
           playersMap[p.batsman_id] = {
             ...comP,
-            isPlay: true,
+            isPlay: isPlayData,
+            onStrike: onStrikeData,
             batRun: p.runs,
             batBall: p.balls_faced,
             batFour: p.fours,
             batSix: p.sixes,
             batterOrder,
           };
+          currentPlayers.push(comP.commentaryPlayerId);
         }
       }
     }
@@ -971,6 +983,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     //   }
     // }
     if(response.scorecard && response.scorecard?.innings?.length > 0){
+      let inningNo = response?.live?.live_inning_number
       let cInning = response.scorecard.innings.find((i) => i.number == inningNo)
       let bowlers = cInning.bowlers;
       let currentBowler  = bowlers.filter((i)=> i.bowling == "true")
