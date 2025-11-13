@@ -324,7 +324,16 @@ const updateTeamService = async (request, fastify) => {
       : [0, '', 'null'].includes(request.body.tpId) ? null
       : request.body.tpId,
     countryId: request.body.countryId || checkTeamId.countryId,
+    isMen: checkTeamId.isMen,
+    isInternational: checkTeamId.isInternational
   };
+
+  if ("isMen" in request.body) {
+    body.isMen = request.body.isMen === "true";
+  }
+  if ("isInternational" in request.body) {
+    body.isInternational = request.body.isInternational === "true";
+  }
 
   const validateTeamName = global.tblTeams.find(
     (item) =>
