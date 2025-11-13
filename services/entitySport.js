@@ -423,6 +423,9 @@ const setEntityCom2Service = async (request , fastify) =>{
             // console.log("tossInfo", tossInfo)
             let team1 = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.tpId == tossInfo.winner && ct.currentInnings == comDetails.currentInnings)
             // console.log("team1", team1)
+            if(!team1){
+                throw new Error("Team1 not found in commentary teams.")
+            }
             let team2 = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.commentaryTeamId != team1.commentaryTeamId && ct.currentInnings == comDetails.currentInnings)
             if(!team1 || !team2){
                 throw new Error("Batting or Bowling team not found in commentary teams.")
@@ -960,6 +963,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             bowlerOrder,
           };
         }
+        // set isPlay false for previous bowler
       }
     }
    
