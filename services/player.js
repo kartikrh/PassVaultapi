@@ -8,6 +8,7 @@ const {
   getTeamPlayerQuery,
   activeInactivePlayerQuery,
   updateExchangePlayerQuery,
+  getPlayerCompetitionListByPlayerIdQuery,
 } = require("../repository/TablePlayer");
 const {
   insertTeamPlayerQuery,
@@ -1254,6 +1255,17 @@ const updatePlayerHomeTeamService = async (request, fastify) => {
   return "Player Home Team updated successfully";
 };
 
+const getPlayerCompetitionListByIdService = async (request, fastify) => {
+  const playerId = request.body.playerId;
+  const checkPlayer = global.tblPlayers.find(item => item.playerId === playerId);
+  if (!checkPlayer) {
+    throw new Error(`Player with this id: ${playerId} not Found`);
+  }
+
+  const result = await getPlayerCompetitionListByPlayerIdQuery(request, fastify);
+  return result;
+};
+
 module.exports = {
   allPlayerService,
   playerByIdService,
@@ -1273,5 +1285,6 @@ module.exports = {
   playerImportService,
   allPlayersMergeImageService,
   mergePlayerNullImageService,
-  updatePlayerHomeTeamService
+  updatePlayerHomeTeamService,
+  getPlayerCompetitionListByIdService
 };
