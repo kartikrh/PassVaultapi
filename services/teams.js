@@ -324,7 +324,6 @@ const updateTeamService = async (request, fastify) => {
       : [0, '', 'null'].includes(request.body.tpId) ? null
       : request.body.tpId,
     countryId: request.body.countryId || checkTeamId.countryId,
-    countryId: request.body.countryId || checkTeamId.countryId,
     isMen: request.body.isMen || checkTeamId.isMen,
     isInternational: request.body.isInternational || checkTeamId.isInternational
   };
