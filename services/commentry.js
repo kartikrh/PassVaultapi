@@ -124,6 +124,7 @@ const {
   EntityPlayerType,
   EntityBowlingStyleType,
   extractBowlingStyle,
+  RefType,
 } = require("../utilities");
 const {
   getAllPlayersByTeamIdQuery,
@@ -215,7 +216,7 @@ const { getImageFromUrl } = require("../utilities/Images");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { insertTeamPlayersByTeamId, insertCommentaryPlayersByTeam } = require("./competition");
 const cron = require('node-cron');
-const { insertAutoUpdatePlayerStatisticsDataService } = require("./autoUpdatePlayerStatisticsData");
+const { insertAutoImportDataService } = require("./autoImportData");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -4115,7 +4116,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
               `SELECT * FROM fn_insert_auto_update_player_statistics_by_commentary(:commentaryId, :createdBy)`,
               {
                 replacements: {
-                  commentaryId,
+                  commentaryId: commentaryData.commentaryId,
                   createdBy: request?.userTokenInfo?.WrUserId || -3
                 },
                 type: fastify.db.QueryTypes.SELECT
@@ -4123,13 +4124,15 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
             );
 
             if (result && result.length > 0) {
-              const notInsertedCPIds = result.map(r => r.status === "skipped")?.map(r => r.player_id);
-              errorLogger(
-                fastify,
-                `CommentaryId: ${commentaryId} and PlayerId: ${notInsertedCPIds.join(", ")} skipped`,
-                "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - fn_insert_auto_update_player_statistics_by_commentary",
-                request
-              );
+              const notInsertedCPIds = result.filter(r => r.status === "skipped")?.map(r => r.player_id);
+              if (notInsertedCPIds.length > 0) {
+                errorLogger(
+                  fastify,
+                  `CommentaryId: ${commentaryId} and PlayerId: ${notInsertedCPIds.join(", ")} skipped`,
+                  "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - fn_insert_auto_update_player_statistics_by_commentary",
+                  request
+                );
+              }
             }
           } catch (error) {
             errorLogger(
@@ -12586,6 +12589,8 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
             onStrike: curr?.onStrike,
             isBatterOut: curr?.isBatterOut,
             isBatterRetir: curr?.isBatterRetir,
+            isPlayInEvent: curr?.isPlayInEvent,
+            createdDate: curr?.createdDate,
           };
         })
     );
@@ -23374,14 +23379,14 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
     const newTeamData = {
       teamName: teamData?.title,
       teamShortName: teamData?.abbr,
-      country: teamData?.country,
       eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
       userId: -2,
       tpId: teamData?.tid || null,
       image: imageUrl.fullPath,
       imagePath: imageUrl.imagePath,
       jersey: entitySocketData?.defaultJerseyImage || null,
-      jerseyPath: entitySocketData?.defaultJerseyImagePath || null
+      jerseyPath: entitySocketData?.defaultJerseyImagePath || null,
+      isMen
     }
     const insertTeam = await insertTeamQuery(newTeamData, fastify, request);
     global.tblTeams.push(insertTeam);
@@ -23450,6 +23455,18 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
         const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
         global.tblPlayers.push(insertPlayer);
         checkPlayer = insertPlayer;
+
+        await insertAutoImportDataService({
+          ...request,
+          body: {
+            refId: insertPlayer?.playerId,
+            refType: RefType.PlayerUpdate,
+            sourceId: 3
+          },
+          userTokenInfo: {
+            WrUserId: request?.userTokenInfo?.WrUserId ?? -2
+          }
+        }, fastify);
       }
       else if (checkPlayer?.tpId === null || !checkPlayer?.tpId) {
         const data = {
@@ -23473,20 +23490,20 @@ const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
   if (uniqueUpsertedPlayers.length > 0 && checkTeam.teamId) {
     for (const player of uniqueUpsertedPlayers) {
       const checkPlayerExistsInTeam = teamPlayerByTeamId.find(item => item.playerId === player.playerId);
-        if (!checkPlayerExistsInTeam) {
-          await insertTeamPlayerQuery({
-            teamId: checkTeam?.teamId,
-            refPlayerId: player?.playerId,
-            tpId: player?.tpId,
-            userId: -2,
-            jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage || null,
-            jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
-          }, fastify, request);
-          await updateTeamPlayerHomeTeamQuery({
-            refPlayerId: player?.playerId,
-            teamId: checkTeam?.teamId
-          }, fastify, request);
-        }
+      if (!checkPlayerExistsInTeam) {
+        await insertTeamPlayerQuery({
+          teamId: checkTeam?.teamId,
+          refPlayerId: player?.playerId,
+          tpId: player?.tpId,
+          userId: -2,
+          jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage || null,
+          jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
+        }, fastify, request);
+        await updateTeamPlayerHomeTeamQuery({
+          refPlayerId: player?.playerId,
+          teamId: checkTeam?.teamId
+        }, fastify, request);
+      }
     }
   }
 
@@ -24441,7 +24458,7 @@ const undoCommentaryService = async (request, fastify) => {
       });
     }
     
-    if (deleteCommentaryBallByBallId.length > 0) {
+    if (deleteCommentaryBallByBallId && deleteCommentaryBallByBallId.length > 0) {
       response.deleteCommentaryBallByBallId = true;
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "deleteCommentaryBallByBallIds",
@@ -24522,7 +24539,7 @@ const undoCommentaryService = async (request, fastify) => {
         (item) => !deleteCommentaryBallByBallId.includes(item?.commentaryBallByBallId)
       );
     }
-    if (deleteOverId.length > 0) {
+    if (deleteOverId && deleteOverId.length > 0) {
       response.deleteOverId = true;
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "deleteOverIds",
@@ -24532,7 +24549,7 @@ const undoCommentaryService = async (request, fastify) => {
         (item) => !deleteOverId.includes(item?.overId)
       );
     }
-    if (deleteWicketId.length > 0) {
+    if (deleteWicketId && deleteWicketId.length > 0) {
       response.deleteWicketId = true;
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "deleteWicketIds",
@@ -24542,7 +24559,7 @@ const undoCommentaryService = async (request, fastify) => {
         (item) => !deleteWicketId.includes(item?.commentaryWicketId)
       );
     }
-    if (deletePartnershipId.length > 0) {
+    if (deletePartnershipId && deletePartnershipId.length > 0) {
       response.deletePartnershipId = true;
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "deletePartnershipIds",

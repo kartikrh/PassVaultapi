@@ -1648,6 +1648,21 @@ const Teams = {
       },
     },
   },
+  activeInactive: {
+    schema: {
+      tags: ["Teams"],
+      description: "active inactive teams data",
+      body: {
+        type: "object",
+        properties: {
+          teamId: { type: "integer" },
+          isMen: { type: "boolean" },
+          isInternational: { type: "boolean" },
+        },
+        required: ["teamId"],
+      },
+    },
+  },
 };
 
 const PaneltyRuns = {

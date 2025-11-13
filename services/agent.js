@@ -489,6 +489,8 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
             jerseyPlayerImage: curr.jerseyPlayerImage,
             jerseyPlayerImagePath: curr.jerseyPlayerImagePath,
             bowlingType: curr?.bowlingType,
+            isPlayInEvent: curr?.isPlayInEvent,
+            createdDate: curr?.createdDate,
           };
         })
     );

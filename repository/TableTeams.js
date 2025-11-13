@@ -15,7 +15,9 @@ const allTeamQuery = async (fastify) => {
     tt."wrImagePath" AS "imagePath",
     tt."wrJerseyPath" AS "jerseyPath",
     tt."wrTpId" AS "tpId",
-    tt."wrCountryId" AS "countryId"
+    tt."wrCountryId" AS "countryId",
+    tt."wrIsMen" AS "isMen",
+    tt."wrIsInternational" AS "isInternational"
      FROM "tblTeams" tt
       LEFT JOIN "tblEventTypes" et ON tt."wrEventTypeId" = et."wrEventTypeId"
       WHERE tt."wrIsDeleted" = false`,
@@ -58,7 +60,9 @@ const getTeamsByIds = async (data,request,fastify) => {
     tt."wrImagePath" AS "imagePath",
     tt."wrJerseyPath" AS "jerseyPath",
     tt."wrTpId" AS "tpId",
-    tt."wrCountryId" AS "countryId"
+    tt."wrCountryId" AS "countryId",
+    tt."wrIsMen" AS "isMen",
+    tt."wrIsInternational" AS "isInternational"
      FROM "tblTeams" tt
       LEFT JOIN "tblEventTypes" et ON tt."wrEventTypeId" = et."wrEventTypeId"
       WHERE 
@@ -86,8 +90,8 @@ const insertTeamQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
       `with insert_data as(
-      INSERT INTO "tblTeams" ("wrTeamName","wrTeamShortName", "wrImage", "wrEventTypeId", "wrCreatedBy", "wrCreatedDate" , "WrTeamJersey","wrTeamColor", "wrBackgroundColor", "wrImagePath", "wrJerseyPath", "wrTpId", "wrCountryId")
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      INSERT INTO "tblTeams" ("wrTeamName","wrTeamShortName", "wrImage", "wrEventTypeId", "wrCreatedBy", "wrCreatedDate" , "WrTeamJersey","wrTeamColor", "wrBackgroundColor", "wrImagePath", "wrJerseyPath", "wrTpId", "wrCountryId", "wrIsMen", "wrIsInternational")
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
       RETURNING *    
     )
     SELECT 
@@ -103,7 +107,9 @@ const insertTeamQuery = async (data, fastify, request) => {
     tt."wrImagePath" AS "imagePath",
     tt."wrJerseyPath" AS "jerseyPath",
     tt."wrTpId" AS "tpId",
-    tt."wrCountryId" AS "countryId"
+    tt."wrCountryId" AS "countryId",
+    tt."wrIsMen" AS "isMen",
+    tt."wrIsInternational" AS "isInternational"
      FROM "insert_data" tt 
       INNER JOIN "tblEventTypes" evt ON tt."wrEventTypeId" = evt."wrEventTypeId" 
     `,
@@ -122,6 +128,8 @@ const insertTeamQuery = async (data, fastify, request) => {
           data.jerseyPath || null,
           data.tpId || null,
           data.countryId || null,
+          data?.isMen || true,
+          data?.isInternational || false,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -163,7 +171,9 @@ const updateExchangeTeamQuery = async (data, fastify, request) => {
         tt."wrBackgroundColor" AS "backgroundColor",
         tt."wrImagePath" AS "imagePath",
         tt."wrJerseyPath" AS "jerseyPath",
-        tt."wrTpId" AS "tpId"
+        tt."wrTpId" AS "tpId",
+        tt."wrIsMen" AS "isMen",
+        tt."wrIsInternational" AS "isInternational"
       FROM update_data tt
       INNER JOIN "tblEventTypes" evt ON tt."wrEventTypeId" = evt."wrEventTypeId"
       `,
@@ -194,7 +204,7 @@ const updateTeamQuery = async (data, fastify, request) => {
     return await fastify.db.query(
       `WITH update_data AS (
         UPDATE "tblTeams" SET "wrTeamName" = $1, "wrTeamShortName" = $2,"wrImage" = $3, "wrEventTypeId" = $4, "wrModifyBy" = $5, 
-          "wrModifyDate" = $6,"WrTeamJersey"=$7, "wrTeamColor" = $9, "wrBackgroundColor" = $10, "wrImagePath" = $11, "wrJerseyPath" = $12, "wrTpId" = $13, "wrCountryId" = $14
+          "wrModifyDate" = $6,"WrTeamJersey"=$7, "wrTeamColor" = $9, "wrBackgroundColor" = $10, "wrImagePath" = $11, "wrJerseyPath" = $12, "wrTpId" = $13, "wrCountryId" = $14, "wrIsMen" = $15, "wrIsInternational" = $16
         WHERE "wrTeamId" = $8
         returning *
       )
@@ -211,7 +221,9 @@ const updateTeamQuery = async (data, fastify, request) => {
         tt."wrImagePath" AS "imagePath",
         tt."wrJerseyPath" AS "jerseyPath",
         tt."wrTpId" AS "tpId",
-        tt."wrCountryId" AS "countryId"
+        tt."wrCountryId" AS "countryId",
+        tt."wrIsMen" AS "isMen",
+        tt."wrIsInternational" AS "isInternational"
       FROM "update_data" tt 
       INNER JOIN "tblEventTypes" evt ON tt."wrEventTypeId" = evt."wrEventTypeId"
       `,
@@ -231,6 +243,8 @@ const updateTeamQuery = async (data, fastify, request) => {
           data.jerseyPath,
           data.tpId,
           data.countryId || null,
+          data?.isMen || true,
+          data?.isInternational || false,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -435,7 +449,9 @@ const getAllTeamsByIdsQuery = async (whereCondition = undefined, fastify) => {
           tt."wrImagePath" AS "imagePath",
           tt."wrJerseyPath" AS "jerseyPath",
           tt."wrTpId" AS "tpId",
-          tt."wrCountryId" AS "countryId"
+          tt."wrCountryId" AS "countryId",
+          tt."wrIsMen" AS "isMen",
+          tt."wrIsInternational" AS "isInternational"
       FROM "tblTeams" tt
       LEFT JOIN "tblEventTypes" et ON tt."wrEventTypeId" = et."wrEventTypeId"
       ${whereCondition ? `WHERE ${whereCondition}` : 'WHERE tt."wrIsDeleted" = false'}`,
@@ -455,6 +471,60 @@ const getAllTeamsByIdsQuery = async (whereCondition = undefined, fastify) => {
     throw new Error(err.message);
   }
 }
+
+const activeInactiveTeamQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `WITH update_data AS (
+        UPDATE "tblTeams" SET
+          "wrIsMen" = $1,
+          "wrIsInternational" = $2,
+          "wrModifyBy" = $3,
+          "wrModifyDate" = $4
+        WHERE "wrTeamId" = $5
+        returning *
+      )
+      SELECT 
+        "wrTeamId" as "teamId",
+        tt."wrEventTypeId" as "eventTypeId",
+        "wrTeamName" as "teamName",
+        "wrTeamShortName" as "teamShortName",
+        "WrTeamJersey" as "jersey",
+        tt."wrImage" as "image",
+        "wrEventType" AS "eventType",
+        "wrTeamColor" AS "teamColor",
+        "wrBackgroundColor" AS "backgroundColor",
+        tt."wrImagePath" AS "imagePath",
+        tt."wrJerseyPath" AS "jerseyPath",
+        tt."wrTpId" AS "tpId",
+        tt."wrCountryId" AS "countryId",
+        tt."wrIsMen" AS "isMen",
+        tt."wrIsInternational" AS "isInternational"
+      FROM "update_data" tt 
+      INNER JOIN "tblEventTypes" evt ON tt."wrEventTypeId" = evt."wrEventTypeId"
+      `,
+      {
+        bind: [
+          data.isMen,
+          data.isInternational,
+          request?.userTokenInfo?.WrUserId,
+          new Date(),
+          data.teamId
+        ],
+        type: fastify.db.QueryTypes.UPDATE
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeams.js/activeInactiveTeamQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   allTeamQuery,
   insertTeamQuery,
@@ -467,5 +537,6 @@ module.exports = {
   getAllTeamsByIdsQuery,
   getTeamsByIds,
   updateExchangeTeamQuery,
-  getTeamPlayerTournamentQuery
+  getTeamPlayerTournamentQuery,
+  activeInactiveTeamQuery
 };
