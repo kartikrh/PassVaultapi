@@ -326,6 +326,9 @@ const setEntityCom2Service = async (request , fastify) =>{
 
       // get in comteam
       let team1 = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.tpId == tossInfo.winner && ct.currentInnings == comDetails.currentInnings)
+      if(!team1){
+          throw new Error("Team1 not found in commentary teams.")
+      }
       let team2 = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.commentaryTeamId != team1.commentaryTeamId && ct.currentInnings == comDetails.currentInnings)
       if(!team1 || !team2){
           throw new Error("Batting or Bowling team not found in commentary teams.")
@@ -895,6 +898,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     const playersMap = {}; // key: commentaryPlayerId
     let ltSetOrder = 0;
     // Find the current max batter order from global data
+    let currentPlayers = []
     const existingBatters = global.tblCommentaryPlayers.filter(i =>
       i.commentaryId === comDetails.commentaryId &&
       i.currentInnings === comDetails.currentInnings &&
@@ -941,32 +945,66 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
       ? Math.max(...existingBowlers?.map(i => i.bowlerOrder))
       : 0;
 
-    if (response.live?.bowlers) {
-      for (let p of response.live.bowlers) {
-        let comP = playerTpIdObj[p.bowler_id];
-        if (comP) {
-          let bowlerOrder = comP.bowlerOrder;
+    // if (response.live?.bowlers) {
+    //   for (let p of response.live.bowlers) {
+    //     let comP = playerTpIdObj[p.bowler_id];
+    //     if (comP) {
+    //       let bowlerOrder = comP.bowlerOrder;
 
-          // assign order only if not set yet
+    //       // assign order only if not set yet
+    //       if (bowlerOrder == null) {
+    //         ltSetBowlerOrder += 1;
+    //         bowlerOrder = ltSetBowlerOrder;
+    //       }
+
+    //       playersMap[p.bowler_id] = {
+    //         ...comP,
+    //         isPlay: true,
+    //         onStrike: false,
+    //         bowlerOver: p.overs,
+    //         bowlerRun: p.runs_conceded,
+    //         bowlerWicket: p.wickets,
+    //         bowlerOrder,
+    //       };
+    //     }
+    //     // set isPlay false for previous bowler
+    //   }
+    // }
+    if(response.scorecard && response.scorecard?.innings?.length > 0){
+      let cInning = response.scorecard.innings.find((i) => i.number == inningNo)
+      let bowlers = cInning.bowlers;
+      let currentBowler  = bowlers.filter((i)=> i.bowling == "true")
+      for (let b of currentBowler){
+        let comP = playerTpIdObj[b.bowler_id];
+        if(comP){
+          let bowlerOrder = comP.bowlerOrder;
           if (bowlerOrder == null) {
             ltSetBowlerOrder += 1;
             bowlerOrder = ltSetBowlerOrder;
           }
-
-          playersMap[p.bowler_id] = {
+          playersMap[b.bowler_id] = {
             ...comP,
             isPlay: true,
             onStrike: false,
-            bowlerOver: p.overs,
-            bowlerRun: p.runs_conceded,
-            bowlerWicket: p.wickets,
+            bowlerOver: b.overs,
+            bowlerRun: b.runs_conceded,
+            bowlerWicket: b.wickets,
             bowlerOrder,
           };
+          currentPlayers.push(comP.commentaryPlayerId);
         }
-        // set isPlay false for previous bowler
+       
       }
     }
-   
+    // find nonplaying player and set isPlay null
+    let nonPlayingPlayers = comPlayers.filter((i)=> i.isPlay == true && !currentPlayers.includes(i.commentaryPlayerId));
+    for (let npp of nonPlayingPlayers){
+      playersMap[npp.tpId] = {
+        ...npp,
+        isPlay : null,
+      }
+    }
+
    
     const oversMap = {}; // key: `${teamId}_${overNumber}`
     const ballByBall = [];
