@@ -222,8 +222,8 @@ const updateTeamQuery = async (data, fastify, request) => {
         tt."wrJerseyPath" AS "jerseyPath",
         tt."wrTpId" AS "tpId",
         tt."wrCountryId" AS "countryId",
-        tt."wrIsMen" AS "isMen",
-        tt."wrIsInternational" AS "isInternational"
+        tt."wrIsMen"::boolean AS "isMen",
+        tt."wrIsInternational"::boolean AS "isInternational"
       FROM "update_data" tt 
       INNER JOIN "tblEventTypes" evt ON tt."wrEventTypeId" = evt."wrEventTypeId"
       `,
