@@ -737,6 +737,47 @@ const getAllDuplicatePlayersQuery = async (request, fastify) => {
       throw new Error(err.message);
     }
 };
+
+const getPlayerCompetitionListByPlayerIdQuery = async (request, fastify) => {
+  try {
+    const playerId = request.body.playerId;
+
+    const result = await fastify.db.query(
+      `
+      SELECT json_build_object(
+        'ended', COALESCE(json_agg(c) FILTER (WHERE c."wrStatus" IN (3,4)), '[]'::json),
+        'notEnded', COALESCE(json_agg(c) FILTER (WHERE c."wrStatus" IN (1,2)), '[]'::json)
+      ) AS competitions_json
+      FROM "tblCompetitions" c
+      WHERE c."wrStatus" IN (1,2,3,4)
+        AND EXISTS (
+          SELECT 1
+          FROM "tblTournamentTeamPlayers" ttp
+          JOIN "tblCommentaryPlayers" cp
+            ON ttp."wrPlayerId" = cp."wrPlayerId"
+          WHERE ttp."wrCompetitionId" = c."wrCompetitionId"
+            AND ttp."wrPlayerId" = $1
+            AND cp."wrIsInPlayingEleven" = true
+        );
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [playerId],
+      }
+    );
+
+    return result[0].competitions_json;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePlayer.js/getPlayerCompetitionListByPlayerIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllPlayersQuery,
   insertPlayerQuery,
@@ -754,4 +795,5 @@ module.exports = {
   getPlayerByIdQuery,
   updateExchangePlayerQuery,
   getAllDuplicatePlayersQuery,
+  getPlayerCompetitionListByPlayerIdQuery
 };
