@@ -1051,7 +1051,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           event = "wicket"
         }
         if(event == "ball"){
-          let index = global.tblCommentaryBallByBall.findIndex((i)=>i.tpId == c.event_id)
+          let index = global.tblCommentaryBallByBall.findIndex((i)=>i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId)
           if(index != -1) continue; // skip already processed ball
           const overNumber = Number(c.over);
           const overKey = `${comDetails.commentaryId}-${comDetails.currentInnings}-${battingTeam.teamId}-${overNumber}`;
@@ -1405,7 +1405,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           }
         }
         if(event == "wicket"){
-          let index = global.tblCommentaryBallByBall.findIndex((i)=>i.tpId == c.event_id)
+          let index = global.tblCommentaryBallByBall.findIndex((i)=>i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId)
           if(index != -1) continue;
           const overNumber = Number(c.over);
           if(!playersMap[c.batsman_id]){
@@ -1440,10 +1440,11 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               bowlerDotBall : playerTpIdObj[c.bowler_id].bowlerDotBall ? playerTpIdObj[c.bowler_id].bowlerDotBall + 1 : 1,  
             }
           }
+          let wicketBatsMan = playerTpIdObj[c.wicket_batsman_id];
           let wicketData = {
             wicketType: wicketTypeObj.BOLD,
-            batterId: playerTpIdObj[c.batsman_id]?.commentaryPlayerId,
-            batterName : playerTpIdObj[c.batsman_id]?.playerName,
+            batterId: wicketBatsMan?.commentaryPlayerId,
+            batterName : wicketBatsMan?.playerName,
             runs: 0,
             fieldPlayerId : playerTpIdObj[c.bowler_id]?.commentaryPlayerId,
             fieldPlayerName : playerTpIdObj[c.bowler_id]?.playerName,
@@ -1521,9 +1522,9 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           over.ballCount += 1;
           over.dotBall += 1;
           over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
-          if(playersMap[c.batsman_id]){
-            playersMap[c.batsman_id] = {
-              ...playersMap[c.batsman_id],
+          if(playersMap[c.wicket_batsman_id]){
+            playersMap[c.wicket_batsman_id] = {
+              ...playersMap[c.wicket_batsman_id],
               isBatterOut: true,
               isBatterRetir: false,
               wicketType: wicketData.wicketType,
@@ -1533,12 +1534,12 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               isPlay: null,
               onStrike: null,
               // batBall: (playersMap[c.batsman_id]?.batBall || 0) + 1,
-              batDotBall: (playersMap[c.batsman_id]?.batDotBall || 0) + 1,
+              batDotBall: (playersMap[c.wicket_batsman_id]?.batDotBall || 0) + 1,
             }
           }
           else {
-            playersMap[c.batsman_id] = {
-              ...playerTpIdObj[c.batsman_id],
+            playersMap[c.wicket_batsman_id] = {
+              ...playerTpIdObj[c.wicket_batsman_id],
               isBatterOut: true,
               isBatterRetir: false,
               wicketType: wicketData.wicketType,
@@ -1548,7 +1549,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               isPlay: null,
               onStrike: null,
               // batBall: (playerTpIdObj[c.batsman_id].batBall || 0) + 1,
-              batDotBall: (playerTpIdObj[c.batsman_id].batDotBall || 0) + 1,
+              batDotBall: (playerTpIdObj[c.wicket_batsman_id].batDotBall || 0) + 1,
               // batBall: 1,
               // batDotBall: 1,
             }
@@ -1558,10 +1559,10 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             ballWicketType: wicketTypeObj.BOLD,
             ballFielderId1: wicketData.fielder1,
             ballFielderId2: wicketData.fielder2,
-            batStrikeId: playerTpIdObj[c.batsman_id]?.commentaryPlayerId,
+            batStrikeId: playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId,
             // batNonStrikeId: ,
             batNonStrikeId: nonStrikePId,
-            ballPlayerId: playerTpIdObj[c.batsman_id]?.commentaryPlayerId,
+            ballPlayerId: playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId,
             ballIsCount: true,
             ballType: BALL_TYPE.REGULAR,
             ballRun: wicketData.runs,
@@ -1575,7 +1576,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                 commentaryBallByBallId: 0,
                 updateBattingTeam : battingTeam,
                 updateOver : over,
-                updateBatter : playersMap[c.batsman_id],
+                updateBatter : playersMap[c.wicket_batsman_id],
                 updateBowler : playersMap[c.bowler_id],
                 nonStrikeBatter : null,
                 updatePartnership : partnership,
@@ -2138,9 +2139,9 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
       }
     }
     if (event == "ball") {
-      let index = global.tblCommentaryBallByBall.findIndex((i) => i.tpId == c.event_id)
+      let index = global.tblCommentaryBallByBall.findIndex((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
        if (index == -1) continue; // skip not created ball
-      let ball = global.tblCommentaryBallByBall.find((i) => i.tpId == c.event_id)
+      let ball = global.tblCommentaryBallByBall.find((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
       // if (ball.ballRun == c.run) {
       //   continue;
       // }  
@@ -2484,9 +2485,9 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
       }      
     }
     if (event == "wide") {
-      let index = global.tblCommentaryBallByBall.findIndex((i) => i.tpId == c.event_id);
+      let index = global.tblCommentaryBallByBall.findIndex((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
       if (index == -1) continue; // skip not created ball
-      let ball = global.tblCommentaryBallByBall.find((i) => i.tpId == c.event_id);
+      let ball = global.tblCommentaryBallByBall.find((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
       // if (!ball.ballIsWicket && ball.ballType == BALL_TYPE.WIDE && ball.ballRun == c.run) {
       //   continue;
       // }
