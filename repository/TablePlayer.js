@@ -752,7 +752,7 @@ const getPlayerCompetitionListByPlayerIdQuery = async (request, fastify) => {
           'startDate', c."wrStartDate",
           'endDate', c."wrEndDate",
           'matchTypeId', c."wrMatchTypeId",
-          'MatchType', mt."wrMatchType"
+          'matchType', mt."wrMatchType"
         )
       )`;
 
