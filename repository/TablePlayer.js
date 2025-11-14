@@ -742,31 +742,28 @@ const getPlayerCompetitionListByPlayerIdQuery = async (request, fastify) => {
   try {
     const playerId = request.body.playerId;
 
+    const returnColumn = `
+      COALESCE(json_agg(
+        json_build_object(
+          'refID', c."wrRefID",
+          'competitionId', c."wrCompetitionId",
+          'competition', c."wrCompetition",
+          'tpId', c."wrTpId",
+          'startDate', c."wrStartDate",
+          'endDate', c."wrEndDate",
+          'matchTypeId', c."wrMatchTypeId",
+          'MatchType', mt."wrMatchType"
+        )
+      )`;
+
     const result = await fastify.db.query(
       `
       SELECT json_build_object(
-        'ended', COALESCE(json_agg(
-          json_build_object(
-            'refID', c."wrRefID",
-            'competitionId', c."wrCompetitionId",
-            'competition', c."wrCompetition",
-            'tpId', c."wrTpId",
-            'startDate', c."wrStartDate",
-            'endDate', c."wrEndDate"
-          )
-        ) FILTER (WHERE c."wrStatus" IN (3,4)), '[]'::json),
-        'notEnded', COALESCE(json_agg(
-          json_build_object(
-            'refID', c."wrRefID",
-            'competitionId', c."wrCompetitionId",
-            'competition', c."wrCompetition",
-            'tpId', c."wrTpId",
-            'startDate', c."wrStartDate",
-            'endDate', c."wrEndDate"
-          )
-        ) FILTER (WHERE c."wrStatus" IN (1,2)), '[]'::json)
+        'ended', ${returnColumn} FILTER (WHERE c."wrStatus" IN (3,4)), '[]'::json),
+        'notEnded', ${returnColumn} FILTER (WHERE c."wrStatus" IN (1,2)), '[]'::json)
       ) AS competitions_json
       FROM "tblCompetitions" c
+      LEFT JOIN "tblMatchTypes" mt ON c."wrMatchTypeId" = mt."wrMatchTypeId"
       WHERE c."wrStatus" IN (1,2,3,4)
         AND EXISTS (
           SELECT 1
