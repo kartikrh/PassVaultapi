@@ -505,8 +505,8 @@ const activeInactiveTeamQuery = async (data, request, fastify) => {
       `,
       {
         bind: [
-          data.isMen,
-          data.isInternational,
+          data?.isMen ?? null,
+          data?.isInternational ?? null,
           request?.userTokenInfo?.WrUserId,
           new Date(),
           data.teamId
