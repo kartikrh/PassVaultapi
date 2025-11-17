@@ -752,7 +752,9 @@ const getPlayerCompetitionListByPlayerIdQuery = async (request, fastify) => {
           'startDate', c."wrStartDate",
           'endDate', c."wrEndDate",
           'matchTypeId', c."wrMatchTypeId",
-          'matchType', mt."wrMatchType"
+          'matchType', mt."wrMatchType",
+          'eventTypeId', c."wrEventTypeId",
+          'eventType', et."wrEventType"
         )
       )`;
 
@@ -764,6 +766,7 @@ const getPlayerCompetitionListByPlayerIdQuery = async (request, fastify) => {
       ) AS competitions_json
       FROM "tblCompetitions" c
       LEFT JOIN "tblMatchTypes" mt ON c."wrMatchTypeId" = mt."wrMatchTypeId"
+      LEFT JOIN "tblEventTypes" et ON c."wrEventTypeId" = et."wrEventTypeId"
       WHERE c."wrStatus" IN (1,2,3,4)
         AND EXISTS (
           SELECT 1
