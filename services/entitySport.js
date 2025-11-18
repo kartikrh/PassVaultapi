@@ -1440,11 +1440,11 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               bowlerDotBall : playerTpIdObj[c.bowler_id].bowlerDotBall ? playerTpIdObj[c.bowler_id].bowlerDotBall + 1 : 1,  
             }
           }
-          let wicketBatsMan = playerTpIdObj[c.wicket_batsman_id];
+          // let wicketBatsMan = playerTpIdObj[c.wicket_batsman_id];
           let wicketData = {
             wicketType: wicketTypeObj.BOLD,
-            batterId: wicketBatsMan?.commentaryPlayerId,
-            batterName : wicketBatsMan?.playerName,
+            batterId: playerTpIdObj[c.batsman_id]?.commentaryPlayerId,
+            batterName : playerTpIdObj[c.batsman_id]?.playerName,
             runs: 0,
             fieldPlayerId : playerTpIdObj[c.bowler_id]?.commentaryPlayerId,
             fieldPlayerName : playerTpIdObj[c.bowler_id]?.playerName,
@@ -1522,9 +1522,9 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           over.ballCount += 1;
           over.dotBall += 1;
           over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
-          if(playersMap[c.wicket_batsman_id]){
-            playersMap[c.wicket_batsman_id] = {
-              ...playersMap[c.wicket_batsman_id],
+          if(playersMap[c.batsman_id]){
+            playersMap[c.batsman_id] = {
+              ...playersMap[c.batsman_id],
               isBatterOut: true,
               isBatterRetir: false,
               wicketType: wicketData.wicketType,
@@ -1534,12 +1534,12 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               isPlay: null,
               onStrike: null,
               // batBall: (playersMap[c.batsman_id]?.batBall || 0) + 1,
-              batDotBall: (playersMap[c.wicket_batsman_id]?.batDotBall || 0) + 1,
+              batDotBall: (playersMap[c.batsman_id]?.batDotBall || 0) + 1,
             }
           }
           else {
-            playersMap[c.wicket_batsman_id] = {
-              ...playerTpIdObj[c.wicket_batsman_id],
+            playersMap[c.batsman_id] = {
+              ...playerTpIdObj[c.batsman_id],
               isBatterOut: true,
               isBatterRetir: false,
               wicketType: wicketData.wicketType,
@@ -1549,7 +1549,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               isPlay: null,
               onStrike: null,
               // batBall: (playerTpIdObj[c.batsman_id].batBall || 0) + 1,
-              batDotBall: (playerTpIdObj[c.wicket_batsman_id].batDotBall || 0) + 1,
+              batDotBall: (playerTpIdObj[c.batsman_id].batDotBall || 0) + 1,
               // batBall: 1,
               // batDotBall: 1,
             }
@@ -1559,10 +1559,10 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             ballWicketType: wicketTypeObj.BOLD,
             ballFielderId1: wicketData.fielder1,
             ballFielderId2: wicketData.fielder2,
-            batStrikeId: playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId,
+            batStrikeId: playerTpIdObj[c.batsman_id]?.commentaryPlayerId,
             // batNonStrikeId: ,
             batNonStrikeId: nonStrikePId,
-            ballPlayerId: playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId,
+            ballPlayerId: playerTpIdObj[c.batsman_id]?.commentaryPlayerId,
             ballIsCount: true,
             ballType: BALL_TYPE.REGULAR,
             ballRun: wicketData.runs,
@@ -1576,7 +1576,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                 commentaryBallByBallId: 0,
                 updateBattingTeam : battingTeam,
                 updateOver : over,
-                updateBatter : playersMap[c.wicket_batsman_id],
+                updateBatter : playersMap[c.batsman_id],
                 updateBowler : playersMap[c.bowler_id],
                 nonStrikeBatter : null,
                 updatePartnership : partnership,
