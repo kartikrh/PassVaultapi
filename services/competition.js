@@ -326,6 +326,7 @@ const updateCompititionService = async (request, fastify) => {
       : request.body.tpId,
     pythonId: request.body.pythonId || validateId.pythonId,
     countryId: request.body.countryId === undefined ? validateId.countryId : request.body.countryId,
+    setOfRules: request.body?.setOfRules || validateId?.setOfRules,
   };
   const developerName = global.tblPythonAPI.find(item => item.id === data?.pythonId);
   data.developerName = developerName?.developerName ?? null

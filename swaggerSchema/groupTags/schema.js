@@ -4185,6 +4185,7 @@ const Compitition = {
           lossPoint: { type: "integer" },
           drsCount: { type: "integer" },
           countryId: { type: "integer" },
+          setOfRules: { type: "string" },
         },
         required: ["competitionId"],
       },
