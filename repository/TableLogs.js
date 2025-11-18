@@ -847,6 +847,7 @@ const allEntityUpdateLogsQuery = async (body ,request, fastify) => {
                 logs."wrOffsetHour" as "offsetHour",
                 logs."wrStatus" as "status",
                 logs."wrMessage" as "message",
+                logs."wrResponseData" as "responseData",
                 logs."wrCreateDate" as "createDate"
             FROM
             "tblAutoUpdateCommentaryData" logs
