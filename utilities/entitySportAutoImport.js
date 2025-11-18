@@ -7,113 +7,137 @@ const { teamImportService, UpdateTeamFromEntityService } = require("../services/
 const { importUpdateTournamentTeamPointFromEntitySportService } = require("../services/tournamentTeamPoints");
 const { errorLogger } = require("./logger");
 
-const entitySportAutoImportProcess = async (fastify) => {
+const importUpdate = async (data, fastify) => {
     try {
-        const condition = `"wrIsImported" = ${true} AND "wrIsImportStart" = ${false} AND "wrSourceId" = ${3}`;
-        const autoImportDataCompetition = await getAllAutoImportDataQuery(null, fastify, condition);
-        if (!autoImportDataCompetition?.length) return;
-
-        const grouped = {};
-        autoImportDataCompetition.forEach(item => {
-            if (!grouped[item.refType]) {
-                grouped[item.refType] = [];
-            }
-            grouped[item.refType].push(item);
-        });
-
-        const importStart = async (data) => {
-            try {
-                await updateAutoImportDataQuery(data, fastify, null);
-            } catch (err) {
-                errorLogger(fastify, err.message, `DB ERROR --> utilities/entitySportAutoImport.js/entitySportAutoImportProcess/importStart`, null);
-            }
-        };
-
-        const importEnd = async (data) => {
-            try {
-                await updateAutoImportDataQuery({
-                    ...data,
-                }, fastify, null);
-            } catch (err) {
-                errorLogger(fastify, err.message, `DB ERROR --> utilities/entitySportAutoImport.js/entitySportAutoImportProcess/importEnd`, null);
-            }
-        };
-
-        const processImport = async (autoImport, importFn, idKey) => {
-            if (!autoImport?.refId) {
-                console.log(`No wrRefId found in ${idKey}, skipping import`);
-                return;
-            }
-
-            autoImport.importStartTime = new Date();
-            autoImport.isImportStart = true;
-
-            await importStart(autoImport);
-
-            try {
-                const data = { [idKey]: autoImport.refId };
-                const syncData = await importFn(data, fastify, {
-                    userTokenInfo: {
-                        WrUserId: -2
-                    }
-                });
-                if (syncData) {
-                    autoImport.importEndTime = new Date();
-                    autoImport.isImported = false;
-                    await importEnd(autoImport);
-                }
-            } catch (err) {
-                console.log("🚀 ~ processImport ~ err:", err)
-                errorLogger(fastify, err.message, `DB ERROR --> utilities/entitySportAutoImport.js/processImport/${importFn.name}`, null);
-            }
-        };
-
-        for (const competition of grouped?.[RefType.Competition.toString()] || []) {
-            const result = await processImport(competition, competitionImportService, 'cid');
-            if (result) return true;
-        }
-
-        for (const team of grouped?.[RefType.Team.toString()] || []) {
-            const result = await processImport(team, teamImportService, 'tid');
-            if (result) return true;
-        }
-
-        for (const match of grouped?.[RefType.Match.toString()] || []) {
-            const result = await processImport(match, matchImportService, 'mid');
-            if (result) return true;
-        }
-
-        for (const player of grouped?.[RefType.Player.toString()] || []) {
-            const result = await processImport(player, playerImportService, 'pid');
-            if (result) return true;
-        }
-
-        for (const teamUpdate of grouped?.[RefType.TeamUpdate.toString()] || []) {
-            const result = await processImport(teamUpdate, UpdateTeamFromEntityService, 'tid');
-            if (result) return true;
-        }
-
-        for (const playerUpdate of grouped?.[RefType.PlayerUpdate.toString()] || []) {
-            const result = await processImport(playerUpdate, UpdatePlayerFromEntityService, 'pid');
-            if (result) return true;
-        }
-
-        for (const tournamentTeamPointUpdate of grouped?.[RefType.tournamentTeamPointUpdate.toString()] || []) {
-            const result = await processImport(tournamentTeamPointUpdate, importUpdateTournamentTeamPointFromEntitySportService, 'cid');
-            if (result) return true;
-        }
-    } catch (err) {
-        console.error("Error in autoImportProcess", err);
+        await updateAutoImportDataQuery(data, fastify, null);
+    } catch (error) {
         errorLogger(
             fastify,
-            err.message,
-            "ERROR --> services/entitySportAutoImport.js/entitySportAutoImport",
+            error.message,
+            "DB ERROR --> utilities/entitySportAutoImport.js/importUpdate",
+            null,
+            data
+        );
+        throw error;
+    }
+};
+
+const getImportPayload = (importFn, refId) => {
+    const mapping = {
+        [competitionImportService.name]: { cid: refId },
+        [importUpdateTournamentTeamPointFromEntitySportService.name]: { cid: refId },
+        [matchImportService.name]: { mid: refId },
+        [teamImportService.name]: { tid: refId },
+        [UpdateTeamFromEntityService.name]: { tid: refId },
+        [playerImportService.name]: { pid: refId },
+        [UpdatePlayerFromEntityService.name]: { pid: refId },
+    };
+    return mapping[importFn.name] || {};
+};
+
+const processImport = async (importFn, importData, fastify) => {
+    importData.isImportStart = true;
+    importData.importStartTime =  new Date();
+
+    try {
+        await importUpdate(importData, fastify);
+
+        const payload = getImportPayload(importFn, importData.refId);
+
+        await importFn(payload, fastify, {
+            userTokenInfo: { WrUserId: -2 }
+        });
+
+        importData.importEndTime = new Date();
+        importData.isImported = false;
+        await importUpdate(importData, fastify);
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            `DB ERROR --> utilities/entitySportAutoImport.js/processImport/${importFn.name}`,
+            null,
+            importData
+        );
+        throw error;
+    }
+};
+
+const validateImportData = (data, fastify) => {
+    if (!data || !data.id) return false;
+    const { id, refId, refType } = data;
+    if (!refId || !refType) {
+        errorLogger(
+            fastify,
+            `Invalid refId or refType for wrId: ${id}, skipping import`,
+            "ERROR --> services/entitySportAutoImport.js/entitySportAutoImportProcess - validateImportData",
+            null,
+            data
+        );
+        return false;
+    }
+
+    const validRefTypes = Object.values(RefType);
+    if (!validRefTypes.includes(Number(refType))) {
+        errorLogger(
+            fastify,
+            `Unknown refType: ${refType} for wrId: ${id}, skipping import`,
+            "ERROR --> services/entitySportAutoImport.js/entitySportAutoImportProcess - validRefTypes",
+            null,
+            data
+        );
+        return false;
+    }
+
+    return true;
+};
+
+const entitySportAutoImportProcess = async (fastify) => {
+    try {
+        const condition = `"wrIsImported" = true AND "wrIsImportStart" = false AND "wrSourceId" = 3 ORDER BY "wrId" ASC LIMIT 1`;
+        const autoImportData = await getAllAutoImportDataQuery(null, fastify, condition);
+
+        if (!autoImportData?.length) return;
+
+        const importData = autoImportData[0];
+        if (!validateImportData(importData, fastify)) return;
+
+        const { refId, refType } = importData;
+
+        const importMap = {
+            [RefType.Competition]: competitionImportService,
+            [RefType.Match]: matchImportService,
+            [RefType.Team]: teamImportService,
+            [RefType.Player]: playerImportService,
+            [RefType.TeamUpdate]: UpdateTeamFromEntityService,
+            [RefType.PlayerUpdate]: UpdatePlayerFromEntityService,
+            [RefType.tournamentTeamPointUpdate]: importUpdateTournamentTeamPointFromEntitySportService,
+        };
+
+        const importFn = importMap[Number(refType)];
+        if (!importFn) {
+            errorLogger(
+                fastify,
+                `Unknown refType: ${refType} for refId: ${refId}`,
+                "ERROR --> services/entitySportAutoImport.js/entitySportAutoImportProcess - importFn",
+                null,
+                refType
+            );
+            return;
+        }
+
+        await processImport(importFn, importData, fastify);
+    } catch (error) {
+        console.error("Error in autoImportProcess", error);
+        errorLogger(
+            fastify,
+            error.message,
+            "ERROR --> services/entitySportAutoImport.js/entitySportAutoImportProcess",
             null
         );
     }
 };
 
-
 module.exports = {
     entitySportAutoImportProcess,
-}
+};
