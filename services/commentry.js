@@ -4953,8 +4953,10 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           data: response.commentaryPartnershipDetails,
         });
       } else {
-        global.tblCommentaryPartnership[partnershipIndex] =
+        if(updatedData.commentaryPartnershipDetails){
+          global.tblCommentaryPartnership[partnershipIndex] =
           updatedData.commentaryPartnershipDetails;
+        }
         response.commentaryPartnershipDetails =
           updatedData.commentaryPartnershipDetails;
 
@@ -4990,8 +4992,12 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
         }
         if (!deleteCommentaryBallByBallId) {
           if (partnershipIndex !== -1) {
-            global.tblCommentaryPartnership[partnershipIndex] =
-              updatedData.commentaryPartnershipDetails;
+             if(updatedData.commentaryPartnershipDetails){
+                global.tblCommentaryPartnership[partnershipIndex] =
+                updatedData.commentaryPartnershipDetails;
+              }
+            // global.tblCommentaryPartnership[partnershipIndex] =
+            //   updatedData.commentaryPartnershipDetails;
           }
         }
         if (
@@ -5000,8 +5006,12 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           deleteCommentaryBallByBallId
         ) {
           if (partnershipIndex !== -1) {
-            global.tblCommentaryPartnership[partnershipIndex] =
-              updatedData.commentaryPartnershipDetails;
+            // global.tblCommentaryPartnership[partnershipIndex] =
+            //   updatedData.commentaryPartnershipDetails;
+              if(updatedData.commentaryPartnershipDetails){
+                global.tblCommentaryPartnership[partnershipIndex] =
+                updatedData.commentaryPartnershipDetails;
+              }
           }
         }
         response.commentaryPartnershipDetails =
