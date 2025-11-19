@@ -72,6 +72,7 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
                   if (elem.commentaryId) {
                     const index = global.tblCommentaries.findIndex(i => i.commentaryId == elem.commentaryId);
                     if(index == -1){
+                      console.log("elem", elem)
                       errorLogger(
                         fastify,
                         "CommentaryId not found in global  socketObj.cronJob",
