@@ -4099,6 +4099,25 @@ const Commentary = {
       },
     },
   },
+  getCommentaryViewsList: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get all commentaries views list",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryStatus: { type: "integer" },
+          eventTypeId: { type: "integer" },
+          competitionId: { type: "integer" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
+          isVirtual: { type: "boolean" },
+          pythonId: { type: "integer" },
+        }
+      },
+    },
+  },
 };
 
 const Compitition = {

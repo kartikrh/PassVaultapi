@@ -25033,6 +25033,37 @@ const undoCommentaryService = async (request, fastify) => {
   }
 };
 
+const commentaryViewsReportService = async (request, fastify) => {
+  const {
+    commentaryStatus,
+    eventTypeId,
+    competitionId,
+    isVirtual,
+    startDate,
+    endDate,
+    pythonId,
+  } = request.body || {};
+
+  const result = await fastify.db.query(
+    `CALL proc_commentary_views_list($1, $2, $3, $4, $5, $6, $7, $8)`,
+    {
+      bind: [
+        commentaryStatus ?? null,
+        eventTypeId ?? null,
+        competitionId ?? null,
+        isVirtual ?? null,
+        startDate ?? null,
+        endDate ?? null,
+        pythonId ?? null,
+        null,
+      ],
+      type: fastify.db.QueryTypes.SELECT
+    }
+  );
+
+  return result[0]?.commentary_list ?? [];
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -25153,4 +25184,5 @@ module.exports = {
   clientSocketCountService,
   undoCommentaryInningService,
   undoCommentaryService,
+  commentaryViewsReportService,
 };

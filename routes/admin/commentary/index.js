@@ -111,6 +111,7 @@ const {
   bowlingTypeChange,
   undoCommentaryInning,
   undoCommentary,
+  commentaryViewsReport,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -1494,5 +1495,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request , reply) => undoCommentary(request, reply, fastify)
+  });
+  fastify.post("/viewsReport", {
+    schema: Commentary.getCommentaryViewsList.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:["Commentary", "Commentary List"],
+          mode: "view",
+        }),
+    ],
+    handler: (request , reply) => commentaryViewsReport(request, reply, fastify)
   });
 };
