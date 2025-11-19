@@ -68,7 +68,6 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
               socketObj.client.removeAllListeners("countData");
               socketObj.client.once("countData", async (data) => {
                 for (const elem of data) {
-                  console.log("elem: ",elem)
                   const currentCount = Number(elem.count) || 0;
                   if (elem.commentaryId) {
                     await updateCommentaryViewsQuery({ views: currentCount, commentaryId: elem.commentaryId }, fastify);
