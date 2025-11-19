@@ -12025,7 +12025,6 @@ const revertCommentaryService = async (request, fastify) => {
   const index = global.tblCommentaries.findIndex(
     (item) => item?.commentaryId === commentaryId
   );
-  
   if (index == -1) {
     throw new Error("Commentary with this id not Found");
   }
@@ -12040,9 +12039,11 @@ const revertCommentaryService = async (request, fastify) => {
   //     "Cannot revert the commentary as markets are already created"
   //   );
   // }
+  const sendDataForSocketUpdate = {};
+  sendDataForSocketUpdate.commentaryId = commentaryId;
+  sendDataForSocketUpdate.dataToUpdate = [];
 
   let res = await revertCommentaryQuery(request.body, fastify, request);
-  // console.log("revertCommentaryQuery", r);
 
   if (res) {
     global.tblCommentaries[index].displayStatus = "Toss Pending!!";
@@ -12059,6 +12060,14 @@ const revertCommentaryService = async (request, fastify) => {
     global.tblCommentaries[index].tpId = null;
     global.tblCommentaries[index].commentaryResult = null;
     global.tblCommentaries[index].commentaryCloseTime = null;
+    global.tblCommentaries[index].currentInnings = 1;
+
+    sendDataForSocketUpdate.eventRefId = global.tblCommentaries[index]?.eventRefId;
+    sendDataForSocketUpdate.dataToUpdate.push({
+      module: "commentaryDetails",
+      type: "update",
+      data: global.tblCommentaries[index],
+    });
 
     const ct = global.tblCommentaryTeams.filter(
       (item) => item?.commentaryId === commentaryId
@@ -12067,6 +12076,7 @@ const revertCommentaryService = async (request, fastify) => {
       (item) => item?.commentaryId === commentaryId
     );
     if (ct.length > 0) {
+      let comTeams = []
       // update the global variable
       for (let team of ct) {
         let teamIndex = global.tblCommentaryTeams.findIndex(
@@ -12077,11 +12087,24 @@ const revertCommentaryService = async (request, fastify) => {
             (item) => item.commentaryTeamId === team.commentaryTeamId
           );
           global.tblCommentaryTeams[teamIndex] = updatedData;
+          comTeams.push(updatedData)
         }
+      }
+      if (comTeams.length > 0) {
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module: "commentaryTeams",
+          type: "update",
+          data: comTeams.map((team) => ({
+            ...team,
+            crr: parseFloat(team?.crr) || 0,
+            rrr: parseFloat(team?.rrr) || 0,
+          })),
+        });
       }
     }
     if (cp.length > 0) {
       // update the global variable
+      let commPlayer = []
       for (let player of cp) {
         let playerIndex = global.tblCommentaryPlayers.findIndex(
           (item) => item.commentaryPlayerId === player.commentaryPlayerId
@@ -12091,9 +12114,61 @@ const revertCommentaryService = async (request, fastify) => {
             (item) => item.commentaryPlayerId === player.commentaryPlayerId
           );
           global.tblCommentaryPlayers[playerIndex] = updatedData;
+          commPlayer.push(updatedData)
         }
       }
+      if (commPlayer.length > 0) {
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module: "commentaryPlayers",
+          type: "update",
+          data: commPlayer,
+        });
+      }
     }
+  }
+
+  const deleteOvers = global.tblOvers
+    .filter(item => item?.commentaryId === commentaryId)
+    .map(item => item?.overId);
+
+  if (deleteOvers && deleteOvers.length > 0) {
+    sendDataForSocketUpdate.dataToUpdate.push({
+      module: "deleteOverIds",
+      data: { overId: deleteOvers },
+    });
+  }
+
+  const deleteWickets = global.tblCommentaryWicket
+    .filter(item => item?.commentaryId === commentaryId)
+    .map(item => item?.commentaryWicketId);
+
+  if (deleteWickets && deleteWickets.length > 0) {
+    sendDataForSocketUpdate.dataToUpdate.push({
+      module: "deleteWicketIds",
+      data: { commentaryWicketId: deleteWickets },
+    });
+  }
+
+  const deletePartnerships = global.tblCommentaryPartnership
+    .filter(item => item?.commentaryId === commentaryId)
+    .map(item => item?.commentaryPartnershipId);
+
+  if (deletePartnerships && deletePartnerships.length > 0) {
+    sendDataForSocketUpdate.dataToUpdate.push({
+      module: "deletePartnershipIds",
+      data: { commentaryPartnershipId: deletePartnerships },
+    });
+  }
+
+  const deleteCommBallByBalls = global.tblCommentaryBallByBall
+    .filter(item => item?.commentaryId === commentaryId)
+    .map(item => item?.commentaryBallByBallId);
+
+  if (deleteCommBallByBalls && deleteCommBallByBalls.length > 0) {
+    sendDataForSocketUpdate.dataToUpdate.push({
+      module: "deleteCommentaryBallByBallIds",
+      data: { commentaryBallByBallId: deleteCommBallByBalls },
+    });
   }
 
   // remvoe over for this commentary
@@ -12112,6 +12187,10 @@ const revertCommentaryService = async (request, fastify) => {
   global.tblCommentaryWicket = global.tblCommentaryWicket.filter(
     (item) => item?.commentaryId !== commentaryId
   );
+
+  global.clientSocketIo.forEach((socket) => {
+    socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+  });
 
   commentaryLogger(
     {
