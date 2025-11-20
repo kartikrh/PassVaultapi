@@ -13,6 +13,7 @@ const getAllAutoImportDataQuery = async (request, fastify, whereCondition = unde
                 "wrIsImportStart" as "isImportStart",
                 "wrImportStartTime" as "importStartTime",
                 "wrImportEndTime" as "importEndTime",
+                "wrErrorStackData" as "errorStackData",
                 "wrCreatedBy" as "createdBy",
                 "wrCreateDate" as "createdDate"
             FROM "tblAutoImportData"
@@ -42,6 +43,7 @@ const getAutoImportDataByIdQuery = async (whereCondition = undefined, request, f
                 "wrIsImportStart" as "isImportStart",
                 "wrImportStartTime" as "importStartTime",
                 "wrImportEndTime" as "importEndTime",
+                "wrErrorStackData" as "errorStackData",
                 "wrCreatedBy" as "createdBy",
                 "wrCreateDate" as "createdDate"
             FROM "tblAutoImportData"
@@ -81,6 +83,7 @@ const insertAutoImportDataQuery = async (data, fastify, request) => {
                 "wrIsImportStart" as "isImportStart",
                 "wrImportStartTime" as "importStartTime",
                 "wrImportEndTime" as "importEndTime",
+                "wrErrorStackData" as "errorStackData",
                 "wrCreatedBy" as "createdBy",
                 "wrCreateDate" as "createdDate"
             FROM insert_data;`,
@@ -121,8 +124,9 @@ const updateAutoImportDataQuery = async (data, fastify, request) => {
                 "wrIsImported" = $4,
                 "wrIsImportStart" = $5,
                 "wrImportStartTime" = $6,
-                "wrImportEndTime" = $7
-            WHERE "wrId" = $8
+                "wrImportEndTime" = $7,
+                "wrErrorStackData" = $8
+            WHERE "wrId" = $9
             RETURNING *
         )
             SELECT 
@@ -134,6 +138,7 @@ const updateAutoImportDataQuery = async (data, fastify, request) => {
                 "wrIsImportStart" as "isImportStart",
                 "wrImportStartTime" as "importStartTime",
                 "wrImportEndTime" as "importEndTime",
+                "wrErrorStackData" as "errorStackData",
                 "wrCreatedBy" as "createdBy",
                 "wrCreateDate" as "createdDate"
             FROM updated_data;`,
@@ -147,6 +152,7 @@ const updateAutoImportDataQuery = async (data, fastify, request) => {
                     data.isImportStart,
                     data.importStartTime,
                     data.importEndTime,
+                    data?.errorStackData,
                     data.id,
                 ],
             }
@@ -200,6 +206,7 @@ const allAutoImportDataLogsQuery = async (body ,request, fastify) => {
                 "wrIsImportStart" as "isImportStart",
                 "wrImportStartTime" as "importStartTime",
                 "wrImportEndTime" as "importEndTime",
+                "wrErrorStackData" as "errorStackData",
                 tu."WrName" as "createdBy",
                 "wrCreateDate" as "createdDate"
             FROM "tblAutoImportData"
