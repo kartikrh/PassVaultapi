@@ -1,6 +1,6 @@
-const { roundToNearestMinutes, checkEntitySportAPIEndpointIsActive, APIEndpointModuleType, callEntitySportAPI, parseUmpires, ScoringTypes } = require(".");
+const { checkEntitySportAPIEndpointIsActive, APIEndpointModuleType, callEntitySportAPI, parseUmpires, ScoringTypes } = require(".");
 const { errorLogger } = require("./logger");
-const { entitySportAutoUpdateCommentaryTime, intervalTimesForUpdateCommentary, autoUpdateCommentaryDataStatus } = require('./entityConst');
+const { autoUpdateCommentaryDataStatus, intervalTimesForUpdateCommentary } = require('./entityConst');
 const { getAllAutoUpdateCommentaryDataQuery, insertAutoUpdateCommentaryDataQuery, updateAutoUpdateCommentaryDataQuery } = require('../repository/TableAutoUpdateCommentaryData');
 const { updateCommentaryQuery, insertCommentaryTeams, getCommentaryTeamsQuery } = require('../repository/TableCommentary');
 const { insertCommentaryPlayersByTeam, insertTeamPlayersByTeamId } = require('../services/competition');
@@ -14,20 +14,22 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
     try {
         const getAllCommentaryData = global.tblCommentaries.filter(item => item.tpId !== null && item.commentaryStatus === 1 && item.scoringType === ScoringTypes.Entity && item.isEventStart === false && new Date(item.eventDate) > new Date());
         if (getAllCommentaryData && getAllCommentaryData.length > 0) {
-            const roundedNowTime = await roundToNearestMinutes(entitySportAutoUpdateCommentaryTime);
+            const currentDate = new Date();
 
             for (const commentary of getAllCommentaryData) {
                 const commentaryStartTime = new Date(commentary.eventDate);
+                const diffHours = (commentaryStartTime - currentDate) / (1000 * 60 * 60);
 
-                for (const hoursBefore of intervalTimesForUpdateCommentary) {
-                    let insertAutoUpdateCommentaryData = null;
-                    const intervalTime = new Date(commentaryStartTime.getTime() - hoursBefore * 60 * 60 * 1000);
-                    const differenceTime = Math.abs(intervalTime - roundedNowTime);
+                for (let hour of intervalTimesForUpdateCommentary) {
+                    const upper = hour;
+                    const lower = hour - 0.25; // 15-minute buffer
 
-                    if (differenceTime <= entitySportAutoUpdateCommentaryTime * 60 * 1000) {
+                    if (diffHours <= upper && diffHours > lower) {
+                        hour = hour.toFixed(0);
+                        let insertAutoUpdateCommentaryData = null;
                         try {
                             const autoUpdateCommentaryData = await getAllAutoUpdateCommentaryDataQuery(
-                                `"wrCommentaryId" = '${commentary.commentaryId}' AND "wrOffsetHour" = ${hoursBefore}`,
+                                `"wrCommentaryId" = '${commentary.commentaryId}' AND "wrOffsetHour" = ${hour}`,
                                 fastify
                             );
 
@@ -56,13 +58,13 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     throw new Error(`Competition with tpId ${matchInfoData?.competition?.cid} not found`);
                                 }
 
-                                console.log(`🔔 Running update for ${commentary.commentaryId} at ${hoursBefore}h before start`);
+                                console.log(`🔔 Running update for ${commentary.commentaryId} at ${hour}h before start`);
 
                                 const insertData = {
                                     commentaryId: commentary.commentaryId,
-                                    offsetHour: hoursBefore,
+                                    offsetHour: hour,
                                     status: autoUpdateCommentaryDataStatus.start,
-                                    message: `Running update for ${commentary.commentaryId} at ${hoursBefore}h before start`,
+                                    message: `Running update for ${commentary.commentaryId} at ${hour}h before start`,
                                     responseData: entitySportMatchResponse
                                 };
 
@@ -357,7 +359,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     responseData: insertAutoUpdateCommentaryData?.responseData ?? null
                                 }, fastify);
                             }
-                            console.error(`Error processing commentary ${commentary.commentaryId} for ${hoursBefore}h before start: `, error);
+                            console.error(`Error processing commentary ${commentary.commentaryId} for ${hour}h before start: `, error);
                             errorLogger(
                                 fastify,
                                 error.message,
