@@ -112,6 +112,7 @@ const {
   undoCommentaryInning,
   undoCommentary,
   commentaryViewsReport,
+  checkSUpdatePassword,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -1507,5 +1508,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request , reply) => commentaryViewsReport(request, reply, fastify)
+  });
+  fastify.post("/checkSUpdatePass", {
+    schema: Commentary.checkSUpdatePass.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:["Commentary", "Commentary List"],
+          mode: "view",
+        }),
+    ],
+    handler: (request , reply) => checkSUpdatePassword(request, reply, fastify)
   });
 };
