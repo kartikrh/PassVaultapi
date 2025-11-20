@@ -13730,6 +13730,7 @@ const saveComVirtual = async (request, fastify) => {
       commentaryId,
       isEndInnings = false,
       isCallPredict = false,
+      isOverComplete = false
     } = request.body;
 
     let commentaryIndex,
@@ -14391,11 +14392,57 @@ const saveComVirtual = async (request, fastify) => {
         data: response.commentaryPlayers,
       });
     }
+   
+    if (commentaryOvers) {
+      if (updatedData.overDetails) {
+        global.tblOvers.push(updatedData.overDetails);
+        response.overdetails = updatedData.overDetails;
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module: "commentaryOvers",
+          type: "create",
+          data: response.overdetails,
+        });
+      } else {
+        if (!deleteOverId) {
+          if (overIndex !== -1) {
+            global.tblOvers[overIndex] = commentaryOvers;
+          }
+        }
+        if (deleteOverId && commentaryOvers.overId !== deleteOverId) {
+          if (overIndex !== -1) {
+            global.tblOvers[overIndex] = commentaryOvers;
+          }
+        }
+        response.overdetails = commentaryOvers;
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module: "commentaryOvers",
+          type: "update",
+          data: response.overdetails,
+        });
+      }
+    }
     if (
       updatedData.commentaryBallByBallDetails &&
       commentaryData.isPredictMarket &&
       (updatedData.commentaryBallByBallDetails.ballType != 0 && updatedData.commentaryBallByBallDetails.ballType != 8)
     ) {
+
+      let isShuffle = false;
+      
+      let wicketS,overCS,endinningS = false
+      if(commentaryWicket) {
+        wicketS = commentaryData.shuffle?.Wicket == true ? true : false
+      }
+      if(isOverComplete == true){
+        overCS = commentaryData.shuffle?.OverComplete == true ? true : false
+      }
+      if(isEndInnings && isEndInnings == true){
+        endinningS = commentaryData.shuffle?.InningsComplete == true ? true : false
+      }
+      if(wicketS == true || overCS == true || endinningS == true){
+        isShuffle = true
+      }
+      // console.log("isShuffle",isShuffle)
       let strikeTeam = global.tblCommentaryTeams.find(
         (item) =>
           item?.commentaryId === commentaryBallByBall.commentaryId &&
@@ -14451,6 +14498,7 @@ const saveComVirtual = async (request, fastify) => {
           cardKey: updatedData.commentaryBallByBallDetails?.cardKey,
           cardType: updatedData.commentaryBallByBallDetails?.cardType,
           currentInnings: strikeTeam?.teamBattingOrder,
+          isShuffle
           // currentInnings: updatedData.commentaryBallByBallDetails?.currentInnings
         }
       }
@@ -14481,34 +14529,6 @@ const saveComVirtual = async (request, fastify) => {
             request
           );
         }
-    }
-    if (commentaryOvers) {
-      if (updatedData.overDetails) {
-        global.tblOvers.push(updatedData.overDetails);
-        response.overdetails = updatedData.overDetails;
-        sendDataForSocketUpdate.dataToUpdate.push({
-          module: "commentaryOvers",
-          type: "create",
-          data: response.overdetails,
-        });
-      } else {
-        if (!deleteOverId) {
-          if (overIndex !== -1) {
-            global.tblOvers[overIndex] = commentaryOvers;
-          }
-        }
-        if (deleteOverId && commentaryOvers.overId !== deleteOverId) {
-          if (overIndex !== -1) {
-            global.tblOvers[overIndex] = commentaryOvers;
-          }
-        }
-        response.overdetails = commentaryOvers;
-        sendDataForSocketUpdate.dataToUpdate.push({
-          module: "commentaryOvers",
-          type: "update",
-          data: response.overdetails,
-        });
-      }
     }
     if (commentaryBallByBall) {
       if (updatedData.commentaryBallByBallDetails) {

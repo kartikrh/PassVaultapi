@@ -81,7 +81,8 @@ const getAllCommentaryQuery = async (fastify) => {
     tc."wrCancelTime" as "cancelTime",
     tc."wrViews" as "views",
     tc."wrStreamingUrl" as "streamingUrl",
-    tc."wrStreamingType" as "streamingType"
+    tc."wrStreamingType" as "streamingType",
+    tc."wrShuffle" as "shuffle"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -218,7 +219,7 @@ const insertCommentaryQuery = async (request, fastify) => {
         "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest", "wrEventNo",
         "wrDifficulty", "wrPitchHardness", "wrPitchWareSpeed", "wrPitchType", "wrLawnStriping", "wrPitchAge", "wrIsVirtual",
         "wrOnfieldUmpires", "wrThirdUmpire", "wrMatchReferee", "wrSession", "wrTestDayCount", "wrPythonId", "wrPythonURI",
-        "wrCountryId", "wrVenueId", "wrScoringType", "wrStreamingUrl", "wrStreamingType"
+        "wrCountryId", "wrVenueId", "wrScoringType", "wrStreamingUrl", "wrStreamingType","wrShuffle"
         ) values (
           $1,
           $2,
@@ -257,7 +258,8 @@ const insertCommentaryQuery = async (request, fastify) => {
           $43,
           $44,
           $45,
-          $46
+          $46,
+          $47
         ) returning *         
       )
 
@@ -332,7 +334,8 @@ const insertCommentaryQuery = async (request, fastify) => {
     tc."wrCancelTime" as "cancelTime",
     "wrStreamingUrl" as "streamingUrl",
     tc."wrViews" as "views",
-    "wrStreamingType" as "streamingType"
+    "wrStreamingType" as "streamingType",
+    tc."wrShuffle" as "shuffle"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -389,11 +392,11 @@ const insertCommentaryQuery = async (request, fastify) => {
           data.scoringType || null,
           data.streamingUrl || null,
           data.streamingType || null,
+          data.shuffle || null
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
     );
-
     return result[0];
   } catch (err) {
     errorLogger(
@@ -984,7 +987,8 @@ const updateCommentaryQuery = async (request, fastify) => {
           tc."wrCancelTime" as "cancelTime",
           tc."wrViews" as "views",
           "wrStreamingUrl" as "streamingUrl",
-          "wrStreamingType" as "streamingType"
+          "wrStreamingType" as "streamingType",
+          tc."wrShuffle" as "shuffle"
         from "update_data" tc
         left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
         left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -1372,7 +1376,8 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       tc."wrCancelTime" as "cancelTime",
       tc."wrStreamingUrl" as "streamingUrl",
       tc."wrViews" as "views",
-      tc."wrStreamingType" as "streamingType"
+      tc."wrStreamingType" as "streamingType",
+      tc."wrShuffle" as "shuffle"
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -6214,7 +6219,7 @@ const insertVirtualEventQuery = async (data, request, fastify) => {
         "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest", "wrEventNo",
         "wrDifficulty", "wrPitchHardness", "wrPitchWareSpeed", "wrIsVirtual", "wrCardType",
         "wrBallDelay", "wrOverDelay", "wrInningDelay", "wrTossDelay", "wrPythonId", "wrPythonURI",
-        "wrCountryId", "wrVenueId"
+        "wrCountryId", "wrVenueId", "wrShuffle"
         ) values (
           $1,
           $2,
@@ -6247,7 +6252,8 @@ const insertVirtualEventQuery = async (data, request, fastify) => {
           $38,
           $39,
           $40,
-          $41
+          $41,
+          $42
         ) returning *         
       )
 
@@ -6313,7 +6319,8 @@ const insertVirtualEventQuery = async (data, request, fastify) => {
     tc."wrPythonId" as "pythonId",
     tc."wrScoringType" as "scoringType",
     tc."wrViews" as "views",
-    tc."wrPythonURI" as "pythonURI"
+    tc."wrPythonURI" as "pythonURI",
+    tc."wrShuffle" as "shuffle"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -6366,6 +6373,7 @@ const insertVirtualEventQuery = async (data, request, fastify) => {
           data.pythonURI || null,
           data.countryId || null,
           data.venueId || null,
+          data.shuffle || null
         ],
         type: fastify.db.QueryTypes.SELECT,
       }

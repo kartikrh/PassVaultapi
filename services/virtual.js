@@ -229,12 +229,43 @@ const createVirtualEventService = async (request, fastify) => {
       pythonId = pythonAPI?.id;
       pythonURI = pythonAPI?.URI;
     }
+    let shuffle = {
+      Wicket : false,
+      OverComplete : false,
+      MinCardRemain : false,
+      InningsComplete : false
+    }
+    let reqSuffle = request.body.shuffleOn ? request.body.shuffleOn : null;
+    let suffleNo = reqSuffle?.split(",") || []
+    if(suffleNo.length > 0){
+      for (let i of suffleNo){  
+        i = parseInt(i)
+        switch(i) {
+          case 1 :
+              shuffle.Wicket = true
+              break;
+          case 2 : 
+              shuffle.OverComplete = true
+              break;
+          case 3 : 
+            shuffle.MinCardRemain = true;
+            break;
+          case 4:
+            shuffle.InningsComplete = true
+            break;
+          default :
+            break;
+        }
+      }
+    }
+
     let dataToInsert = {
       ...request.body,
       ...checkComp,
       isPredictMarket,
       pythonId,
-      pythonURI
+      pythonURI,
+      shuffle
     };
 
     const commentaryData = await insertVirtualEventQuery(
@@ -928,8 +959,8 @@ const commentaryResponseSerivce = async (commentaryId) => {
         ? global.tblTeams.find((item) => item.teamId === com.tossWonBy).teamName
         : null,
     remark: com.rmk,
+    shuffle : com.shuffle
   };
-
   return commentaryData;
 };
 
