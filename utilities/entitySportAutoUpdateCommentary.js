@@ -354,7 +354,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     status: autoUpdateCommentaryDataStatus.failed,
                                     message: "Failed to update Match data",
                                     id: insertAutoUpdateCommentaryData.id,
-                                    responseData: insertAutoUpdateCommentaryData.responseData
+                                    responseData: insertAutoUpdateCommentaryData?.responseData ?? null
                                 }, fastify);
                             }
                             console.error(`Error processing commentary ${commentary.commentaryId} for ${hoursBefore}h before start: `, error);
