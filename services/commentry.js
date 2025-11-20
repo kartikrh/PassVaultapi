@@ -10589,8 +10589,16 @@ const saveCommentaryDetailsAPIService = async (request, fastify) => {
       commentaryBallByBall,
       commentaryWickets,
       commentaryPartnership,
+      password
     } = request.body;
 
+    let pass = global.tblConfigs.find((i)=>i.key == configConstants.SUPDATEPASS)?.value || null
+    if(!pass){
+      throw new Error("Password not found in config")
+    }
+    if(pass != password){
+      throw new Error("Invalid password")
+    }
     // call the sp to save the commentary details
     const res = await saveCommentaryDetailsAPIQuery(request.body, fastify, request);
     // console.log("saveCommentaryDetailsAPIQuery response", res);
@@ -11235,6 +11243,13 @@ const getShortCommertyService = async (request, fastify) => {
 const deleteCommentaryDataService = async (request, fastify) => {
   const startTime = new Date();
   try {
+     let pass = global.tblConfigs.find((i)=>i.key == configConstants.SUPDATEPASS)?.value || null
+    if(!pass){
+      throw new Error("Password not found in config")
+    }
+    if(pass != request.body.password){
+      throw new Error("Invalid password")
+    }
     const { deleteWickets, deleteOvers, deletePartnership, deleteBallByBall } =
       request.body;
     const result = await deleteCommentaryDataQuery(
@@ -25162,7 +25177,21 @@ const commentaryViewsReportService = async (request, fastify) => {
 
   return result[0]?.commentary_list ?? [];
 };
+const checkSUpdatePasswordService = async(request,fastify) =>{
+  let com = global.tblCommentaries.find((i)=> i.commentaryId == request.body.commentaryId);
+  if(!com){
+    throw new Error("Commentary with this id not found")
+  }
+  let pass = global.tblConfigs.find((i)=>i.key == configConstants.SUPDATEPASS)?.value || null
+  if(!pass){
+    throw new Error("Password not found in config")
+  }
+  if(pass != request.body.password){
+    throw new Error("Invalid password")
+  }
+  return true;
 
+}
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -25284,4 +25313,5 @@ module.exports = {
   undoCommentaryInningService,
   undoCommentaryService,
   commentaryViewsReportService,
+  checkSUpdatePasswordService
 };
