@@ -2424,6 +2424,21 @@ const Commentary = {
       },
     },
   },
+  checkSUpdatePass: {
+    schema: {
+      tags: ["Commentary"],
+      description: "checkSUpdatePass Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId : {type : "integer"},
+          password : {type : "string"}
+        },
+        required : ["commentaryId", "password"]
+      },
+    },
+  },
   changeIsTest: {
     schema: {
       tags: ["Commentary"],
