@@ -52,6 +52,10 @@ const processImport = async (importFn, importData, fastify) => {
         importData.isImported = false;
         await importUpdate(importData, fastify);
     } catch (error) {
+        await importUpdate({
+            ...importData,
+            errorStackData: error.stack
+        }, fastify);
         errorLogger(
             fastify,
             error.message,
