@@ -31,7 +31,8 @@ const getAllCompititionQuery = async (fastify) => {
     tc."wrTpId" as "tpId",
     tc."wrPythonId" as "pythonId",
     tc."wrCountryId" as "countryId",
-    tpa."wrDeveloperName" as "developerName"
+    tpa."wrDeveloperName" as "developerName",
+    tc."wrSetOfRules" as "setOfRules"
     from "tblCompetitions" tc 
     inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
     LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
@@ -81,12 +82,12 @@ const insertCompetitionQuery = async (request, fastify) => {
             "wrCompetition" , "wrEventTypeId" , "wrRefID" , "wrImage" ,"wrIsActive" ,
              "wrCreatedBy" , "wrCreatedDate","wrDisplayOrder", "wrIsTrending", "wrIsEventSnap", "wrIsPointTable", "wrMatchTypeId",
              "wrWinPoint", "wrTiePoint", "wrCancelPoint", "wrLossPoint","wrDrsCount", "wrImagePath", "wrIsMen", "wrType", "wrIsVirtual", "wrStatus", "wrStartDate", "wrEndDate",
-             "wrTpId", "wrPythonId", "wrCountryId"
+             "wrTpId", "wrPythonId", "wrCountryId", "wrSetOfRules"
             )
             values ($1 ,
                  $2,
                  $3,$4,$5,$6,now(),(select COALESCE("display_order" , 0) from "display") + 1, $7, $8, $9, $10,
-                 $11, $12, $13, $14,$15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25
+                 $11, $12, $13, $14,$15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26
                  ) returning *
         )
 
@@ -118,7 +119,8 @@ const insertCompetitionQuery = async (request, fastify) => {
         tc."wrTpId" as "tpId",
         tc."wrCountryId" as "countryId",
         tc."wrPythonId" as "pythonId",
-        tpa."wrDeveloperName" as "developerName"
+        tpa."wrDeveloperName" as "developerName",
+        tc."wrSetOfRules" as "setOfRules"
         from "inser_data" tc
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
         LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
@@ -150,6 +152,7 @@ const insertCompetitionQuery = async (request, fastify) => {
           data.tpId || null,
           data.pythonId || null,
           data.countryId || null,
+          data?.setOfRules || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -281,7 +284,8 @@ const updateCompititionQuery = async (data, fastify, request) => {
           "wrEndDate" = $23,
           "wrTpId" = $24,
           "wrPythonId" = $25,
-          "wrCountryId" = $26
+          "wrCountryId" = $26,
+          "wrSetOfRules" = $27
         where "wrCompetitionId" = $10
         returning *
       )
@@ -313,7 +317,8 @@ const updateCompititionQuery = async (data, fastify, request) => {
         tc."wrTpId" as "tpId",
         tc."wrCountryId" as "countryId",
         tc."wrPythonId" as "pythonId",
-        tpa."wrDeveloperName" as "developerName"
+        tpa."wrDeveloperName" as "developerName",
+        tc."wrSetOfRules" as "setOfRules"
       from "update_data" tc
       inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
       LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
@@ -346,6 +351,7 @@ const updateCompititionQuery = async (data, fastify, request) => {
           data.tpId === undefined ? null : data.tpId,
           data.pythonId,
           data.countryId,
+          data?.setOfRules,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }

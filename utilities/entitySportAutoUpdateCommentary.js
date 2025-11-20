@@ -62,7 +62,8 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     commentaryId: commentary.commentaryId,
                                     offsetHour: hoursBefore,
                                     status: autoUpdateCommentaryDataStatus.start,
-                                    message: `Running update for ${commentary.commentaryId} at ${hoursBefore}h before start`
+                                    message: `Running update for ${commentary.commentaryId} at ${hoursBefore}h before start`,
+                                    responseData: entitySportMatchResponse
                                 };
 
                                 insertAutoUpdateCommentaryData = await insertAutoUpdateCommentaryDataQuery(insertData, fastify);
@@ -338,18 +339,24 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     }
                                 }
 
-                                await updateAutoUpdateCommentaryDataQuery({
-                                    status: isChanged ? autoUpdateCommentaryDataStatus.success : autoUpdateCommentaryDataStatus.noupdate,
-                                    message: "Match data updated successfully",
-                                    id: insertAutoUpdateCommentaryData.id
-                                }, fastify);
+                                if (insertAutoUpdateCommentaryData?.id) {
+                                    await updateAutoUpdateCommentaryDataQuery({
+                                        status: isChanged ? autoUpdateCommentaryDataStatus.success : autoUpdateCommentaryDataStatus.noupdate,
+                                        message: "Match data updated successfully",
+                                        id: insertAutoUpdateCommentaryData.id,
+                                        responseData: entitySportMatchResponse
+                                    }, fastify);
+                                }
                             }
                         } catch (error) {
-                            await updateAutoUpdateCommentaryDataQuery({
-                                status: autoUpdateCommentaryDataStatus.failed,
-                                message: "Failed to update Match data",
-                                id: insertAutoUpdateCommentaryData.id
-                            }, fastify);
+                            if (insertAutoUpdateCommentaryData?.id) {
+                                await updateAutoUpdateCommentaryDataQuery({
+                                    status: autoUpdateCommentaryDataStatus.failed,
+                                    message: "Failed to update Match data",
+                                    id: insertAutoUpdateCommentaryData.id,
+                                    responseData: insertAutoUpdateCommentaryData.responseData
+                                }, fastify);
+                            }
                             console.error(`Error processing commentary ${commentary.commentaryId} for ${hoursBefore}h before start: `, error);
                             errorLogger(
                                 fastify,

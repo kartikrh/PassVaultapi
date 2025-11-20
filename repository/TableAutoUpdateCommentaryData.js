@@ -9,6 +9,7 @@ const getAllAutoUpdateCommentaryDataQuery = async (whereCondition = undefined, f
                 "wrOffsetHour" as "offsetHour",
                 "wrStatus" as "status",
                 "wrMessage" as "message",
+                "wrResponseData" as "responseData",
                 "wrCreateDate" as "createDate",
                 "wrUpdateDate" as "updateDate"
             FROM "tblAutoUpdateCommentaryData"
@@ -31,12 +32,13 @@ const insertAutoUpdateCommentaryDataQuery = async (data, fastify) => {
         const result = await fastify.db.query(
             `
             WITH insert_data AS (
-              INSERT INTO "tblAutoUpdateCommentaryData" ("wrCommentaryId","wrOffsetHour","wrStatus", "wrMessage"
+              INSERT INTO "tblAutoUpdateCommentaryData" ("wrCommentaryId","wrOffsetHour","wrStatus", "wrMessage", "wrResponseData"
               ) VALUES (
                 $1,
                 $2,
                 $3,
-                $4
+                $4,
+                $5
               ) returning *
             )
 
@@ -45,14 +47,16 @@ const insertAutoUpdateCommentaryDataQuery = async (data, fastify) => {
               "wrCommentaryId" as "commentaryId",
               "wrOffsetHour" as "offsetHour",
               "wrStatus" as "status",
-              "wrMessage" as "message"
+              "wrMessage" as "message",
+              "wrResponseData" as "responseData"
             from insert_data`,
             {
                 bind: [
                     data.commentaryId,
                     data.offsetHour,
                     data.status,
-                    data.message || null
+                    data.message || null,
+                    data.responseData || {}
                 ],
                 type: fastify.db.QueryTypes.SELECT,
             }
@@ -75,14 +79,16 @@ const updateAutoUpdateCommentaryDataQuery = async (data, fastify) => {
         return await fastify.db.query(
             `
             update "tblAutoUpdateCommentaryData" set
-                "wrStatus" = $1,
-                "wrMessage" = $2,
+                "wrResponseData" = $1,
+                "wrStatus" = $2,
+                "wrMessage" = $3,
                 "wrUpdateDate" = now()
-            where "wrId" = $3
+            where "wrId" = $4
             RETURNING *
             `,
             {
                 bind: [
+                    data.responseData,
                     data.status,
                     data.message,
                     data.id

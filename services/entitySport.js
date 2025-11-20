@@ -1051,7 +1051,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           event = "wicket"
         }
         if(event == "ball"){
-          let index = global.tblCommentaryBallByBall.findIndex((i)=>i.tpId == c.event_id)
+          let index = global.tblCommentaryBallByBall.findIndex((i)=>i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId)
           if(index != -1) continue; // skip already processed ball
           const overNumber = Number(c.over);
           const overKey = `${comDetails.commentaryId}-${comDetails.currentInnings}-${battingTeam.teamId}-${overNumber}`;
@@ -1405,7 +1405,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           }
         }
         if(event == "wicket"){
-          let index = global.tblCommentaryBallByBall.findIndex((i)=>i.tpId == c.event_id)
+          let index = global.tblCommentaryBallByBall.findIndex((i)=>i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId)
           if(index != -1) continue;
           const overNumber = Number(c.over);
           if(!playersMap[c.batsman_id]){
@@ -1440,6 +1440,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               bowlerDotBall : playerTpIdObj[c.bowler_id].bowlerDotBall ? playerTpIdObj[c.bowler_id].bowlerDotBall + 1 : 1,  
             }
           }
+          // let wicketBatsMan = playerTpIdObj[c.wicket_batsman_id];
           let wicketData = {
             wicketType: wicketTypeObj.BOLD,
             batterId: playerTpIdObj[c.batsman_id]?.commentaryPlayerId,
@@ -2138,9 +2139,9 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
       }
     }
     if (event == "ball") {
-      let index = global.tblCommentaryBallByBall.findIndex((i) => i.tpId == c.event_id)
+      let index = global.tblCommentaryBallByBall.findIndex((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
        if (index == -1) continue; // skip not created ball
-      let ball = global.tblCommentaryBallByBall.find((i) => i.tpId == c.event_id)
+      let ball = global.tblCommentaryBallByBall.find((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
       // if (ball.ballRun == c.run) {
       //   continue;
       // }  
@@ -2484,9 +2485,9 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
       }      
     }
     if (event == "wide") {
-      let index = global.tblCommentaryBallByBall.findIndex((i) => i.tpId == c.event_id);
+      let index = global.tblCommentaryBallByBall.findIndex((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
       if (index == -1) continue; // skip not created ball
-      let ball = global.tblCommentaryBallByBall.find((i) => i.tpId == c.event_id);
+      let ball = global.tblCommentaryBallByBall.find((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
       // if (!ball.ballIsWicket && ball.ballType == BALL_TYPE.WIDE && ball.ballRun == c.run) {
       //   continue;
       // }

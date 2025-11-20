@@ -326,6 +326,7 @@ const updateCompititionService = async (request, fastify) => {
       : request.body.tpId,
     pythonId: request.body.pythonId || validateId.pythonId,
     countryId: request.body.countryId === undefined ? validateId.countryId : request.body.countryId,
+    setOfRules: request.body?.setOfRules || validateId?.setOfRules,
   };
   const developerName = global.tblPythonAPI.find(item => item.id === data?.pythonId);
   data.developerName = developerName?.developerName ?? null
@@ -1172,7 +1173,7 @@ const competitionImportService = async (data, fastify, request) => {
       if (venue.city && venue.name) {
         let checkVenue = global.tblVenues.find(item => item.countryId === checkCountry?.id && item.city === venue?.city && item.name === venue?.name);
         if (!checkVenue) {
-          const venueData = {
+          const insertVenueData = {
             countryId: checkCountry?.id,
             city: venue?.city || null,
             name: venue?.name || null,
@@ -1181,15 +1182,15 @@ const competitionImportService = async (data, fastify, request) => {
             capacity: venue?.capacity || null,
           };
 
-          checkVenue = await insertVenueQuery(venueData, fastify, request);
+          checkVenue = await insertVenueQuery(insertVenueData, fastify, request);
           global.tblVenues.push(checkVenue);
         } else if (checkVenue?.tpId === null || !checkVenue?.tpId) {
-          const venueData = {
+          const updateVenueData = {
             tpId: venue?.venue_id || null,
             venueId: checkVenue.id,
           };
 
-          checkVenue = await updateVenueQuery(venueData, fastify, request);
+          checkVenue = await updateVenueQuery(updateVenueData, fastify, request);
           const index = global.tblVenues.findIndex(item => item.id === checkVenue.id);
           global.tblVenues[index] = checkVenue;
         }
