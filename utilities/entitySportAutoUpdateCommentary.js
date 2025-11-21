@@ -58,13 +58,13 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     throw new Error(`Competition with tpId ${matchInfoData?.competition?.cid} not found`);
                                 }
 
-                                console.log(`🔔 Running update for ${commentary.commentaryId} at ${hour}h before start`);
+                                console.log(`🔔 Running update for commentary id ${commentary.commentaryId} at ${hour}h before start`);
 
                                 const insertData = {
                                     commentaryId: commentary.commentaryId,
                                     offsetHour: hour,
                                     status: autoUpdateCommentaryDataStatus.start,
-                                    message: `Running update for ${commentary.commentaryId} at ${hour}h before start`,
+                                    message: `Running update for commentary id ${commentary.commentaryId} at ${hour}h before start`,
                                     responseData: entitySportMatchResponse
                                 };
 
