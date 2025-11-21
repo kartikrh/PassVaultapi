@@ -1951,10 +1951,10 @@ const cloneCommentaryService = async (request, fastify) => {
     ...newCommentary,
     team1Captain: team1.teamCaptain,
     team1Kipper: team1.teamKipper,
-    team1Players: filterOutUniquePlayerId(team1Players),
+    team1Players: team1Players,
     team2Captain: team2.teamCaptain,
     team2Kipper: team2.teamKipper,
-    team2Players: filterOutUniquePlayerId(team2Players),
+    team2Players:team2Players,
     teamMaxOver: validateMatchTypeId.maxOversInFirstInings,
     drsCount: team1.drsCount,
     subInning: team1.subInning,
@@ -1988,21 +1988,21 @@ const cloneCommentaryService = async (request, fastify) => {
         ) {
           let data = [
             ...request.body.team1Players.map((item, i) => {
-              const playerTpId = global.tblPlayers.find(elem => elem.playerId === item);
+              const playerTpId = global.tblPlayers.find(elem => elem.playerId === item.playerId);
               return {
                 commentaryId: newCommentary.commentaryId,
                 teamId: request.body.team1Id,
-                playerId: item,
+                playerId: item.playerId,
                 tpId: playerTpId?.tpId ?? null,
                 displayOrder: i + 1,
               };
             }),
             ...request.body.team2Players.map((item, i) => {
-              const playTpId = global.tblPlayers.find(elem => elem.playerId === item);
+              const playTpId = global.tblPlayers.find(elem => elem.playerId === item.playerId);
               return {
                 commentaryId: newCommentary.commentaryId,
                 teamId: request.body.team2Id,
-                playerId: item,
+                playerId: item.playerId,
                 tpId: playTpId?.tpId ?? null,
                 displayOrder: i + 1,
               };
@@ -2105,23 +2105,25 @@ const cloneCommentaryService = async (request, fastify) => {
       ) {
         let data = [
           ...request.body.team1Players.map((item, i) => {
-            const playerTpId = global.tblPlayers.find(elem => elem.playerId === item);
+            const playerTpId = global.tblPlayers.find(elem => elem.playerId === item.playerId);
             return {
               commentaryId: newCommentary.commentaryId,
               teamId: request.body.team1Id,
-              playerId: item,
+              playerId: item.playerId,
               tpId: playerTpId?.tpId ?? null,
               displayOrder: i + 1,
+              isInPlayingEleven : item.isInPlayingEleven
             };
           }),
           ...request.body.team2Players.map((item, i) => {
-            const playTpId = global.tblPlayers.find(elem => elem.playerId === item);
+            const playTpId = global.tblPlayers.find(elem => elem.playerId === item.playerId);
             return {
               commentaryId: newCommentary.commentaryId,
               teamId: request.body.team2Id,
-              playerId: item,
+              playerId: item.playerId,
               tpId: playTpId?.tpId ?? null,
               displayOrder: i + 1,
+              isInPlayingEleven : item.isInPlayingEleven
             };
           }),
         ];

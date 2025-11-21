@@ -599,7 +599,7 @@ const insertCommentaryPlayers = async (
           data.tpId || null,
           data?.jerseyPlayerImage || null,
           data?.jerseyPlayerImagePath || null,
-          data?.isInPlaying11 ?? null,
+          data?.isInPlayingEleven || false,
         ],
       }
     );
@@ -1480,7 +1480,8 @@ const getCommentaryPlayersQuery = async (data, fastify, request) => {
       "wrBatterOrder" as "batterOrder",
       "wrBowlerOrder" as "bowlerOrder",
       "wrBowlingType" as "bowlingType",
-      "wrPlayerName" as "playerName"
+      "wrPlayerName" as "playerName",
+      "wrIsInPlayingEleven" as "isInPlayingEleven"
       from "tblCommentaryPlayers"
       where "wrCommentaryId" = $1 and "wrTeamId" = $2 and "wrIsDelete" = false
       order by "wrDisplayOrder"
