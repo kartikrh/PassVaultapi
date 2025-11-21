@@ -599,7 +599,7 @@ const insertCommentaryPlayers = async (
           data.tpId || null,
           data?.jerseyPlayerImage || null,
           data?.jerseyPlayerImagePath || null,
-          data?.isInPlaying11 || null,
+          data?.isInPlaying11 ?? null,
         ],
       }
     );
@@ -4178,7 +4178,8 @@ const deleteCommentaryDataQuery = async (data, fastify, request) => {
         type: fastify.db.QueryTypes.DELETE,
         bind: [
           data.deleteBallByBall || null,
-          data.deleteOver || null,
+          // data.deleteOver || null,
+          data.deleteOvers || null,
           data.deleteWickets || null,
           data.deletePartnership || null,
           isDelete,
@@ -8653,6 +8654,30 @@ const updateCommentaryViewsQuery = async (data, fastify) => {
     throw new Error(err.message);
   }
 };
+const playingElevenChangeOnCommPlayersQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaryPlayers" SET
+          "wrIsInPlayingEleven" = $1
+        WHERE "wrCommentaryPlayerId" = $2
+        AND "wrPlayerId" = $3
+        AND "wrIsDelete" = FALSE
+      `,
+      {
+        bind: [data.isInPlayingEleven, data.commentaryPlayerId, data.playerId],
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/playingElevenChangeOnCommPlayersQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -8798,4 +8823,5 @@ module.exports = {
   updateStreamingURLQuery,
   bowlingTypeChangeQuery,
   updateCommentaryViewsQuery,
+  playingElevenChangeOnCommPlayersQuery,
 };
