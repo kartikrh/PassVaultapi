@@ -1093,16 +1093,16 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
   }
 
   const playerTpIds = teamPlaying11Squad?.map(item => Number(item.player_id));
-  let playersNotInTeam = commentaryPlayers.filter(player => !playerTpIds.includes(player.tpId));
-  if (playersNotInTeam && playersNotInTeam.length > 0) {
-    playersNotInTeam = playersNotInTeam.map(item => item.playerId);
-    await deleteCommentaryPlayersByPlayerId({
-      commentaryId,
-      playerIds: playersNotInTeam?.map(item => item.playerId)
-    }, request, fastify);
+  // let playersNotInTeam = commentaryPlayers.filter(player => !playerTpIds.includes(player.tpId));
+  // if (playersNotInTeam && playersNotInTeam.length > 0) {
+  //   playersNotInTeam = playersNotInTeam.map(item => item.playerId);
+  //   await deleteCommentaryPlayersByPlayerId({
+  //     commentaryId,
+  //     playerIds: playersNotInTeam?.map(item => item.playerId)
+  //   }, request, fastify);
 
-    global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(item => !(item.commentaryId === commentaryId && playersNotInTeam.includes(item.playerId)));
-  }
+  //   global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(item => !(item.commentaryId === commentaryId && playersNotInTeam.includes(item.playerId)));
+  // }
 
   for (const pid of playerTpIds) {
     const commentaryPlayerData = global.tblCommentaryPlayers.find(item => item.commentaryId === commentaryId && item.teamId === teamId && item.currentInnings === i && item.tpId === pid);
