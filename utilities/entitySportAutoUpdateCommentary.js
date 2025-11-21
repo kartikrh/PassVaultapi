@@ -12,7 +12,7 @@ const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 
 const entitySportAutoUpdateCommentary = async (fastify) => {
     try {
-        const getAllCommentaryData = global.tblCommentaries.filter(item => item.tpId !== null && item.commentaryStatus === 1 && item.scoringType === ScoringTypes.Entity && item.isEventStart === false && new Date(item.eventDate) > new Date());
+        const getAllCommentaryData = global.tblCommentaries.filter(item => item.tpId !== null && item.commentaryStatus === 1 && item.scoringType === ScoringTypes.Entity && item.isEventStart === false && new Date(item.eventDate) > new Date() && new Date(item.eventDate) <= new Date(Date.now() + 50 * 60 * 60 * 1000));
         if (getAllCommentaryData && getAllCommentaryData.length > 0) {
             const currentDate = new Date();
 
@@ -24,7 +24,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                     const upper = hour;
                     const lower = hour - 0.25; // 15-minute buffer
 
-                    if (diffHours <= upper && diffHours > lower) {
+                    if (diffHours <= upper && diffHours >= lower) {
                         hour = hour.toFixed(0);
                         let insertAutoUpdateCommentaryData = null;
                         try {
