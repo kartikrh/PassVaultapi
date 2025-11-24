@@ -20,18 +20,28 @@ const autoUpdatePlayerStatisticsDataProcess = async (fastify) => {
                 }
             }, fastify);
 
-            const getPlayerId = global.tblPlayers.find(item => item.playerId === playerId)?.playerId;
-            const getCommentaryPlayerId = global.tblCommentaryPlayers.find(item => item.commentaryPlayerId === commentaryPlayerId)?.playerId;
+            const getPlayerId = global.tblPlayers.find(item => item.playerId === playerId);
+            const getCommentaryPlayerId = global.tblCommentaryPlayers.find(item => item.commentaryPlayerId === commentaryPlayerId);
             const getCommentaryData = global.tblCommentaries.find(item => item.commentaryId === commentaryId);
 
-            if (!getPlayerId || !getCommentaryPlayerId || !getCommentaryData) {
+            if (!getPlayerId?.playerId || !getCommentaryPlayerId?.playerId || !getCommentaryData) {
                 await updateAutoUpdatePlayerStatisticsDataService({
                     body: {
                         id,
                         endTime: new Date()
                     }
                 }, fastify);
-                errorLogger(fastify, `PlayerId or CommentaryPlayerId or CommentaryData not found of ID: ${id}`, `utilities/autoUpdatePlayerStatisticsData.js/autoUpdatePlayerStatisticsData`, null);
+                errorLogger(fastify,
+                    `PlayerId or CommentaryPlayerId or CommentaryData not found of ID: ${id}`,
+                    `utilities/autoUpdatePlayerStatisticsData.js/autoUpdatePlayerStatisticsData`,
+                    null,
+                    {
+                        autoUpdatePlayerStatisticsData: getAutoUpdatePlayerStatisticsData?.[0],
+                        playerData: getPlayerId,
+                        commentaryPlayerData: getCommentaryPlayerId,
+                        commentaryData: getCommentaryData
+                    }
+                );
                 return;
             }
 
