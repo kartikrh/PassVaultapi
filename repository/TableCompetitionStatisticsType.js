@@ -103,9 +103,10 @@ const updateCompetitionStatisticsTypeByIdQuery = async (data, fastify, request) 
                         "wrKeyName" = $1,
                         "wrDisplayOrder" = $2,
                         "wrDescription" = $3,
-                        "wrUpdatedBy" = $4,
-                        "wrUpdatedAt" = $5
-                    WHERE "wrCompetitionStatisticsTypeId" = $6
+                        "wrIsActive" = $4,
+                        "wrUpdatedBy" = $5,
+                        "wrUpdatedAt" = $6
+                    WHERE "wrCompetitionStatisticsTypeId" = $7
                     RETURNING *
                 )
                 SELECT
@@ -131,6 +132,7 @@ const updateCompetitionStatisticsTypeByIdQuery = async (data, fastify, request) 
                     data.keyName,
                     data.displayOrder,
                     data.description,
+                    data.isActive,
                     request?.userTokenInfo?.WrUserId ?? -5,
                     new Date(),
                     data.competitionStatisticsTypeId
