@@ -65,11 +65,13 @@ const updateCompetitionStatisticsTypeService = async (request, fastify) => {
         throw new Error("Competition Statistics Type with this id not Found");
     }
 
-    const checkDisplayOrderExists = global.tblCompetitionStatisticsType.find(
-        (item) => item.typeId === checkExists.typeId && item.displayOrder === displayOrder
-    );
-    if (checkDisplayOrderExists) {
-        throw new Error("Competition Statistics Type display order already exists");
+    if (displayOrder) {
+        const checkDisplayOrderExists = global.tblCompetitionStatisticsType.find(
+            (item) => item.typeId === checkExists.typeId && item.displayOrder === displayOrder
+        );
+        if (checkDisplayOrderExists) {
+            throw new Error("Competition Statistics Type display order already exists");
+        }
     }
 
     const updateData = {
