@@ -11165,6 +11165,77 @@ const AutoUpdatePlayerStatisticsData = {
   }
 }
 
+const CompititionStatisticsType = {
+  getAll: {
+    schema: {
+      tags: ["Compitition Statistics Type"],
+      description: "get all Compitition Statistics Type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+          eventTypeId: { type: "integer" },
+          typeId: { type: "integer" }
+        },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Compitition Statistics Type"],
+      description: "get Compitition Statistics Type by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionStatisticsTypeId: { type: "integer" },
+        },
+        required: ["competitionStatisticsTypeId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Compitition Statistics Type"],
+      description: "save Compitition Statistics Type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionStatisticsTypeId: { type: "integer" },
+          eventTypeId: { type: "integer" },
+          typeId: { type: "integer" },
+          name: { type: "string" },
+          keyName: { type: "string" },
+          displayOrder: { type: "integer" },
+          description: { type: "string" },
+          isActive: { type: "boolean" }
+        },
+        required: ["competitionStatisticsTypeId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Compitition Statistics Type"],
+      description: "delete Compitition Statistics Type",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionStatisticsTypeId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["competitionStatisticsTypeId"],
+      },
+    },
+  }
+};
+
 module.exports = {
   Auth,
   Tabs,
@@ -11245,5 +11316,6 @@ module.exports = {
   ICCRanking,
   Report,
   EntitySocket,
-  AutoUpdatePlayerStatisticsData
+  AutoUpdatePlayerStatisticsData,
+  CompititionStatisticsType
 };
