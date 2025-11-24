@@ -1542,7 +1542,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             wicketType: wicketTypeObj.BOLD,
             batterId: playerTpIdObj[c.batsman_id]?.commentaryPlayerId,
             batterName : playerTpIdObj[c.batsman_id]?.playerName,
-            runs: 0,
+            runs: c?.run ?? 0,
             fieldPlayerId : playerTpIdObj[c.bowler_id]?.commentaryPlayerId,
             fieldPlayerName : playerTpIdObj[c.bowler_id]?.playerName,
             fielder1: playerTpIdObj[c.bowler_id]?.commentaryPlayerId,
@@ -1551,6 +1551,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             bowlerName : playerTpIdObj[c.bowler_id]?.playerName,
           };
           battingTeam.teamOver = `${c.over}.${c.ball}`;
+          battingTeam["teamScore"] = (battingTeam.teamScore || 0) + c?.run ?? 0;
           battingTeam.teamWicket = (battingTeam.teamWicket || 0) + 1;
           if(!over) {
             over = global.tblOvers.find((i)=> i.commentaryId == comDetails.commentaryId && i.currentInnings == comDetails.currentInnings
@@ -1587,7 +1588,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                     ballIsCount: true,
                     ballType: 0,
                     ballIsDot: false,
-                    ballRun: 0,
+                    ballRun: c?.run ?? 0,
                     ballExtraRun: 0,
                     ballIsBoundry: false,
                     ballFour: 0,
@@ -1620,6 +1621,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             oversMap[overKey] = over; // store reference
           }
           over.totalWicket = (over.totalWicket || 0) + 1;
+          over.totalRun += c?.run ?? 0;
           over.ballCount += 1;
           over.dotBall += 1;
           over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
