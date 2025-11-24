@@ -318,6 +318,12 @@ const setEntityCom2Service = async (request , fastify) =>{
         // throw new Error("This commentary not associated with any tpId.")
         return true;
     }
+
+    const scoreResponse = {};
+    const sendDataForSocketUpdate = {};
+    sendDataForSocketUpdate.commentaryId = comDetails?.commentaryId;
+    sendDataForSocketUpdate.eventRefId = comDetails?.eventRefId;
+    sendDataForSocketUpdate.dataToUpdate = [];
     // check the status
     if(response.live.game_state == commentaryStatus.TOSSDONE){
       if(comDetails.commentaryStatus == commentaryStatus.OPEN){
@@ -402,8 +408,15 @@ const setEntityCom2Service = async (request , fastify) =>{
                   choseTo: upComData.choseTo,
                   tossRmk: upComData.tossRmk,
               };
+              scoreResponse.scoreResponse = global.tblCommentaries[comI]
+              sendDataForSocketUpdate.dataToUpdate.push({
+                module: "commentaryDetails",
+                type: "update",
+                data: scoreResponse.scoreResponse,
+              });
           }
           if(comTeams && comTeams.length > 0){
+            scoreResponse.commentaryTeams = [];
               for (let ct of comTeams){
                   let comTI = global.tblCommentaryTeams.findIndex((c)=> c.commentaryTeamId == ct.commentaryTeamId)
                   global.tblCommentaryTeams[comTI] = {
@@ -412,8 +425,33 @@ const setEntityCom2Service = async (request , fastify) =>{
                       teamBattingOrder: ct.teamBattingOrder,
                       subInning: ct.subInning,
                   };
+                  scoreResponse.commentaryTeams.push(global.tblCommentaryTeams[comTI]);
               }
+              scoreResponse.commentaryTeams.forEach(async (team) => {
+                const _teamsC1 = global.tblTeams.filter(
+                  (item) => item.teamId === team.teamId
+                );
+                if (_teamsC1.length > 0) {
+                  team.image = _teamsC1[0].image;
+                  team.jersey = _teamsC1[0].jersey;
+                  team.nimage = _teamsC1[0].imagePath;
+                  team.njersey = _teamsC1[0].jerseyPath;
+                }
+              });
+              sendDataForSocketUpdate.dataToUpdate.push({
+                module: "commentaryTeams",
+                type: "update",
+                data: scoreResponse.commentaryTeams.map((team) => ({
+                  ...team,
+                  crr: parseFloat(team?.crr) || 0,
+                  rrr: parseFloat(team?.rrr) || 0,
+                })),
+              });
           }
+          console.log("toss socket data", sendDataForSocketUpdate)
+          global.clientSocketIo.forEach((socket) => {
+            socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+          });
       }
       return true;
     }
@@ -498,6 +536,12 @@ const setEntityCom2Service = async (request , fastify) =>{
                     choseTo: upComData.choseTo,
                     tossRmk: upComData.tossRmk,
                 };
+                scoreResponse.scoreResponse = global.tblCommentaries[comI]
+                sendDataForSocketUpdate.dataToUpdate.push({
+                  module: "commentaryDetails",
+                  type: "update",
+                  data: scoreResponse.scoreResponse,
+                });
             }
             if(comTeams && comTeams.length > 0){
                 for (let ct of comTeams){
@@ -508,8 +552,33 @@ const setEntityCom2Service = async (request , fastify) =>{
                         teamBattingOrder: ct.teamBattingOrder,
                         subInning: ct.subInning,
                     };
+                    scoreResponse.commentaryTeams.push(global.tblCommentaryTeams[comTI]);
                 }
+                scoreResponse.commentaryTeams.forEach(async (team) => {
+                  const _teamsC1 = global.tblTeams.filter(
+                    (item) => item.teamId === team.teamId
+                  );
+                  if (_teamsC1.length > 0) {
+                    team.image = _teamsC1[0].image;
+                    team.jersey = _teamsC1[0].jersey;
+                    team.nimage = _teamsC1[0].imagePath;
+                    team.njersey = _teamsC1[0].jerseyPath;
+                  }
+                });
+                sendDataForSocketUpdate.dataToUpdate.push({
+                  module: "commentaryTeams",
+                  type: "update",
+                  data: scoreResponse.commentaryTeams.map((team) => ({
+                    ...team,
+                    crr: parseFloat(team?.crr) || 0,
+                    rrr: parseFloat(team?.rrr) || 0,
+                  })),
+                });
             }
+            console.log("2nd toss code", sendDataForSocketUpdate)
+            global.clientSocketIo.forEach((socket) => {
+              socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+            });
         }
         comDetails = global.tblCommentaries.find((i) => i.commentaryId == comDetails.commentaryId)
         if(comDetails.commentaryStatus == commentaryStatus.TOSSDONE){
@@ -793,6 +862,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     let part = response.live?.live_inning?.current_partnership;
     let batters = part?.batsmen?.map((i)=>i.batsman_id) || []
     let isChangeStrike = false;
+    const prtship = [];
     // let onStrikePlayer = global.tblCommentaryPlayers.find(
     //     (item) =>
     //     item.commentaryId == comDetails.commentaryId &&
@@ -857,7 +927,14 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           let par = await updateVirtualPartnershipQuery(partnership,fastify, null)
           //update partnersip in db
           let pI = global.tblCommentaryPartnership.findIndex((i)=> i.commentaryPartnershipId == partnership.commentaryPartnershipId)
-          global.tblCommentaryPartnership[pI] =par[0]; 
+          global.tblCommentaryPartnership[pI] =par[0];
+          const validate = prtship.findIndex(item => item.commentaryPartnershipId == par[0]?.commentaryPartnershipId);
+          if(validate == -1) {
+            par[0].type = "update";
+            prtship.push(par[0]) 
+          } else {
+            prtship[validate].type = "update";
+          }
       }
       else {
           let cp1 = playerTpIdObj[part.batsmen[0].batsman_id]
@@ -888,6 +965,8 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               fastify
           );
           global.tblCommentaryPartnership.push(partnership);
+          partnership.type = "create";
+          prtship.push(partnership)
       }
     }
     
@@ -1083,6 +1162,9 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                 over = global.tblOvers.find((i)=> i.commentaryId == comDetails.commentaryId && i.currentInnings == comDetails.currentInnings
                   && i.over == c.over
                   && i.teamId == battingTeam.teamId);
+                if (over) {
+                  over.type = "update";
+                }
                 if(!over){
                   // generate new over
                   let newOver = generateOverEt({
@@ -1097,6 +1179,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                   over = await virtualOverQuery(newOver, request, fastify);
                   // add over to global variable
                   global.tblOvers.push(over);
+                  over.type = "create";
                   const commentaryBallByBall = {
                       commentaryBallByBallId: 0,
                       commentaryId: comDetails?.commentaryId,
@@ -1139,6 +1222,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                   );
                   // add ball to global variable
                   global.tblCommentaryBallByBall.push(oball);
+                  oball.type = "create";
                   ballbyball.push(oball)
                 }
                 oversMap[overKey] = over; // store reference
@@ -1159,7 +1243,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               battingTeam["teamScore"] = (battingTeam.teamScore || 0) + runToUpdate;
               battingTeam.teamOver = `${c.over}.${c.ball}`;
               battingTeam.teamWideRuns = (battingTeam.teamWideRuns || 0) + runToUpdate;       
-              over.ballCount += 1;
+              // over.ballCount += 1;
               over.totalRun += c.run;
               over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
               over.totalWideBall += 1;
@@ -1183,6 +1267,9 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                 over = global.tblOvers.find((i)=> i.commentaryId == comDetails.commentaryId && i.currentInnings == comDetails.currentInnings
                   && i.over == c.over
                   && i.teamId == battingTeam.teamId);
+                if (over) {
+                  over.type = "update";
+                }
                 if(!over){
                     // generate new over
                     let newOver = generateOverEt({
@@ -1197,6 +1284,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                     over = await virtualOverQuery(newOver, request, fastify);
                     // add over to global variable
                     global.tblOvers.push(over);
+                    over.type = "create";
                     const commentaryBallByBall = {
                         commentaryBallByBallId: 0,
                         commentaryId: comDetails?.commentaryId,
@@ -1239,6 +1327,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                     );
                     // add ball to global variable
                     global.tblCommentaryBallByBall.push(oball);
+                    oball.type = "create";
                     ballbyball.push(oball)
 
                 }
@@ -1316,6 +1405,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                 },
                 request
             );
+            ballByBallUp.type = "create";
             ballbyball.push(ballByBallUp)
             // upOver = over;
             // update partnership
@@ -1459,6 +1549,9 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             over = global.tblOvers.find((i)=> i.commentaryId == comDetails.commentaryId && i.currentInnings == comDetails.currentInnings
               && i.over == c.over
               && i.teamId == battingTeam.teamId);
+            if (over) {
+              over.type = "update";
+            }
             if(!over){
                 // generate new over
                 let newOver = generateOverEt({
@@ -1473,6 +1566,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                 over = await virtualOverQuery(newOver, request, fastify);
                 // add over to global variable
                 global.tblOvers.push(over);
+                over.type = "create";
                 const commentaryBallByBall = {
                     commentaryBallByBallId: 0,
                     commentaryId: comDetails?.commentaryId,
@@ -1592,6 +1686,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           );
           // add ball to global variable
           global.tblCommentaryBallByBall.push(oball)
+          oball.type = "create";
           ballbyball.push(oball)
           const generateWicket1 = generateWicket({
             commentaryDetails : comDetails,
@@ -1600,6 +1695,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             battingTeam: battingTeam,
             currentBall: oball,
           });
+          generateWicket1.type = "create";
           wickets.push(generateWicket1);
           if(batters.length == 2) {
             let [b1, b2] = batters;
@@ -1630,7 +1726,6 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
         upComDetails.displayStatus = c.commentary;
       }
     }
-   
     // console.log(oversMap)
     let plyArr = Object.values(playersMap);
     let overArr = Object.values(oversMap)
@@ -1643,6 +1738,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
         ...upComDetails
       },
       commentaryPlayers : plyArr,
+      commentaryPartnership: prtship,
       // commentaryPartnership: partnership,
       commentaryBallByBall : ballbyball,
       commentaryOvers : overArr,
