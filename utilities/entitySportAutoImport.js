@@ -37,7 +37,7 @@ const getImportPayload = (importFn, refId) => {
 
 const processImport = async (importFn, importData, fastify) => {
     importData.isImportStart = true;
-    importData.importStartTime =  new Date();
+    importData.importStartTime = new Date();
 
     try {
         await importUpdate(importData, fastify);

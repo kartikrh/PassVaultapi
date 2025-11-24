@@ -7,6 +7,7 @@ const {
 } = require("../repository/TableEntitySockets");
 const { errorLogger } = require("../utilities/logger");
 const { setEntityCom2Service } = require("../services/entitySport");
+const { updateCommentaryPlayersFromEntityService } = require("../services/commentry");
 const configConstants = require("../utilities/configConstants");
 const { createDataQuery } = require("../repository/TableEntityDataLog");
 const commentaryQueue = new Map();
@@ -134,8 +135,15 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
               // await setEntityCom2Service(request, fastify);
               console.log("entityScoreData...")
               addToQueue(payload, fastify);
-
-              
+            } else if (
+              payload?.response?.ball_event &&
+              payload.response.ball_event.toLowerCase() == "playing-11 update"
+            ) {
+              const request = { body: payload };
+              await updateCommentaryPlayersFromEntityService(request, fastify);
+              let isLog = global.tblConfigs.find((c) => c.key == configConstants.ISENTITYDATALOG)?.value || "false";
+              if(isLog == "false") { return true; }
+              await createDataQuery({data : payload, matchId : payload.response.match_id}, fastify);
             } else {
               return true;
             }

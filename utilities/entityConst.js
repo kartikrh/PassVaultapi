@@ -16,7 +16,7 @@ const nullTeamtpIds = [
 
 const entitySportAutoUpdateCommentaryTime = 15; //minutes
 
-const intervalTimesForUpdateCommentary = [48, 24, 12, 6, 3, 1]; //hours
+const intervalTimesForUpdateCommentary = [48, 24, 12, 6, 3, 1, 0.25]; // hours (use 0.25 for 15 minutes)
 
 const autoUpdateCommentaryDataStatus = {
    start: 1,
