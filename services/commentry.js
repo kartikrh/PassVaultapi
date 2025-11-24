@@ -96,6 +96,7 @@ const {
   updateStreamingURLQuery,
   bowlingTypeChangeQuery,
   updateCommentaryViewsQuery,
+  playingElevenChangeOnCommPlayersQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -217,6 +218,7 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { insertTeamPlayersByTeamId, insertCommentaryPlayersByTeam } = require("./competition");
 const cron = require('node-cron');
 const { insertAutoImportDataService } = require("./autoImportData");
+const { insertTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -23153,17 +23155,27 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
               global.tblOvers.push(overDetails);
             } else {
               global.tblOvers[ovIndex] = overDetails
+              // sendDataForSocketUpdate.dataToUpdate.push({
+              //   module: "commentaryOvers",
+              //   type: "update",
+              //   data: response.overdetails,
+              // });
             }
           }
-          response.overdetails = updatedData.overDetails;
+          // response.overdetails = updatedData.overDetails;
+          // sendDataForSocketUpdate.dataToUpdate.push({
+          //     module: "commentaryOvers",
+          //     type: "create",
+          //     data: response.overdetails,
+          // });
+          response.overdetails = commentaryOvers;
           sendDataForSocketUpdate.dataToUpdate.push({
-              module: "commentaryOvers",
-              type: "create",
-              data: response.overdetails,
+            module: "entityOvers",
+            data: response.overdetails,
           });
         }
         if (commentaryBallByBall && commentaryBallByBall.length > 0) {
-          response.commentaryBallByBallDetails = updatedData.commentaryBallByBallDetails;
+          response.commentaryBallByBallDetails = commentaryBallByBall;
           for (const ballDetails of updatedData.commentaryBallByBallDetails) {
             const findBallByBall = global.tblCommentaryBallByBall.findIndex(item => 
               item.commentaryBallByBallId == ballDetails.commentaryBallByBallId
@@ -23198,13 +23210,22 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
             //   }
             // }
           }
+          // sendDataForSocketUpdate.dataToUpdate.push({
+          //   module: "commentaryBallByBall",
+          //   type: "create",
+          //   data: {
+          //       ...response.commentaryBallByBallDetails
+          //       // overCount: null
+          //   },
+          // });
           sendDataForSocketUpdate.dataToUpdate.push({
-            module: "commentaryBallByBall",
-            type: "create",
-            data: {
-                ...response.commentaryBallByBallDetails
-                // overCount: null
-            },
+            module: "entityBallByBalls",
+            data: response.commentaryBallByBallDetails.map(item => {
+              return {
+                ...item,
+                overCount: item.overCount !== null ? item.overCount.toString() : null
+              };
+            })
           });
         }
         if (commentaryWicket && commentaryWicket.length > 0) {
@@ -23212,6 +23233,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
             const wickIndex = global.tblCommentaryWicket.findIndex(item => 
               item.commentaryWicketId == wicketDetails.commentaryWicketId
             )
+            // response.commentaryWicketDetails = wicketDetails
             if (wickIndex === -1) {
                 global.tblCommentaryWicket.push(wicketDetails);
                 await notiConfigContentReplaceService(
@@ -23220,14 +23242,29 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                     request,
                     fastify
                 );
+                // sendDataForSocketUpdate.dataToUpdate.push({
+                //   module: "commentaryWicket",
+                //   type: "create",
+                //   data: response.commentaryWicketDetails,
+                // });
             } else {
               global.tblCommentaryWicket[wickIndex] = wicketDetails;
+              // sendDataForSocketUpdate.dataToUpdate.push({
+              //   module: "commentaryWicket",
+              //   type: "update",
+              //   data: response.commentaryWicketDetails,
+              // });
             }
           }
-          response.commentaryWicketDetails = updatedData.commentaryWicketDetails;
+          // response.commentaryWicketDetails = updatedData.commentaryWicketDetails;
+          // sendDataForSocketUpdate.dataToUpdate.push({
+          //     module: "commentaryWicket",
+          //     type: "create",
+          //     data: response.commentaryWicketDetails,
+          // });
+          response.commentaryWicketDetails = commentaryWicket;
           sendDataForSocketUpdate.dataToUpdate.push({
-              module: "commentaryWicket",
-              type: "create",
+              module: "entityWickets",
               data: response.commentaryWicketDetails,
           });
         }
@@ -23241,14 +23278,41 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
               global.tblCommentaryPartnership.push(partners);
             } else {
               global.tblCommentaryPartnership[partnerIndex] = partners;
+              // sendDataForSocketUpdate.dataToUpdate.push({
+              //   module: "commentaryPartnership",
+              //   type: "update",
+              //   data: response.commentaryPartnershipDetails,
+              // });
             }
           }
-          response.commentaryPartnershipDetails = updatedData.commentaryPartnershipDetails;
+          // response.commentaryPartnershipDetails = updatedData.commentaryPartnershipDetails;
+
+          // sendDataForSocketUpdate.dataToUpdate.push({
+          //   module: "commentaryPartnership",
+          //   type: "create",
+          //   data: response.commentaryPartnershipDetails,
+          // });
+          response.commentaryPartnershipDetails = commentaryPartnership;
 
           sendDataForSocketUpdate.dataToUpdate.push({
-            module: "commentaryPartnership",
-            type: "create",
-            data: response.commentaryPartnershipDetails,
+            module: "entityPartnerships",
+            data: response.commentaryPartnershipDetails.map(item => {
+              // Find player 1
+              const player1 = commentaryPlayers.find(p => p.commentaryPlayerId === item.batter1Id);
+              if (player1) {
+                item.player1image = player1.playerimage;
+                item.player1jerseyandimage = player1.jerseyPlayerImage;
+                item.player1jerseyandimagepath = player1.jerseyPlayerImagePath;
+              }
+              // Find player 2
+              const player2 = commentaryPlayers.find(p => p.commentaryPlayerId === item.batter2Id);
+              if (player2) {
+                item.player2image = player2.playerimage;
+                item.player2jerseyandimage = player2.jerseyPlayerImage;
+                item.player2jerseyandimagepath = player2.jerseyPlayerImagePath;
+              }
+              return item;
+            })
           });
         }
 
@@ -23932,6 +23996,33 @@ const matchImportService = async (data, fastify, request = null) => {
       "ERROR --> services/commentary.js/matchImportService",
       request
     );
+  }
+  if (checkCommentary?.isActive && checkCommentary?.isTest == false) {
+    let cData = await getMatchDataByCId(
+      {
+        commentaryId: checkCommentary?.commentaryId,
+      },
+      request,
+      fastify
+    );
+
+    callClientAPI(
+      {
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.commentaryUpdate,
+        data: cData,
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      console.log("call client api console in matchImportService", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/matchImportService",
+        request
+      );
+    });
   }
   return checkCommentary;
 }
