@@ -31,7 +31,12 @@ const autoUpdatePlayerStatisticsDataProcess = async (fastify) => {
                         endTime: new Date()
                     }
                 }, fastify);
-                errorLogger(fastify, `PlayerId or CommentaryPlayerId or CommentaryData not found of ID: ${id}`, `utilities/autoUpdatePlayerStatisticsData.js/autoUpdatePlayerStatisticsData`, null);
+                errorLogger(fastify,
+                    `PlayerId or CommentaryPlayerId or CommentaryData not found of ID: ${id}`,
+                    `utilities/autoUpdatePlayerStatisticsData.js/autoUpdatePlayerStatisticsData`,
+                    null,
+                    getAutoUpdatePlayerStatisticsData?.[0]
+                );
                 return;
             }
 
