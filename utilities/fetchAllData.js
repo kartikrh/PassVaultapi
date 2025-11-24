@@ -111,6 +111,7 @@ const { getAllMatchTypeTemplatesQuery } = require("../repository/TableMatchTypeT
 const { getAllOverTypesQuery } = require("../repository/TableOverType");
 const { getAllICCRankingQuery } = require("../repository/TableICCRanking");
 const { getAllEntitySocketsQuery } = require("../repository/TableEntitySockets");
+const { getAllCompetitionStatisticsTypeQuery } = require("../repository/TableCompetitionStatisticsType");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -238,6 +239,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllOverTypes = await getAllOverTypesQuery(fastify);
     const getAllICCRanking = await getAllICCRankingQuery(fastify);
     const getAllEntitySockets = await getAllEntitySocketsQuery(fastify);
+    const getAllCompetitionStatisticsType = await getAllCompetitionStatisticsTypeQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -326,6 +328,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblOverTypes = getAllOverTypes;
     global.tblICCRanking = getAllICCRanking;
     global.tblEntitySockets = getAllEntitySockets;
+    global.tblCompetitionStatisticsType = getAllCompetitionStatisticsType;
+
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
     // global.predictorAPILogs = predictorAPILogs;
