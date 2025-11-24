@@ -43,7 +43,7 @@ const insertCompetitionStatisticsTypeQuery = async (data, fastify, request) => {
             `
                 WITH insert_data AS (
                   INSERT INTO "tblCompetitionStatisticsType"
-                  ("wrEventTypeId", "wrTypeId", "wrName", "wrDisplayOrder", "wrKeyName", "wrDescription", "wrIsActive",
+                  ("wrEventTypeId", "wrTypeId", "wrName", "wrKeyName", "wrDisplayOrder", "wrDescription", "wrIsActive",
                    "wrCreatedBy", "wrIsDeleted")
                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                   RETURNING *
