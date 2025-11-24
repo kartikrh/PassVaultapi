@@ -762,6 +762,11 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           global.tblEntitySockets = getAllEntitySockets;
           break;
         }
+        case ModuleTypes.CompetitionStatisticsType: {
+          const getAllCompetitionStatisticsType = await getAllCompetitionStatisticsTypeQuery(fastify);
+          global.tblCompetitionStatisticsType = getAllCompetitionStatisticsType;
+          break;
+        }
         default:
           break;
       }
