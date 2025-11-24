@@ -23155,11 +23155,6 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
               global.tblOvers.push(overDetails);
             } else {
               global.tblOvers[ovIndex] = overDetails
-              // sendDataForSocketUpdate.dataToUpdate.push({
-              //   module: "commentaryOvers",
-              //   type: "update",
-              //   data: response.overdetails,
-              // });
             }
           }
           // response.overdetails = updatedData.overDetails;
@@ -23233,7 +23228,6 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
             const wickIndex = global.tblCommentaryWicket.findIndex(item => 
               item.commentaryWicketId == wicketDetails.commentaryWicketId
             )
-            // response.commentaryWicketDetails = wicketDetails
             if (wickIndex === -1) {
                 global.tblCommentaryWicket.push(wicketDetails);
                 await notiConfigContentReplaceService(
@@ -23242,18 +23236,8 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                     request,
                     fastify
                 );
-                // sendDataForSocketUpdate.dataToUpdate.push({
-                //   module: "commentaryWicket",
-                //   type: "create",
-                //   data: response.commentaryWicketDetails,
-                // });
             } else {
               global.tblCommentaryWicket[wickIndex] = wicketDetails;
-              // sendDataForSocketUpdate.dataToUpdate.push({
-              //   module: "commentaryWicket",
-              //   type: "update",
-              //   data: response.commentaryWicketDetails,
-              // });
             }
           }
           // response.commentaryWicketDetails = updatedData.commentaryWicketDetails;
@@ -23278,11 +23262,6 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
               global.tblCommentaryPartnership.push(partners);
             } else {
               global.tblCommentaryPartnership[partnerIndex] = partners;
-              // sendDataForSocketUpdate.dataToUpdate.push({
-              //   module: "commentaryPartnership",
-              //   type: "update",
-              //   data: response.commentaryPartnershipDetails,
-              // });
             }
           }
           // response.commentaryPartnershipDetails = updatedData.commentaryPartnershipDetails;

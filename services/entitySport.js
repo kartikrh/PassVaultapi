@@ -1405,8 +1405,15 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                 },
                 request
             );
-            ballByBallUp.type = "create";
-            ballbyball.push(ballByBallUp)
+            const oball = await virtualBallByBallQuery(
+                ballByBallUp,
+                request,
+                fastify
+            );
+            global.tblCommentaryBallByBall.push(oball)
+            oball.type = "create";
+            ballbyball.push(oball)
+            // ballbyball.push(ballByBallUp)
             // upOver = over;
             // update partnership
             // const newPart = genEtPartnership(
