@@ -1159,7 +1159,8 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             if (c.score && String(c.score).includes('wd')) {
               // it's a wide ball
               isWide = true;
-              const runToUpdate = +matchType.valueOfWideBall || 0;
+              // const runToUpdate = +matchType.valueOfWideBall || 0;
+              const runToUpdate = +(c?.run ?? 0);
               if(!over) {
                 over = global.tblOvers.find((i)=> i.commentaryId == comDetails.commentaryId && i.currentInnings == comDetails.currentInnings
                   && i.over == c.over
@@ -2217,7 +2218,8 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
         }
           if (b1.ballType == BALL_TYPE.WIDE  && b1.ballIsWicket == false) {
             isWide = true;
-            let run = +matchType.valueOfWideBall || 0;
+            // let run = +matchType.valueOfWideBall || 0;
+            let run = +(c?.run ?? 0);
             battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
             let previousBall = c.ball - 1;
             battingTeam.teamOver = `${c.over}.${previousBall}`
@@ -2566,7 +2568,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
         }
         if (b1.ballType == BALL_TYPE.WIDE) {
             isWide = true;
-            let run = +matchType.valueOfWideBall || 0;
+            let run = +(c?.run ?? 0);
             battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
             let previousBall = c.ball - 1;
             battingTeam.teamOver = `${c.over}.${previousBall}`
@@ -2912,7 +2914,8 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
         }
         if (b1.ballType == BALL_TYPE.WIDE && b1.ballIsWicket == false) {
             isWide = true;
-            let run = +matchType.valueOfWideBall || 0;
+            // let run = +matchType.valueOfWideBall || 0;
+            let run = +(c?.run ?? 0);
             battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
             let previousBall = c.ball - 1;
             battingTeam.teamOver = `${c.over}.${previousBall}`
