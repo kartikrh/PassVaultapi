@@ -17,14 +17,17 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
             const currentDate = new Date();
 
             for (const commentary of getAllCommentaryData) {
-                const commentaryStartTime = new Date(commentary.eventDate);
+                const eventDate = new Date(commentary.eventDate);
+                eventDate.setSeconds(0, 0);
+                const commentaryStartTime = eventDate;
+                
                 const diffHours = (commentaryStartTime - currentDate) / (1000 * 60 * 60);
 
                 for (let hour of intervalTimesForUpdateCommentary) {
                     const upper = hour;
                     const lower = hour - 0.25; // 15-minute buffer
 
-                    if (diffHours <= upper && diffHours >= lower) {
+                    if (diffHours > 0 && diffHours <= upper && diffHours >= lower) {
                         hour = hour.toFixed(0);
                         let insertAutoUpdateCommentaryData = null;
                         try {
