@@ -378,6 +378,7 @@ const setEntityCom2Service = async (request , fastify) =>{
           tossWonBy : team1.teamId,
           choseTo : tossInfo.decision,
           tossRmk : `Toss won by ${team1.teamName} and chose to Bat.`,
+          displayStatus : `Toss won by ${team1.teamName} and chose to Bat.`,
       }
       let commentaryId = comDetails.commentaryId;
       // return {
@@ -407,6 +408,7 @@ const setEntityCom2Service = async (request , fastify) =>{
                   tossWonBy: upComData.tossWonBy,
                   choseTo: upComData.choseTo,
                   tossRmk: upComData.tossRmk,
+                  displayStatus: upComData.displayStatus,
               };
               scoreResponse.scoreResponse = global.tblCommentaries[comI]
               sendDataForSocketUpdate.dataToUpdate.push({
@@ -448,7 +450,6 @@ const setEntityCom2Service = async (request , fastify) =>{
                 })),
               });
           }
-          console.log("toss socket data", sendDataForSocketUpdate)
           global.clientSocketIo.forEach((socket) => {
             socket.client.emit("updateFullscore", sendDataForSocketUpdate);
           });
@@ -510,6 +511,7 @@ const setEntityCom2Service = async (request , fastify) =>{
                 tossWonBy : team1.teamId,
                 choseTo : tossInfo.decision,
                 tossRmk : `Toss won by ${team1.teamName} and chose to Bat.`,
+                displayStatus : `Toss won by ${team1.teamName} and chose to Bat.`,
             }
             let commentaryId = comDetails.commentaryId;
             let updatedData = await fastify.db.query(
@@ -535,6 +537,7 @@ const setEntityCom2Service = async (request , fastify) =>{
                     tossWonBy: upComData.tossWonBy,
                     choseTo: upComData.choseTo,
                     tossRmk: upComData.tossRmk,
+                    displayStatus: upComData.displayStatus,
                 };
                 scoreResponse.scoreResponse = global.tblCommentaries[comI]
                 sendDataForSocketUpdate.dataToUpdate.push({
@@ -575,7 +578,6 @@ const setEntityCom2Service = async (request , fastify) =>{
                   })),
                 });
             }
-            console.log("2nd toss code", sendDataForSocketUpdate)
             global.clientSocketIo.forEach((socket) => {
               socket.client.emit("updateFullscore", sendDataForSocketUpdate);
             });
@@ -1971,6 +1973,9 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
             } else {
               over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
               over.teamScore = `${battingTeam.teamScore || 0}/${battingTeam.teamWicket || 0}`;
+              if (over) {
+                over.type = "update"
+              }
               oversMap[overKey] = over;
             }
           }
@@ -2287,6 +2292,9 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
             } else {
               over.teamScore = `${battingTeam.teamScore || 0}/${battingTeam.teamWicket || 0}`;
               over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
+              if (over) {
+                over.type = "update"
+              }
               oversMap[overKey] = over;
             }
           }
@@ -2630,6 +2638,9 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
             } else {
               over.teamScore = `${battingTeam.teamScore || 0}/${battingTeam.teamWicket || 0}`;
               over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
+              if (over) {
+                over.type = "update"
+              }
               oversMap[overKey] = over;
             }
           }
