@@ -14,9 +14,9 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
     try {
         const getAllCommentaryData = global.tblCommentaries.filter(item => item.tpId !== null && item.commentaryStatus === 1 && item.scoringType === ScoringTypes.Entity && item.isEventStart === false && new Date(item.eventDate) > new Date() && new Date(item.eventDate) <= new Date(Date.now() + 50 * 60 * 60 * 1000));
         if (getAllCommentaryData && getAllCommentaryData.length > 0) {
-            const currentDate = new Date();
-
             for (const commentary of getAllCommentaryData) {
+                const currentDate = new Date();
+                currentDate.setSeconds(0, 0);
                 const eventDate = new Date(commentary.eventDate);
                 eventDate.setSeconds(0, 0);
                 const commentaryStartTime = eventDate;
