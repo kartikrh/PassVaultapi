@@ -1257,13 +1257,40 @@ const updatePlayerHomeTeamService = async (request, fastify) => {
 
 const getPlayerCompetitionListByIdService = async (request, fastify) => {
   const playerId = request.body.playerId;
-  const checkPlayer = global.tblPlayers.find(item => item.playerId === playerId);
+  const checkPlayer = global.tblPlayers.find(p => p.playerId === playerId);
   if (!checkPlayer) {
     throw new Error(`Player with this id: ${playerId} not Found`);
   }
 
-  const result = await getPlayerCompetitionListByPlayerIdQuery(request, fastify);
-  return result;
+  const commentaryList = [];
+  const competitionList = [];
+
+  const commentaryIds = global.tblCommentaryPlayers
+    .filter(row => row.playerId === playerId && row.isInPlayingEleven === true)
+    .map(row => row.commentaryId);
+
+  const uniqueCommentaryIds = [...new Set(commentaryIds)];
+
+  const playerCommentaries = global.tblCommentaries
+    .filter(comm => uniqueCommentaryIds.includes(comm.commentaryId));
+
+  for (const comm of playerCommentaries) {
+    if (!competitionList.some(c => c.competitionId === comm.competitionId)) {
+      const competitionData = global.tblCompetitions
+        .find(cp => cp.competitionId === comm.competitionId);
+
+      if (competitionData) {
+        competitionList.push(competitionData);
+      }
+    }
+
+    commentaryList.push(comm);
+  }
+
+  return {
+    commentaryList,
+    competitionList
+  };
 };
 
 module.exports = {
