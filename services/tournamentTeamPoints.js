@@ -1,4 +1,3 @@
-const { getAutoImportDataByIdQuery, insertAutoImportDataQuery } = require("../repository/TableAutoImportData");
 const { createTeamPointLogQuery, getLogByComIdQuery } = require("../repository/TableTeamPointLogs");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { deletePlayerByTeamQuery, deleteTournamentTeamPlayersQuery, insertTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
@@ -16,8 +15,8 @@ const {
   getTournamentTeamPointsQuery,
 } = require("../repository/TableTournmentTeamPoints");
 const { callClientAPI, ServiceType, APIEndpointModuleType, callEntitySportAPI, extractGroupDataFromArray, teamRemarkType, checkEntitySportAPIEndpointIsActive } = require("../utilities");
+const { nullTeamtpIds } = require("../utilities/entityConst");
 const { errorLogger } = require("../utilities/logger");
-const { updateAutoImportDataService } = require("./autoImportData");
 
 const allTournamentTeamPointsService = async (request, fastify) => {
   const { competitionId, teamId, groupId, isActive } = request.body;
@@ -614,7 +613,8 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
 
   const checkTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(item => item.competitionId === competitionId);
 
-  for (let team of result?.teams) {
+  const filterTeamIds = (result?.teams || []).filter(team => !nullTeamtpIds.includes(team.tid));
+  for (let team of filterTeamIds) {
     const highestOrder = Math.max(...result?.rounds.map(group => group.order));
     const checkTeam = global.tblTeams.find(item => item.tpId === team?.tid);
     if (checkTeam) {
@@ -710,6 +710,13 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
           }
         }
       }
+    } else {
+      errorLogger(
+        fastify,
+        `Missing team tpId ${team?.tid}`,
+        "services/tournamentTeamPoints.js/addEditTournamentTeamPointDataService - checkTeam",
+        null
+      );
     }
   }
 }
@@ -736,7 +743,7 @@ const importUpdateTournamentTeamPointFromEntitySportService = async (data, fasti
   }
 
   await addEditTournamentTeamPointDataService(entitySportCompetitionInfoResponse, checkCompetition?.competitionId, fastify, request);
-  return true;
+  return entitySportCompetitionInfoResponse;
 };
 
 module.exports = {
