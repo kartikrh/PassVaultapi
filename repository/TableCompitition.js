@@ -16,6 +16,7 @@ const getAllCompititionQuery = async (fastify) => {
     tc."wrIsEventSnap" as "isEventSnap",
     tc."wrIsPointTable" as "isPointTable",
     tc."wrMatchTypeId" as "matchTypeId",
+    tmt."wrMatchType" as "matchType",
     tc."wrWinPoint" as "winPoint",
     tc."wrTiePoint" as "tiePoint",
     tc."wrCancelPoint" as "cancelPoint",
@@ -35,6 +36,7 @@ const getAllCompititionQuery = async (fastify) => {
     tc."wrSetOfRules" as "setOfRules"
     from "tblCompetitions" tc 
     inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
+    inner join "tblMatchTypes" tmt on tc."wrMatchTypeId" = tmt."wrMatchTypeId"
     LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
     where tc."wrIsDeleted" = false and tev."wrIsDeleted" = false
     `,
@@ -104,6 +106,7 @@ const insertCompetitionQuery = async (request, fastify) => {
         tc."wrIsEventSnap" as "isEventSnap",
         tc."wrIsPointTable" as "isPointTable",
         tc."wrMatchTypeId" as "matchTypeId",
+        tmt."wrMatchType" as "matchType",
         tc."wrWinPoint" as "winPoint",
         tc."wrTiePoint" as "tiePoint",
         tc."wrCancelPoint" as "cancelPoint",
@@ -123,6 +126,7 @@ const insertCompetitionQuery = async (request, fastify) => {
         tc."wrSetOfRules" as "setOfRules"
         from "inser_data" tc
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
+        inner join "tblMatchTypes" tmt on tc."wrMatchTypeId" = tmt."wrMatchTypeId"
         LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
     `,
       {
@@ -195,6 +199,7 @@ const updateTpIdCompQuery = async (data, fastify, request) => {
         ud."wrIsEventSnap" AS "isEventSnap",
         ud."wrIsPointTable" AS "isPointTable",
         ud."wrMatchTypeId" AS "matchTypeId",
+        tmt."wrMatchType" as "matchType",
         ud."wrWinPoint" AS "winPoint",
         ud."wrTiePoint" AS "tiePoint",
         ud."wrCancelPoint" AS "cancelPoint",
@@ -210,6 +215,7 @@ const updateTpIdCompQuery = async (data, fastify, request) => {
         ud."wrTpId" AS "tpId"
       FROM update_data ud
       INNER JOIN "tblEventTypes" tev ON ud."wrEventTypeId" = tev."wrEventTypeId"
+      INNER JOIN "tblMatchTypes" tmt ON ud."wrMatchTypeId" = tmt."wrMatchTypeId"
       `,
       {
         bind: [
@@ -302,6 +308,7 @@ const updateCompititionQuery = async (data, fastify, request) => {
         tc."wrIsEventSnap" as "isEventSnap",
         tc."wrIsPointTable" as "isPointTable",
         tc."wrMatchTypeId" as "matchTypeId",
+        tmt."wrMatchType" as "matchType",
         tc."wrWinPoint" as "winPoint",
         tc."wrTiePoint" as "tiePoint",
         tc."wrCancelPoint" as "cancelPoint",
@@ -321,6 +328,7 @@ const updateCompititionQuery = async (data, fastify, request) => {
         tc."wrSetOfRules" as "setOfRules"
       from "update_data" tc
       inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
+      inner join "tblMatchTypes" tmt on tc."wrMatchTypeId" = tmt."wrMatchTypeId"
       LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
       `,
       {
@@ -390,6 +398,7 @@ const updateDisplayOrderQuery = async (data, fastify, request) => {
         u."wrIsEventSnap" as "isEventSnap",
         u."wrIsPointTable" as "isPointTable",
         u."wrMatchTypeId" as "matchTypeId",
+        tmt."wrMatchType" as "matchType",
         u."wrWinPoint" as "winPoint",
         u."wrTiePoint" as "tiePoint",
         u."wrCancelPoint" as "cancelPoint",
@@ -407,6 +416,7 @@ const updateDisplayOrderQuery = async (data, fastify, request) => {
         tpa."wrDeveloperName" as "developerName"
       FROM updated u
       INNER JOIN "tblEventTypes" et ON u."wrEventTypeId" = et."wrEventTypeId"
+      INNER JOIN "tblMatchTypes" tmt on u."wrMatchTypeId" = tmt."wrMatchTypeId"
       LEFT JOIN "tblPythonAPI" tpa on u."wrPythonId" = tpa."wrId"
       `,
       {
@@ -704,6 +714,7 @@ const insertCompetitionWithImportQuery = async (data, request, fastify) => {
         tc."wrIsEventSnap" as "isEventSnap",
         tc."wrIsPointTable" as "isPointTable",
         tc."wrMatchTypeId" as "matchTypeId",
+        tmt."wrMatchType" as "matchType",
         tc."wrWinPoint" as "winPoint",
         tc."wrTiePoint" as "tiePoint",
         tc."wrCancelPoint" as "cancelPoint",
@@ -722,6 +733,7 @@ const insertCompetitionWithImportQuery = async (data, request, fastify) => {
         tpa."wrDeveloperName" as "developerName"
         from "inser_data" tc
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
+        inner join "tblMatchTypes" tmt on tc."wrMatchTypeId" = tmt."wrMatchTypeId"
         LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
     `,
       {
@@ -856,6 +868,7 @@ const getAllCompetitionByIdsQuery = async (whereCondition = undefined, fastify) 
           tc."wrIsEventSnap" as "isEventSnap",
           tc."wrIsPointTable" as "isPointTable",
           tc."wrMatchTypeId" as "matchTypeId",
+          tmt."wrMatchType" as "matchType",
           tc."wrWinPoint" as "winPoint",
           tc."wrTiePoint" as "tiePoint",
           tc."wrCancelPoint" as "cancelPoint",
@@ -874,6 +887,7 @@ const getAllCompetitionByIdsQuery = async (whereCondition = undefined, fastify) 
           tpa."wrDeveloperName" as "developerName"
       FROM "tblCompetitions" tc 
       INNER JOIN "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
+      INNER JOIN "tblMatchTypes" tmt on tc."wrMatchTypeId" = tmt."wrMatchTypeId"
       LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
       ${whereCondition ? `WHERE ${whereCondition}` : 'WHERE tc."wrIsDeleted" = false and tev."wrIsDeleted" = false'}`,
       {
@@ -910,6 +924,7 @@ const getCompetitionByIdsQuery = async (data , request , fastify)=>{
         tc."wrIsEventSnap" as "isEventSnap",
         tc."wrIsPointTable" as "isPointTable",
         tc."wrMatchTypeId" as "matchTypeId",
+        tmt."wrMatchType" as "matchType",
         tc."wrWinPoint" as "winPoint",
         tc."wrTiePoint" as "tiePoint",
         tc."wrCancelPoint" as "cancelPoint",
@@ -928,6 +943,7 @@ const getCompetitionByIdsQuery = async (data , request , fastify)=>{
         tpa."wrDeveloperName" as "developerName"
         from "tblCompetitions" tc 
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
+        inner join "tblMatchTypes" tmt on tc."wrMatchTypeId" = tmt."wrMatchTypeId"
         LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
         where tc."wrIsDeleted" = false and tev."wrIsDeleted" = false
         AND tc."wrCompetitionId" = ANY($1)

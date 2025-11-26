@@ -1280,11 +1280,36 @@ const getPlayerCompetitionListByIdService = async (request, fastify) => {
         .find(cp => cp.competitionId === comm.competitionId);
 
       if (competitionData) {
-        competitionList.push(competitionData);
+        const { competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, startDate, endDate, commStatus } = competitionData;
+        competitionList.push({
+          competitionId,
+          competition,
+          eventTypeId,
+          eventType,
+          matchTypeId,
+          matchType,
+          tpId,
+          startDate,
+          endDate,
+          commStatus
+        });
       }
     }
 
-    commentaryList.push(comm);
+    const { commentaryId, competitionId, eventTypeId, eventType, competition, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus } = comm;
+    commentaryList.push({
+      commentaryId,
+      competitionId,
+      competition,
+      eventTypeId,
+      eventType,
+      matchTypeId,
+      matchType,
+      tpId,
+      eventName,
+      eventDate,
+      commentaryStatus
+    });
   }
 
   return {
