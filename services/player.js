@@ -1270,8 +1270,8 @@ const getPlayerCompetitionListByIdService = async (request, fastify) => {
 
   const playerCommentaries = global.tblCommentaries
     ?.filter(comm => uniqueCommentaryIds.includes(comm.commentaryId))
-    ?.map(({ commentaryId, competitionId, eventTypeId, eventType, competition, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus }) =>
-      ({ commentaryId, competitionId, eventTypeId, eventType, competition, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus })
+    ?.map(({ commentaryId, competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus }) =>
+      ({ commentaryId, competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus })
     );
 
   const competitionsIds = global.tblTournamentTeamPlayers
