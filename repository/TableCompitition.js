@@ -36,7 +36,7 @@ const getAllCompititionQuery = async (fastify) => {
     tc."wrSetOfRules" as "setOfRules"
     from "tblCompetitions" tc 
     inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
-    inner join "tblMatchTypes" tmt on tc."wrMatchTypeId" = tmt."wrMatchTypeId"
+    LEFT JOIN "tblMatchTypes" tmt on tc."wrMatchTypeId" = tmt."wrMatchTypeId"
     LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
     where tc."wrIsDeleted" = false and tev."wrIsDeleted" = false
     `,
@@ -126,7 +126,7 @@ const insertCompetitionQuery = async (request, fastify) => {
         tc."wrSetOfRules" as "setOfRules"
         from "inser_data" tc
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
-        inner join "tblMatchTypes" tmt on tc."wrMatchTypeId" = tmt."wrMatchTypeId"
+        LEFT JOIN "tblMatchTypes" tmt on tc."wrMatchTypeId" = tmt."wrMatchTypeId"
         LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
     `,
       {
@@ -215,7 +215,7 @@ const updateTpIdCompQuery = async (data, fastify, request) => {
         ud."wrTpId" AS "tpId"
       FROM update_data ud
       INNER JOIN "tblEventTypes" tev ON ud."wrEventTypeId" = tev."wrEventTypeId"
-      INNER JOIN "tblMatchTypes" tmt ON ud."wrMatchTypeId" = tmt."wrMatchTypeId"
+      LEFT JOIN "tblMatchTypes" tmt ON ud."wrMatchTypeId" = tmt."wrMatchTypeId"
       `,
       {
         bind: [
@@ -328,7 +328,7 @@ const updateCompititionQuery = async (data, fastify, request) => {
         tc."wrSetOfRules" as "setOfRules"
       from "update_data" tc
       inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
-      inner join "tblMatchTypes" tmt on tc."wrMatchTypeId" = tmt."wrMatchTypeId"
+      LEFT JOIN "tblMatchTypes" tmt on tc."wrMatchTypeId" = tmt."wrMatchTypeId"
       LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
       `,
       {
@@ -416,7 +416,7 @@ const updateDisplayOrderQuery = async (data, fastify, request) => {
         tpa."wrDeveloperName" as "developerName"
       FROM updated u
       INNER JOIN "tblEventTypes" et ON u."wrEventTypeId" = et."wrEventTypeId"
-      INNER JOIN "tblMatchTypes" tmt on u."wrMatchTypeId" = tmt."wrMatchTypeId"
+      LEFT JOIN "tblMatchTypes" tmt on u."wrMatchTypeId" = tmt."wrMatchTypeId"
       LEFT JOIN "tblPythonAPI" tpa on u."wrPythonId" = tpa."wrId"
       `,
       {
@@ -733,7 +733,7 @@ const insertCompetitionWithImportQuery = async (data, request, fastify) => {
         tpa."wrDeveloperName" as "developerName"
         from "inser_data" tc
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
-        inner join "tblMatchTypes" tmt on tc."wrMatchTypeId" = tmt."wrMatchTypeId"
+        LEFT JOIN "tblMatchTypes" tmt on tc."wrMatchTypeId" = tmt."wrMatchTypeId"
         LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
     `,
       {
@@ -887,7 +887,7 @@ const getAllCompetitionByIdsQuery = async (whereCondition = undefined, fastify) 
           tpa."wrDeveloperName" as "developerName"
       FROM "tblCompetitions" tc 
       INNER JOIN "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
-      INNER JOIN "tblMatchTypes" tmt on tc."wrMatchTypeId" = tmt."wrMatchTypeId"
+      LEFT JOIN "tblMatchTypes" tmt on tc."wrMatchTypeId" = tmt."wrMatchTypeId"
       LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
       ${whereCondition ? `WHERE ${whereCondition}` : 'WHERE tc."wrIsDeleted" = false and tev."wrIsDeleted" = false'}`,
       {
@@ -943,7 +943,7 @@ const getCompetitionByIdsQuery = async (data , request , fastify)=>{
         tpa."wrDeveloperName" as "developerName"
         from "tblCompetitions" tc 
         inner join "tblEventTypes" tev on tc."wrEventTypeId" = tev."wrEventTypeId"
-        inner join "tblMatchTypes" tmt on tc."wrMatchTypeId" = tmt."wrMatchTypeId"
+        LEFT JOIN "tblMatchTypes" tmt on tc."wrMatchTypeId" = tmt."wrMatchTypeId"
         LEFT JOIN "tblPythonAPI" tpa on tc."wrPythonId" = tpa."wrId"
         where tc."wrIsDeleted" = false and tev."wrIsDeleted" = false
         AND tc."wrCompetitionId" = ANY($1)

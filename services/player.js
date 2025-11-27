@@ -1262,59 +1262,33 @@ const getPlayerCompetitionListByIdService = async (request, fastify) => {
     throw new Error(`Player with this id: ${playerId} not Found`);
   }
 
-  const commentaryList = [];
-  const competitionList = [];
-
   const commentaryIds = global.tblCommentaryPlayers
-    .filter(row => row.playerId === playerId && row.isInPlayingEleven === true)
-    .map(row => row.commentaryId);
+    ?.filter(tcp => tcp.playerId === playerId)
+    ?.map(tcp => tcp.commentaryId);
 
   const uniqueCommentaryIds = [...new Set(commentaryIds)];
 
   const playerCommentaries = global.tblCommentaries
-    .filter(comm => uniqueCommentaryIds.includes(comm.commentaryId));
+    ?.filter(comm => uniqueCommentaryIds.includes(comm.commentaryId))
+    ?.map(({ commentaryId, competitionId, eventTypeId, eventType, competition, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus }) =>
+      ({ commentaryId, competitionId, eventTypeId, eventType, competition, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus })
+    );
 
-  for (const comm of playerCommentaries) {
-    if (!competitionList.some(c => c.competitionId === comm.competitionId)) {
-      const competitionData = global.tblCompetitions
-        .find(cp => cp.competitionId === comm.competitionId);
+  const competitionsIds = global.tblTournamentTeamPlayers
+    ?.filter(ttp => ttp.playerId == playerId)
+    ?.map(ttp => ttp.competitionId);
 
-      if (competitionData) {
-        const { competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, startDate, endDate, commStatus } = competitionData;
-        competitionList.push({
-          competitionId,
-          competition,
-          eventTypeId,
-          eventType,
-          matchTypeId,
-          matchType,
-          tpId,
-          startDate,
-          endDate,
-          commStatus
-        });
-      }
-    }
+  const uniqueCompetitionIds = [...new Set(competitionsIds)];
 
-    const { commentaryId, competitionId, eventTypeId, eventType, competition, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus } = comm;
-    commentaryList.push({
-      commentaryId,
-      competitionId,
-      competition,
-      eventTypeId,
-      eventType,
-      matchTypeId,
-      matchType,
-      tpId,
-      eventName,
-      eventDate,
-      commentaryStatus
-    });
-  }
+  const competitionDetails = global.tblCompetitions
+    ?.filter(tc => uniqueCompetitionIds.includes(tc.competitionId))
+    ?.map(({ competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, startDate, endDate, commStatus }) =>
+      ({ competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, startDate, endDate, commStatus })
+    );
 
   return {
-    commentaryList,
-    competitionList
+    commentaryList: playerCommentaries,
+    competitionList: competitionDetails
   };
 };
 
