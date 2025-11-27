@@ -16,18 +16,21 @@ const autoUpdateTournamentTeamPoints = async (fastify) => {
         })
 
         for (const competition of competitionList) {
+            const request = {
+                userTokenInfo: {
+                    WrUserId: -2
+                }
+            }
             const result = await importUpdateTournamentTeamPointFromEntitySportService({
                 cid: competition.tpId
-            }, fastify, null);
+            }, fastify, request);
             const entityCompetitionStatus = compStatus[result?.status]
             if (entityCompetitionStatus !== competition.commStatus) {
                 await saveCompetitionService({
+                    ...request,
                     body: {
                         ...competition,
                         commStatus: entityCompetitionStatus
-                    },
-                    userTokenInfo: {
-                        WrUserId: -2
                     }
                 }, fastify);
             }
