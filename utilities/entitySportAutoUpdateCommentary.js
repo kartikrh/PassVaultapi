@@ -259,16 +259,23 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                         global.tblCommentaryTeams.push(teamACommentaryTeam, teamBCommentaryTeam);
                                     }
 
-                                    await insertCommentaryPlayersByTeam(i, commentary.commentaryId, team1Id, teamASquad, entitySportMatchResponse?.players, matchType?.matchTypeId, getTeamIsMen, fastify, {
+                                    const teamAUpdated = await insertCommentaryPlayersByTeam(i, commentary.commentaryId, team1Id, teamASquad, entitySportMatchResponse?.players, matchType?.matchTypeId, getTeamIsMen, fastify, {
                                         userTokenInfo: {
                                             WrUserId: -2
                                         }
                                     });
-                                    await insertCommentaryPlayersByTeam(i, commentary.commentaryId, team2Id, teamBSquad, entitySportMatchResponse?.players, matchType?.matchTypeId, getTeamIsMen, fastify, {
+                                    if (teamAUpdated) {
+                                        isChanged = true;
+                                    }
+
+                                    const teamBUpdated = await insertCommentaryPlayersByTeam(i, commentary.commentaryId, team2Id, teamBSquad, entitySportMatchResponse?.players, matchType?.matchTypeId, getTeamIsMen, fastify, {
                                         userTokenInfo: {
                                             WrUserId: -2
                                         }
                                     });
+                                    if (teamBUpdated) {
+                                        isChanged = true;
+                                    }
                                 }
 
                                 if (entitySportMatchResponse?.weather && entitySportMatchResponse?.weather.length > 0) {
@@ -290,6 +297,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                         const index = global.tblWeather.findIndex(item => item?.commentaryId === commentary.commentaryId);
                                         if (index !== -1) {
                                             global.tblWeather[index] = updateWeather[0]
+                                            isChanged = true;
                                         } else {
                                             global.tblWeather.push(updateWeather[0]);
                                         }
@@ -307,6 +315,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                         };
                                         const insertWeather = await insertWeatherQuery(weatherData, fastify, null);
                                         global.tblWeather.push(insertWeather);
+                                        isChanged = true;
                                     }
                                 }
 
@@ -324,8 +333,8 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                         const updatePitch = await updatePitchConditionQuery(pitchConditionData, fastify, null);
                                         const index = global.tblPitchConditions.findIndex(item => item?.commentaryId === commentary.commentaryId);
                                         if (index !== -1) {
-                                            isChanged = true;
                                             global.tblPitchConditions[index] = updatePitch[0]
+                                            isChanged = true;
                                         } else {
                                             global.tblPitchConditions.push(updatePitch[0]);
                                         }
