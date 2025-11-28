@@ -1775,6 +1775,18 @@ const onInningChangeService = async (data, fastify, comDetails) => {
   const {response} = data;
   const teams = global.tblCommentaryTeams.filter((i) =>i.commentaryId == comDetails.commentaryId &&
   i.currentInnings == comDetails.currentInnings)  
+  // chekc if one of the team bat is completed
+  let oneTeamWon = teams.find((i)=>i.isBattingComplete == true);
+  if(oneTeamWon){
+    errorLogger(
+      fastify,          
+      "Inning already Changed again got inning break status",
+      "services/entitySport.js/onInningChangeService",
+      null,
+      data
+    )
+    return true;
+  } 
   let batTeam = teams.find((i) => i.teamStatus ==1)
   let bowlTeam = teams.find((i)=> i.teamStatus == 2)
   let matchType = global.tblMatchTypes.find((i)=> i.matchTypeId == comDetails.matchTypeId)
