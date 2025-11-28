@@ -23305,11 +23305,21 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
           global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
             (item) => !deleteBallByBallIds.includes(item?.commentaryBallByBallId)
           );
+          response.deleteBallByBallIds = true;
+          sendDataForSocketUpdate.dataToUpdate.push({
+            module: "deleteOverWicketParnerBallIds",
+            data: { commentaryBallByBallId: deleteBallByBallIds },
+          });
         }
         if (deleteOverIds && deleteOverIds.length > 0) {
           global.tblOvers = global.tblOvers.filter(
             (item) => !deleteOverIds.includes(item?.overId)
           );
+          response.deleteOverIds = true;
+          sendDataForSocketUpdate.dataToUpdate.push({
+            module: "deleteOverIds",
+            data: { overId: deleteOverIds },
+          });
         }
         // call the getscore and emit the event data
         if (

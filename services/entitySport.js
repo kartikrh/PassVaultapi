@@ -301,6 +301,7 @@ const saveTournamentTeamPlayerService = async (request, fastify) => {
     return "Tournament Team Players Data Updated successfully."
 }
 const setEntityCom2Service = async (request , fastify) =>{
+  let matchID = request.body?.response?.match_id
   try {
         const {response} = request.body
     // await new Promise((r) => setTimeout(r, 5000));
@@ -845,8 +846,8 @@ const setEntityCom2Service = async (request , fastify) =>{
   } catch (error) {
     errorLogger(
       fastify,
-      // `${error.message}-${response?.match_id}`,
-      error.message,
+      `${error.message}-${matchID}`,
+      // error.message,
       "Error --> services/entitySport.js/setEntityCom2servie",
       null,
       request.body
