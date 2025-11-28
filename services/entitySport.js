@@ -845,7 +845,7 @@ const setEntityCom2Service = async (request , fastify) =>{
   } catch (error) {
     errorLogger(
       fastify,
-      error.message,
+      `${error.message}-${response?.match_id}`,
       "Error --> services/entitySport.js/setEntityCom2servie",
       null,
       request.body
@@ -1735,13 +1735,56 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           }
         }
         upTeams = [battingTeam, bowlingTeam]
-        upComDetails.displayStatus = c.commentary;
+        // upComDetails.displayStatus = c.commentary;
       }
     }
     // console.log(oversMap)
     let plyArr = Object.values(playersMap);
     let overArr = Object.values(oversMap)
-   
+    if (commentaries?.length > 0) {
+      let displayData = {}
+      let latestBall = commentaries.filter(c => c.event != "overend").at(-1);
+      const currentBall = global.tblCommentaryBallByBall.find(item => 
+        item.tpId == latestBall?.event_id
+      );
+      if(currentBall) {
+        displayData.currentBall = currentBall
+      }
+      if (latestBall && String(latestBall?.score) == "w") {
+        // // onStrike player code
+        // const currentInning = response?.scorecard?.innings?.find(
+        //   i => i.number == response?.live?.live_inning_number
+        // );
+        // const batter = currentInning?.batsmen?.find(
+        //   b => b.position == "striker" && b.batting == "true"
+        // );
+        
+        if (latestBall?.wicket_batsman_id) {
+          const onStrike = plyArr.find(item => item.tpId == latestBall?.wicket_batsman_id);
+          if (onStrike) {
+            displayData.playerSwitch = null;
+            displayData.onStrikePlayer = onStrike;
+          }
+        }
+      }
+      if (Object.keys(displayData).length > 0) {
+        const commDisplayStatus = await generateDisplayStatus(displayData);
+        upComDetails.displayStatus = commDisplayStatus;
+      }
+      let overEndBall = commentaries.at(-1)?.event === "overend"
+      if (overEndBall) {
+        upTeams = upTeams.map(item => {
+          if(item.teamId == battingTeam.teamId) {
+            const newOver = Math.ceil(Number(item.teamOver || 0));
+            return {
+              ...item,
+              teamOver: `${newOver}`
+            };
+          }
+          return item;
+        })
+      }
+    }
 
     await syncEntitySportCommentaryService({
       commentaryId : comDetails.commentaryId,
