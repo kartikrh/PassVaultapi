@@ -1146,7 +1146,7 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
   return `Player data updated successfully`;
 };
 
-const playerImportService = async (data, fastify, request = null) => {
+const playerImportService = async (data, fastify, request) => {
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getPlayerDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
     errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/player.js/playerImportService - checkEntitySportAPIEndpoint", request);
