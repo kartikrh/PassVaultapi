@@ -1967,6 +1967,20 @@ const Player = {
       },
     },
   },
+  getPlayerPlayInCommentaryListById: {
+    schema: {
+      tags: ["Player"],
+      security: [{ bearerAuth: [] }],
+      description: "get Player play in commentary list by id",
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+        },
+        required: ["playerId"],
+      },
+    },
+  }
 };
 
 const MatchType = {

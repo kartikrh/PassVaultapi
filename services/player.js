@@ -1292,6 +1292,29 @@ const getPlayerCompetitionListByIdService = async (request, fastify) => {
   };
 };
 
+const getPlayerPlayInCommentaryListByIdService = async (request, fastify) => {
+  const playerId = request.body.playerId;
+
+  const checkPlayer = global.tblPlayers.find(p => p.playerId === playerId);
+  if (!checkPlayer) {
+    throw new Error(`Player with this id: ${playerId} not Found`);
+  }
+
+  const commentaryIds = (global.tblCommentaryPlayers ?? [])
+    .filter(tcp => tcp.playerId === playerId && tcp.isPlayInEvent === true)
+    .map(tcp => tcp.commentaryId);
+
+  const uniqueCommentaryIds = [...new Set(commentaryIds)];
+
+  const playerCommentaries = (global.tblCommentaries ?? [])
+    .filter(comm => uniqueCommentaryIds.includes(comm.commentaryId))
+    .map(({ commentaryId, competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus }) => ({
+      commentaryId, competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus
+    }));
+
+  return playerCommentaries;
+};
+
 module.exports = {
   allPlayerService,
   playerByIdService,
@@ -1312,5 +1335,6 @@ module.exports = {
   allPlayersMergeImageService,
   mergePlayerNullImageService,
   updatePlayerHomeTeamService,
-  getPlayerCompetitionListByIdService
+  getPlayerCompetitionListByIdService,
+  getPlayerPlayInCommentaryListByIdService
 };
