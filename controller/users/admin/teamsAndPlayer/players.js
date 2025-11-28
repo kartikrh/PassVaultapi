@@ -18,6 +18,7 @@ const {
   mergePlayerNullImageService,
   updatePlayerHomeTeamService,
   getPlayerCompetitionListByIdService,
+  getPlayerPlayInCommentaryListByIdService,
 } = require("../../../../services/player");
 const { errorLogger } = require("../../../../utilities/logger");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
@@ -238,6 +239,16 @@ const getPlayerCompetitionListById = async (request, reply, fastify) => {
   }
 };
 
+const getPlayerPlayInCommentaryListById = async (request, reply, fastify) => {
+  try {
+    const result = await getPlayerPlayInCommentaryListByIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getPlayerPlayInCommentaryListById", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 module.exports = {
   getAllPlayers,
   getPlayerById,
@@ -258,5 +269,6 @@ module.exports = {
   allPlayersMergeImage,
   mergePlayerNullImage,
   updatePlayerHomeTeam,
-  getPlayerCompetitionListById
+  getPlayerCompetitionListById,
+  getPlayerPlayInCommentaryListById
 };
