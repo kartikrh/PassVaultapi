@@ -45,6 +45,7 @@ const { entitySportAutoUpdateCommentary } = require("./utilities/entitySportAuto
 const { entitySportAutoUpdateCommentaryTime } = require("./utilities/entityConst.js");
 const { autoUpdatePlayerStatisticsDataProcess } = require("./utilities/autoUpdatePlayerStatisticsData.js");
 const { ISPLAYERCALCULATIONON } = require("./utilities/configConstants.js");
+const { autoUpdateTournamentTeamPoints } = require("./utilities/autoUpdateTournamentTeamPoints.js");
 // const { nodeProfilingIntegration } = require('@sentry/profiling-node');
 // const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 // Pass --options via CLI arguments in command to enable these options.
@@ -117,7 +118,7 @@ module.exports = async function (fastify, opts) {
         "marketTemplateModel", "eventMarketsModel", "marketRunnerModel", "marketTemplateRunnerModel", 
         "vendorsModel", "vendorIpModel", "clientSocketModel", "activityLogModel", "mailSettingsModel", 
         "thirdPartyApisModel", "commentaryScoringLogsModel", "clientVideoModel", "awardModel", "commentaryAwardModel","cardTypeModel",
-        "iccRankingModel"
+        "iccRankingModel", "competitionStatisticsTypeModel"
       ];
       
       models.forEach((model) => require(`./sequelize/tables/${model}`)(fastify.db));
@@ -184,6 +185,16 @@ module.exports = async function (fastify, opts) {
         }
       } catch (error) {
         console.error("Error during scheduled task - autoUpdatePlayerStatisticsDataProcess:", error);
+      }
+    });
+
+    cron.schedule('0 0 * * *', async () => {
+      try {
+        if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
+          await autoUpdateTournamentTeamPoints(fastify);
+        }
+      } catch (error) {
+        console.error("Error during scheduled task - autoUpdateTournamentTeamPoints:", error);
       }
     });
 

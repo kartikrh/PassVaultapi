@@ -1257,13 +1257,39 @@ const updatePlayerHomeTeamService = async (request, fastify) => {
 
 const getPlayerCompetitionListByIdService = async (request, fastify) => {
   const playerId = request.body.playerId;
-  const checkPlayer = global.tblPlayers.find(item => item.playerId === playerId);
+
+  const checkPlayer = global.tblPlayers.find(p => p.playerId === playerId);
   if (!checkPlayer) {
     throw new Error(`Player with this id: ${playerId} not Found`);
   }
 
-  const result = await getPlayerCompetitionListByPlayerIdQuery(request, fastify);
-  return result;
+  const commentaryIds = (global.tblCommentaryPlayers ?? [])
+    .filter(tcp => tcp.playerId === playerId)
+    .map(tcp => tcp.commentaryId);
+
+  const uniqueCommentaryIds = [...new Set(commentaryIds)];
+
+  const playerCommentaries = (global.tblCommentaries ?? [])
+    .filter(comm => uniqueCommentaryIds.includes(comm.commentaryId))
+    .map(({ commentaryId, competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus }) => ({
+      commentaryId, competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus
+    }));
+
+  const uniqueCompetitionIds = [...new Set([
+    ...(global.tblTournamentTeamPlayers ?? []).filter(ttp => ttp.playerId == playerId).map(ttp => ttp.competitionId),
+    ...playerCommentaries.map(pc => pc.competitionId)
+  ])];
+
+  const competitionDetails = (global.tblCompetitions ?? [])
+    .filter(tc => uniqueCompetitionIds.includes(tc.competitionId))
+    .map(({ competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, startDate, endDate, commStatus }) => ({
+      competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, startDate, endDate, commStatus
+    }));
+
+  return {
+    commentaryList: playerCommentaries,
+    competitionList: competitionDetails
+  };
 };
 
 module.exports = {

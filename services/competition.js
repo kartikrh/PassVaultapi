@@ -1119,6 +1119,8 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
       }
     }
   }
+
+  return isAllPlaying11;
 }
 
 const competitionImportService = async (data, fastify, request) => {
