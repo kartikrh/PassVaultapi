@@ -845,7 +845,8 @@ const setEntityCom2Service = async (request , fastify) =>{
   } catch (error) {
     errorLogger(
       fastify,
-      `${error.message}-${response?.match_id}`,
+      // `${error.message}-${response?.match_id}`,
+      error.message,
       "Error --> services/entitySport.js/setEntityCom2servie",
       null,
       request.body
