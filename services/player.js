@@ -27,7 +27,7 @@ const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { deleteTournamentPlayersByPlayerIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteAwardsByPlayerIdQuery } = require("../repository/TableCommentaryAward");
-const { bowlingStyleChangeOnCommPlayersQuery } = require("../repository/TableCommentary");
+const { bowlingStyleChangeOnCommPlayersQuery, deleteCommentaryPlayerById } = require("../repository/TableCommentary");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const configConstants = require("../utilities/configConstants");
 const { trimTextData, callEntitySportAPI, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, RefType, EventType, checkEntitySportAPIEndpointIsActive, ICCMatchType } = require("../utilities/index");
@@ -590,6 +590,24 @@ const updateIsSystemPlayerService = async (request, fastify) => {
 const deletePlayerService = async (request, fastify) => {
   const { playerId } = request.body;
 
+  for (const pId of playerId) {
+    const getPlayerData = global.tblPlayers.find(tp => tp.playerId === pId);
+    const checkCommentaryPlayer = global.tblCommentaryPlayers.find(tcp => tcp.playerId === pId);
+    if (checkCommentaryPlayer) {
+      throw new Error(`'${getPlayerData?.playerName}' player is in commentary/s and cannot be deleted at this moment`);
+    }
+
+    const checkTournamentTeamPlayer = global.tblTournamentTeamPlayers.find(tttp => tttp.playerId === playerId);
+    if (checkTournamentTeamPlayer) {
+      throw new Error(`'${getPlayerData?.playerName}' player is in tournament/s and cannot be deleted at this moment`);
+    }
+
+    const checkTeamPlayer = await getTeamPlayerByPlayerIdQuery(pId, fastify, request);
+    if (checkTeamPlayer) {
+      throw new Error(`'${getPlayerData?.playerName}' player is in team/s and cannot be deleted at this moment`);
+    }
+  }
+
   for (const id of playerId) {
   const teamPlayersData = await getTeamPlayerByPlayerIdQuery(id, fastify, request);
     for (const playerData of teamPlayersData) {
@@ -610,6 +628,21 @@ const deletePlayerService = async (request, fastify) => {
       });
     }
   }
+
+  const getPlayerCommentary = global.tblCommentaryPlayers.filter(tcp => playerId.includes(tcp.playerId));
+  for (const commentary of getPlayerCommentary) {
+    await deleteCommentaryPlayerById({
+      commentaryPlayerId: commentary.commentaryPlayerId
+    }, request, fastify);
+    global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(tcp => !(tcp.commentaryPlayerId === commentary.commentaryPlayerId));
+
+    if (commentary?.jerseyPlayerImage) {
+      await removeImageFromServer({
+        path: commentary.jerseyPlayerImage,
+      });
+    }
+  }
+
   await deleteTournamentPlayersByPlayerIdQuery(playerId, request, fastify);
   await deleteAwardsByPlayerIdQuery(playerId, request, fastify);
   await deletePlayerQuery(playerId, fastify, request);
