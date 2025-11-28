@@ -27,7 +27,7 @@ const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { deleteTournamentPlayersByPlayerIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteAwardsByPlayerIdQuery } = require("../repository/TableCommentaryAward");
-const { bowlingStyleChangeOnCommPlayersQuery } = require("../repository/TableCommentary");
+const { bowlingStyleChangeOnCommPlayersQuery, deleteCommentaryPlayersByPlayerId } = require("../repository/TableCommentary");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const configConstants = require("../utilities/configConstants");
 const { trimTextData, callEntitySportAPI, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, RefType, EventType, checkEntitySportAPIEndpointIsActive, ICCMatchType } = require("../utilities/index");
@@ -610,6 +610,21 @@ const deletePlayerService = async (request, fastify) => {
       });
     }
   }
+
+  const getPlayerCommentary = global.tblCommentaryPlayers.filter(tcp => playerId.includes(tcp.playerId));
+  for (const commentary of getPlayerCommentary) {
+    await deleteCommentaryPlayersByPlayerId({
+      commentaryId: commentary.commentaryId,
+      playerIds: playerId
+    }, request, fastify);
+
+    if (commentary?.jerseyPlayerImage) {
+      await removeImageFromServer({
+        path: commentary.jerseyPlayerImage,
+      });
+    }
+  }
+
   await deleteTournamentPlayersByPlayerIdQuery(playerId, request, fastify);
   await deleteAwardsByPlayerIdQuery(playerId, request, fastify);
   await deletePlayerQuery(playerId, fastify, request);
