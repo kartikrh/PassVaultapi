@@ -844,6 +844,7 @@ const setEntityCom2Service = async (request , fastify) =>{
     return true;
 
   } catch (error) {
+    console.log("error", error);
     errorLogger(
       fastify,
       `${error.message}-${matchID}`,
