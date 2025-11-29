@@ -2277,13 +2277,14 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           if (b1.ballType == BALL_TYPE.WIDE  && b1.ballIsWicket == false) {
             isWide = true;
             // let run = +matchType.valueOfWideBall || 0;
-            let run = +(c?.run ?? 0);
+            // let run = +(c?.run ?? 0);
+            let run = b1?.ballExtraRun ?? 0;
             battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
             let previousBall = c.ball - 1;
             battingTeam.teamOver = `${c.over}.${previousBall}`
-            battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - 1 : 0;
+            battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - run : 0;
             over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
-            over.totalRun = over.totalRun > 0 ? over.totalRun - 1 : 0;
+            over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
             over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
             over.totalWideBall = over.totalWideBall > 0 ? over.totalWideBall - 1 : 0;
             over.totalWideRun = over.totalWideRun > 0 ? over.totalWideRun - run : 0;
@@ -2300,7 +2301,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
             playersMap[tpBall.bowler_id].bowlerWideBall = playersMap[tpBall.bowler_id].bowlerWideBall > 0 ? playersMap[tpBall.bowler_id].bowlerWideBall - 1 : 0;
             playersMap[tpBall.bowler_id].bowlerWideBallRun = playersMap[tpBall.bowler_id].bowlerWideBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerWideBallRun - run : 0;
             playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
-            playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - run : 0;
+            playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
 
             if (over.ballCount === 0) {
               deleteOverIds.push(over.overId);
@@ -2626,13 +2627,14 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
         }
         if (b1.ballType == BALL_TYPE.WIDE) {
             isWide = true;
-            let run = +(c?.run ?? 0);
+            // let run = +(c?.run ?? 0);
+            let run = b1?.ballExtraRun ?? 0;
             battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
             let previousBall = c.ball - 1;
             battingTeam.teamOver = `${c.over}.${previousBall}`
-            battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - 1 : 0;
+            battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - run : 0;
             over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
-            over.totalRun = over.totalRun > 0 ? over.totalRun - 1 : 0;
+            over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
             over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
             over.totalWideBall = over.totalWideBall > 0 ? over.totalWideBall - 1 : 0;
             over.totalWideRun = over.totalWideRun > 0 ? over.totalWideRun - run : 0;
@@ -2649,7 +2651,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
             playersMap[tpBall.bowler_id].bowlerWideBall = playersMap[tpBall.bowler_id].bowlerWideBall > 0 ? playersMap[tpBall.bowler_id].bowlerWideBall - 1 : 0;
             playersMap[tpBall.bowler_id].bowlerWideBallRun = playersMap[tpBall.bowler_id].bowlerWideBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerWideBallRun - run : 0;
             playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
-            playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - run : 0;
+            playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
             
             if (over.ballCount === 0) {
               deleteOverIds.push(over.overId);
@@ -2973,13 +2975,14 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
         if (b1.ballType == BALL_TYPE.WIDE && b1.ballIsWicket == false) {
             isWide = true;
             // let run = +matchType.valueOfWideBall || 0;
-            let run = +(c?.run ?? 0);
+            // let run = +(c?.run ?? 0);
+            let run = b1?.ballExtraRun ?? 0;
             battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
             let previousBall = c.ball - 1;
             battingTeam.teamOver = `${c.over}.${previousBall}`
-            battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - 1 : 0;
+            battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - run : 0;
             over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
-            over.totalRun = over.totalRun > 0 ? over.totalRun - 1 : 0;
+            over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
             over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
             over.totalWideBall = over.totalWideBall > 0 ? over.totalWideBall - 1 : 0;
             over.totalWideRun = over.totalWideRun > 0 ? over.totalWideRun - run : 0;
@@ -2996,7 +2999,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
             playersMap[tpBall.bowler_id].bowlerWideBall = playersMap[tpBall.bowler_id].bowlerWideBall > 0 ? playersMap[tpBall.bowler_id].bowlerWideBall - 1 : 0;
             playersMap[tpBall.bowler_id].bowlerWideBallRun = playersMap[tpBall.bowler_id].bowlerWideBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerWideBallRun - run : 0;
             playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
-            playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - run : 0;
+            playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
             
             if (over.ballCount === 0) {
               deleteOverIds.push(over.overId);
