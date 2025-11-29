@@ -8679,6 +8679,31 @@ const playingElevenChangeOnCommPlayersQuery = async (data, fastify, request) => 
     throw new Error(err.message);
   }
 };
+const upTeamNameInComQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaryTeams" SET
+        "wrTeamName" =$1
+        WHERE "wrCommentaryTeamId" = ANY($2)
+        RETURNING
+          "wrCommentaryTeamId" as "commentaryTeamId",
+          "wrTeamName" as "teamName"
+      `,
+      {
+        bind: [ data.teamName , data.commentaryTeamId],
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/upTeamNameInComQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -8825,4 +8850,5 @@ module.exports = {
   bowlingTypeChangeQuery,
   updateCommentaryViewsQuery,
   playingElevenChangeOnCommPlayersQuery,
+  upTeamNameInComQuery
 };

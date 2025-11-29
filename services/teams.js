@@ -25,11 +25,13 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { deletePlayersByTeamIdQuery } = require("../repository/TableTournamentsTeamPlayers")
 const { deletePointsByTeamIdQuery } = require("../repository/TableTournmentTeamPoints")
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
-const { trimTextData, callEntitySportAPI, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, EventType, checkEntitySportAPIEndpointIsActive, RefType } = require("../utilities/index");
+const { trimTextData, callEntitySportAPI, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, EventType, checkEntitySportAPIEndpointIsActive, RefType, commentaryStatus } = require("../utilities/index");
 const { insertPlayerQuery } = require("../repository/TablePlayer");
 const { insertTeamAndPlayers } = require("./commentry");
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { insertAutoImportDataService } = require("./autoImportData");
+const { errorLogger } = require("../utilities/logger");
+const { upTeamNameInComQuery } = require("../repository/TableCommentary");
 const allTeamsService = async () => {
   return global.tblTeams;
 };
@@ -298,6 +300,10 @@ const updateTeamService = async (request, fastify) => {
     Object.assign(request.body, trimData);
   }
 
+  let isNameChange = false
+  if(trimData.teamName != checkTeamId.teamName){
+    isNameChange = true;
+  }
   const _getEventType = global.tblEventTypes.find(
     (item) => item.eventTypeId === request.body.eventTypeId
   );
@@ -483,9 +489,47 @@ const updateTeamService = async (request, fastify) => {
   //   }
   // }
 
+  if(isNameChange && isNameChange == true){
+     changeInComTeam(global.tblTeams[index],request,fastify)
+  }
   return body;
 };
+const changeInComTeam = async(data,request,fastify)=>{
+  try {
+      let com = global.tblCommentaries.filter((i)=>i.commentaryStatus != commentaryStatus.COMPLETED && i.commentaryStatus != commentaryStatus.CANCELLED)
+      if(com.length == 0){
+        return true
+      }
+      let comIds = com.map((i)=>i.commentaryId)
+      // got the comteam where this com and team exist
+      let comTeam = global.tblCommentaryTeams.filter((i)=> comIds.includes(i.commentaryId) && i.teamId == data.teamId)
+      if(comTeam.length == 0){
+        return true;
+      }
+      let upTeam = await upTeamNameInComQuery({
+        teamName : data.teamName,
+        commentaryTeamId : comTeam.map((i)=>i.commentaryTeamId)
+      },fastify,request)
 
+      for (let c of upTeam){
+        let index = global.tblCommentaryTeams.findIndex((i)=>i.commentaryTeamId == c.commentaryTeamId)
+        if(index != -1){
+          global.tblCommentaryTeams[index].teamName = c.teamName
+        }
+      }
+      return true;
+
+
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "Error --> services/teams.js/changeInComTeam",
+      request
+    )
+    return true;
+  }
+}
 const saveTeamService = async (request, fastify) => {
   const { teamId } = request.body;
 
