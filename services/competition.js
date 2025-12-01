@@ -21,7 +21,7 @@ const {storeImageOnServer, removeImageFromServer, generateImageName, getImageFro
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
 const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive, matchStatusEntity, error, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, parseUmpires, ScoringTypes, RefType } = require("../utilities");
-const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryTeams, getCommentaryTeamsQuery, insertCommentaryPlayers, deleteCommentaryPlayersByPlayerId, updateCommentaryPlayerById } = require("../repository/TableCommentary")
+const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryTeams, getCommentaryTeamsQuery, insertCommentaryPlayers, deleteCommentaryPlayersByPlayerId, updateCommentaryPlayerById, isCountInPOintCommentaryChangeQuery } = require("../repository/TableCommentary")
 const { deleteTournamentTeamPlayersByCompIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
 const { addEditTournamentTeamPointDataService } = require("./tournamentTeamPoints");
@@ -31,7 +31,7 @@ const { insertPlayerQuery, updateExchangePlayerQuery } = require("../repository/
 const { insertTeamPlayerQuery, updateTeamPlayerHomeTeamQuery } = require("../repository/TableTeamPlayer");
 const { addTournamentTeamPlayersService } = require("./tournamentTeamPlayers");
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
-const { errorLogger } = require("../utilities/logger");
+const { errorLogger, commActionLogger } = require("../utilities/logger");
 const { insertVenueQuery, updateVenueQuery } = require("../repository/TableVenue");
 const { insertWeatherQuery, updateWeatherQuery } = require("../repository/TableWeather");
 const { updatePitchConditionQuery, insertPitchConditionQuery } = require("../repository/TablePitchCondition");
@@ -649,6 +649,10 @@ const isPointTableService = async (request, fastify) => {
     (item) => item.competitionId === competitionId
   );
 
+  if (!validateId) {
+    throw new Error("Competition with this id not Found");
+  }
+
   let winPoint = validateId.winPoint, tiePoint = validateId.tiePoint, lossPoint = validateId.cancelPoint, cancelPoint = validateId.lossPoint;
   if (isPointTable === true) {
     if (!validateId.winPoint) winPoint = 2;
@@ -657,8 +661,39 @@ const isPointTableService = async (request, fastify) => {
     if (!validateId.cancelPoint) cancelPoint = 1;
   }
 
-  if (!validateId) {
-    throw new Error("Competition with this id not Found");
+  const getCommentaryByCompetitionId = global.tblCommentaries.filter(tc => tc.competitionId === competitionId && [1, 2, 3, 5].includes(tc.commentaryStatus));
+  for (const commentary of getCommentaryByCompetitionId) {
+    const getCommentaryIndex = global.tblCommentaries.findIndex(tc => tc.commentaryId === commentary.commentaryId);
+    const bodyData = {
+      commentaryId: commentary.commentaryId,
+      isCountInPoint: isPointTable
+    };
+    await isCountInPOintCommentaryChangeQuery(bodyData, fastify, request);
+    global.tblCommentaries[getCommentaryIndex].isCountInPoint = isPointTable;
+
+    commActionLogger(
+      {
+        commentaryId: commentary.commentaryId,
+        requestBody: {
+          ...request.body,
+          ...bodyData
+        },
+        response: {
+          message: "Commentary Updated successfully",
+        },
+        apiName: "/admin/commentary/isCountInPoint",
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      console.log("isCountInPoint commActionLogger console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/competition.js/isPointTableService - commActionLogger",
+        request
+      );
+    });
   }
 
   await isPointTableCompetitionQuery(
@@ -674,7 +709,7 @@ const isPointTableService = async (request, fastify) => {
     fastify
   );
   const index = global.tblCompetitions.findIndex((item) => item.competitionId == competitionId);
-  if(index != -1){
+  if (index != -1) {
     global.tblCompetitions[index].isPointTable = isPointTable;
     global.tblCompetitions[index] = {
       ...global.tblCompetitions[index],
@@ -685,26 +720,26 @@ const isPointTableService = async (request, fastify) => {
       lossPoint
     }
   }
-  
+
   callClientAPI(
     {
-      serviceType : ServiceType.clientAPI,
-      moduleType : APIEndpointModuleType.updateSeoModule,
-      data : {
-        module : "competition",
-        type : "update",
-        data : global.tblCompetitions[index]
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.updateSeoModule,
+      data: {
+        module: "competition",
+        type: "update",
+        data: global.tblCompetitions[index]
       }
     }, request, fastify)
-  .catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "API ERROR --> services/competition.js/isPointTableService - callClientAPI",
-      request
-    );
-  });
-  
+    .catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "API ERROR --> services/competition.js/isPointTableService - callClientAPI",
+        request
+      );
+    });
+
   return `Competition isEventSnap status updated successfully`;
 };
 
