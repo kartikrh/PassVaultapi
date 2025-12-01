@@ -1339,9 +1339,16 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                 }
                 oversMap[overKey] = over; // store reference
               }
+              let ball_Type = BALL_TYPE.REGULAR;
+              if (Number(c?.legbye_run) > 0) {
+                ball_Type = BALL_TYPE.LEG_BYE;
+              } else if (Number(c?.noball_run) > 0) {
+                ball_Type = BALL_TYPE.NO_BALL;
+              }
               updateBall = {
                   ballIsCount : true,
-                  ballType : BALL_TYPE.REGULAR,
+                  // ballType : BALL_TYPE.REGULAR,
+                  ballType : ball_Type,
                   ballRun : c.run,
                   batStrikeId : playerTpIdObj[c.batsman_id].commentaryPlayerId,
                   batNonStrikeId : nonStrikePId,
