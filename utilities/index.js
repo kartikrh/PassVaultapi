@@ -1918,6 +1918,26 @@ async function roundToNearestMinutes(minutes) {
     return new Date(Math.round(date.getTime() / ms) * ms);
 };
 
+const GAME_STATUS = {
+  "Default": 0,
+  "Starts Shortly": 1,
+  "Toss": 2,
+  "Play Ongoing": 3,
+  "Delayed": 4,
+  "Drinks Break": 5,
+  "Innings Break": 6,
+  "Stumps": 7,
+  "Lunch Break": 8,
+  "Tea Break": 9,
+  "Match Start Delay": 10,
+  "Rain Delay": 11,
+  "Dinner": 12,
+  "Strategic Timeout": 13,
+  "Technical Issue": 14,
+  "Bad Light": 15,
+  "Match Interrupted": 16
+};
+
 module.exports = {    
   ERROR_CODES,
   error,
@@ -2031,5 +2051,6 @@ module.exports = {
   checkEntitySportAPIEndpointIsActive,
   ICCMatchType,
   playersMergeImageService,
-  roundToNearestMinutes
+  roundToNearestMinutes,
+  GAME_STATUS
 };
