@@ -1300,17 +1300,24 @@ const getPlayerCompetitionListByIdService = async (request, fastify) => {
     throw new Error(`Player with this id: ${playerId} not Found`);
   }
 
-  const commentaryIds = (global.tblCommentaryPlayers ?? [])
+  const playerCommentaries = global.tblCommentaryPlayers
     .filter(tcp => tcp.playerId === playerId)
-    .map(tcp => tcp.commentaryId);
+    .map(tcp => ({commentaryId: tcp.commentaryId, isPlayInEvent: tcp.isPlayInEvent, isInPlayingEleven: tcp.isInPlayingEleven, currentInnings: tcp.currentInnings}));
 
-  const uniqueCommentaryIds = [...new Set(commentaryIds)];
+  const playerCommentariesData = [];
+  const commentaryIds = playerCommentaries?.map(c => c.commentaryId);
+  const getCommentariesData = global.tblCommentaries.filter(tc => commentaryIds.includes(tc.commentaryId));
 
-  const playerCommentaries = (global.tblCommentaries ?? [])
-    .filter(comm => uniqueCommentaryIds.includes(comm.commentaryId))
-    .map(({ commentaryId, competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus }) => ({
-      commentaryId, competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus
-    }));
+  for (const commentary of playerCommentaries) {
+    const getCommentaryData = getCommentariesData.find(c => c.commentaryId === commentary.commentaryId);
+    if (getCommentaryData) {
+      const { commentaryId, competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus } = getCommentaryData;
+      playerCommentariesData.push({
+        commentaryId, competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus,
+        ...commentary
+      })
+    }
+  }
 
   const uniqueCompetitionIds = [...new Set([
     ...(global.tblTournamentTeamPlayers ?? []).filter(ttp => ttp.playerId == playerId).map(ttp => ttp.competitionId),
@@ -1324,7 +1331,7 @@ const getPlayerCompetitionListByIdService = async (request, fastify) => {
     }));
 
   return {
-    commentaryList: playerCommentaries,
+    commentaryList: playerCommentariesData,
     competitionList: competitionDetails
   };
 };
@@ -1337,19 +1344,26 @@ const getPlayerPlayInCommentaryListByIdService = async (request, fastify) => {
     throw new Error(`Player with this id: ${playerId} not Found`);
   }
 
-  const commentaryIds = (global.tblCommentaryPlayers ?? [])
+  const playerCommentaries = global.tblCommentaryPlayers
     .filter(tcp => tcp.playerId === playerId && tcp.isPlayInEvent === true)
-    .map(tcp => tcp.commentaryId);
+    .map(tcp => ({commentaryId: tcp.commentaryId, isPlayInEvent: tcp.isPlayInEvent, isInPlayingEleven: tcp.isInPlayingEleven, currentInnings: tcp.currentInnings}));
 
-  const uniqueCommentaryIds = [...new Set(commentaryIds)];
+  const playerCommentariesData = [];
+  const commentaryIds = playerCommentaries?.map(c => c.commentaryId);
+  const getCommentariesData = global.tblCommentaries.filter(tc => commentaryIds.includes(tc.commentaryId));
 
-  const playerCommentaries = (global.tblCommentaries ?? [])
-    .filter(comm => uniqueCommentaryIds.includes(comm.commentaryId))
-    .map(({ commentaryId, competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus }) => ({
-      commentaryId, competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus
-    }));
+  for (const commentary of playerCommentaries) {
+    const getCommentaryData = getCommentariesData.find(c => c.commentaryId === commentary.commentaryId);
+    if (getCommentaryData) {
+      const { commentaryId, competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus } = getCommentaryData;
+      playerCommentariesData.push({
+        commentaryId, competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus,
+        ...commentary
+      })
+    }
+  }
 
-  return playerCommentaries;
+  return playerCommentariesData;
 };
 
 module.exports = {

@@ -128,8 +128,8 @@ const insertTeamQuery = async (data, fastify, request) => {
           data.jerseyPath || null,
           data.tpId || null,
           data.countryId || null,
-          data?.isMen || true,
-          data?.isInternational || false,
+          data?.isMen ?? true,
+          data?.isInternational ?? false
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -243,8 +243,8 @@ const updateTeamQuery = async (data, fastify, request) => {
           data.jerseyPath,
           data.tpId,
           data.countryId || null,
-          data?.isMen || true,
-          data?.isInternational || false,
+          data?.isMen ?? true,
+          data?.isInternational ?? false
         ],
         type: fastify.db.QueryTypes.SELECT,
       }

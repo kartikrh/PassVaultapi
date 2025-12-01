@@ -649,6 +649,14 @@ const isPointTableService = async (request, fastify) => {
     (item) => item.competitionId === competitionId
   );
 
+  let winPoint = validateId.winPoint, tiePoint = validateId.tiePoint, lossPoint = validateId.cancelPoint, cancelPoint = validateId.lossPoint;
+  if (isPointTable === true) {
+    if (!validateId.winPoint) winPoint = 2;
+    if (!validateId.tiePoint) tiePoint = 0;
+    if (!validateId.lossPoint) lossPoint = 0;
+    if (!validateId.cancelPoint) cancelPoint = 1;
+  }
+
   if (!validateId) {
     throw new Error("Competition with this id not Found");
   }
@@ -657,6 +665,10 @@ const isPointTableService = async (request, fastify) => {
     {
       competitionId,
       isPointTable,
+      winPoint,
+      tiePoint,
+      cancelPoint,
+      lossPoint
     },
     request,
     fastify
@@ -664,6 +676,14 @@ const isPointTableService = async (request, fastify) => {
   const index = global.tblCompetitions.findIndex((item) => item.competitionId == competitionId);
   if(index != -1){
     global.tblCompetitions[index].isPointTable = isPointTable;
+    global.tblCompetitions[index] = {
+      ...global.tblCompetitions[index],
+      isPointTable: isPointTable,
+      winPoint,
+      tiePoint,
+      cancelPoint,
+      lossPoint
+    }
   }
   
   callClientAPI(

@@ -199,7 +199,7 @@ const insertPlayerQuery = async (data, fastify, request) => {
           data.tpId || null,
           data.countryId || null,
           data.bowlingTypeId || null,
-          data?.isMen || false,
+          data?.isMen ?? false,
           data?.birthDate || null,
         ],
       }
@@ -282,7 +282,7 @@ const updatePlayerQuery = async (data, fastify, request) => {
           data.tpId,
           data.countryId,
           data.bowlingTypeId,
-          data?.isMen || false,
+          data?.isMen ?? false,
           data?.birthDate || null
         ],
       }
