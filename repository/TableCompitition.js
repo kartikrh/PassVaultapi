@@ -488,11 +488,22 @@ const isPointTableCompetitionQuery = async (data, request, fastify) => {
     return await fastify.db.query(
       `
                 update "tblCompetitions" set
-                "wrIsPointTable" = $1
-                where "wrCompetitionId" = $2
+                "wrIsPointTable" = $1,
+                "wrWinPoint" = $2,
+                "wrTiePoint" = $3,
+                "wrCancelPoint" = $4,
+                "wrLossPoint" = $5
+                where "wrCompetitionId" = $6
             `,
       {
-        bind: [data.isPointTable, data.competitionId],
+        bind: [
+          data.isPointTable,
+          data.winPoint,
+          data.tiePoint,
+          data.cancelPoint,
+          data.lossPoint,
+          data.competitionId
+        ],
       }
     );
   } catch (err) {
