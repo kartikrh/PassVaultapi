@@ -1133,6 +1133,12 @@ const competitionImportService = async (data, fastify, request) => {
   const url = checkEntitySportAPIEndpoint.data.replace("{cid}", data.cid);
   const entitySportCompetition = await callEntitySportAPI(url, request, fastify);
 
+  if (data?.autoImportId && data?.autoImportId === global.autoImportData.id) {
+    global.autoImportData.esApiResponseData = {
+      competition: entitySportCompetition?.data?.result
+    }
+  }
+
   let entitySportCompetitionResponse = entitySportCompetition?.data?.result;
   if (!entitySportCompetitionResponse) {
     errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/competition.js/competitionImportService - entitySportCompetitionResponse", {
@@ -1216,6 +1222,17 @@ const competitionImportService = async (data, fastify, request) => {
     params.append("per_page", 50);
     url2 += `&${params.toString()}`;
     const entitySportCompetitionMatch = await callEntitySportAPI(url2, request, fastify);
+
+    if (data?.autoImportId && data?.autoImportId === global.autoImportData.id) {
+      global.autoImportData.esApiResponseData = {
+        ...global.autoImportData.esApiResponseData,
+        match: [
+          ...global.autoImportData.esApiResponseData?.match || [],
+          ...(entitySportCompetitionMatch?.data?.result?.items || [])
+        ]
+      }
+    }
+
     let entitySportCompetitionMatchResponse = entitySportCompetitionMatch?.data?.result;
     if (!entitySportCompetitionMatchResponse) {
       errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/competition.js/competitionImportService - entitySportCompetitionMatchResponse", {
@@ -1287,6 +1304,13 @@ const competitionImportService = async (data, fastify, request) => {
 
   const url3 = checkEntitySportAPIEndpoint3.data.replace("{cid}", data.cid);
   const entitySportCompetitionSquad = await callEntitySportAPI(url3, request, fastify);
+
+  if (data?.autoImportId && data?.autoImportId === global.autoImportData.id) {
+    global.autoImportData.esApiResponseData = {
+      ...global.autoImportData.esApiResponseData,
+      squad: entitySportCompetitionSquad?.data?.result?.squads
+    }
+  }
 
   let entitySportCompetitionSquadResponse = entitySportCompetitionSquad?.data?.result?.squads;
 
