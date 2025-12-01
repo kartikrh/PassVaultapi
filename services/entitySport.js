@@ -301,6 +301,7 @@ const saveTournamentTeamPlayerService = async (request, fastify) => {
     return "Tournament Team Players Data Updated successfully."
 }
 const setEntityCom2Service = async (request , fastify) =>{
+  let matchID = request.body?.response?.match_id
   try {
         const {response} = request.body
     // await new Promise((r) => setTimeout(r, 5000));
@@ -843,9 +844,11 @@ const setEntityCom2Service = async (request , fastify) =>{
     return true;
 
   } catch (error) {
+    console.log("error", error);
     errorLogger(
       fastify,
-      error.message,
+      `${error.message}-${matchID}`,
+      // error.message,
       "Error --> services/entitySport.js/setEntityCom2servie",
       null,
       request.body
@@ -1735,13 +1738,56 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           }
         }
         upTeams = [battingTeam, bowlingTeam]
-        upComDetails.displayStatus = c.commentary;
+        // upComDetails.displayStatus = c.commentary;
       }
     }
     // console.log(oversMap)
     let plyArr = Object.values(playersMap);
     let overArr = Object.values(oversMap)
-   
+    if (commentaries?.length > 0) {
+      let displayData = {}
+      let latestBall = commentaries.filter(c => c.event != "overend").at(-1);
+      const currentBall = global.tblCommentaryBallByBall.find(item => 
+        item.tpId == latestBall?.event_id
+      );
+      if(currentBall) {
+        displayData.currentBall = currentBall
+      }
+      if (latestBall && String(latestBall?.score) == "w") {
+        // // onStrike player code
+        // const currentInning = response?.scorecard?.innings?.find(
+        //   i => i.number == response?.live?.live_inning_number
+        // );
+        // const batter = currentInning?.batsmen?.find(
+        //   b => b.position == "striker" && b.batting == "true"
+        // );
+        
+        if (latestBall?.wicket_batsman_id) {
+          const onStrike = plyArr.find(item => item.tpId == latestBall?.wicket_batsman_id);
+          if (onStrike) {
+            displayData.playerSwitch = null;
+            displayData.onStrikePlayer = onStrike;
+          }
+        }
+      }
+      if (Object.keys(displayData).length > 0) {
+        const commDisplayStatus = await generateDisplayStatus(displayData);
+        upComDetails.displayStatus = commDisplayStatus;
+      }
+      let overEndBall = commentaries.at(-1)?.event === "overend"
+      if (overEndBall) {
+        upTeams = upTeams.map(item => {
+          if(item.teamId == battingTeam.teamId) {
+            const newOver = Math.ceil(Number(item.teamOver || 0));
+            return {
+              ...item,
+              teamOver: `${newOver}`
+            };
+          }
+          return item;
+        })
+      }
+    }
 
     await syncEntitySportCommentaryService({
       commentaryId : comDetails.commentaryId,
@@ -2231,13 +2277,14 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           if (b1.ballType == BALL_TYPE.WIDE  && b1.ballIsWicket == false) {
             isWide = true;
             // let run = +matchType.valueOfWideBall || 0;
-            let run = +(c?.run ?? 0);
+            // let run = +(c?.run ?? 0);
+            let run = b1?.ballExtraRun ?? 0;
             battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
             let previousBall = c.ball - 1;
             battingTeam.teamOver = `${c.over}.${previousBall}`
-            battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - 1 : 0;
+            battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - run : 0;
             over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
-            over.totalRun = over.totalRun > 0 ? over.totalRun - 1 : 0;
+            over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
             over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
             over.totalWideBall = over.totalWideBall > 0 ? over.totalWideBall - 1 : 0;
             over.totalWideRun = over.totalWideRun > 0 ? over.totalWideRun - run : 0;
@@ -2254,7 +2301,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
             playersMap[tpBall.bowler_id].bowlerWideBall = playersMap[tpBall.bowler_id].bowlerWideBall > 0 ? playersMap[tpBall.bowler_id].bowlerWideBall - 1 : 0;
             playersMap[tpBall.bowler_id].bowlerWideBallRun = playersMap[tpBall.bowler_id].bowlerWideBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerWideBallRun - run : 0;
             playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
-            playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - run : 0;
+            playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
 
             if (over.ballCount === 0) {
               deleteOverIds.push(over.overId);
@@ -2580,13 +2627,14 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
         }
         if (b1.ballType == BALL_TYPE.WIDE) {
             isWide = true;
-            let run = +(c?.run ?? 0);
+            // let run = +(c?.run ?? 0);
+            let run = b1?.ballExtraRun ?? 0;
             battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
             let previousBall = c.ball - 1;
             battingTeam.teamOver = `${c.over}.${previousBall}`
-            battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - 1 : 0;
+            battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - run : 0;
             over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
-            over.totalRun = over.totalRun > 0 ? over.totalRun - 1 : 0;
+            over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
             over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
             over.totalWideBall = over.totalWideBall > 0 ? over.totalWideBall - 1 : 0;
             over.totalWideRun = over.totalWideRun > 0 ? over.totalWideRun - run : 0;
@@ -2603,7 +2651,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
             playersMap[tpBall.bowler_id].bowlerWideBall = playersMap[tpBall.bowler_id].bowlerWideBall > 0 ? playersMap[tpBall.bowler_id].bowlerWideBall - 1 : 0;
             playersMap[tpBall.bowler_id].bowlerWideBallRun = playersMap[tpBall.bowler_id].bowlerWideBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerWideBallRun - run : 0;
             playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
-            playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - run : 0;
+            playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
             
             if (over.ballCount === 0) {
               deleteOverIds.push(over.overId);
@@ -2927,13 +2975,14 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
         if (b1.ballType == BALL_TYPE.WIDE && b1.ballIsWicket == false) {
             isWide = true;
             // let run = +matchType.valueOfWideBall || 0;
-            let run = +(c?.run ?? 0);
+            // let run = +(c?.run ?? 0);
+            let run = b1?.ballExtraRun ?? 0;
             battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
             let previousBall = c.ball - 1;
             battingTeam.teamOver = `${c.over}.${previousBall}`
-            battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - 1 : 0;
+            battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - run : 0;
             over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
-            over.totalRun = over.totalRun > 0 ? over.totalRun - 1 : 0;
+            over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
             over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
             over.totalWideBall = over.totalWideBall > 0 ? over.totalWideBall - 1 : 0;
             over.totalWideRun = over.totalWideRun > 0 ? over.totalWideRun - run : 0;
@@ -2950,7 +2999,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
             playersMap[tpBall.bowler_id].bowlerWideBall = playersMap[tpBall.bowler_id].bowlerWideBall > 0 ? playersMap[tpBall.bowler_id].bowlerWideBall - 1 : 0;
             playersMap[tpBall.bowler_id].bowlerWideBallRun = playersMap[tpBall.bowler_id].bowlerWideBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerWideBallRun - run : 0;
             playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
-            playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - run : 0;
+            playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
             
             if (over.ballCount === 0) {
               deleteOverIds.push(over.overId);

@@ -27,7 +27,7 @@ const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { deleteTournamentPlayersByPlayerIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteAwardsByPlayerIdQuery } = require("../repository/TableCommentaryAward");
-const { bowlingStyleChangeOnCommPlayersQuery } = require("../repository/TableCommentary");
+const { bowlingStyleChangeOnCommPlayersQuery, deleteCommentaryPlayerById } = require("../repository/TableCommentary");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const configConstants = require("../utilities/configConstants");
 const { trimTextData, callEntitySportAPI, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, RefType, EventType, checkEntitySportAPIEndpointIsActive, ICCMatchType } = require("../utilities/index");
@@ -590,6 +590,24 @@ const updateIsSystemPlayerService = async (request, fastify) => {
 const deletePlayerService = async (request, fastify) => {
   const { playerId } = request.body;
 
+  for (const pId of playerId) {
+    const getPlayerData = global.tblPlayers.find(tp => tp.playerId === pId);
+    const checkCommentaryPlayer = global.tblCommentaryPlayers.find(tcp => tcp.playerId === pId);
+    if (checkCommentaryPlayer) {
+      throw new Error(`'${getPlayerData?.playerName}' player is in commentary/s and cannot be deleted at this moment`);
+    }
+
+    const checkTournamentTeamPlayer = global.tblTournamentTeamPlayers.find(tttp => tttp.playerId === playerId);
+    if (checkTournamentTeamPlayer) {
+      throw new Error(`'${getPlayerData?.playerName}' player is in tournament/s and cannot be deleted at this moment`);
+    }
+
+    const checkTeamPlayer = await getTeamPlayerByPlayerIdQuery(pId, fastify, request);
+    if (checkTeamPlayer) {
+      throw new Error(`'${getPlayerData?.playerName}' player is in team/s and cannot be deleted at this moment`);
+    }
+  }
+
   for (const id of playerId) {
   const teamPlayersData = await getTeamPlayerByPlayerIdQuery(id, fastify, request);
     for (const playerData of teamPlayersData) {
@@ -610,6 +628,21 @@ const deletePlayerService = async (request, fastify) => {
       });
     }
   }
+
+  const getPlayerCommentary = global.tblCommentaryPlayers.filter(tcp => playerId.includes(tcp.playerId));
+  for (const commentary of getPlayerCommentary) {
+    await deleteCommentaryPlayerById({
+      commentaryPlayerId: commentary.commentaryPlayerId
+    }, request, fastify);
+    global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(tcp => !(tcp.commentaryPlayerId === commentary.commentaryPlayerId));
+
+    if (commentary?.jerseyPlayerImage) {
+      await removeImageFromServer({
+        path: commentary.jerseyPlayerImage,
+      });
+    }
+  }
+
   await deleteTournamentPlayersByPlayerIdQuery(playerId, request, fastify);
   await deleteAwardsByPlayerIdQuery(playerId, request, fastify);
   await deletePlayerQuery(playerId, fastify, request);
@@ -1146,7 +1179,7 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
   return `Player data updated successfully`;
 };
 
-const playerImportService = async (data, fastify, request = null) => {
+const playerImportService = async (data, fastify, request) => {
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getPlayerDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
     errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/player.js/playerImportService - checkEntitySportAPIEndpoint", request);
@@ -1292,6 +1325,29 @@ const getPlayerCompetitionListByIdService = async (request, fastify) => {
   };
 };
 
+const getPlayerPlayInCommentaryListByIdService = async (request, fastify) => {
+  const playerId = request.body.playerId;
+
+  const checkPlayer = global.tblPlayers.find(p => p.playerId === playerId);
+  if (!checkPlayer) {
+    throw new Error(`Player with this id: ${playerId} not Found`);
+  }
+
+  const commentaryIds = (global.tblCommentaryPlayers ?? [])
+    .filter(tcp => tcp.playerId === playerId && tcp.isPlayInEvent === true)
+    .map(tcp => tcp.commentaryId);
+
+  const uniqueCommentaryIds = [...new Set(commentaryIds)];
+
+  const playerCommentaries = (global.tblCommentaries ?? [])
+    .filter(comm => uniqueCommentaryIds.includes(comm.commentaryId))
+    .map(({ commentaryId, competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus }) => ({
+      commentaryId, competitionId, competition, eventTypeId, eventType, matchTypeId, matchType, tpId, eventName, eventDate, commentaryStatus
+    }));
+
+  return playerCommentaries;
+};
+
 module.exports = {
   allPlayerService,
   playerByIdService,
@@ -1312,5 +1368,6 @@ module.exports = {
   allPlayersMergeImageService,
   mergePlayerNullImageService,
   updatePlayerHomeTeamService,
-  getPlayerCompetitionListByIdService
+  getPlayerCompetitionListByIdService,
+  getPlayerPlayInCommentaryListByIdService
 };

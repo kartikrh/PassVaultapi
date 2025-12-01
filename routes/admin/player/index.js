@@ -25,6 +25,7 @@ const {
   mergePlayerNullImage,
   updatePlayerHomeTeam,
   getPlayerCompetitionListById,
+  getPlayerPlayInCommentaryListById,
 } = require("../../../controller/users/admin/teamsAndPlayer/players");
 const {
   getTeamList,
@@ -250,5 +251,16 @@ module.exports = async (fastify, opts) => {
       }),
     ],
     handler: (request, reply) => getPlayerCompetitionListById(request, reply, fastify),
+  });
+  fastify.post("/playCommentaryList", {
+    schema: Player.getPlayerPlayInCommentaryListById.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) => checkPermission(request, reply, fastify, {
+        tabName: "Players",
+        mode: "view",
+      }),
+    ],
+    handler: (request, reply) => getPlayerPlayInCommentaryListById(request, reply, fastify),
   });
 };
