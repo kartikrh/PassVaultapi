@@ -23512,15 +23512,19 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
   return insertCompetition;
 }
 
-const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
+const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getTeamDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
     errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/commentary.js/insertTeamAndPlayers - checkEntitySportAPIEndpoint", request);
     return false;
   }
 
-  const url = checkEntitySportAPIEndpoint.data.replace("{tid}", teamTpId);
+  const url = checkEntitySportAPIEndpoint.data.replace("{tid}", data.tid);
   const entitySportTeamPlayers = await callEntitySportAPI(url, request, fastify);
+
+  if (data?.autoImportId && data?.autoImportId === global.autoImportData.id) {
+    global.autoImportData.esApiResponseData = entitySportTeamPlayers?.data?.result?.items
+  }
 
   let entitySportTeamPlayersResponse = entitySportTeamPlayers?.data?.result?.items;
   if (!entitySportTeamPlayersResponse) {
@@ -23699,6 +23703,12 @@ const matchImportService = async (data, fastify, request = null) => {
   const url = checkEntitySportAPIEndpoint.data.replace("{mid}", data.mid);
   const entitySportMatch = await callEntitySportAPI(url, request, fastify);
 
+  if (data?.autoImportId && data?.autoImportId === global.autoImportData.id) {
+    global.autoImportData.esApiResponseData = {
+      commentary: entitySportMatch?.data?.result
+    }
+  }
+
   let entitySportMatchResponse = entitySportMatch?.data?.result;
   if (!entitySportMatchResponse) {
     errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/commentary.js/matchImportService - entitySportMatchResponse", {
@@ -23845,10 +23855,14 @@ const matchImportService = async (data, fastify, request = null) => {
   const teamB = matchInfoResponse?.teamb?.team_id;
   let teamAData, teamBData;
   if (teamA && !nullTeamtpIds.includes(teamA)) {
-    teamAData = await insertTeamAndPlayers(teamA, eventType, request, fastify);
+    teamAData = await insertTeamAndPlayers({
+      tid: teamA
+    }, eventType, request, fastify);
   }
   if (teamB && !nullTeamtpIds.includes(teamB)) {
-    teamBData = await insertTeamAndPlayers(teamB, eventType, request, fastify);
+    teamBData = await insertTeamAndPlayers({
+      tid: teamB
+    }, eventType, request, fastify);
   }
 
   const isMen = !teamAData?.teamName?.toLowerCase().includes("women");

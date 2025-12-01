@@ -756,7 +756,7 @@ const UpdateTeamFromEntityService = async (data, fastify, request) => {
 
 const teamImportService = async (data, fastify, request = null) => {
   const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
-  return await insertTeamAndPlayers(data.tid, eventType, request, fastify);
+  return await insertTeamAndPlayers(data, eventType, request, fastify);
 }
 
 const activeInactiveTeamService = async (request, fastify) => {

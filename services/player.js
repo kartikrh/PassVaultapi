@@ -1189,6 +1189,10 @@ const playerImportService = async (data, fastify, request) => {
   const url = checkEntitySportAPIEndpoint.data.replace("{pid}", data.pid);
   const entitySportPlayer = await callEntitySportAPI(url, request, fastify);
 
+  if (data?.autoImportId && data?.autoImportId === global.autoImportData.id) {
+    global.autoImportData.esApiResponseData = entitySportPlayer?.data?.result
+  }
+
   let entitySportPlayerResponse = entitySportPlayer?.data?.result?.player;
   let entitySportPlayerStatisticsResponse = entitySportPlayer?.data?.result;
   if (!entitySportPlayerResponse) {
