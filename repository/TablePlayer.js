@@ -810,6 +810,36 @@ const getPlayersWithoutHomeTeamQuery = async (request, fastify) => {
   }
 };
 
+const getTeamPlayerJerseyByPlayerIdQuery = async (playerId, fastify, request) => {
+  try {
+    const sql = `
+      SELECT 
+        ttp."wrJerseyPlayerImage" AS "jerseyPlayerImage",
+        ttp."wrJerseyPlayerImagePath" AS "jerseyPlayerImagePath"
+      FROM "tblTeamPlayers" ttp
+      WHERE ttp."wrRefPlayerId" = $1
+        AND ttp."wrHomeTeam" = true
+        AND ttp."wrIsDeleted" = false
+      LIMIT 1;
+    `;
+
+    const result = await fastify.db.query(sql, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [playerId],
+    });
+
+    return result[0] || null;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePlayer/getTeamPlayerJerseyByPlayerIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 const getPlayerCompetitionListByPlayerIdQuery = async (request, fastify) => {
   try {
     const playerId = request.body.playerId;
@@ -888,4 +918,5 @@ module.exports = {
   getPlayerCompetitionListByPlayerIdQuery,
   getPlayersWithoutTeamQuery,
   getPlayersWithoutHomeTeamQuery,
+  getTeamPlayerJerseyByPlayerIdQuery,
 };

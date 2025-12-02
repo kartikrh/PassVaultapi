@@ -1,4 +1,5 @@
 const { deleteICCRankingByIdQuery, insertICCRankingQuery, updateICCRankingQuery, activeInactiveICCRankingByIdQuery } = require("../repository/TableICCRanking");
+const { getTeamPlayerJerseyByPlayerIdQuery } = require("../repository/TablePlayer");
 const { ICCRankingType, callEntitySportAPI, ServiceType, APIEndpointModuleType, callClientAPI, ICCRankingPlayerType, checkEntitySportAPIEndpointIsActive, ICCMatchType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 const { playerImportService } = require("./player");
@@ -28,7 +29,7 @@ const getAllICCRankingService = async (request) => {
     });
 };
 
-const AllICCRankingService = async (request) => {
+const AllICCRankingService = async (request, fastify) => {
     const { isActive } = request.body;
     const filterValue = isActive !== undefined ? isActive : true;
 
@@ -36,7 +37,7 @@ const AllICCRankingService = async (request) => {
         global.tblICCRanking
             .filter(item => item.isActive === filterValue)
             .map(async (item) => {
-                const fields = await fieldNamesService(item);
+                const fields = await fieldNamesService(item, fastify);
                 return { ...item, ...fields };
             })
     );
@@ -89,7 +90,7 @@ const createICCRankingService = async (request, fastify) => {
     const saveData = await insertICCRankingQuery(request.body, fastify, request);
     global.tblICCRanking.push(saveData);
     if (saveData && saveData.isActive == true) {
-        const keyNames = await fieldNamesService(saveData);
+        const keyNames = await fieldNamesService(saveData, fastify);
         callClientAPI(
             {
                 serviceType: ServiceType.clientAPI,
@@ -225,7 +226,7 @@ const updateICCRankingByIdService = async (request, fastify) => {
         updateData
             .filter(elem => elem.isActive === true)
             .map(async item => {
-                const fields = await fieldNamesService(item);
+                const fields = await fieldNamesService(item, fastify);
                 return { ...item, ...fields };
             })
     );
@@ -309,7 +310,7 @@ const activeInactiveICCRankingByIdService = async (request, fastify) => {
         global.tblICCRanking[index].isActive = isActive;
     }
 
-    const keyNames = await fieldNamesService(global.tblICCRanking[index]);
+    const keyNames = await fieldNamesService(global.tblICCRanking[index], fastify);
     callClientAPI(
         {
             serviceType: ServiceType.clientAPI,
@@ -332,12 +333,14 @@ const activeInactiveICCRankingByIdService = async (request, fastify) => {
     return `IsActive stage updated successfully`;
 };
 
-const fieldNamesService = async (data) => {
+const fieldNamesService = async (data, fastify) => {
     let sportName = null,
         matchType = null,
         teamName = null,
         playerName = null,
         playerTypeName = null;
+        jerseyPlayerImage = null,
+        jerseyPlayerImagePath = null;
 
     if (data.sportId) {
         sportName = global.tblEventTypes.find(e => e.eventTypeId == data.sportId)?.eventType || null;
@@ -350,6 +353,11 @@ const fieldNamesService = async (data) => {
     }
     if (data.playerId) {
         playerName = global.tblPlayers.find(e => e.playerId == data.playerId)?.playerName || null;
+        const teamPlayer = await getTeamPlayerJerseyByPlayerIdQuery(data.playerId, fastify, data);
+        if (teamPlayer) {
+            jerseyPlayerImage = teamPlayer?.jerseyPlayerImage || null;
+            jerseyPlayerImagePath = teamPlayer?.jerseyPlayerImagePath || null;
+        }
     }
     if (data.playerTypeId) {
         playerTypeName = global.tblPlayerTypes.find(e => e.playerTypeId == data.playerTypeId)?.playerType || null;
@@ -361,6 +369,8 @@ const fieldNamesService = async (data) => {
         teamName,
         playerName,
         playerTypeName,
+        jerseyPlayerImage,
+        jerseyPlayerImagePath,
     };
 };
 
