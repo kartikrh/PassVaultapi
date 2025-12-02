@@ -1188,7 +1188,7 @@ const competitionImportService = async (data, fastify, request) => {
   const url = checkEntitySportAPIEndpoint.data.replace("{cid}", data.cid);
   const entitySportCompetition = await callEntitySportAPI(url, request, fastify);
 
-  if (data?.autoImportId && data?.autoImportId === global.autoImportData.id) {
+  if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
     global.autoImportData.esApiResponseData = {
       competition: entitySportCompetition?.data?.result
     }
@@ -1278,7 +1278,7 @@ const competitionImportService = async (data, fastify, request) => {
     url2 += `&${params.toString()}`;
     const entitySportCompetitionMatch = await callEntitySportAPI(url2, request, fastify);
 
-    if (data?.autoImportId && data?.autoImportId === global.autoImportData.id) {
+    if (data?.autoImportId && data?.autoImportId === global.autoImportData?.id) {
       global.autoImportData.esApiResponseData = {
         ...global.autoImportData.esApiResponseData,
         match: [
@@ -1360,7 +1360,7 @@ const competitionImportService = async (data, fastify, request) => {
   const url3 = checkEntitySportAPIEndpoint3.data.replace("{cid}", data.cid);
   const entitySportCompetitionSquad = await callEntitySportAPI(url3, request, fastify);
 
-  if (data?.autoImportId && data?.autoImportId === global.autoImportData.id) {
+  if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
     global.autoImportData.esApiResponseData = {
       ...global.autoImportData.esApiResponseData,
       squad: entitySportCompetitionSquad?.data?.result?.squads

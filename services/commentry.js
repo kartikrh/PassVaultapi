@@ -23526,7 +23526,7 @@ const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
   const url = checkEntitySportAPIEndpoint.data.replace("{tid}", data.tid);
   const entitySportTeamPlayers = await callEntitySportAPI(url, request, fastify);
 
-  if (data?.autoImportId && data?.autoImportId === global.autoImportData.id) {
+  if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
     global.autoImportData.esApiResponseData = entitySportTeamPlayers?.data?.result?.items
   }
 
@@ -23707,7 +23707,7 @@ const matchImportService = async (data, fastify, request = null) => {
   const url = checkEntitySportAPIEndpoint.data.replace("{mid}", data.mid);
   const entitySportMatch = await callEntitySportAPI(url, request, fastify);
 
-  if (data?.autoImportId && data?.autoImportId === global.autoImportData.id) {
+  if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
     global.autoImportData.esApiResponseData = {
       commentary: entitySportMatch?.data?.result
     }

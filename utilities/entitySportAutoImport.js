@@ -117,13 +117,13 @@ const entitySportAutoImportProcess = async (fastify) => {
             importData.importEndTime = new Date();
             importData.isImported = false;
 
-            if (global.autoImportData && global.autoImportData.id === id) {
+            if (global?.autoImportData && global?.autoImportData?.id === id) {
                 importData.esApiResponseData = global.autoImportData.esApiResponseData
             }
             await importUpdate(importData, fastify);
         } catch (error) {
-            if (importData && global.autoImportData && global.autoImportData.id) {
-                if (global.autoImportData.id === importData.id) {
+            if (importData && global?.autoImportData && global?.autoImportData?.id) {
+                if (global?.autoImportData?.id === importData.id) {
                     importData.esApiResponseData = global.autoImportData.esApiResponseData
                 }
                 await importUpdate({
