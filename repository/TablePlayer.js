@@ -738,6 +738,78 @@ const getAllDuplicatePlayersQuery = async (request, fastify) => {
     }
 };
 
+const getPlayersWithoutTeamQuery = async (request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      SELECT 
+          tp."wrPlayerId" AS "playerId",
+          tp."wrPlayerName" AS "playerName",
+          tp."wrDisplayName" AS "displayName",
+          tp."wrImage" AS "image",
+          tp."wrIsActive" AS "isActive"
+      FROM "tblPlayers" tp
+      WHERE tp."wrIsDeleted" = false
+      AND NOT EXISTS (
+          SELECT 1 
+          FROM "tblTeamPlayers" ttp
+          WHERE ttp."wrRefPlayerId" = tp."wrPlayerId"
+          AND ttp."wrIsDeleted" = false
+      );
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePlayer.js/getPlayersWithoutTeamQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const getPlayersWithoutHomeTeamQuery = async (request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      SELECT 
+          tp."wrPlayerId" AS "playerId",
+          tp."wrPlayerName" AS "playerName",
+          tp."wrDisplayName" AS "displayName",
+          tp."wrImage" AS "image",
+          tp."wrIsActive" AS "isActive",
+          ttp."wrTeamId" AS "teamId",
+          ttp."wrHomeTeam" AS "homeTeam"
+      FROM "tblPlayers" tp
+      JOIN "tblTeamPlayers" ttp 
+          ON tp."wrPlayerId" = ttp."wrRefPlayerId"
+      WHERE tp."wrIsDeleted" = false
+        AND ttp."wrIsDeleted" = false
+        AND (ttp."wrHomeTeam" = false OR ttp."wrHomeTeam" IS NULL);
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT
+      }
+    );
+
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePlayer.js/getPlayersWithoutHomeTeamQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 const getPlayerCompetitionListByPlayerIdQuery = async (request, fastify) => {
   try {
     const playerId = request.body.playerId;
@@ -813,5 +885,7 @@ module.exports = {
   getPlayerByIdQuery,
   updateExchangePlayerQuery,
   getAllDuplicatePlayersQuery,
-  getPlayerCompetitionListByPlayerIdQuery
+  getPlayerCompetitionListByPlayerIdQuery,
+  getPlayersWithoutTeamQuery,
+  getPlayersWithoutHomeTeamQuery,
 };
