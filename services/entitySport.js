@@ -413,11 +413,11 @@ const setEntityCom2Service = async (request , fastify) =>{
                   tossRmk: upComData.tossRmk,
                   displayStatus: upComData.displayStatus,
               };
-              scoreResponse.scoreResponse = global.tblCommentaries[comI]
+              scoreResponse.commentaryDetails = global.tblCommentaries[comI]
               sendDataForSocketUpdate.dataToUpdate.push({
                 module: "commentaryDetails",
                 type: "update",
-                data: scoreResponse.scoreResponse,
+                data: scoreResponse.commentaryDetails,
               });
           }
           if(comTeams && comTeams.length > 0){
@@ -543,11 +543,11 @@ const setEntityCom2Service = async (request , fastify) =>{
                     tossRmk: upComData.tossRmk,
                     displayStatus: upComData.displayStatus,
                 };
-                scoreResponse.scoreResponse = global.tblCommentaries[comI]
+                scoreResponse.commentaryDetails = global.tblCommentaries[comI]
                 sendDataForSocketUpdate.dataToUpdate.push({
                   module: "commentaryDetails",
                   type: "update",
-                  data: scoreResponse.scoreResponse,
+                  data: scoreResponse.commentaryDetails,
                 });
             }
             if(comTeams && comTeams.length > 0){
@@ -869,6 +869,12 @@ const setEntityCom2Service = async (request , fastify) =>{
       if (index !== -1) {
         global.tblCommentaries[index].displayStatus = commDisplayStatus;
       }
+      scoreResponse.commentaryDetails = global.tblCommentaries[index]
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module: "commentaryDetails",
+        type: "update",
+        data: scoreResponse.commentaryDetails,
+      });
     }
     return true;
   } catch (error) {
