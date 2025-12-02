@@ -65,7 +65,7 @@ const validateImportData = (data, fastify) => {
 };
 
 const entitySportAutoImportProcess = async (fastify) => {
-    const condition = `"wrIsImported" = true AND "wrIsImportStart" = false AND "wrSourceId" = 3 ORDER BY "wrId" ASC`;
+    const condition = `"wrIsImported" = true AND "wrIsImportStart" = false AND "wrSourceId" = 3 AND "wrImportStartTime" IS NULL ORDER BY "wrId" ASC`;
     const autoImportData = await getAllAutoImportDataQuery(null, fastify, condition);
 
     for (const aID of autoImportData) {
