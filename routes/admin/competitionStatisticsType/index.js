@@ -1,4 +1,5 @@
 const { authorize, checkPermission } = require("../../../controller/middleware");
+const { updateCompetitionStatisticsTypeDisplayOrder } = require("../../../controller/users/admin/competitionStatisticsType");
 const { getAllCompetitionStatisticsType, getCompetitionStatisticsTypeById, saveCompetitionStatisticsType, deleteCompetitionStatisticsType } = require("../../../controller/users/admin/competitionStatisticsType");
 const { CompititionStatisticsType } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -53,5 +54,18 @@ module.exports = async (fastify, opts) => {
                 }),
         ],
         handler: (request, reply) => deleteCompetitionStatisticsType(request, reply, fastify),
+    });
+
+    fastify.post("/changeDisplayOrder", {
+        schema: CompititionStatisticsType.updateDisplayOrder.schema,
+        preHandler: [
+            (request, reply) => authorize(request, reply, fastify),
+            (request, reply) =>
+                checkPermission(request, reply, fastify, {
+                    tabName: "Competition Statistics Type",
+                    mode: "edit",
+                }),
+        ],
+        handler: (request, reply) => updateCompetitionStatisticsTypeDisplayOrder(request, reply, fastify),
     });
 }

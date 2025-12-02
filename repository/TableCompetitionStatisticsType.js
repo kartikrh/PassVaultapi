@@ -9,7 +9,7 @@ const getAllCompetitionStatisticsTypeQuery = async (fastify, request = null) => 
                 tet."wrEventType" as "eventType",
                 tcst."wrTypeId" as "typeId",
                 tcst."wrName" as "name",
-                tcst."wrKeyName" as "keyName",
+                tcst."wrEntityEnum" as "entityEnum",
                 tcst."wrDisplayOrder" as "displayOrder",
                 tcst."wrDescription" as "description",
                 tcst."wrIsActive" as "isActive",
@@ -43,7 +43,7 @@ const insertCompetitionStatisticsTypeQuery = async (data, fastify, request) => {
             `
                 WITH insert_data AS (
                   INSERT INTO "tblCompetitionStatisticsType"
-                  ("wrEventTypeId", "wrTypeId", "wrName", "wrKeyName", "wrDisplayOrder", "wrDescription", "wrIsActive",
+                  ("wrEventTypeId", "wrTypeId", "wrName", "wrEntityEnum", "wrDisplayOrder", "wrDescription", "wrIsActive",
                    "wrCreatedBy", "wrIsDeleted")
                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                   RETURNING *
@@ -54,7 +54,7 @@ const insertCompetitionStatisticsTypeQuery = async (data, fastify, request) => {
                     tet."wrEventType" as "eventType",
                     tcst."wrTypeId" as "typeId",
                     tcst."wrName" as "name",
-                    tcst."wrKeyName" as "keyName",
+                    tcst."wrEntityEnum" as "entityEnum",
                     tcst."wrDisplayOrder" as "displayOrder",
                     tcst."wrDescription" as "description",
                     tcst."wrIsActive" as "isActive",
@@ -71,7 +71,7 @@ const insertCompetitionStatisticsTypeQuery = async (data, fastify, request) => {
                     data?.eventTypeId ?? null,
                     data?.typeId ?? null,
                     data?.name ?? null,
-                    data?.keyName ?? null,
+                    data?.entityEnum ?? null,
                     data?.displayOrder ?? null,
                     data?.description ?? null,
                     data?.isActive ?? true,
@@ -100,7 +100,7 @@ const updateCompetitionStatisticsTypeByIdQuery = async (data, fastify, request) 
                 WITH update_data AS (
                     UPDATE "tblCompetitionStatisticsType"
                     SET
-                        "wrKeyName" = $1,
+                        "wrEntityEnum" = $1,
                         "wrDisplayOrder" = $2,
                         "wrDescription" = $3,
                         "wrIsActive" = $4,
@@ -115,7 +115,7 @@ const updateCompetitionStatisticsTypeByIdQuery = async (data, fastify, request) 
                     tet."wrEventType" as "eventType",
                     tcst."wrTypeId" as "typeId",
                     tcst."wrName" as "name",
-                    tcst."wrKeyName" as "keyName",
+                    tcst."wrEntityEnum" as "entityEnum",
                     tcst."wrDisplayOrder" as "displayOrder",
                     tcst."wrDescription" as "description",
                     tcst."wrIsActive" as "isActive",
@@ -129,7 +129,7 @@ const updateCompetitionStatisticsTypeByIdQuery = async (data, fastify, request) 
             {
                 type: fastify.db.QueryTypes.SELECT,
                 bind: [
-                    data.keyName,
+                    data.entityEnum,
                     data.displayOrder,
                     data.description,
                     data.isActive,
@@ -188,9 +188,29 @@ const deleteCompetitionStatisticsTypeByIdQuery = async (competitionStatisticsTyp
     }
 };
 
+const updateCompetitionStatisticsTypeDisplayOrderQuery = async (body, request, fastify) => {
+    try {
+        return await fastify.db.query(
+            `update "wrCompetitionStatisticsTypeId" set "wrDisplayOrder" = $1 where "wrCompetitionStatisticsTypeId" in ($2) `,
+            {
+                bind: [body.displayOrder, body.competitionStatisticsTypeId],
+            }
+        );
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableCompetitionStatisticsType.js/updateDisplayOrder",
+            request
+        );
+        throw new Error(err.message);
+    }
+}
+
 module.exports = {
     getAllCompetitionStatisticsTypeQuery,
     insertCompetitionStatisticsTypeQuery,
     updateCompetitionStatisticsTypeByIdQuery,
-    deleteCompetitionStatisticsTypeByIdQuery
+    deleteCompetitionStatisticsTypeByIdQuery,
+    updateCompetitionStatisticsTypeDisplayOrderQuery
 };
