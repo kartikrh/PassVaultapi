@@ -1912,7 +1912,7 @@ const playersMergeImageService = async (type, request, fastify) => {
   return "All Player image(s) and Jersey image(s) merge process started";
 };
 
-const roundToNearestMinutes = (minutes) => {
+const roundToNearestMinutes = async (minutes) => {
     const date = new Date();
     const ms = 1000 * 60 * minutes;
     return new Date(Math.round(date.getTime() / ms) * ms);
