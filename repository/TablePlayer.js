@@ -783,15 +783,24 @@ const getPlayersWithoutHomeTeamQuery = async (request, fastify) => {
           tp."wrPlayerName" AS "playerName",
           tp."wrDisplayName" AS "displayName",
           tp."wrImage" AS "image",
-          tp."wrIsActive" AS "isActive",
-          ttp."wrTeamId" AS "teamId",
-          ttp."wrHomeTeam" AS "homeTeam"
+          tp."wrIsActive" AS "isActive"
       FROM "tblPlayers" tp
-      JOIN "tblTeamPlayers" ttp 
-          ON tp."wrPlayerId" = ttp."wrRefPlayerId"
       WHERE tp."wrIsDeleted" = false
-        AND ttp."wrIsDeleted" = false
-        AND (ttp."wrHomeTeam" = false OR ttp."wrHomeTeam" IS NULL);
+      AND EXISTS (
+          -- Player has at least one team entry
+          SELECT 1
+          FROM "tblTeamPlayers" ttp
+          WHERE ttp."wrRefPlayerId" = tp."wrPlayerId"
+            AND ttp."wrIsDeleted" = false
+      )
+      AND NOT EXISTS (
+          -- Player should NOT have any homeTeam = true entry
+          SELECT 1
+          FROM "tblTeamPlayers" ttp2
+          WHERE ttp2."wrRefPlayerId" = tp."wrPlayerId"
+            AND ttp2."wrIsDeleted" = false
+            AND ttp2."wrHomeTeam" = true
+      );
       `,
       {
         type: fastify.db.QueryTypes.SELECT
