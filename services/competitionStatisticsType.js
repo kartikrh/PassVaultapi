@@ -1,7 +1,7 @@
 const { insertCompetitionStatisticsTypeQuery, updateCompetitionStatisticsTypeByIdQuery, deleteCompetitionStatisticsTypeByIdQuery, updateCompetitionStatisticsTypeDisplayOrderQuery } = require("../repository/TableCompetitionStatisticsType");
 
 const getAllCompetitionStatisticsTypeService = async (request, fastify) => {
-    const { isActive, typeId, eventTypeId } = request.body;
+    const { isActive, typeId, eventTypeId, entityEnum } = request.body;
     let competitionStatisticsTypes = global.tblCompetitionStatisticsType;
 
     if ("isActive" in request.body) {
@@ -14,6 +14,10 @@ const getAllCompetitionStatisticsTypeService = async (request, fastify) => {
 
     if (eventTypeId && eventTypeId !== 0) {
         competitionStatisticsTypes = competitionStatisticsTypes.filter(item => item.eventTypeId === eventTypeId);
+    }
+
+    if (entityEnum && entityEnum !== 0) {
+        competitionStatisticsTypes = competitionStatisticsTypes.filter(item => item.entityEnum === entityEnum);
     }
 
     return competitionStatisticsTypes;

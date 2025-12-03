@@ -11190,7 +11190,8 @@ const CompititionStatisticsType = {
         properties: {
           isActive: { type: "boolean" },
           eventTypeId: { type: "integer" },
-          typeId: { type: "integer" }
+          typeId: { type: "integer" },
+          entityEnum: { type: "integer" }
         },
       },
     },
