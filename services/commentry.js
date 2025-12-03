@@ -23816,7 +23816,7 @@ const matchImportService = async (data, fastify, request = null) => {
         eventName: matchInfoResponse?.title,
         team1Id: teamAData?.teamId,
         team2Id: teamBData?.teamId,
-        location: checkVenue?.name && checkVenue?.countryName ? `${checkVenue.name}, ${checkVenue.countryName}` : null,
+        location: checkVenue?.name && checkVenue?.city ? `${checkVenue.name}, ${checkVenue.city}` : null,
         displayStatus: matchInfoResponse?.status_note,
         isClientShow: false,
         commentaryStatus: 1,

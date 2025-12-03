@@ -1481,7 +1481,7 @@ const competitionImportService = async (data, fastify, request) => {
         eventName: match?.title,
         team1Id: teamA?.teamId,
         team2Id: teamB?.teamId,
-        location: getVenueData?.name && getVenueData?.countryName ? `${getVenueData.name}, ${getVenueData.countryName}` : null,
+        location: getVenueData?.name && getVenueData?.city ? `${getVenueData.name}, ${getVenueData.city}` : null,
         displayStatus: match?.status_note,
         isClientShow: true,
         commentaryStatus: 1,
