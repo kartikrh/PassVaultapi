@@ -11221,7 +11221,7 @@ const CompititionStatisticsType = {
           eventTypeId: { type: "integer" },
           typeId: { type: "integer" },
           name: { type: "string" },
-          keyName: { type: "string" },
+          entityEnum: { type: "integer" },
           displayOrder: { type: "integer" },
           description: { type: "string" },
           isActive: { type: "boolean" }
@@ -11245,6 +11245,24 @@ const CompititionStatisticsType = {
           },
         },
         required: ["competitionStatisticsTypeId"],
+      },
+    },
+  },
+  updateDisplayOrder: {
+    schema: {
+      tags: ["Compitition Statistics Type"],
+      description: "update display order",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            competitionStatisticsTypeId: { type: "integer" },
+            displayOrder: { type: "integer" },
+          },
+        },
+        minItems: 1,
       },
     },
   }
