@@ -601,11 +601,6 @@ const deletePlayerService = async (request, fastify) => {
     if (checkTournamentTeamPlayer) {
       throw new Error(`'${getPlayerData?.playerName}' player is in tournament/s and cannot be deleted at this moment`);
     }
-
-    const checkTeamPlayer = await getTeamPlayerByPlayerIdQuery(pId, fastify, request);
-    if (checkTeamPlayer) {
-      throw new Error(`'${getPlayerData?.playerName}' player is in team/s and cannot be deleted at this moment`);
-    }
   }
 
   for (const id of playerId) {
