@@ -769,8 +769,8 @@ const setEntityCom2Service = async (request , fastify) =>{
                 overCount: 0,
                 currentOverBalls: 0,
                 bowlerId: bowler?.commentaryPlayerId,
-                batStrikeId: strikePlayer.commentaryPlayerId,
-                batNonStrikeId: nonStrikePlayer.commentaryPlayerId,
+                batStrikeId: strikePlayer?.commentaryPlayerId,
+                batNonStrikeId: nonStrikePlayer?.commentaryPlayerId,
                 ballIsCount: true,
                 ballType: 0,
                 ballIsDot: false,
@@ -788,8 +788,8 @@ const setEntityCom2Service = async (request , fastify) =>{
                 devCurrentOverBall: null,
                 ballFielderId2: 0,
                 overIsMaiden: false,
-                nextBatStrikeId:  strikePlayer.commentaryPlayerId,
-                nextBatNonStrikeId: nonStrikePlayer.commentaryPlayerId,
+                nextBatStrikeId:  strikePlayer?.commentaryPlayerId,
+                nextBatNonStrikeId: nonStrikePlayer?.commentaryPlayerId,
                 currentInnings: comDetails.currentInnings
             };
             const ball = await virtualBallByBallQuery(
@@ -1059,6 +1059,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             batFour: p.fours,
             batSix: p.sixes,
             batterOrder,
+            batsmanStrikeRate: parseFloat(p.strike_rate) ?? "0",
           };
           currentPlayers.push(comP.commentaryPlayerId);
         }
