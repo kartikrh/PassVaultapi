@@ -188,7 +188,7 @@ module.exports = async function (fastify, opts) {
       }
     });
 
-    cron.schedule('0 0 * * *', async () => {
+    cron.schedule('30 19 * * *', async () => {
       try {
         if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
           await autoUpdateTournamentTeamPoints(fastify);
