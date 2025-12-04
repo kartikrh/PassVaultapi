@@ -1,5 +1,7 @@
 const {
     getAllDuplicatePlayersQuery,
+    getPlayersWithoutTeamQuery,
+    getPlayersWithoutHomeTeamQuery,
 } = require("../repository/TablePlayer");
 
 const getAllNullImagePlayersService = async (fastify, request) => {
@@ -64,9 +66,21 @@ const getAllDuplicatePlayersService = async (fastify, request) => {
     return result;
 };
 
+const getPlayersWithoutTeamService = async (fastify, request) => {
+    let result = await getPlayersWithoutTeamQuery(request, fastify)
+    return result;
+};
+
+const getPlayersWithoutHomeTeamService = async (fastify, request) => {
+    let result = await getPlayersWithoutHomeTeamQuery(request, fastify)
+    return result;
+};
+
 module.exports = {
     getAllNullImagePlayersService,
     getAllNullImageTeamsService,
     getAllDuplicatePlayersService,
     getAllNullImageTeamsAndPlayersService,
+    getPlayersWithoutTeamService,
+    getPlayersWithoutHomeTeamService,
 };

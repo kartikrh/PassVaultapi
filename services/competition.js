@@ -21,7 +21,7 @@ const {storeImageOnServer, removeImageFromServer, generateImageName, getImageFro
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
 const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive, matchStatusEntity, error, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, parseUmpires, ScoringTypes, RefType } = require("../utilities");
-const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryTeams, getCommentaryTeamsQuery, insertCommentaryPlayers, deleteCommentaryPlayersByPlayerId, updateCommentaryPlayerById } = require("../repository/TableCommentary")
+const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryTeams, getCommentaryTeamsQuery, insertCommentaryPlayers, deleteCommentaryPlayersByPlayerId, updateCommentaryPlayerById, isCountInPOintCommentaryChangeQuery } = require("../repository/TableCommentary")
 const { deleteTournamentTeamPlayersByCompIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
 const { addEditTournamentTeamPointDataService } = require("./tournamentTeamPoints");
@@ -31,7 +31,7 @@ const { insertPlayerQuery, updateExchangePlayerQuery } = require("../repository/
 const { insertTeamPlayerQuery, updateTeamPlayerHomeTeamQuery } = require("../repository/TableTeamPlayer");
 const { addTournamentTeamPlayersService } = require("./tournamentTeamPlayers");
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
-const { errorLogger } = require("../utilities/logger");
+const { errorLogger, commActionLogger } = require("../utilities/logger");
 const { insertVenueQuery, updateVenueQuery } = require("../repository/TableVenue");
 const { insertWeatherQuery, updateWeatherQuery } = require("../repository/TableWeather");
 const { updatePitchConditionQuery, insertPitchConditionQuery } = require("../repository/TablePitchCondition");
@@ -653,38 +653,93 @@ const isPointTableService = async (request, fastify) => {
     throw new Error("Competition with this id not Found");
   }
 
+  let winPoint = validateId.winPoint, tiePoint = validateId.tiePoint, lossPoint = validateId.cancelPoint, cancelPoint = validateId.lossPoint;
+  if (isPointTable === true) {
+    if (!validateId.winPoint) winPoint = 2;
+    if (!validateId.tiePoint) tiePoint = 0;
+    if (!validateId.lossPoint) lossPoint = 0;
+    if (!validateId.cancelPoint) cancelPoint = 1;
+  }
+
+  const getCommentaryByCompetitionId = global.tblCommentaries.filter(tc => tc.competitionId === competitionId && [1, 2, 3, 5].includes(tc.commentaryStatus));
+  for (const commentary of getCommentaryByCompetitionId) {
+    const getCommentaryIndex = global.tblCommentaries.findIndex(tc => tc.commentaryId === commentary.commentaryId);
+    const bodyData = {
+      commentaryId: commentary.commentaryId,
+      isCountInPoint: isPointTable
+    };
+    await isCountInPOintCommentaryChangeQuery(bodyData, fastify, request);
+    global.tblCommentaries[getCommentaryIndex].isCountInPoint = isPointTable;
+
+    commActionLogger(
+      {
+        commentaryId: commentary.commentaryId,
+        requestBody: {
+          ...request.body,
+          ...bodyData
+        },
+        response: {
+          message: "Commentary Updated successfully",
+        },
+        apiName: "/admin/commentary/isCountInPoint",
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      console.log("isCountInPoint commActionLogger console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/competition.js/isPointTableService - commActionLogger",
+        request
+      );
+    });
+  }
+
   await isPointTableCompetitionQuery(
     {
       competitionId,
       isPointTable,
+      winPoint,
+      tiePoint,
+      cancelPoint,
+      lossPoint
     },
     request,
     fastify
   );
   const index = global.tblCompetitions.findIndex((item) => item.competitionId == competitionId);
-  if(index != -1){
+  if (index != -1) {
     global.tblCompetitions[index].isPointTable = isPointTable;
+    global.tblCompetitions[index] = {
+      ...global.tblCompetitions[index],
+      isPointTable: isPointTable,
+      winPoint,
+      tiePoint,
+      cancelPoint,
+      lossPoint
+    }
   }
-  
+
   callClientAPI(
     {
-      serviceType : ServiceType.clientAPI,
-      moduleType : APIEndpointModuleType.updateSeoModule,
-      data : {
-        module : "competition",
-        type : "update",
-        data : global.tblCompetitions[index]
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.updateSeoModule,
+      data: {
+        module: "competition",
+        type: "update",
+        data: global.tblCompetitions[index]
       }
     }, request, fastify)
-  .catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "API ERROR --> services/competition.js/isPointTableService - callClientAPI",
-      request
-    );
-  });
-  
+    .catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "API ERROR --> services/competition.js/isPointTableService - callClientAPI",
+        request
+      );
+    });
+
   return `Competition isEventSnap status updated successfully`;
 };
 
@@ -1133,6 +1188,12 @@ const competitionImportService = async (data, fastify, request) => {
   const url = checkEntitySportAPIEndpoint.data.replace("{cid}", data.cid);
   const entitySportCompetition = await callEntitySportAPI(url, request, fastify);
 
+  if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
+    global.autoImportData.esApiResponseData = {
+      competition: entitySportCompetition?.data?.result
+    }
+  }
+
   let entitySportCompetitionResponse = entitySportCompetition?.data?.result;
   if (!entitySportCompetitionResponse) {
     errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/competition.js/competitionImportService - entitySportCompetitionResponse", {
@@ -1216,6 +1277,17 @@ const competitionImportService = async (data, fastify, request) => {
     params.append("per_page", 50);
     url2 += `&${params.toString()}`;
     const entitySportCompetitionMatch = await callEntitySportAPI(url2, request, fastify);
+
+    if (data?.autoImportId && data?.autoImportId === global.autoImportData?.id) {
+      global.autoImportData.esApiResponseData = {
+        ...global.autoImportData.esApiResponseData,
+        match: [
+          ...global.autoImportData.esApiResponseData?.match || [],
+          ...(entitySportCompetitionMatch?.data?.result?.items || [])
+        ]
+      }
+    }
+
     let entitySportCompetitionMatchResponse = entitySportCompetitionMatch?.data?.result;
     if (!entitySportCompetitionMatchResponse) {
       errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/competition.js/competitionImportService - entitySportCompetitionMatchResponse", {
@@ -1287,6 +1359,13 @@ const competitionImportService = async (data, fastify, request) => {
 
   const url3 = checkEntitySportAPIEndpoint3.data.replace("{cid}", data.cid);
   const entitySportCompetitionSquad = await callEntitySportAPI(url3, request, fastify);
+
+  if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
+    global.autoImportData.esApiResponseData = {
+      ...global.autoImportData.esApiResponseData,
+      squad: entitySportCompetitionSquad?.data?.result?.squads
+    }
+  }
 
   let entitySportCompetitionSquadResponse = entitySportCompetitionSquad?.data?.result?.squads;
 
@@ -1402,7 +1481,7 @@ const competitionImportService = async (data, fastify, request) => {
         eventName: match?.title,
         team1Id: teamA?.teamId,
         team2Id: teamB?.teamId,
-        location: getVenueData?.name && getVenueData?.countryName ? `${getVenueData.name}, ${getVenueData.countryName}` : null,
+        location: getVenueData?.name && getVenueData?.city ? `${getVenueData.name}, ${getVenueData.city}` : null,
         displayStatus: match?.status_note,
         isClientShow: true,
         commentaryStatus: 1,

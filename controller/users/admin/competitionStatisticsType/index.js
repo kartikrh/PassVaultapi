@@ -1,4 +1,4 @@
-const { getAllCompetitionStatisticsTypeService, getCompetitionStatisticsTypeByIdService, saveCompetitionStatisticsTypeService, deleteCompetitionStatisticsTypeService } = require("../../../../services/competitionStatisticsType");
+const { getAllCompetitionStatisticsTypeService, getCompetitionStatisticsTypeByIdService, saveCompetitionStatisticsTypeService, deleteCompetitionStatisticsTypeService, updateCompetitionStatisticsTypeDisplayOrderService } = require("../../../../services/competitionStatisticsType");
 const { success, ERROR_CODES, error } = require("../../../../utilities");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -44,9 +44,20 @@ const deleteCompetitionStatisticsType = async (request, reply, fastify) => {
     }
 };
 
+const updateCompetitionStatisticsTypeDisplayOrder = async (request, reply, fastify) => {
+    try {
+        const result = await updateCompetitionStatisticsTypeDisplayOrderService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, path + "/updateCompetitionStatisticsTypeDisplayOrder", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+
 module.exports = {
     getAllCompetitionStatisticsType,
     getCompetitionStatisticsTypeById,
     saveCompetitionStatisticsType,
-    deleteCompetitionStatisticsType
+    deleteCompetitionStatisticsType,
+    updateCompetitionStatisticsTypeDisplayOrder
 };

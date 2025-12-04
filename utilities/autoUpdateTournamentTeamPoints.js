@@ -6,6 +6,11 @@ const { errorLogger } = require("./logger");
 const formatDate = (date) => date.toISOString().split("T")[0];
 
 const autoUpdateTournamentTeamPoints = async (fastify) => {
+    const request = {
+        userTokenInfo: {
+            WrUserId: -2
+        }
+    }
     try {
         const yesterdayStr = formatDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
         const competitionList = global.tblCompetitions.filter(cp => {
@@ -16,11 +21,6 @@ const autoUpdateTournamentTeamPoints = async (fastify) => {
         })
 
         for (const competition of competitionList) {
-            const request = {
-                userTokenInfo: {
-                    WrUserId: -2
-                }
-            }
             const result = await importUpdateTournamentTeamPointFromEntitySportService({
                 cid: competition.tpId
             }, fastify, request);
@@ -40,9 +40,8 @@ const autoUpdateTournamentTeamPoints = async (fastify) => {
             fastify,
             error.message,
             "ERROR --> utilities/autoUpdateTournamentTeamPoints.js/autoUpdateTournamentTeamPoints",
-            null
+            request
         );
-
     }
 }
 
