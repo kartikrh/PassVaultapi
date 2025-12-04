@@ -875,6 +875,9 @@ const setEntityCom2Service = async (request , fastify) =>{
         type: "update",
         data: scoreResponse.commentaryDetails,
       });
+      global.clientSocketIo.forEach((socket) => {
+        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      });
     }
     return true;
   } catch (error) {
@@ -1147,9 +1150,12 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     const bowlerDotMap = {};  // key: bowler_id, value: dot balls
     const wickets = []; // optional: cache to avoid re-checking db
 
-    let upComDetails;
-    upComDetails = {
-      rmk : response.live.status_note
+    let upComDetails = {};
+    let inningNo = response?.live?.live_inning_number
+    if (inningNo == 1) {
+      upComDetails.rmk = ""
+    } else {
+      upComDetails.rmk = response.live.status_note;
     }
     if(commentaries?.length > 0){
       if(comDetails.commentaryStatus == commentaryStatus.INNINGCHANGE){
