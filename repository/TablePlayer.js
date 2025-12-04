@@ -716,7 +716,6 @@ const getAllDuplicatePlayersQuery = async (request, fastify) => {
       //     type: fastify.db.QueryTypes.SELECT,
       //   }
       // );
-
       let res = await fastify.db.query(
         `
             CALL proc_get_duplicate_data($1)
