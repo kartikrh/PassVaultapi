@@ -1,19 +1,23 @@
 const { insertCompetitionStatisticsTypeQuery, updateCompetitionStatisticsTypeByIdQuery, deleteCompetitionStatisticsTypeByIdQuery, updateCompetitionStatisticsTypeDisplayOrderQuery } = require("../repository/TableCompetitionStatisticsType");
 
 const getAllCompetitionStatisticsTypeService = async (request, fastify) => {
-    const { isActive, typeId, eventTypeId } = request.body;
+    const { isActive, typeId, eventTypeId, entityEnum } = request.body;
     let competitionStatisticsTypes = global.tblCompetitionStatisticsType;
 
     if ("isActive" in request.body) {
         competitionStatisticsTypes = competitionStatisticsTypes.filter(item => item.isActive === isActive);
     }
 
-    if (typeId && typeId !== 0) {
-        competitionStatisticsTypes = competitionStatisticsTypes.filter(item => item.typeId === typeId);
-    }
-
     if (eventTypeId && eventTypeId !== 0) {
         competitionStatisticsTypes = competitionStatisticsTypes.filter(item => item.eventTypeId === eventTypeId);
+    }
+
+    if (typeId && typeId !== 0) {
+        competitionStatisticsTypes = competitionStatisticsTypes.filter(item => item.typeId === typeId);
+
+        if (entityEnum && entityEnum !== 0) {
+            competitionStatisticsTypes = competitionStatisticsTypes.filter(item => item.entityEnum === entityEnum);
+        }
     }
 
     return competitionStatisticsTypes;
@@ -118,12 +122,12 @@ const updateCompetitionStatisticsTypeDisplayOrderService = async (request, fasti
     for (const item of request.body) {
         await updateCompetitionStatisticsTypeDisplayOrderQuery(item, request, fastify);
         let index = global.tblCompetitionStatisticsType.findIndex((elem) => elem.id === item.competitionStatisticsTypeId);
-        if(index !== -1){
+        if (index !== -1) {
             global.tblCompetitionStatisticsType[index].displayOrder = item.displayOrder;
         }
-      }
-    
-      return `Display order updated successfully`;
+    }
+
+    return `Display order updated successfully`;
 }
 
 module.exports = {

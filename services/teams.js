@@ -635,6 +635,10 @@ const UpdateTeamFromEntityService = async (data, fastify, request) => {
   const url = checkEntitySportAPIEndpoint.data.replace("{tid}", checkTeamData.tpId);
   const entitySportTeamPlayer = await callEntitySportAPI(url, request, fastify);
 
+  if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
+    global.autoImportData.esApiResponseData = entitySportTeamPlayer?.data?.result?.items;
+  }
+
   let entitySportTeamPlayerResponse = entitySportTeamPlayer?.data?.result?.items;
   if (!entitySportTeamPlayerResponse) {
     errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/teams.js/UpdateTeamFromEntityService - entitySportTeamPlayerResponse", {

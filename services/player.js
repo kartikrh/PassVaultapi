@@ -601,11 +601,6 @@ const deletePlayerService = async (request, fastify) => {
     if (checkTournamentTeamPlayer) {
       throw new Error(`'${getPlayerData?.playerName}' player is in tournament/s and cannot be deleted at this moment`);
     }
-
-    const checkTeamPlayer = await getTeamPlayerByPlayerIdQuery(pId, fastify, request);
-    if (checkTeamPlayer) {
-      throw new Error(`'${getPlayerData?.playerName}' player is in team/s and cannot be deleted at this moment`);
-    }
   }
 
   for (const id of playerId) {
@@ -1056,6 +1051,10 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
   const url = checkEntitySportAPIEndpoint.data.replace("{pid}", playerNewTpId);
   const entitySportPlayer = await callEntitySportAPI(url, request, fastify);
 
+  if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
+    global.autoImportData.esApiResponseData = entitySportPlayer?.data?.result;
+  }
+
   const entitySportPlayerResponse = entitySportPlayer?.data?.result;
   if (!entitySportPlayerResponse) {
     errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/player.js/UpdatePlayerFromEntityService - entitySportPlayerResponse", {
@@ -1190,7 +1189,7 @@ const playerImportService = async (data, fastify, request) => {
   const entitySportPlayer = await callEntitySportAPI(url, request, fastify);
 
   if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
-    global.autoImportData.esApiResponseData = entitySportPlayer?.data?.result
+    global.autoImportData.esApiResponseData = entitySportPlayer?.data?.result;
   }
 
   let entitySportPlayerResponse = entitySportPlayer?.data?.result?.player;

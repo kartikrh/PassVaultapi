@@ -23527,7 +23527,7 @@ const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
   const entitySportTeamPlayers = await callEntitySportAPI(url, request, fastify);
 
   if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
-    global.autoImportData.esApiResponseData = entitySportTeamPlayers?.data?.result?.items
+    global.autoImportData.esApiResponseData = entitySportTeamPlayers?.data?.result?.items;
   }
 
   let entitySportTeamPlayersResponse = entitySportTeamPlayers?.data?.result?.items;
@@ -23816,7 +23816,7 @@ const matchImportService = async (data, fastify, request = null) => {
         eventName: matchInfoResponse?.title,
         team1Id: teamAData?.teamId,
         team2Id: teamBData?.teamId,
-        location: checkVenue?.name && checkVenue?.countryName ? `${checkVenue.name}, ${checkVenue.countryName}` : null,
+        location: checkVenue?.name && checkVenue?.city ? `${checkVenue.name}, ${checkVenue.city}` : null,
         displayStatus: matchInfoResponse?.status_note,
         isClientShow: false,
         commentaryStatus: 1,
