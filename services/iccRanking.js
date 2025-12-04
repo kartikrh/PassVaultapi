@@ -388,8 +388,7 @@ const extractEntries = async (json, isMen, request, fastify) => {
         playerTypeData.map((pt) => [pt.playerType.toLowerCase(), pt])
     );
 
-    let teamIds = new Set(),
-        playerIds = new Set();
+    let teamIds = new Set(), playerIds = new Set();
     for (const category in json) {
         const categoryData = json[category];
 
@@ -398,12 +397,14 @@ const extractEntries = async (json, isMen, request, fastify) => {
 
             for (const item of entries) {
                 if (isTeamCategory(category)) {
-                    if (!teamMap.has(Number(item.tid))) {
-                        teamIds.add(item.tid);
+                    const tid = Number(item.tid);
+                    if (!isNaN(tid) && (item.tid !== '0') && !teamMap.has(tid)) {
+                        teamIds.add(tid);
                     }
                 } else {
-                    if (!playerMap.has(Number(item.pid))) {
-                        playerIds.add(item.pid);
+                    const pid = Number(item.pid);
+                    if (!isNaN(pid) && (item.pid !== '0') && !playerMap.has(pid)) {
+                        playerIds.add(pid);
                     }
                 }
             }
