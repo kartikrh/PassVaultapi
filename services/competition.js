@@ -16,12 +16,13 @@ const {
   upStatusQuery,
   getMatchTypeTemplateByCompetitionIdQuery,
   updateTpIdCompQuery,
+  updateCompititionDateByCompetitionIdQuery,
 } = require("../repository/TableCompitition");
 const {storeImageOnServer, removeImageFromServer, generateImageName, getImageFromUrl } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
 const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive, matchStatusEntity, error, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, parseUmpires, ScoringTypes, RefType } = require("../utilities");
-const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryTeams, getCommentaryTeamsQuery, insertCommentaryPlayers, deleteCommentaryPlayersByPlayerId, updateCommentaryPlayerById, isCountInPOintCommentaryChangeQuery } = require("../repository/TableCommentary")
+const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryTeams, getCommentaryTeamsQuery, insertCommentaryPlayers, deleteCommentaryPlayersByPlayerId, updateCommentaryPlayerById, isCountInPOintCommentaryChangeQuery, updateCommentaryDateByCommentaryIdQuery } = require("../repository/TableCommentary")
 const { deleteTournamentTeamPlayersByCompIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
 const { addEditTournamentTeamPointDataService } = require("./tournamentTeamPoints");
@@ -1316,26 +1317,73 @@ const competitionImportService = async (data, fastify, request) => {
   if (!checkCompetition) {
     const competitionData = {
       competition: entitySportCompetitionResponse?.title,
-      eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
+      eventTypeId: eventType?.eventTypeId || EventType["Cricket"],
       refId: entitySportCompetitionResponse?.cid,
       isActive: true,
       isEventSnap: true,
       matchTypeId: matchType?.matchTypeId || null,
       drsCount: 2,
-      isMen: entitySportCompetitionResponse?.teams[0]?.sex == 'male' ? true : false,
-      type: CompetitionType[entitySportCompetitionResponse?.category.toUpperCase()],
-      commStatus: compStatus[entitySportCompetitionResponse?.status], // 1: fixture, 2: live, 3: result
+      isMen: entitySportCompetitionResponse?.teams?.[0]?.sex === "male",
+      type: CompetitionType[entitySportCompetitionResponse?.category?.toUpperCase()],
+      commStatus: compStatus[entitySportCompetitionResponse?.status],
       startDate: entitySportCompetitionResponse?.datestart,
       endDate: entitySportCompetitionResponse?.dateend,
       tpId: entitySportCompetitionResponse?.cid,
       pythonId: pythonIdData?.id || null,
-    }
+    };
+
     const insertCompetition = await insertCompetitionQuery({
       ...request,
       body: competitionData
     }, fastify);
+
     global.tblCompetitions.push(insertCompetition);
     checkCompetition = insertCompetition;
+  } else {
+    const esStart = entitySportCompetitionResponse?.datestart
+      ? new Date(entitySportCompetitionResponse?.datestart)
+      : null;
+
+    const esEnd = entitySportCompetitionResponse?.dateend
+      ? new Date(entitySportCompetitionResponse?.dateend)
+      : null;
+
+    const localStart = checkCompetition?.startDate
+      ? new Date(checkCompetition.startDate)
+      : null;
+
+    const localEnd = checkCompetition?.endDate
+      ? new Date(checkCompetition.endDate)
+      : null;
+
+    const updateData = {};
+
+    if (esStart && (!localStart || esStart.getTime() !== localStart.getTime())) {
+      updateData.startDate = esStart;
+    }
+
+    if (esEnd && (!localEnd || esEnd.getTime() !== localEnd.getTime())) {
+      updateData.endDate = esEnd;
+    }
+
+    if (Object.keys(updateData).length > 0) {
+      updateData.competitionId = checkCompetition.competitionId;
+
+      const updated = await updateCompititionDateByCompetitionIdQuery(
+        updateData,
+        fastify,
+        request
+      );
+
+      const index = global.tblCompetitions.findIndex(tc => tc.tpId === data.cid);
+      if (index !== -1) {
+        global.tblCompetitions[index] = {
+          ...global.tblCompetitions[index],
+          ...updated,
+        };
+        checkCompetition = global.tblCompetitions[index];
+      }
+    }
   }
 
   const entitySocketData = global.tblEntitySockets[0];
@@ -1522,6 +1570,32 @@ const competitionImportService = async (data, fastify, request) => {
 
         global.tblCommentaries.push(insertCommentary);
         checkCommentary = insertCommentary;
+      }
+
+      const esStart = match?.date_start
+        ? new Date(match?.date_start)
+        : null;
+
+      const localStart = checkCommentary?.eventDate
+        ? new Date(checkCommentary?.eventDate)
+        : null;
+
+      if (esStart && (!localStart || esStart.getTime() !== localStart.getTime())) {
+        const updated = await updateCommentaryDateByCommentaryIdQuery({
+          ...request,
+          body: {
+            eventDate: esStart,
+            commentaryId: checkCommentary?.commentaryId
+          }
+        }, fastify)
+        const index = global.tblCommentaries.findIndex(tc => tc.commentaryId === checkCommentary?.commentaryId);
+        if (index !== -1) {
+          global.tblCommentaries[index] = {
+            ...global.tblCommentaries[index],
+            ...updated
+          };
+          checkCommentary = global.tblCommentaries[index];
+        }
       }
 
       if (match?.weather && match?.weather.length > 0) {
