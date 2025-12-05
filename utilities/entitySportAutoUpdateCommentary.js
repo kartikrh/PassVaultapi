@@ -25,7 +25,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
 
                 for (let hour of intervalTimesForUpdateCommentary) {
                     const upper = hour;
-                    const lower = hour - 0.25; // 15-minute buffer
+                    const lower = hour - 0.25; // 15-minute buffers
 
                     if (diffHours > 0 && diffHours <= upper && diffHours >= lower) {
                         hour = hour.toFixed(0);
