@@ -22,7 +22,7 @@ const {storeImageOnServer, removeImageFromServer, generateImageName, getImageFro
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
 const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive, matchStatusEntity, error, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, parseUmpires, ScoringTypes, RefType } = require("../utilities");
-const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryTeams, getCommentaryTeamsQuery, insertCommentaryPlayers, deleteCommentaryPlayersByPlayerId, updateCommentaryPlayerById, isCountInPOintCommentaryChangeQuery } = require("../repository/TableCommentary")
+const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryTeams, getCommentaryTeamsQuery, insertCommentaryPlayers, deleteCommentaryPlayersByPlayerId, updateCommentaryPlayerById, isCountInPOintCommentaryChangeQuery, updateCommentaryDateByCommentaryIdQuery } = require("../repository/TableCommentary")
 const { deleteTournamentTeamPlayersByCompIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
 const { addEditTournamentTeamPointDataService } = require("./tournamentTeamPoints");
@@ -1359,11 +1359,11 @@ const competitionImportService = async (data, fastify, request) => {
     const updateData = {};
 
     if (esStart && (!localStart || esStart.getTime() !== localStart.getTime())) {
-      updateData.startDate = esStart.toISOString();
+      updateData.startDate = esStart;
     }
 
     if (esEnd && (!localEnd || esEnd.getTime() !== localEnd.getTime())) {
-      updateData.endDate = esEnd.toISOString();
+      updateData.endDate = esEnd;
     }
 
     if (Object.keys(updateData).length > 0) {
@@ -1570,6 +1570,32 @@ const competitionImportService = async (data, fastify, request) => {
 
         global.tblCommentaries.push(insertCommentary);
         checkCommentary = insertCommentary;
+      }
+
+      const esStart = match?.date_start
+        ? new Date(match?.date_start)
+        : null;
+
+      const localStart = checkCommentary?.eventDate
+        ? new Date(checkCommentary?.eventDate)
+        : null;
+
+      if (esStart && (!localStart || esStart.getTime() !== localStart.getTime())) {
+        const updated = await updateCommentaryDateByCommentaryIdQuery({
+          ...request,
+          body: {
+            eventDate: esStart,
+            commentaryId: checkCommentary?.commentaryId
+          }
+        }, fastify)
+        const index = global.tblCommentaries.findIndex(tc => tc.commentaryId === checkCommentary?.commentaryId);
+        if (index !== -1) {
+          global.tblCommentaries[index] = {
+            ...global.tblCommentaries[index],
+            ...updated
+          };
+          checkCommentary = global.tblCommentaries[index];
+        }
       }
 
       if (match?.weather && match?.weather.length > 0) {

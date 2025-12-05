@@ -1126,7 +1126,6 @@ const updateCompititionDateByCompetitionIdQuery = async (data, fastify, request)
     });
 
     return result?.[0] || null;
-
   } catch (err) {
     errorLogger(
       fastify,
