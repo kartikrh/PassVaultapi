@@ -121,7 +121,7 @@ const deleteCompetitionStatisticsTypeService = async (request, fastify) => {
 const updateCompetitionStatisticsTypeDisplayOrderService = async (request, fastify) => {
     for (const item of request.body) {
         await updateCompetitionStatisticsTypeDisplayOrderQuery(item, request, fastify);
-        let index = global.tblCompetitionStatisticsType.findIndex((elem) => elem.id === item.competitionStatisticsTypeId);
+        let index = global.tblCompetitionStatisticsType.findIndex((elem) => elem.competitionStatisticsTypeId === item.competitionStatisticsTypeId);
         if (index !== -1) {
             global.tblCompetitionStatisticsType[index].displayOrder = item.displayOrder;
         }

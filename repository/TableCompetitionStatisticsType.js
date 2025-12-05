@@ -191,7 +191,7 @@ const deleteCompetitionStatisticsTypeByIdQuery = async (competitionStatisticsTyp
 const updateCompetitionStatisticsTypeDisplayOrderQuery = async (body, request, fastify) => {
     try {
         return await fastify.db.query(
-            `update "wrCompetitionStatisticsTypeId" set "wrDisplayOrder" = $1 where "wrCompetitionStatisticsTypeId" in ($2) `,
+            `UPDATE "tblCompetitionStatisticsType" SET "wrDisplayOrder" = $1 WHERE "wrCompetitionStatisticsTypeId" = $2`,
             {
                 bind: [body.displayOrder, body.competitionStatisticsTypeId],
             }
@@ -200,7 +200,7 @@ const updateCompetitionStatisticsTypeDisplayOrderQuery = async (body, request, f
         errorLogger(
             fastify,
             err.message,
-            "DB ERROR --> repository/TableCompetitionStatisticsType.js/updateDisplayOrder",
+            "DB ERROR --> repository/TableCompetitionStatisticsType.js/updateCompetitionStatisticsTypeDisplayOrderQuery",
             request
         );
         throw new Error(err.message);
