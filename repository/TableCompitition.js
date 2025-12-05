@@ -1052,6 +1052,92 @@ const getMatchTypeTemplateByCompetitionIdQuery = async (data,request, fastify) =
   }
 }
 
+const updateCompititionDateByCompetitionIdQuery = async (data, fastify, request) => {
+  try {
+    const fields = [];
+    const values = [];
+    let idx = 1;
+
+    if (data.startDate !== undefined) {
+      fields.push(`"wrStartDate" = $${idx++}`);
+      values.push(data.startDate);
+    }
+
+    if (data.endDate !== undefined) {
+      fields.push(`"wrEndDate" = $${idx++}`);
+      values.push(data.endDate);
+    }
+
+    fields.push(`"wrModifyBy" = $${idx++}`);
+    values.push(request?.userTokenInfo?.WrUserId);
+
+    fields.push(`"wrModifyDate" = NOW()`);
+
+    values.push(data.competitionId);
+    const competitionIdParam = `$${idx}`;
+
+    const sql = `
+      WITH update_data AS (
+        UPDATE "tblCompetitions"
+        SET ${fields.join(", ")}
+        WHERE "wrCompetitionId" = ${competitionIdParam}
+        RETURNING *
+      )
+      SELECT 
+        tc."wrCompetitionId" AS "competitionId",
+        tc."wrCompetition"   AS "competition",
+        tc."wrEventTypeId"   AS "eventTypeId",
+        tev."wrEventType"    AS "eventType",
+        tc."wrRefID"         AS "refId",
+        tc."wrImage"         AS "image",
+        tc."wrIsActive"      AS "isActive",
+        tc."wrDisplayOrder"  AS "displayOrder",
+        tc."wrIsTrending"    AS "isTrending",
+        tc."wrIsEventSnap"   AS "isEventSnap",
+        tc."wrIsPointTable"  AS "isPointTable",
+        tc."wrMatchTypeId"   AS "matchTypeId",
+        tmt."wrMatchType"    AS "matchType",
+        tc."wrWinPoint"      AS "winPoint",
+        tc."wrTiePoint"      AS "tiePoint",
+        tc."wrCancelPoint"   AS "cancelPoint",
+        tc."wrLossPoint"     AS "lossPoint",
+        tc."wrDrsCount"      AS "drsCount",
+        tc."wrImagePath"     AS "imagePath",
+        tc."wrIsMen"         AS "isMen",
+        tc."wrType"          AS "type",
+        tc."wrIsVirtual"     AS "isVirtual",
+        tc."wrStatus"        AS "commStatus",
+        tc."wrStartDate"     AS "startDate",
+        tc."wrEndDate"       AS "endDate",
+        tc."wrTpId"          AS "tpId",
+        tc."wrCountryId"     AS "countryId",
+        tc."wrPythonId"      AS "pythonId",
+        tpa."wrDeveloperName" AS "developerName",
+        tc."wrSetOfRules"    AS "setOfRules"
+      FROM update_data tc
+      INNER JOIN "tblEventTypes" tev ON tc."wrEventTypeId" = tev."wrEventTypeId"
+      LEFT JOIN "tblMatchTypes" tmt ON tc."wrMatchTypeId" = tmt."wrMatchTypeId"
+      LEFT JOIN "tblPythonAPI" tpa ON tc."wrPythonId" = tpa."wrId"
+    `;
+
+    const result = await fastify.db.query(sql, {
+      bind: values,
+      type: fastify.db.QueryTypes.SELECT,
+    });
+
+    return result?.[0] || null;
+
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCompitition.js/updateCompititionDateByCompetitionIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCompititionQuery,
   insertCompetitionQuery,
@@ -1073,4 +1159,5 @@ module.exports = {
   getCompetitionByIdsQuery,
   getMatchTypeTemplateByCompetitionIdQuery,
   updateTpIdCompQuery,
+  updateCompititionDateByCompetitionIdQuery
 };
