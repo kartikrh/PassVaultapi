@@ -47,6 +47,9 @@ const allEventService = async (request, fastify) => {
     const startDate = new Date(filterObject.startDate);
     const endDate = new Date(filterObject.endDate);
     _event = _event?.filter((item) => {
+      if (!item.eventDate) {
+        return true;
+      }
       return (
         new Date(item.eventDate) >= startDate &&
         new Date(item.eventDate) <= endDate
