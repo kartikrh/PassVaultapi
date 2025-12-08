@@ -420,7 +420,6 @@ const setEntityCom2Service = async (request , fastify) =>{
                 data: scoreResponse.commentaryDetails,
               });
           }
-          console.log("------ consdofd", comTeams)
           if(comTeams && comTeams.length > 0){
             scoreResponse.commentaryTeams = [];
               for (let ct of comTeams){
@@ -433,7 +432,6 @@ const setEntityCom2Service = async (request , fastify) =>{
                   };
                   scoreResponse.commentaryTeams.push(global.tblCommentaryTeams[comTI]);
               }
-              console.log("1sit consdofd", comTeams)
               scoreResponse.commentaryTeams.forEach(async (team) => {
                 const _teamsC1 = global.tblTeams.filter(
                   (item) => item.teamId === team.teamId
@@ -552,8 +550,8 @@ const setEntityCom2Service = async (request , fastify) =>{
                   data: scoreResponse.commentaryDetails,
                 });
             }
-            console.log("++++++ consdofd", comTeams)
             if(comTeams && comTeams.length > 0){
+              scoreResponse.commentaryTeams = []
                 for (let ct of comTeams){
                     let comTI = global.tblCommentaryTeams.findIndex((c)=> c.commentaryTeamId == ct.commentaryTeamId)
                     global.tblCommentaryTeams[comTI] = {
@@ -564,7 +562,6 @@ const setEntityCom2Service = async (request , fastify) =>{
                     };
                     scoreResponse.commentaryTeams.push(global.tblCommentaryTeams[comTI]);
                   }
-                  console.log("comTeams", comTeams)
                 scoreResponse.commentaryTeams.forEach(async (team) => {
                   const _teamsC1 = global.tblTeams.filter(
                     (item) => item.teamId === team.teamId
@@ -735,7 +732,7 @@ const setEntityCom2Service = async (request , fastify) =>{
             const commentaryOvers = {
                 overId: 0,
                 commentaryId: comDetails?.commentaryId,
-                teamId: battingTeam.teamId,
+                teamId: battingTeam?.teamId,
                 over: 0,
                 ballCount: 0,
                 bowlerId: bowler?.commentaryPlayerId,
@@ -768,11 +765,11 @@ const setEntityCom2Service = async (request , fastify) =>{
             const commentaryBallByBall = {
                 commentaryBallByBallId: 0,
                 commentaryId: comDetails?.commentaryId,
-                teamId: battingTeam.teamId,
+                teamId: battingTeam?.teamId,
                 overId: over?.overId,
                 overCount: 0,
                 currentOverBalls: 0,
-                bowlerId: bowler?.commentaryPlayerId,
+                bowlerId: bowler?.commentaryPlayerId ?? 0,
                 batStrikeId: strikePlayer?.commentaryPlayerId,
                 batNonStrikeId: nonStrikePlayer?.commentaryPlayerId,
                 ballIsCount: true,
@@ -1417,8 +1414,6 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                   ...playerTpIdObj[c.bowler_id],
                 }
               }
-              console.log("noball", over)
-              console.log("updateBall", updateBall)
               playersMap[c.bowler_id].bowlerNoBall = (playersMap[c.bowler_id].bowlerNoBall || 0) + 1;
               playersMap[c.bowler_id].bowlerNoBallRun = (playersMap[c.bowler_id].bowlerNoBallRun || 0) + runToUpdate;
               playersMap[c.bowler_id].bowlerRun = (playersMap[c.bowler_id].bowlerRun || 0) + runToUpdate;
@@ -1722,7 +1717,8 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           battingTeam.teamOver = `${c.over}.${c.ball}`;
           // battingTeam["teamScore"] = (battingTeam.teamScore || 0) + c?.run ?? 0;
           battingTeam["teamScore"] = liveTeamScore;
-          battingTeam.teamWicket = (battingTeam.teamWicket || 0) + 1;
+          // battingTeam.teamWicket = (battingTeam.teamWicket || 0) + 1;
+          battingTeam.teamWicket = live_score_data?.wickets ?? 0;
           battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
           battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
           if(!over) {
@@ -1897,7 +1893,6 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               ...oldPart,
               isActive: false,
             };
-
             await upActivePartQuery(partData, fastify);
             let partIndex = global.tblCommentaryPartnership.findIndex(
               (item) => item.commentaryPartnershipId == partData.commentaryPartnershipId
@@ -2007,9 +2002,9 @@ const onInningChangeService = async (data, fastify, comDetails) => {
   let bowlTeam = teams.find((i)=> i.teamStatus == 2)
   let matchType = global.tblMatchTypes.find((i)=> i.matchTypeId == comDetails.matchTypeId)
   const runDifference =
-    (batTeam.teamScore || 0) +
-    (batTeam.teamLeadRuns || 0) -
-    (batTeam.teamTrialRuns || 0);
+    (batTeam?.teamScore || 0) +
+    (batTeam?.teamLeadRuns || 0) -
+    (batTeam?.teamTrialRuns || 0);
   const leadRuns = Math.max(runDifference * -1, 0);
   const trialRuns = Math.max(runDifference, 0);
   const partnership = global.tblCommentaryPartnership
@@ -3780,6 +3775,7 @@ const noballUndoService = async (data, fastify, request) => {
     tpBall,
     deleteOverIds,
     over,
+    tpCurrentBall,
   } = data;
 
   let playersMap = {};
