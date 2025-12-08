@@ -3835,7 +3835,7 @@ const applyUndoForAllTypes = async(requestData, b1, fastify, request) => {
 
     const undoFuncTypes = undoHandlers[b1.ballType];
 
-    if (undoFunc) {
+    if (undoFuncTypes) {
       const result = await undoFuncTypes(requestData, fastify, request);
       if (!result) {
         return
