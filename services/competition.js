@@ -26,7 +26,7 @@ const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQue
 const { deleteTournamentTeamPlayersByCompIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
 const { addEditTournamentTeamPointDataService } = require("./tournamentTeamPoints");
-const { nullTeamtpIds } = require("../utilities/entityConst");
+const { nullTeamtpIds, autoUpdateCommentaryDataStatus } = require("../utilities/entityConst");
 const { insertTeamQuery, updateExchangeTeamQuery, getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { insertPlayerQuery, updateExchangePlayerQuery } = require("../repository/TablePlayer");
 const { insertTeamPlayerQuery, updateTeamPlayerHomeTeamQuery } = require("../repository/TableTeamPlayer");
@@ -37,6 +37,7 @@ const { insertVenueQuery, updateVenueQuery } = require("../repository/TableVenue
 const { insertWeatherQuery, updateWeatherQuery } = require("../repository/TableWeather");
 const { updatePitchConditionQuery, insertPitchConditionQuery } = require("../repository/TablePitchCondition");
 const { insertAutoImportDataService } = require("./autoImportData");
+const { insertAutoUpdateCommentaryDataQuery } = require("../repository/TableAutoUpdateCommentaryData");
 
 // const allCompetitionService = async (request) => {
 //   const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type } = request.body;
@@ -1597,6 +1598,17 @@ const competitionImportService = async (data, fastify, request) => {
           checkCommentary = global.tblCommentaries[index];
         }
       }
+
+      const commentaryId = checkCommentary?.commentaryId;
+      const insertDataInCommentaryUpdate = {
+        commentaryId: commentaryId,
+        offsetHour: null,
+        status: autoUpdateCommentaryDataStatus.imported,
+        message: `Commentary id ${commentaryId} imported before start`,
+        responseData: match
+      };
+
+      await insertAutoUpdateCommentaryDataQuery(insertDataInCommentaryUpdate, fastify);
 
       if (match?.weather && match?.weather.length > 0) {
         const checkWeather = global.tblWeather.find(item => item.commentaryId === checkCommentary.commentaryId);
