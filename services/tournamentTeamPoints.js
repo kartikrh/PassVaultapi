@@ -14,9 +14,10 @@ const {
   getTournamentPointsByGroupNameQuery,
   getTournamentTeamPointsQuery,
 } = require("../repository/TableTournmentTeamPoints");
-const { callClientAPI, ServiceType, APIEndpointModuleType, callEntitySportAPI, extractGroupDataFromArray, teamRemarkType, checkEntitySportAPIEndpointIsActive } = require("../utilities");
+const { callClientAPI, ServiceType, APIEndpointModuleType, callEntitySportAPI, extractGroupDataFromArray, teamRemarkType, checkEntitySportAPIEndpointIsActive, compStatus } = require("../utilities");
 const { nullTeamtpIds } = require("../utilities/entityConst");
 const { errorLogger } = require("../utilities/logger");
+const { saveCompetitionService } = require("./competition");
 
 const allTournamentTeamPointsService = async (request, fastify) => {
   const { competitionId, teamId, groupId, isActive } = request.body;
@@ -788,6 +789,16 @@ const importUpdateTournamentTeamPointFromEntitySportService = async (data, fasti
   }
 
   await addEditTournamentTeamPointDataService(entitySportCompetitionInfoResponse, checkCompetition?.competitionId, fastify, request);
+  const entityCompetitionStatus = compStatus[entitySportCompetitionInfoResponse?.status]
+  if (entityCompetitionStatus !== checkCompetition?.commStatus) {
+    await saveCompetitionService({
+      ...request,
+      body: {
+        ...checkCompetition,
+        commStatus: entityCompetitionStatus
+      }
+    }, fastify);
+  }
   return entitySportCompetitionInfoResponse;
 };
 

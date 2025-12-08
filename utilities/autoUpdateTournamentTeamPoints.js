@@ -1,6 +1,5 @@
-const { compStatus } = require(".");
-const { saveCompetitionService } = require("../services/competition");
-const { importUpdateTournamentTeamPointFromEntitySportService } = require("../services/tournamentTeamPoints");
+const { RefType } = require(".");
+const { insertAutoImportDataService } = require("../services/autoImportData");
 const { errorLogger } = require("./logger");
 
 const formatDate = (date) => date.toISOString().split("T")[0];
@@ -21,19 +20,17 @@ const autoUpdateTournamentTeamPoints = async (fastify) => {
         })
 
         for (const competition of competitionList) {
-            const result = await importUpdateTournamentTeamPointFromEntitySportService({
-                cid: competition.tpId
-            }, fastify, request);
-            const entityCompetitionStatus = compStatus[result?.status]
-            if (entityCompetitionStatus !== competition.commStatus) {
-                await saveCompetitionService({
-                    ...request,
-                    body: {
-                        ...competition,
-                        commStatus: entityCompetitionStatus
-                    }
-                }, fastify);
-            }
+            await insertAutoImportDataService({
+                ...request,
+                body: {
+                    refId: competition?.tpId || competition?.competitionId,
+                    refType: RefType.tournamentTeamPointUpdate,
+                    sourceId: 3
+                },
+                userTokenInfo: {
+                    WrUserId: request?.userTokenInfo?.WrUserId ?? -2
+                }
+            }, fastify);
         }
     } catch (error) {
         errorLogger(
