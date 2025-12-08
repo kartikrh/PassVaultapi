@@ -31,12 +31,16 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
         global.clientSocketIo = global.clientSocketIo.filter(c => c.url !== urlConfig.url);
       }
       const client = io(urlConfig.url, {
-        transport: ["websocket"],
+        // transport: ["websocket"],
+        transports: ["websocket"],
         query: { source: "admin-panel"},
         reconnection: true,
         reconnectionDelay: urlConfig.reconnectDelay,
         reconnectionDelayMax: urlConfig.reconnectMaxDelay,
         reconnectionAttempts: urlConfig.reconnectAttempts,
+        timeout: 20000,
+        pingInterval: 25000,
+        pingTimeout: 60000, 
       });
 
       // Attach event listeners for connection events

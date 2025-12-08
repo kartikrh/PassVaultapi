@@ -97,6 +97,7 @@ const {
   bowlingTypeChangeQuery,
   updateCommentaryViewsQuery,
   playingElevenChangeOnCommPlayersQuery,
+  updateCommentaryDateByCommentaryIdQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -23860,6 +23861,33 @@ const matchImportService = async (data, fastify, request = null) => {
 
     if (checkCommentary && checkCommentary?.commentaryId) {
       const upsertedCommentaryId = checkCommentary.commentaryId;
+
+      const esStart = matchInfoResponse?.date_start
+        ? new Date(matchInfoResponse?.date_start)
+        : null;
+
+      const localStart = checkCommentary?.eventDate
+        ? new Date(checkCommentary?.eventDate)
+        : null;
+
+      if (esStart && (!localStart || esStart.getTime() !== localStart.getTime())) {
+        const updated = await updateCommentaryDateByCommentaryIdQuery({
+          ...request,
+          body: {
+            eventDate: esStart,
+            commentaryId: checkCommentary?.commentaryId
+          }
+        }, fastify);
+        const index = global.tblCommentaries.findIndex(tc => tc.commentaryId === upsertedCommentaryId);
+        if (index !== -1) {
+          global.tblCommentaries[index] = {
+            ...global.tblCommentaries[index],
+            ...updated
+          };
+          checkCommentary = global.tblCommentaries[index];
+        }
+      }
+
       if (matchInfoResponse?.weather && matchInfoResponse?.weather.length > 0) {
         const checkWeather = global.tblWeather.find(item => item.commentaryId === upsertedCommentaryId);
         if (checkWeather) {
