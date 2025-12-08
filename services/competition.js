@@ -25,7 +25,6 @@ const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardC
 const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryTeams, getCommentaryTeamsQuery, insertCommentaryPlayers, deleteCommentaryPlayersByPlayerId, updateCommentaryPlayerById, isCountInPOintCommentaryChangeQuery, updateCommentaryDateByCommentaryIdQuery } = require("../repository/TableCommentary")
 const { deleteTournamentTeamPlayersByCompIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
-const { addEditTournamentTeamPointDataService } = require("./tournamentTeamPoints");
 const { nullTeamtpIds, autoUpdateCommentaryDataStatus } = require("../utilities/entityConst");
 const { insertTeamQuery, updateExchangeTeamQuery, getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { insertPlayerQuery, updateExchangePlayerQuery } = require("../repository/TablePlayer");
@@ -1787,6 +1786,7 @@ const competitionImportService = async (data, fastify, request) => {
     }
   }
 
+  const { addEditTournamentTeamPointDataService } = require("./tournamentTeamPoints");
   await addEditTournamentTeamPointDataService(entitySportCompetitionResponse, checkCompetition?.competitionId, fastify, request);
 
   return checkCompetition;
