@@ -554,5 +554,6 @@ module.exports = {
     deleteICCRankingByIdService,
     activeInactiveICCRankingByIdService,
     AllICCRankingService,
-    importICCRankingFromEntitySportService
+    importICCRankingFromEntitySportService,
+    fieldNamesService,
 }
