@@ -168,8 +168,6 @@ module.exports = async function (fastify, opts) {
         }
       } catch (error) {
         console.error("Error during scheduled task - entitySportAutoImportProcess:", error);
-      } finally {
-        isAutoImportProcessEnded = true;
       }
     });
 
