@@ -1129,6 +1129,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             bowlerWicket: b.wickets,
             bowlerEconomy: parseFloat(b.econ) ?? "0",
             bowlerOrder,
+            bowlerMaidenOver: b?.maidens ?? 0,
           };
           currentPlayers.push(comP.commentaryPlayerId);
         }
