@@ -903,7 +903,6 @@ const allEntityUpdateLogsQuery = async (body, request, fastify) => {
             commentaryId,
             eventTypeId,
             competitionId,
-            createdById
         } = body;
 
         const { skip, take } = getPagination(page, limit);
@@ -940,13 +939,6 @@ const allEntityUpdateLogsQuery = async (body, request, fastify) => {
             bindIndex++;
         }
 
-        // CreatedBy filter
-        if (createdById) {
-            whereClauses.push(`logs."wrCreatedBy" = $${bindIndex}`);
-            bindValues.push(createdById);
-            bindIndex++;
-        }
-
         const where = whereClauses.length ? `WHERE ${whereClauses.join(" AND ")}` : "";
 
         // Base Query with event & competition details
@@ -959,8 +951,6 @@ const allEntityUpdateLogsQuery = async (body, request, fastify) => {
                 logs."wrMessage" AS "message",
                 logs."wrResponseData" AS "responseData",
                 logs."wrCreateDate" AS "createDate",
-                logs."wrCreatedBy" AS "createdById",
-                users."WrName" AS "createdBy",
 
                 -- Commentary Details
                 com."wrEventName" AS "eventName",
@@ -975,9 +965,6 @@ const allEntityUpdateLogsQuery = async (body, request, fastify) => {
                 et."wrEventType" AS "eventTypeName"
 
             FROM "tblAutoUpdateCommentaryData" logs
-
-            LEFT JOIN "tblUsers" users 
-                ON logs."wrCreatedBy" = users."WrUserId"
 
             LEFT JOIN "tblCommentaries" com
                 ON logs."wrCommentaryId" = com."wrCommentaryId"
