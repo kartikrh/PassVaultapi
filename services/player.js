@@ -30,14 +30,15 @@ const { deleteAwardsByPlayerIdQuery } = require("../repository/TableCommentaryAw
 const { bowlingStyleChangeOnCommPlayersQuery, deleteCommentaryPlayerById } = require("../repository/TableCommentary");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const configConstants = require("../utilities/configConstants");
-const { trimTextData, callEntitySportAPI, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, RefType, EventType, checkEntitySportAPIEndpointIsActive, ICCMatchType } = require("../utilities/index");
+const { trimTextData, callEntitySportAPI, APIEndpointModuleType, ServiceType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, RefType, EventType, checkEntitySportAPIEndpointIsActive, ICCMatchType } = require("../utilities/index");
 const { getAutoImportDataByIdQuery, insertAutoImportDataQuery } = require("../repository/TableAutoImportData");
 const { updateAutoImportDataService } = require("./autoImportData");
 const { errorLogger } = require("../utilities/logger");
-const { playersMergeImageService } = require("../utilities/index");
+const { playersMergeImageService, callClientAPI } = require("../utilities/index");
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { deleteCommentaryBattingHistoryService, deleteCommentaryBowlingHistoryService } = require("./commPlayerHistory");
 const { savePlayerBatHistQuery, savePlayerBallHistQuery } = require("../repository/TableCommPlayerHistory");
+const { fieldNamesService } = require("../services/iccRanking");
 
 const allPlayerService = async (request,fastify) => {
   const { isActive, eventTypeId, teamId, isMen } = request.body;
@@ -1288,6 +1289,34 @@ const updatePlayerHomeTeamService = async (request, fastify) => {
     fastify,
     request
   );
+  const rankingData = global.tblICCRanking.filter(item => item.playerId == playerId && item.isActive == true);
+  const updatedData = await Promise.all(
+    rankingData
+      .map(async item => {
+        const fields = await fieldNamesService(item, fastify);
+        return { ...item, ...fields };
+      })
+  );
+  if (updatedData.length > 0) {
+    callClientAPI(
+      {
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.updateSeoModule,
+        data: {
+          module: 'iccRankings',
+          type: "update",
+          data: updatedData
+        }
+      }, request, fastify)
+      .catch((err) => {
+        errorLogger(
+          fastify,
+          err.message,
+          "services/iccRanking.js/updatePlayerHomeTeamService - callClientAPI",
+          request
+        );
+      });
+  }
   return "Player Home Team updated successfully";
 };
 
