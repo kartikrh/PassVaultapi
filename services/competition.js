@@ -1330,6 +1330,7 @@ const competitionImportService = async (data, fastify, request) => {
       endDate: entitySportCompetitionResponse?.dateend,
       tpId: entitySportCompetitionResponse?.cid,
       pythonId: pythonIdData?.id || null,
+      isPointTable: entitySportCompetitionResponse?.table === "1"
     };
 
     const insertCompetition = await insertCompetitionQuery({
