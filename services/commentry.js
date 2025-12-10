@@ -220,7 +220,7 @@ const { insertTeamPlayersByTeamId, insertCommentaryPlayersByTeam } = require("./
 const cron = require('node-cron');
 const { insertAutoImportDataService } = require("./autoImportData");
 const { insertTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
-const { insertAutoUpdateCommentaryDataQuery } = require("../repository/TableAutoUpdateCommentaryData");
+const { insertAutoUpdateCommentaryDataQuery, getAllAutoUpdateCommentaryDataQuery } = require("../repository/TableAutoUpdateCommentaryData");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -24073,11 +24073,16 @@ const matchImportService = async (data, fastify, request = null) => {
   }
 
   const commentaryId = checkCommentary?.commentaryId;
+  const getAutoUpdateCommentary = await getAllAutoUpdateCommentaryDataQuery(
+    `"wrCommentaryId" = '${commentaryId}' AND "wrOffsetHour" IS NULL`,
+    fastify
+  );
+  const isExists = getAutoUpdateCommentary && getAutoUpdateCommentary.length > 0;
   const insertDataInCommentaryUpdate = {
     commentaryId: commentaryId,
     offsetHour: null,
-    status: autoUpdateCommentaryDataStatus.imported,
-    message: `Commentary id ${commentaryId} imported before start`,
+    status: isExists ? autoUpdateCommentaryDataStatus.noupdate : autoUpdateCommentaryDataStatus.added,
+    message: `Commentary with this id ${commentaryId} ${isExists ? "updated" : "added"}`,
     responseData: entitySportMatchResponse,
   };
 
