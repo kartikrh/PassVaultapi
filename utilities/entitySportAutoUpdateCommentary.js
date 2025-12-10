@@ -356,7 +356,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                 if (insertAutoUpdateCommentaryData?.id) {
                                     await updateAutoUpdateCommentaryDataQuery({
                                         status: isChanged ? autoUpdateCommentaryDataStatus.success : autoUpdateCommentaryDataStatus.noupdate,
-                                        message: isChanged ? "Match data updated successfully" : "No update found for this commentary",
+                                        message: isChanged ? "Commentary updated" : "No changes in commentary",
                                         id: insertAutoUpdateCommentaryData.id,
                                         responseData: entitySportMatchResponse
                                     }, fastify);
@@ -366,7 +366,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                             if (insertAutoUpdateCommentaryData?.id) {
                                 await updateAutoUpdateCommentaryDataQuery({
                                     status: autoUpdateCommentaryDataStatus.failed,
-                                    message: "Failed to update Match data",
+                                    message: "Failed to update commentary",
                                     id: insertAutoUpdateCommentaryData.id,
                                     responseData: insertAutoUpdateCommentaryData?.responseData ?? null
                                 }, fastify);
