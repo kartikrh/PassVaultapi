@@ -7246,7 +7246,8 @@ const updateVirtualPartnershipQuery = async (data, fastify, request) => {
         "wrTotalWide" = $12,
         "wrTotalNoBall" = $13,
         "wrTeamScore" = $14,
-        "wrTeamWicket" = $15
+        "wrTeamWicket" = $15,
+        "wrIsActive" = $18
       WHERE "wrCommentaryPartnershipId" = $16
       AND "wrCommentaryId" = $17
       AND "wrIsDelete" = false
@@ -7302,6 +7303,7 @@ const updateVirtualPartnershipQuery = async (data, fastify, request) => {
           data.teamWicket,
           data.commentaryPartnershipId,
           data.commentaryId,
+          data.isActive ?? false,
         ],
       }
     );
