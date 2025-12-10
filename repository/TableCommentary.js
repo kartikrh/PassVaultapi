@@ -1481,6 +1481,7 @@ const getCommentaryPlayersQuery = async (data, fastify, request) => {
       "wrBowlerOrder" as "bowlerOrder",
       "wrBowlingType" as "bowlingType",
       "wrPlayerName" as "playerName",
+      "wrCurrentInnings" as "currentInnings",
       "wrIsInPlayingEleven" as "isInPlayingEleven"
       from "tblCommentaryPlayers"
       where "wrCommentaryId" = $1 and "wrTeamId" = $2 and "wrIsDelete" = false

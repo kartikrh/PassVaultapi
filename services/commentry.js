@@ -1991,7 +1991,8 @@ const cloneCommentaryService = async (request, fastify) => {
           request.body.team2Players.length > 0
         ) {
           let data = [
-            ...request.body.team1Players.map((item, i) => {
+            ...request.body.team1Players.filter(p => p.currentInnings === currentInning)
+            .map((item, i) => {
               const playerTpId = global.tblPlayers.find(elem => elem.playerId === item.playerId);
               return {
                 commentaryId: newCommentary.commentaryId,
@@ -2001,7 +2002,8 @@ const cloneCommentaryService = async (request, fastify) => {
                 displayOrder: i + 1,
               };
             }),
-            ...request.body.team2Players.map((item, i) => {
+            ...request.body.team2Players.filter(p => p.currentInnings === currentInning)
+            .map((item, i) => {
               const playTpId = global.tblPlayers.find(elem => elem.playerId === item.playerId);
               return {
                 commentaryId: newCommentary.commentaryId,
