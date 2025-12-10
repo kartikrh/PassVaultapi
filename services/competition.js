@@ -36,7 +36,7 @@ const { insertVenueQuery, updateVenueQuery } = require("../repository/TableVenue
 const { insertWeatherQuery, updateWeatherQuery } = require("../repository/TableWeather");
 const { updatePitchConditionQuery, insertPitchConditionQuery } = require("../repository/TablePitchCondition");
 const { insertAutoImportDataService } = require("./autoImportData");
-const { insertAutoUpdateCommentaryDataQuery } = require("../repository/TableAutoUpdateCommentaryData");
+const { insertAutoUpdateCommentaryDataQuery, getAllAutoUpdateCommentaryDataQuery } = require("../repository/TableAutoUpdateCommentaryData");
 
 // const allCompetitionService = async (request) => {
 //   const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type } = request.body;
@@ -1600,11 +1600,16 @@ const competitionImportService = async (data, fastify, request) => {
       }
 
       const commentaryId = checkCommentary?.commentaryId;
+      const getAutoUpdateCommentary = await getAllAutoUpdateCommentaryDataQuery(
+        `"wrCommentaryId" = '${commentaryId}' AND "wrOffsetHour" IS NULL`,
+        fastify
+      );
+      const isExists = getAutoUpdateCommentary && getAutoUpdateCommentary.length > 0;
       const insertDataInCommentaryUpdate = {
         commentaryId,
         offsetHour: null,
-        status: autoUpdateCommentaryDataStatus.imported,
-        message: `Commentary id ${commentaryId} imported before start`,
+        status: isExists ? autoUpdateCommentaryDataStatus.noupdate : autoUpdateCommentaryDataStatus.added,
+        message: `Commentary with this id ${commentaryId} ${isExists ? "updated" : "added"}`,
         responseData: match
       };
 
