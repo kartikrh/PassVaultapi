@@ -128,7 +128,6 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
           try {
             // console.log("Received entity data from Backend A:", payload);
             const request = { body: payload };
-            console.log("-------------")
             if (payload.api_type && payload.api_type == "match_push_obj") {
               let isLog = global.tblConfigs.find((c) => c.key == configConstants.ISENTITYDATALOG)?.value || "false";
               if(isLog == "false") { return true; }

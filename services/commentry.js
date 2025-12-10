@@ -209,7 +209,7 @@ const {
   updatePitchConditionQuery,
   deletePitchConditionWithCommIdQuery,
 } = require("../repository/TablePitchCondition");
-const { PlayerType, nullTeamtpIds } = require("../utilities/entityConst");
+const { PlayerType, nullTeamtpIds, autoUpdateCommentaryDataStatus } = require("../utilities/entityConst");
 const { insertPlayerEntityQuery, insertPlayerQuery, updateExchangePlayerQuery } = require("../repository/TablePlayer");
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { insertVenueQuery, updateVenueQuery } = require("../repository/TableVenue");
@@ -220,6 +220,7 @@ const { insertTeamPlayersByTeamId, insertCommentaryPlayersByTeam } = require("./
 const cron = require('node-cron');
 const { insertAutoImportDataService } = require("./autoImportData");
 const { insertTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
+const { insertAutoUpdateCommentaryDataQuery } = require("../repository/TableAutoUpdateCommentaryData");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -23507,6 +23508,7 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
     endDate: entitySportCompetitionResponse?.dateend,
     tpId: entitySportCompetitionResponse?.cid,
     pythonId: pythonIdData?.id || null,
+    isPointTable: entitySportCompetitionResponse?.table === "1"
   }
 
   const insertCompetition = await insertCompetitionQuery({
@@ -24069,6 +24071,18 @@ const matchImportService = async (data, fastify, request = null) => {
       );
     });
   }
+
+  const commentaryId = checkCommentary?.commentaryId;
+  const insertDataInCommentaryUpdate = {
+    commentaryId: commentaryId,
+    offsetHour: null,
+    status: autoUpdateCommentaryDataStatus.imported,
+    message: `Commentary id ${commentaryId} imported before start`,
+    responseData: entitySportMatchResponse,
+  };
+
+  await insertAutoUpdateCommentaryDataQuery(insertDataInCommentaryUpdate, fastify);
+
   return checkCommentary;
 }
 const clientSocketCountService = async (fastify) => {

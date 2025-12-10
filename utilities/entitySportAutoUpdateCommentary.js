@@ -162,7 +162,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                 if (changedValues.countryId && changedValues.venueId) {
                                     const getVenueData = global.tblVenues.find(item => item.id === changedValues.venueId);
                                     if (getVenueData) {
-                                        const getLocation = `${getVenueData.name}, ${getVenueData.countryName}`;
+                                        const getLocation = `${getVenueData.name}, ${getVenueData.city}`;
                                         if (getLocation !== location) {
                                             changedValues.location = getLocation;
                                         }

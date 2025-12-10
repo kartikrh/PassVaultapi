@@ -22,7 +22,8 @@ const autoUpdateCommentaryDataStatus = {
    start: 1,
    noupdate: 2,
    success: 3,
-   failed: 4
+   failed: 4,
+   imported: 5
 }
 
 module.exports = {
