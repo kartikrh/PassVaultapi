@@ -30,7 +30,15 @@ const { getAllEventMarketsAndRunners } = require('../../../controller/users/admi
 const { getAllMenuItems } = require("../../../controller/users/admin/menuItem");
 const { getMenuItemList, getAllMenuTypes } = require("../../../controller/users/admin/menuType");
 const { getAllNews, getNewsById } = require("../../../controller/users/admin/news");
-const { getMarketsByCommentaryId, getNotificationByClient, markReadNotification ,getMarketByGraphByRefId, getMarketsByCommentaryIdV1, saveDeviceData } = require("../../../controller/users/admin/score");
+const { 
+  getMarketsByCommentaryId,
+  getNotificationByClient,
+  markReadNotification,
+  getMarketByGraphByRefId,
+  getMarketsByCommentaryIdV1,
+  saveDeviceData,
+  allCommentaryAwards,
+} = require("../../../controller/users/admin/score");
 const {
   saveSubScribeDomain,
 } = require("../../../controller/users/admin/subScribesDomain");
@@ -416,6 +424,9 @@ module.exports = async (fastify, opts) => {
   });
   fastify.post("/iccRanking", {
     handler: (request, reply) => AllICCRankings(request, reply, fastify),
+  });
+  fastify.post("/commAwards", {
+    handler: (request, reply) => allCommentaryAwards(request, reply, fastify),
   });
 };
 

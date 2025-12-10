@@ -1433,11 +1433,9 @@ const updateCommentaryService = async (request, fastify) => {
           const validateCommPlayers = global.tblCommentaryPlayers
             .filter(item => item.commentaryId == request.body.commentaryId)
             .map(item => item.playerId);
-            console.log("validateCommPlayers", validateCommPlayers)
           const removedPlayers = validateCommPlayers.filter(
             playerId => ![...request.body.team1Players, ...request.body.team2Players].includes(playerId)
           );
-          console.log("removedPlayers", removedPlayers)
           if (removedPlayers && removedPlayers.length > 0) {
             await deleteCommentaryPlayersByPlayerId(
               {
@@ -1452,7 +1450,6 @@ const updateCommentaryService = async (request, fastify) => {
             );
           }
         } else {
-          console.log("all players Delete")
           await deleteCommentaryPlayers(request, fastify);
           global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(
             (item) => ![request.body.commentaryId].includes(item?.commentaryId)

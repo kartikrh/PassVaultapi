@@ -4,7 +4,8 @@ const {
     deleteCommentaryAwardQuery,
     assignAwardQuery,
     deleteAwardsQuery
- } = require("../repository/TableCommentaryAward");
+} = require("../repository/TableCommentaryAward");
+const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
 
 const getAllComAwardService = async (fastify) => {
     return global.tblCommentaryAwards || [];
@@ -138,17 +139,65 @@ const assignAwardService = async (request, fastify) => {
           global.tblCommentaryAwards = global.tblCommentaryAwards.filter(
             (el) => !awardIds.includes(el.id)
           );
+            callClientAPI(
+                {
+                    serviceType: ServiceType.clientAPI,
+                    moduleType: APIEndpointModuleType.updateSeoModule,
+                    data: {
+                        module: 'commentaryAwards',
+                        type: "delete",
+                        data: { id: awardIds }
+                    }
+                }, request, fastify
+            ).catch((err) => {
+                errorLogger(
+                    fastify,
+                    err.message,
+                    "services/commentaryAwards.js/assignAwardService - callClientAPI",
+                    request
+                );
+            });
         }
         }
-
     let addAward = await assignAwardQuery(comAwards, request, fastify);
     global.tblCommentaryAwards.push(...addAward); 
+    for (const awardData of addAward) {
+        callClientAPI(
+            {
+                serviceType: ServiceType.clientAPI,
+                moduleType: APIEndpointModuleType.updateSeoModule,
+                data: {
+                    module: 'commentaryAwards',
+                    type: "add",
+                    data: awardData
+                }
+            }, request, fastify)
+            .catch((err) => {
+                errorLogger(
+                    fastify,
+                    err.message,
+                    "services/commentaryAwards.js/assignAwardService add - callClientAPI",
+                    request
+                );
+            });
+    }
     return addAward;
 }
 const getAssignAwardService = async (request, fastify) => {
     let result = global.tblCommentaryAwards.filter((item) => item.commentaryId === request.body.commentaryId);
     return result;
 }
+const allCommentaryAwardService = async (fastify) => {
+    const commAwards = global.tblCommentaryAwards.map(item => {
+        const award = global.tblAwards.find(elem => elem.id === item.awardId);
+        return {
+            ...item,
+            awardName: award?.name ?? null,
+        };
+    });
+
+    return commAwards ?? [];
+};
 module.exports = {
     getAllComAwardService,
     getComAwardByIdService,
@@ -158,5 +207,6 @@ module.exports = {
     getCommentaryTeamService,
     getCommentaryPlayerByComService,
     assignAwardService,
-    getAssignAwardService
+    getAssignAwardService,
+    allCommentaryAwardService,
 }
