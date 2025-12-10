@@ -849,11 +849,15 @@ const setEntityCom2Service = async (request , fastify) =>{
       GAME_STATUS["Toss"],
       GAME_STATUS["Play Ongoing"]
     ];
-    const currentState = response?.live?.game_state;
-    if (!ALLOWED_GAME_STATES.includes(currentState)) {
+    let currentState
+    const currentGameState = response?.live?.game_state;
+    if (typeof currentGameState === "number") {
+      currentState = Number(currentGameState);
+    }
+    if (!ALLOWED_GAME_STATES.includes(currentState) && typeof currentState === "number" && !isNaN(currentState)) {
       const commDisplayStatus = Object.keys(GAME_STATUS).find(
-        key => GAME_STATUS[key] === currentState
-      ) || "Unknown";
+        key => GAME_STATUS[key] == currentState
+      );
       await updateCommentaryStatusQuery(
         {
           displayStatus: commDisplayStatus,
