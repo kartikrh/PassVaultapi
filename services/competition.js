@@ -1609,7 +1609,7 @@ const competitionImportService = async (data, fastify, request) => {
         commentaryId,
         offsetHour: null,
         status: isExists ? autoUpdateCommentaryDataStatus.noupdate : autoUpdateCommentaryDataStatus.added,
-        message: `Commentary with this id ${commentaryId} ${isExists ? "updated" : "added"}`,
+        message: `Commentary ${isExists ? "updated" : "added"}`,
         responseData: match
       };
 
