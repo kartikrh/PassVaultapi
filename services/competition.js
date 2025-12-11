@@ -1160,6 +1160,23 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
   //   global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(item => !(item.commentaryId === commentaryId && playersNotInTeam.includes(item.playerId)));
   // }
 
+  const removedCommentaryPlayers = commentaryPlayers.filter(item => item.commentaryId === commentaryId && item.teamId === teamId && item.currentInnings === i && !playerTpIds.includes(item.tpId));
+  for (const player of removedCommentaryPlayers) {
+    const removedCommentaryPlayer = commentaryPlayers.find(item => item.tpId === player.tpId);
+    if (removedCommentaryPlayer) {
+      const updatedData = {
+        ...removedCommentaryPlayer,
+        isInPlayingEleven: false
+      };
+      await updateCommentaryPlayerById(updatedData, request, fastify);
+
+      const index = global.tblCommentaryPlayers.findIndex(item => item.commentaryId === commentaryId && item.teamId === teamId && item.currentInnings === i && item.tpId === player.tpId);
+      if (index !== -1) {
+        global.tblCommentaryPlayers[index] = updatedData;
+      }
+    }
+  }
+
   for (const pid of playerTpIds) {
     const commentaryPlayerData = global.tblCommentaryPlayers.find(item => item.commentaryId === commentaryId && item.teamId === teamId && item.currentInnings === i && item.tpId === pid);
     if (commentaryPlayerData) {
