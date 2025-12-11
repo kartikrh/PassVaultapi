@@ -4,6 +4,7 @@ const { ICCRankingType, callEntitySportAPI, ServiceType, APIEndpointModuleType, 
 const { errorLogger } = require("../utilities/logger");
 const { playerImportService } = require("./player");
 const { teamImportService } = require("./teams");
+const { fieldNamesService } = require("./fieldNamesService");
 
 const getAllICCRankingService = async (request) => {
     const { isActive, type, matchTypeId, sportId, playerTypeId, isMen } = request.body;
@@ -333,49 +334,6 @@ const activeInactiveICCRankingByIdService = async (request, fastify) => {
     return `IsActive stage updated successfully`;
 };
 
-const fieldNamesService = async (data, fastify) => {
-    let sportName = null,
-        matchType = null,
-        teamName = null,
-        playerName = null,
-        playerTypeName = null,
-        jerseyPlayerImage = null,
-        jerseyPlayerImagePath = null,
-        teamLogo = null;
-
-    if (data.sportId) {
-        sportName = global.tblEventTypes.find(e => e.eventTypeId == data.sportId)?.eventType || null;
-    }
-    if (data.matchTypeId) {
-        matchType = global.tblMatchTypes.find(e => e.matchTypeId == data.matchTypeId)?.matchType || null;
-    }
-    if (data.teamId) {
-        teamName = global.tblTeams.find(e => e.teamId == data.teamId)?.teamName || null;
-        teamLogo = global.tblTeams.find(e => e.teamId == data.teamId)?.imagePath || null;
-    }
-    if (data.playerId) {
-        playerName = global.tblPlayers.find(e => e.playerId == data.playerId)?.playerName || null;
-        const teamPlayer = await getTeamPlayerJerseyByPlayerIdQuery(data.playerId, fastify, data);
-        if (teamPlayer) {
-            jerseyPlayerImage = teamPlayer?.jerseyPlayerImage || null;
-            jerseyPlayerImagePath = teamPlayer?.jerseyPlayerImagePath || null;
-        }
-    }
-    if (data.playerTypeId) {
-        playerTypeName = global.tblPlayerTypes.find(e => e.playerTypeId == data.playerTypeId)?.playerType || null;
-    }
-
-    return {
-        sportName,
-        matchType,
-        teamName,
-        playerName,
-        playerTypeName,
-        jerseyPlayerImage,
-        jerseyPlayerImagePath,
-        teamLogo,
-    };
-};
 
 const extractEntries = async (json, isMen, request, fastify) => {
     const matchTypeData = global.tblMatchTypes;
@@ -558,5 +516,4 @@ module.exports = {
     activeInactiveICCRankingByIdService,
     AllICCRankingService,
     importICCRankingFromEntitySportService,
-    fieldNamesService,
 }
