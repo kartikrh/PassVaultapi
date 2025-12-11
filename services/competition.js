@@ -1347,7 +1347,7 @@ const competitionImportService = async (data, fastify, request) => {
       endDate: entitySportCompetitionResponse?.dateend,
       tpId: entitySportCompetitionResponse?.cid,
       pythonId: pythonIdData?.id || null,
-      isPointTable: entitySportCompetitionResponse?.table === "1",
+      isPointTable: entitySportCompetitionResponse?.table === "1"
     };
 
     if (competitionData.isPointTable) {
@@ -1356,7 +1356,7 @@ const competitionImportService = async (data, fastify, request) => {
         winPoint: 2,
         tiePoint: 0,
         lossPoint: 0,
-        cancelPoint: 1,
+        cancelPoint: 1
       }
     }
 

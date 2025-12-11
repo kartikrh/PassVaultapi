@@ -23516,7 +23516,7 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
       winPoint: 2,
       tiePoint: 0,
       lossPoint: 0,
-      cancelPoint: 1,
+      cancelPoint: 1
     }
   }
 
