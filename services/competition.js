@@ -1332,7 +1332,7 @@ const competitionImportService = async (data, fastify, request) => {
 
   let checkCompetition = global.tblCompetitions.find(item => item.tpId === data.cid);
   if (!checkCompetition) {
-    const competitionData = {
+    let competitionData = {
       competition: entitySportCompetitionResponse?.title,
       eventTypeId: eventType?.eventTypeId || EventType["Cricket"],
       refId: entitySportCompetitionResponse?.cid,
@@ -1347,8 +1347,18 @@ const competitionImportService = async (data, fastify, request) => {
       endDate: entitySportCompetitionResponse?.dateend,
       tpId: entitySportCompetitionResponse?.cid,
       pythonId: pythonIdData?.id || null,
-      isPointTable: entitySportCompetitionResponse?.table === "1"
+      isPointTable: entitySportCompetitionResponse?.table === "1",
     };
+
+    if (competitionData.isPointTable) {
+      competitionData = {
+        ...competitionData,
+        winPoint: 2,
+        tiePoint: 0,
+        lossPoint: 0,
+        cancelPoint: 1,
+      }
+    }
 
     const insertCompetition = await insertCompetitionQuery({
       ...request,
