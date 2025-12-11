@@ -1160,6 +1160,23 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
   //   global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(item => !(item.commentaryId === commentaryId && playersNotInTeam.includes(item.playerId)));
   // }
 
+  const removedCommentaryPlayers = commentaryPlayers.filter(item => item.commentaryId === commentaryId && item.teamId === teamId && item.currentInnings === i && !playerTpIds.includes(item.tpId));
+  for (const player of removedCommentaryPlayers) {
+    const removedCommentaryPlayer = commentaryPlayers.find(item => item.tpId === player.tpId);
+    if (removedCommentaryPlayer) {
+      const updatedData = {
+        ...removedCommentaryPlayer,
+        isInPlayingEleven: false
+      };
+      await updateCommentaryPlayerById(updatedData, request, fastify);
+
+      const index = global.tblCommentaryPlayers.findIndex(item => item.commentaryId === commentaryId && item.teamId === teamId && item.currentInnings === i && item.tpId === player.tpId);
+      if (index !== -1) {
+        global.tblCommentaryPlayers[index] = updatedData;
+      }
+    }
+  }
+
   for (const pid of playerTpIds) {
     const commentaryPlayerData = global.tblCommentaryPlayers.find(item => item.commentaryId === commentaryId && item.teamId === teamId && item.currentInnings === i && item.tpId === pid);
     if (commentaryPlayerData) {
@@ -1315,7 +1332,7 @@ const competitionImportService = async (data, fastify, request) => {
 
   let checkCompetition = global.tblCompetitions.find(item => item.tpId === data.cid);
   if (!checkCompetition) {
-    const competitionData = {
+    let competitionData = {
       competition: entitySportCompetitionResponse?.title,
       eventTypeId: eventType?.eventTypeId || EventType["Cricket"],
       refId: entitySportCompetitionResponse?.cid,
@@ -1332,6 +1349,16 @@ const competitionImportService = async (data, fastify, request) => {
       pythonId: pythonIdData?.id || null,
       isPointTable: entitySportCompetitionResponse?.table === "1"
     };
+
+    if (competitionData.isPointTable) {
+      competitionData = {
+        ...competitionData,
+        winPoint: 2,
+        tiePoint: 0,
+        lossPoint: 0,
+        cancelPoint: 1
+      }
+    }
 
     const insertCompetition = await insertCompetitionQuery({
       ...request,
@@ -1753,7 +1780,8 @@ const competitionImportService = async (data, fastify, request) => {
               currentInnings: i,
               teamMaxOver: maxOver,
               team1TpId: teamA?.tpId,
-              team2TpId: teamB?.tpId
+              team2TpId: teamB?.tpId,
+              drsCount: checkCompetition?.drsCount || 2
             },
           }, fastify);
           const teamACommentaryTeam = await getCommentaryTeamsQuery({
