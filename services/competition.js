@@ -1770,7 +1770,8 @@ const competitionImportService = async (data, fastify, request) => {
               currentInnings: i,
               teamMaxOver: maxOver,
               team1TpId: teamA?.tpId,
-              team2TpId: teamB?.tpId
+              team2TpId: teamB?.tpId,
+              drsCount: checkCompetition?.drsCount || 2
             },
           }, fastify);
           const teamACommentaryTeam = await getCommentaryTeamsQuery({

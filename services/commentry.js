@@ -24008,7 +24008,8 @@ const matchImportService = async (data, fastify, request = null) => {
               currentInnings: i,
               teamMaxOver: maxOver,
               team1TpId: teamAData?.tpId,
-              team2TpId: teamBData?.tpId
+              team2TpId: teamBData?.tpId,
+              drsCount: checkCompetition?.drsCount || 2
             },
           }, fastify);
           const teamACommentaryTeam = await getCommentaryTeamsQuery({
