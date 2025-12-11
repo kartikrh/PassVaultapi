@@ -38,7 +38,7 @@ const { playersMergeImageService, callClientAPI } = require("../utilities/index"
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { deleteCommentaryBattingHistoryService, deleteCommentaryBowlingHistoryService } = require("./commPlayerHistory");
 const { savePlayerBatHistQuery, savePlayerBallHistQuery } = require("../repository/TableCommPlayerHistory");
-const { fieldNamesService } = require("../services/iccRanking");
+const { fieldNamesService } = require("../services/fieldNamesService");
 
 const allPlayerService = async (request,fastify) => {
   const { isActive, eventTypeId, teamId, isMen } = request.body;
