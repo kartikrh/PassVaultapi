@@ -23492,7 +23492,7 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
     return checkCompetition;
   }
 
-  const competitionData = {
+  let competitionData = {
     competition: entitySportCompetitionResponse?.title,
     eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
     refId: entitySportCompetitionResponse?.cid,
@@ -23508,6 +23508,16 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
     tpId: entitySportCompetitionResponse?.cid,
     pythonId: pythonIdData?.id || null,
     isPointTable: entitySportCompetitionResponse?.table === "1"
+  }
+
+  if (competitionData.isPointTable) {
+    competitionData = {
+      ...competitionData,
+      winPoint: 2,
+      tiePoint: 0,
+      lossPoint: 0,
+      cancelPoint: 1
+    }
   }
 
   const insertCompetition = await insertCompetitionQuery({
