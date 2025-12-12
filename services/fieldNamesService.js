@@ -1,4 +1,4 @@
-const { getTeamPlayerJerseyByPlayerIdQuery } = require("../repository/TableTeamPlayer");
+const { getTeamPlayerJerseyByPlayerIdQuery } = require("../repository/TablePlayer");
 
 const fieldNamesService = async (data, fastify) => {
     let sportName = null,
