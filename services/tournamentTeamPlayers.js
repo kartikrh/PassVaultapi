@@ -38,7 +38,6 @@ const addTournamentTeamPlayersService = async (request, fastify) => {
     (item) => !newPlayerIds.includes(item.playerId)
   );
 
-  await addAndRemovePlayersFromTournamentTeams(request, fastify);
 
   // delete this player from the existingPlayers
   await deleteTournamentTeamPlayersQuery(newPlayers.map((item) => item.id), request, fastify);
@@ -46,6 +45,7 @@ const addTournamentTeamPlayersService = async (request, fastify) => {
     (item) => !newPlayers.map((elem) => elem.id).includes(item.id)
   );
 
+  await addAndRemovePlayersFromTournamentTeams(request, fastify);
 
   const insertPromises = teamPlayers?.map(async (item) => {
     const playerTpId = global.tblPlayers.find(elem => elem.playerId === item.playerId);
