@@ -582,7 +582,9 @@ const insertCommentaryPlayers = async (
         tpt."wrPlayerType" AS "playerType",
         tcp."wrJerseyPlayerImage" AS "jerseyPlayerImage",
         tcp."wrJerseyPlayerImagePath" AS "jerseyPlayerImagePath",
-        tcp."wrTpId" AS "tpId"
+        tcp."wrTpId" AS "tpId",
+        tcp."wrIsPlayInEvent" as "isPlayInEvent",
+        tcp."wrCreatedDate" as "createdDate"
       FROM insert_data tcp
       LEFT JOIN "tblPlayers" tp ON tcp."wrPlayerId" = tp."wrPlayerId"
       LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId";
@@ -7246,8 +7248,7 @@ const updateVirtualPartnershipQuery = async (data, fastify, request) => {
         "wrTotalWide" = $12,
         "wrTotalNoBall" = $13,
         "wrTeamScore" = $14,
-        "wrTeamWicket" = $15,
-        "wrIsActive" = $18
+        "wrTeamWicket" = $15
       WHERE "wrCommentaryPartnershipId" = $16
       AND "wrCommentaryId" = $17
       AND "wrIsDelete" = false
@@ -7303,7 +7304,6 @@ const updateVirtualPartnershipQuery = async (data, fastify, request) => {
           data.teamWicket,
           data.commentaryPartnershipId,
           data.commentaryId,
-          data.isActive ?? false,
         ],
       }
     );
