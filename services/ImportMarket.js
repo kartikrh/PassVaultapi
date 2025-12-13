@@ -124,7 +124,10 @@ const ImportMarketService = async (request, fastify) => {
     );
 
     if (!Eventsobj) {
-      if(request.body.openDate == undefined || request.body.openDate == null){
+      const openDate = request.body.openDate?.trim();
+      if (openDate == undefined || openDate == null ||
+        openDate === "" || openDate === "null" ||
+        isNaN(new Date(openDate).getTime())) {
         throw new Error("Open Date is required for event creation");
       }
       request.body.competitionId = CompetitionsObj.competitionId;

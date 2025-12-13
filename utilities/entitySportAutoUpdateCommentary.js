@@ -25,7 +25,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
 
                 for (let hour of intervalTimesForUpdateCommentary) {
                     const upper = hour;
-                    const lower = hour - 0.25; // 15-minute buffer
+                    const lower = hour - 0.25; // 15-minute buffers
 
                     if (diffHours > 0 && diffHours <= upper && diffHours >= lower) {
                         hour = hour.toFixed(0);
@@ -162,7 +162,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                 if (changedValues.countryId && changedValues.venueId) {
                                     const getVenueData = global.tblVenues.find(item => item.id === changedValues.venueId);
                                     if (getVenueData) {
-                                        const getLocation = `${getVenueData.name}, ${getVenueData.countryName}`;
+                                        const getLocation = `${getVenueData.name}, ${getVenueData.city}`;
                                         if (getLocation !== location) {
                                             changedValues.location = getLocation;
                                         }
@@ -356,7 +356,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                 if (insertAutoUpdateCommentaryData?.id) {
                                     await updateAutoUpdateCommentaryDataQuery({
                                         status: isChanged ? autoUpdateCommentaryDataStatus.success : autoUpdateCommentaryDataStatus.noupdate,
-                                        message: isChanged ? "Match data updated successfully" : "No update found for this commentary",
+                                        message: isChanged ? "Commentary updated" : "No changes in commentary",
                                         id: insertAutoUpdateCommentaryData.id,
                                         responseData: entitySportMatchResponse
                                     }, fastify);
@@ -366,7 +366,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                             if (insertAutoUpdateCommentaryData?.id) {
                                 await updateAutoUpdateCommentaryDataQuery({
                                     status: autoUpdateCommentaryDataStatus.failed,
-                                    message: "Failed to update Match data",
+                                    message: "Failed to update commentary",
                                     id: insertAutoUpdateCommentaryData.id,
                                     responseData: insertAutoUpdateCommentaryData?.responseData ?? null
                                 }, fastify);

@@ -199,7 +199,7 @@ const insertPlayerQuery = async (data, fastify, request) => {
           data.tpId || null,
           data.countryId || null,
           data.bowlingTypeId || null,
-          data?.isMen || false,
+          data?.isMen ?? false,
           data?.birthDate || null,
         ],
       }
@@ -282,7 +282,7 @@ const updatePlayerQuery = async (data, fastify, request) => {
           data.tpId,
           data.countryId,
           data.bowlingTypeId,
-          data?.isMen || false,
+          data?.isMen ?? false,
           data?.birthDate || null
         ],
       }
@@ -716,6 +716,7 @@ const getAllDuplicatePlayersQuery = async (request, fastify) => {
       //     type: fastify.db.QueryTypes.SELECT,
       //   }
       // );
+
       let res = await fastify.db.query(
         `
             CALL proc_get_duplicate_data($1)
@@ -736,6 +737,117 @@ const getAllDuplicatePlayersQuery = async (request, fastify) => {
       );
       throw new Error(err.message);
     }
+};
+
+const getPlayersWithoutTeamQuery = async (request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      SELECT 
+          tp."wrPlayerId" AS "playerId",
+          tp."wrPlayerName" AS "playerName",
+          tp."wrDisplayName" AS "displayName",
+          tp."wrImage" AS "image",
+          tp."wrIsActive" AS "isActive"
+      FROM "tblPlayers" tp
+      WHERE tp."wrIsDeleted" = false
+      AND NOT EXISTS (
+          SELECT 1 
+          FROM "tblTeamPlayers" ttp
+          WHERE ttp."wrRefPlayerId" = tp."wrPlayerId"
+          AND ttp."wrIsDeleted" = false
+      );
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePlayer.js/getPlayersWithoutTeamQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const getPlayersWithoutHomeTeamQuery = async (request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      SELECT 
+          tp."wrPlayerId" AS "playerId",
+          tp."wrPlayerName" AS "playerName",
+          tp."wrDisplayName" AS "displayName",
+          tp."wrImage" AS "image",
+          tp."wrIsActive" AS "isActive"
+      FROM "tblPlayers" tp
+      WHERE tp."wrIsDeleted" = false
+      AND EXISTS (
+          -- Player has at least one team entry
+          SELECT 1
+          FROM "tblTeamPlayers" ttp
+          WHERE ttp."wrRefPlayerId" = tp."wrPlayerId"
+            AND ttp."wrIsDeleted" = false
+      )
+      AND NOT EXISTS (
+          -- Player should NOT have any homeTeam = true entry
+          SELECT 1
+          FROM "tblTeamPlayers" ttp2
+          WHERE ttp2."wrRefPlayerId" = tp."wrPlayerId"
+            AND ttp2."wrIsDeleted" = false
+            AND ttp2."wrHomeTeam" = true
+      );
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT
+      }
+    );
+
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePlayer.js/getPlayersWithoutHomeTeamQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const getTeamPlayerJerseyByPlayerIdQuery = async (playerId, fastify, request) => {
+  try {
+    const sql = `
+      SELECT 
+        ttp."wrJerseyPlayerImage" AS "jerseyPlayerImage",
+        ttp."wrJerseyPlayerImagePath" AS "jerseyPlayerImagePath"
+      FROM "tblTeamPlayers" ttp
+      WHERE ttp."wrRefPlayerId" = $1
+        AND ttp."wrHomeTeam" = true
+        AND ttp."wrIsDeleted" = false
+      LIMIT 1;
+    `;
+
+    const result = await fastify.db.query(sql, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [playerId],
+    });
+
+    return result[0] || null;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePlayer/getTeamPlayerJerseyByPlayerIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
 };
 
 const getPlayerCompetitionListByPlayerIdQuery = async (request, fastify) => {
@@ -813,5 +925,8 @@ module.exports = {
   getPlayerByIdQuery,
   updateExchangePlayerQuery,
   getAllDuplicatePlayersQuery,
-  getPlayerCompetitionListByPlayerIdQuery
+  getPlayerCompetitionListByPlayerIdQuery,
+  getPlayersWithoutTeamQuery,
+  getPlayersWithoutHomeTeamQuery,
+  getTeamPlayerJerseyByPlayerIdQuery,
 };

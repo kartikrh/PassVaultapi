@@ -14,6 +14,7 @@ const getAllAutoImportDataQuery = async (request, fastify, whereCondition = unde
                 "wrImportStartTime" as "importStartTime",
                 "wrImportEndTime" as "importEndTime",
                 "wrErrorStackData" as "errorStackData",
+                "wrESApiResponseData" as "esApiResponseData",
                 "wrCreatedBy" as "createdBy",
                 "wrCreateDate" as "createdDate"
             FROM "tblAutoImportData"
@@ -44,6 +45,7 @@ const getAutoImportDataByIdQuery = async (whereCondition = undefined, request, f
                 "wrImportStartTime" as "importStartTime",
                 "wrImportEndTime" as "importEndTime",
                 "wrErrorStackData" as "errorStackData",
+                "wrESApiResponseData" as "esApiResponseData",
                 "wrCreatedBy" as "createdBy",
                 "wrCreateDate" as "createdDate"
             FROM "tblAutoImportData"
@@ -84,6 +86,7 @@ const insertAutoImportDataQuery = async (data, fastify, request) => {
                 "wrImportStartTime" as "importStartTime",
                 "wrImportEndTime" as "importEndTime",
                 "wrErrorStackData" as "errorStackData",
+                "wrESApiResponseData" as "esApiResponseData",
                 "wrCreatedBy" as "createdBy",
                 "wrCreateDate" as "createdDate"
             FROM insert_data;`,
@@ -125,8 +128,9 @@ const updateAutoImportDataQuery = async (data, fastify, request) => {
                 "wrIsImportStart" = $5,
                 "wrImportStartTime" = $6,
                 "wrImportEndTime" = $7,
-                "wrErrorStackData" = $8
-            WHERE "wrId" = $9
+                "wrErrorStackData" = $8,
+                "wrESApiResponseData" = $9
+            WHERE "wrId" = $10
             RETURNING *
         )
             SELECT 
@@ -139,6 +143,7 @@ const updateAutoImportDataQuery = async (data, fastify, request) => {
                 "wrImportStartTime" as "importStartTime",
                 "wrImportEndTime" as "importEndTime",
                 "wrErrorStackData" as "errorStackData",
+                "wrESApiResponseData" as "esApiResponseData",
                 "wrCreatedBy" as "createdBy",
                 "wrCreateDate" as "createdDate"
             FROM updated_data;`,
@@ -153,6 +158,7 @@ const updateAutoImportDataQuery = async (data, fastify, request) => {
                     data.importStartTime,
                     data.importEndTime,
                     data?.errorStackData,
+                    data?.esApiResponseData || null,
                     data.id,
                 ],
             }
@@ -207,6 +213,7 @@ const allAutoImportDataLogsQuery = async (body ,request, fastify) => {
                 "wrImportStartTime" as "importStartTime",
                 "wrImportEndTime" as "importEndTime",
                 "wrErrorStackData" as "errorStackData",
+                "wrESApiResponseData" as "esApiResponseData",
                 tu."WrName" as "createdBy",
                 "wrCreateDate" as "createdDate"
             FROM "tblAutoImportData"

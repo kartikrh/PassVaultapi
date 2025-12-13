@@ -834,53 +834,179 @@ const allUndoLogsByUserWiseQuery = async (data, request, fastify) => {
     }
 };
 
-const allEntityUpdateLogsQuery = async (body ,request, fastify) => {
+// const allEntityUpdateLogsQuery = async (body ,request, fastify) => {
+//     try {
+//         const { startDate, endDate, page = 1, limit = 20, commentaryId } = body;
+//         const {skip , take} = getPagination(page, limit);
+//         let where = startDate && endDate ? `WHERE logs."wrCreateDate" BETWEEN '${startDate}' AND '${endDate}'` : '';
+//         where = commentaryId ? (where ? `${where} AND logs."wrCommentaryId" = ${commentaryId}` : `WHERE logs."wrCommentaryId" = ${commentaryId}`) : where;
+//         const query = `
+//             SELECT 
+//                 logs."wrId" as "id",
+//                 logs."wrCommentaryId" as "commentaryId",
+//                 logs."wrOffsetHour" as "offsetHour",
+//                 logs."wrStatus" as "status",
+//                 logs."wrMessage" as "message",
+//                 logs."wrResponseData" as "responseData",
+//                 logs."wrCreateDate" as "createDate"
+//             FROM
+//             "tblAutoUpdateCommentaryData" logs
+//             ${where}
+//             ORDER BY logs."wrId" DESC
+//             LIMIT $1 OFFSET $2;
+//         `;
+//         const data = await fastify.db.query(query, {
+//             type: fastify.db.QueryTypes.SELECT,
+//             bind : [
+//                 take,
+//                 skip
+//             ]
+//         }); 
+
+//         const totalRecordsQuery = `
+//             SELECT COUNT(*) as "count"
+//             FROM "tblAutoUpdateCommentaryData" logs
+//             ${where}
+//         `;
+
+//         const totalRecordsResult = await fastify.db.query(totalRecordsQuery, {
+//             type: fastify.db.QueryTypes.SELECT,
+//         });
+
+//         const totalRecords = parseInt(totalRecordsResult[0].count, 10);
+//         const totalPages = Math.ceil(totalRecords / take);
+
+//         return {
+//             totalRecords: totalRecords,
+//             currentPage: page,
+//             totalPages: totalPages,
+//             data: data,
+//         };
+//     } catch (err) {
+//         errorLogger(
+//             fastify,
+//             err.message,
+//             "DB ERROR --> repository/TableLogs.js/allEntityUpdateLogsQuery",
+//             request
+//         );
+//         throw new Error(err.message);
+//     }
+// };
+
+const allEntityUpdateLogsQuery = async (body, request, fastify) => {
     try {
-        const { startDate, endDate, page = 1, limit = 20, commentaryId } = body;
-        const {skip , take} = getPagination(page, limit);
-        let where = startDate && endDate ? `WHERE logs."wrCreateDate" BETWEEN '${startDate}' AND '${endDate}'` : '';
-        where = commentaryId ? (where ? `${where} AND logs."wrCommentaryId" = ${commentaryId}` : `WHERE logs."wrCommentaryId" = ${commentaryId}`) : where;
-        const query = `
+        const { 
+            startDate, 
+            endDate, 
+            page = 1, 
+            limit = 20, 
+            commentaryId,
+            eventTypeId,
+            competitionId,
+        } = body;
+
+        const { skip, take } = getPagination(page, limit);
+
+        const whereClauses = [];
+        const bindValues = [];
+        let bindIndex = 1;
+
+        // Date filter
+        if (startDate && endDate) {
+            whereClauses.push(`logs."wrCreateDate" BETWEEN $${bindIndex} AND $${bindIndex + 1}`);
+            bindValues.push(startDate, endDate);
+            bindIndex += 2;
+        }
+
+        // Commentary filter
+        if (commentaryId) {
+            whereClauses.push(`logs."wrCommentaryId" = $${bindIndex}`);
+            bindValues.push(commentaryId);
+            bindIndex++;
+        }
+
+        // Event type filter
+        if (eventTypeId) {
+            whereClauses.push(`com."wrEventTypeId" = $${bindIndex}`);
+            bindValues.push(eventTypeId);
+            bindIndex++;
+        }
+
+        // Competition filter
+        if (competitionId) {
+            whereClauses.push(`com."wrCompetitionId" = $${bindIndex}`);
+            bindValues.push(competitionId);
+            bindIndex++;
+        }
+
+        const where = whereClauses.length ? `WHERE ${whereClauses.join(" AND ")}` : "";
+
+        // Base Query with event & competition details
+        const baseQuery = `
             SELECT 
-                logs."wrId" as "id",
-                logs."wrCommentaryId" as "commentaryId",
-                logs."wrOffsetHour" as "offsetHour",
-                logs."wrStatus" as "status",
-                logs."wrMessage" as "message",
-                logs."wrResponseData" as "responseData",
-                logs."wrCreateDate" as "createDate"
-            FROM
-            "tblAutoUpdateCommentaryData" logs
+                logs."wrId" AS "id",
+                logs."wrCommentaryId" AS "commentaryId",
+                logs."wrOffsetHour" AS "offsetHour",
+                logs."wrStatus" AS "status",
+                logs."wrMessage" AS "message",
+                logs."wrResponseData" AS "responseData",
+                logs."wrCreateDate" AS "createDate",
+
+                -- Commentary Details
+                com."wrEventName" AS "eventName",
+                com."wrEventRefId" AS "eventRefId",
+                com."wrEventDate" AS "eventDate",
+                com."wrCommentaryStatus" AS "commentaryStatus",
+
+                -- Competition
+                comp."wrCompetition" AS "competitionName",
+
+                -- Event Type
+                et."wrEventType" AS "eventTypeName"
+
+            FROM "tblAutoUpdateCommentaryData" logs
+
+            LEFT JOIN "tblCommentaries" com
+                ON logs."wrCommentaryId" = com."wrCommentaryId"
+
+            LEFT JOIN "tblCompetitions" comp
+                ON com."wrCompetitionId" = comp."wrCompetitionId"
+
+            LEFT JOIN "tblEventTypes" et
+                ON com."wrEventTypeId" = et."wrEventTypeId"
+
             ${where}
             ORDER BY logs."wrId" DESC
-            LIMIT $1 OFFSET $2;
         `;
-        const data = await fastify.db.query(query, {
-            type: fastify.db.QueryTypes.SELECT,
-            bind : [
-                take,
-                skip
-            ]
-        }); 
+
+        const paginationBindValues = [...bindValues, take, skip];
+
+        const data = await fastify.db.query(
+            baseQuery + ` LIMIT $${bindIndex} OFFSET $${bindIndex + 1}`,
+            {
+                type: fastify.db.QueryTypes.SELECT,
+                bind: paginationBindValues
+            }
+        );
 
         const totalRecordsQuery = `
-            SELECT COUNT(*) as "count"
-            FROM "tblAutoUpdateCommentaryData" logs
-            ${where}
+            SELECT COUNT(*) AS "count"
+            FROM (${baseQuery}) AS subquery
         `;
 
         const totalRecordsResult = await fastify.db.query(totalRecordsQuery, {
             type: fastify.db.QueryTypes.SELECT,
+            bind: bindValues
         });
 
         const totalRecords = parseInt(totalRecordsResult[0].count, 10);
         const totalPages = Math.ceil(totalRecords / take);
 
         return {
-            totalRecords: totalRecords,
+            totalRecords,
             currentPage: page,
-            totalPages: totalPages,
-            data: data,
+            totalPages,
+            data
         };
     } catch (err) {
         errorLogger(
@@ -893,56 +1019,182 @@ const allEntityUpdateLogsQuery = async (body ,request, fastify) => {
     }
 };
 
-const actionLogsQuery = async (body ,request, fastify) => {
+// const actionLogsQuery = async (body ,request, fastify) => {
+//     try {
+//         const { startDate, endDate, page = 1, limit = 20, commentaryId } = body;
+//         const {skip , take} = getPagination(page, limit);
+//         let where = startDate && endDate ? `WHERE logs."wrCreatedAt" BETWEEN '${startDate}' AND '${endDate}'` : '';
+//         where = commentaryId ? (where ? `${where} AND logs."wrCommentaryId" = ${commentaryId}` : `WHERE logs."wrCommentaryId" = ${commentaryId}`) : where;
+//         const query = `
+//             SELECT 
+//                 logs."wrId" as "id",
+//                 logs."wrCommentaryId" as "commentaryId",
+//                 logs."wrRequestBody" as "requestBody",
+//                 logs."wrResponse" as "response",
+//                 logs."wrApiName" as "apiName",
+//                 logs."wrCreatedAt" as "createdAt",
+//                 logs."wrCreatedBy" as "createdBy",
+//                 users."WrName" as "createdBy"
+//             FROM
+//             "tblCommActionLogs" logs
+//             LEFT JOIN
+//                 "tblUsers" users ON logs."wrCreatedBy" = users."WrUserId"
+//             ${where}
+//             ORDER BY logs."wrId" DESC
+//             LIMIT $1 OFFSET $2;
+//         `;
+//         const data = await fastify.db.query(query, {
+//             type: fastify.db.QueryTypes.SELECT,
+//             bind : [
+//                 take,
+//                 skip
+//             ]
+//         }); 
+
+//         const totalRecordsQuery = `
+//             SELECT COUNT(*) as "count"
+//             FROM "tblCommActionLogs" logs
+//             ${where}
+//         `;
+
+//         const totalRecordsResult = await fastify.db.query(totalRecordsQuery, {
+//             type: fastify.db.QueryTypes.SELECT,
+//         });
+
+//         const totalRecords = parseInt(totalRecordsResult[0].count, 10);
+//         const totalPages = Math.ceil(totalRecords / take);
+//         console.log("data", data);
+//         return {
+//             totalRecords: totalRecords,
+//             currentPage: page,
+//             totalPages: totalPages,
+//             data: data,
+//         };
+//     } catch (err) {
+//         errorLogger(
+//             fastify,
+//             err.message,
+//             "DB ERROR --> repository/TableLogs.js/actionLogsQuery",
+//             request
+//         );
+//         throw new Error(err.message);
+//     }
+// };
+
+const actionLogsQuery = async (body, request, fastify) => {
     try {
-        const { startDate, endDate, page = 1, limit = 20, commentaryId } = body;
-        const {skip , take} = getPagination(page, limit);
-        let where = startDate && endDate ? `WHERE logs."wrCreatedAt" BETWEEN '${startDate}' AND '${endDate}'` : '';
-        where = commentaryId ? (where ? `${where} AND logs."wrCommentaryId" = ${commentaryId}` : `WHERE logs."wrCommentaryId" = ${commentaryId}`) : where;
-        const query = `
+        const { startDate, endDate, page = 1, limit = 20 , eventTypeId, competitionId, commentaryId, createdById } = body;
+        const { skip, take } = getPagination(page, limit);
+
+        const whereClauses = [];
+        const bindValues = [];
+        let bindIndex = 1;
+
+        // Date filter
+        if (startDate && endDate) {
+            whereClauses.push(`logs."wrCreatedAt" BETWEEN $${bindIndex} AND $${bindIndex + 1}`);
+            bindValues.push(startDate, endDate);
+            bindIndex += 2;
+        }
+
+        // Commentary filter
+        if (commentaryId) {
+            whereClauses.push(`logs."wrCommentaryId" = $${bindIndex}`);
+            bindValues.push(commentaryId);
+            bindIndex++;
+        }
+
+        // Event Type filter
+        if (eventTypeId) {
+            whereClauses.push(`com."wrEventTypeId" = $${bindIndex}`);
+            bindValues.push(eventTypeId);
+            bindIndex++;
+        }
+
+        // Competition filter
+        if (competitionId) {
+            whereClauses.push(`com."wrCompetitionId" = $${bindIndex}`);
+            bindValues.push(competitionId);
+            bindIndex++;
+        }
+
+        // Created By filter
+        if (createdById) {
+            whereClauses.push(`logs."wrCreatedBy" = $${bindIndex}`);
+            bindValues.push(createdById);
+            bindIndex++;
+        }
+
+        const where = whereClauses.length ? `WHERE ${whereClauses.join(" AND ")}` : "";
+
+        const baseQuery = `
             SELECT 
-                logs."wrId" as "id",
-                logs."wrCommentaryId" as "commentaryId",
-                logs."wrRequestBody" as "requestBody",
-                logs."wrResponse" as "response",
-                logs."wrApiName" as "apiName",
-                logs."wrCreatedAt" as "createdAt",
-                logs."wrCreatedBy" as "createdBy",
-                users."WrName" as "createdBy"
-            FROM
-            "tblCommActionLogs" logs
-            LEFT JOIN
-                "tblUsers" users ON logs."wrCreatedBy" = users."WrUserId"
+                logs."wrId" AS "id",
+                logs."wrCommentaryId" AS "commentaryId",
+                logs."wrRequestBody" AS "requestBody",
+                logs."wrResponse" AS "response",
+                logs."wrApiName" AS "apiName",
+                logs."wrCreatedAt" AS "createdAt",
+                logs."wrCreatedBy" AS "createdById",
+                users."WrName" AS "createdBy",
+
+                -- Commentary Details
+                com."wrEventName" AS "eventName",
+                com."wrEventRefId" AS "eventRefId",
+                com."wrEventDate" AS "eventDate",
+                com."wrCommentaryStatus" AS "commentaryStatus",
+
+                -- Competition
+                comp."wrCompetition" AS "competitionName",
+
+                -- Event Type
+                et."wrEventType" AS "eventTypeName"
+
+            FROM "tblCommActionLogs" logs
+
+            LEFT JOIN "tblUsers" users 
+                ON logs."wrCreatedBy" = users."WrUserId"
+
+            LEFT JOIN "tblCommentaries" com
+                ON logs."wrCommentaryId" = com."wrCommentaryId"
+
+            LEFT JOIN "tblCompetitions" comp
+                ON com."wrCompetitionId" = comp."wrCompetitionId"
+
+            LEFT JOIN "tblEventTypes" et
+                ON com."wrEventTypeId" = et."wrEventTypeId"
+
             ${where}
             ORDER BY logs."wrId" DESC
-            LIMIT $1 OFFSET $2;
         `;
-        const data = await fastify.db.query(query, {
-            type: fastify.db.QueryTypes.SELECT,
-            bind : [
-                take,
-                skip
-            ]
-        }); 
 
+        // Add pagination
+        const paginationBind = [...bindValues, take, skip];
+        const data = await fastify.db.query(
+            baseQuery + ` LIMIT $${bindIndex} OFFSET $${bindIndex + 1}`,
+            {
+                type: fastify.db.QueryTypes.SELECT,
+                bind: paginationBind
+            }
+        );
+
+        // Count Query
         const totalRecordsQuery = `
-            SELECT COUNT(*) as "count"
-            FROM "tblCommActionLogs" logs
-            ${where}
+            SELECT COUNT(*) AS "count" 
+            FROM ( ${baseQuery} ) AS sub
         `;
-
         const totalRecordsResult = await fastify.db.query(totalRecordsQuery, {
             type: fastify.db.QueryTypes.SELECT,
+            bind: bindValues
         });
 
         const totalRecords = parseInt(totalRecordsResult[0].count, 10);
         const totalPages = Math.ceil(totalRecords / take);
-        console.log("data", data);
         return {
-            totalRecords: totalRecords,
+            totalRecords,
             currentPage: page,
-            totalPages: totalPages,
-            data: data,
+            totalPages,
+            data
         };
     } catch (err) {
         errorLogger(

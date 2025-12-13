@@ -158,10 +158,13 @@ module.exports = async function (fastify, opts) {
       }
     });
 
+    let isAutoImportProcessEnded = true;
     cron.schedule('0,30 * * * * *', async () => {
       try {
-        if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
+        if (isAutoImportProcessEnded && global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
+          isAutoImportProcessEnded = false;
           await entitySportAutoImportProcess(fastify);
+          isAutoImportProcessEnded = true;
         }
       } catch (error) {
         console.error("Error during scheduled task - entitySportAutoImportProcess:", error);
@@ -188,7 +191,7 @@ module.exports = async function (fastify, opts) {
       }
     });
 
-    cron.schedule('0 0 * * *', async () => {
+    cron.schedule('30 19 * * *', async () => {
       try {
         if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
           await autoUpdateTournamentTeamPoints(fastify);

@@ -133,7 +133,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
               if(isLog == "false") { return true; }
               await createDataQuery({data : payload, matchId : payload.response.match_id}, fastify);
               // await setEntityCom2Service(request, fastify);
-              console.log("entityScoreData...")
+              console.log("entityScoreData.....")
               addToQueue(payload, fastify);
             } else if (
               payload?.response?.ball_event &&

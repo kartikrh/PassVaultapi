@@ -679,6 +679,10 @@ const UpdateTeamFromEntityService = async (data, fastify, request) => {
   const url = checkEntitySportAPIEndpoint.data.replace("{tid}", checkTeamData.tpId);
   const entitySportTeamPlayer = await callEntitySportAPI(url, request, fastify);
 
+  if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
+    global.autoImportData.esApiResponseData = entitySportTeamPlayer?.data?.result?.items;
+  }
+
   let entitySportTeamPlayerResponse = entitySportTeamPlayer?.data?.result?.items;
   if (!entitySportTeamPlayerResponse) {
     errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/teams.js/UpdateTeamFromEntityService - entitySportTeamPlayerResponse", {
@@ -800,7 +804,7 @@ const UpdateTeamFromEntityService = async (data, fastify, request) => {
 
 const teamImportService = async (data, fastify, request = null) => {
   const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
-  return await insertTeamAndPlayers(data.tid, eventType, request, fastify);
+  return await insertTeamAndPlayers(data, eventType, request, fastify);
 }
 
 const activeInactiveTeamService = async (request, fastify) => {

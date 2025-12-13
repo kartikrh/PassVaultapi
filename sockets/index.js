@@ -31,12 +31,16 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
         global.clientSocketIo = global.clientSocketIo.filter(c => c.url !== urlConfig.url);
       }
       const client = io(urlConfig.url, {
-        transport: ["websocket"],
+        // transport: ["websocket"],
+        transports: ["websocket"],
         query: { source: "admin-panel"},
         reconnection: true,
         reconnectionDelay: urlConfig.reconnectDelay,
         reconnectionDelayMax: urlConfig.reconnectMaxDelay,
         reconnectionAttempts: urlConfig.reconnectAttempts,
+        timeout: 20000,
+        pingInterval: 25000,
+        pingTimeout: 60000, 
       });
 
       // Attach event listeners for connection events
@@ -72,14 +76,14 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
                   if (elem.commentaryId) {
                     const index = global.tblCommentaries.findIndex(i => i.commentaryId == elem.commentaryId);
                     if(index == -1){
-                      console.log("elem", elem)
-                      errorLogger(
-                        fastify,
-                        "CommentaryId not found in global  socketObj.cronJob",
-                        "sockets/index.js/connectClients",
-                        null,
-                        elem
-                      )
+                      // console.log("elem", elem)
+                      // errorLogger(
+                      //   fastify,
+                      //   "CommentaryId not found in global  socketObj.cronJob",
+                      //   "sockets/index.js/connectClients",
+                      //   null,
+                      //   elem
+                      // )
                       continue;
                     }
                     // console.log("elem.commentaryId",elem)

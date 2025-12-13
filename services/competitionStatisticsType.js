@@ -1,19 +1,23 @@
-const { insertCompetitionStatisticsTypeQuery, updateCompetitionStatisticsTypeByIdQuery, deleteCompetitionStatisticsTypeByIdQuery } = require("../repository/TableCompetitionStatisticsType");
+const { insertCompetitionStatisticsTypeQuery, updateCompetitionStatisticsTypeByIdQuery, deleteCompetitionStatisticsTypeByIdQuery, updateCompetitionStatisticsTypeDisplayOrderQuery } = require("../repository/TableCompetitionStatisticsType");
 
 const getAllCompetitionStatisticsTypeService = async (request, fastify) => {
-    const { isActive, typeId, eventTypeId } = request.body;
+    const { isActive, typeId, eventTypeId, entityEnum } = request.body;
     let competitionStatisticsTypes = global.tblCompetitionStatisticsType;
 
     if ("isActive" in request.body) {
         competitionStatisticsTypes = competitionStatisticsTypes.filter(item => item.isActive === isActive);
     }
 
-    if (typeId && typeId !== 0) {
-        competitionStatisticsTypes = competitionStatisticsTypes.filter(item => item.typeId === typeId);
-    }
-
     if (eventTypeId && eventTypeId !== 0) {
         competitionStatisticsTypes = competitionStatisticsTypes.filter(item => item.eventTypeId === eventTypeId);
+    }
+
+    if (typeId && typeId !== 0) {
+        competitionStatisticsTypes = competitionStatisticsTypes.filter(item => item.typeId === typeId);
+
+        if (entityEnum && entityEnum !== 0) {
+            competitionStatisticsTypes = competitionStatisticsTypes.filter(item => item.entityEnum === entityEnum);
+        }
     }
 
     return competitionStatisticsTypes;
@@ -25,20 +29,20 @@ const getCompetitionStatisticsTypeByIdService = async (request, fastify) => {
 };
 
 const createCompetitionStatisticsTypeService = async (request, fastify) => {
-    const { typeId, name, eventTypeId, displayOrder } = request.body;
+    const { typeId, eventTypeId, displayOrder, entityEnum } = request.body;
 
     if (!typeId) {
         throw new Error("Type Id is required");
-    } else if (!name) {
-        throw new Error("Name is required");
     } else if (!eventTypeId) {
         throw new Error("Event Type Id is required");
     } else if (!displayOrder) {
         throw new Error("Display Order is required");
+    } else if (!entityEnum) {
+        throw new Error("Entity Enum is required");
     }
 
     const checkExists = global.tblCompetitionStatisticsType.find(
-        (item) => item.typeId === typeId && item.name.toLowerCase() === name.toLowerCase() && item.eventTypeId === eventTypeId
+        (item) => item.typeId === typeId && item.entityEnum === entityEnum && item.eventTypeId === eventTypeId
     );
     if (checkExists) {
         throw new Error("Competition Statistics Type already exists");
@@ -75,7 +79,8 @@ const updateCompetitionStatisticsTypeService = async (request, fastify) => {
     }
 
     const updateData = {
-        keyName: request.body.keyName ?? checkExists.keyName,
+        name: request.body.name ?? checkExists.name,
+        entityEnum: request.body.entityEnum ?? checkExists.entityEnum,
         displayOrder: request.body.displayOrder ?? checkExists.displayOrder,
         description: request.body.description ?? checkExists.description,
         ...("isActive" in request.body ? {
@@ -113,9 +118,22 @@ const deleteCompetitionStatisticsTypeService = async (request, fastify) => {
     return true;
 };
 
+const updateCompetitionStatisticsTypeDisplayOrderService = async (request, fastify) => {
+    for (const item of request.body) {
+        await updateCompetitionStatisticsTypeDisplayOrderQuery(item, request, fastify);
+        let index = global.tblCompetitionStatisticsType.findIndex((elem) => elem.competitionStatisticsTypeId === item.competitionStatisticsTypeId);
+        if (index !== -1) {
+            global.tblCompetitionStatisticsType[index].displayOrder = item.displayOrder;
+        }
+    }
+
+    return `Display order updated successfully`;
+}
+
 module.exports = {
     getAllCompetitionStatisticsTypeService,
     getCompetitionStatisticsTypeByIdService,
     saveCompetitionStatisticsTypeService,
-    deleteCompetitionStatisticsTypeService
+    deleteCompetitionStatisticsTypeService,
+    updateCompetitionStatisticsTypeDisplayOrderService
 };

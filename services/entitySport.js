@@ -1,7 +1,7 @@
 const { getPlyByIdQuery } = require("../repository/TablePlayer")
 const { getTeamsByIds } = require("../repository/TableTeams")
 const { getCompetitionByIdsQuery } = require("../repository/TableCompitition")
-const { getComEntityQuery, updateVirtualPartnershipQuery } = require("../repository/TableCommentary")
+const { getComEntityQuery, updateVirtualPartnershipQuery, updateCommentaryStatusQuery } = require("../repository/TableCommentary")
 const { getAllTournamentTeamPlayerByIdsQuery } = require("../repository/TableTournamentsTeamPlayers")
 const { getMatchDataByCId, syncEntitySportCommentaryService } = require("../services/commentry");
 const {
@@ -11,6 +11,7 @@ const {
     BALL_TYPE,
     EntityCommentaryStatus,
     wicketTypeObj,
+    GAME_STATUS,
 } = require("../utilities/index");
 const { getCountryByIds } = require("../repository/TableCountryCodes")
 const { getVenueByIds } = require("../repository/TableVenue")
@@ -301,6 +302,7 @@ const saveTournamentTeamPlayerService = async (request, fastify) => {
     return "Tournament Team Players Data Updated successfully."
 }
 const setEntityCom2Service = async (request , fastify) =>{
+  let matchID = request.body?.response?.match_id
   try {
         const {response} = request.body
     // await new Promise((r) => setTimeout(r, 5000));
@@ -372,13 +374,14 @@ const setEntityCom2Service = async (request , fastify) =>{
               }
           ]
       }
+      let teamChoseTo = tossInfo?.decision === 1 ? "Bat" : "Bowl"
       let upComData = {
           ...comDetails,
           commentaryStatus : commentaryStatus.TOSSDONE,
           tossWonBy : team1.teamId,
           choseTo : tossInfo.decision,
-          tossRmk : `Toss won by ${team1.teamName} and chose to Bat.`,
-          displayStatus : `Toss won by ${team1.teamName} and chose to Bat.`,
+          tossRmk : `Toss won by ${team1.teamName} and chose to ${teamChoseTo}.`,
+          displayStatus : `Toss won by ${team1.teamName} and chose to ${teamChoseTo}.`,
       }
       let commentaryId = comDetails.commentaryId;
       // return {
@@ -410,11 +413,11 @@ const setEntityCom2Service = async (request , fastify) =>{
                   tossRmk: upComData.tossRmk,
                   displayStatus: upComData.displayStatus,
               };
-              scoreResponse.scoreResponse = global.tblCommentaries[comI]
+              scoreResponse.commentaryDetails = global.tblCommentaries[comI]
               sendDataForSocketUpdate.dataToUpdate.push({
                 module: "commentaryDetails",
                 type: "update",
-                data: scoreResponse.scoreResponse,
+                data: scoreResponse.commentaryDetails,
               });
           }
           if(comTeams && comTeams.length > 0){
@@ -505,13 +508,14 @@ const setEntityCom2Service = async (request , fastify) =>{
                     }
                 ]
             }
+            let teamChoseTo = tossInfo?.decision === 1 ? "Bat" : "Bowl"
             let upComData = {
                 ...comDetails,
                 commentaryStatus : commentaryStatus.TOSSDONE,
                 tossWonBy : team1.teamId,
                 choseTo : tossInfo.decision,
-                tossRmk : `Toss won by ${team1.teamName} and chose to Bat.`,
-                displayStatus : `Toss won by ${team1.teamName} and chose to Bat.`,
+                tossRmk : `Toss won by ${team1.teamName} and chose to ${teamChoseTo}.`,
+                displayStatus : `Toss won by ${team1.teamName} and chose to ${teamChoseTo}.`,
             }
             let commentaryId = comDetails.commentaryId;
             let updatedData = await fastify.db.query(
@@ -539,14 +543,15 @@ const setEntityCom2Service = async (request , fastify) =>{
                     tossRmk: upComData.tossRmk,
                     displayStatus: upComData.displayStatus,
                 };
-                scoreResponse.scoreResponse = global.tblCommentaries[comI]
+                scoreResponse.commentaryDetails = global.tblCommentaries[comI]
                 sendDataForSocketUpdate.dataToUpdate.push({
                   module: "commentaryDetails",
                   type: "update",
-                  data: scoreResponse.scoreResponse,
+                  data: scoreResponse.commentaryDetails,
                 });
             }
             if(comTeams && comTeams.length > 0){
+              scoreResponse.commentaryTeams = []
                 for (let ct of comTeams){
                     let comTI = global.tblCommentaryTeams.findIndex((c)=> c.commentaryTeamId == ct.commentaryTeamId)
                     global.tblCommentaryTeams[comTI] = {
@@ -556,7 +561,7 @@ const setEntityCom2Service = async (request , fastify) =>{
                         subInning: ct.subInning,
                     };
                     scoreResponse.commentaryTeams.push(global.tblCommentaryTeams[comTI]);
-                }
+                  }
                 scoreResponse.commentaryTeams.forEach(async (team) => {
                   const _teamsC1 = global.tblTeams.filter(
                     (item) => item.teamId === team.teamId
@@ -727,7 +732,7 @@ const setEntityCom2Service = async (request , fastify) =>{
             const commentaryOvers = {
                 overId: 0,
                 commentaryId: comDetails?.commentaryId,
-                teamId: battingTeam.teamId,
+                teamId: battingTeam?.teamId,
                 over: 0,
                 ballCount: 0,
                 bowlerId: bowler?.commentaryPlayerId,
@@ -760,13 +765,13 @@ const setEntityCom2Service = async (request , fastify) =>{
             const commentaryBallByBall = {
                 commentaryBallByBallId: 0,
                 commentaryId: comDetails?.commentaryId,
-                teamId: battingTeam.teamId,
+                teamId: battingTeam?.teamId,
                 overId: over?.overId,
                 overCount: 0,
                 currentOverBalls: 0,
-                bowlerId: bowler?.commentaryPlayerId,
-                batStrikeId: strikePlayer.commentaryPlayerId,
-                batNonStrikeId: nonStrikePlayer.commentaryPlayerId,
+                bowlerId: bowler?.commentaryPlayerId ?? 0,
+                batStrikeId: strikePlayer?.commentaryPlayerId,
+                batNonStrikeId: nonStrikePlayer?.commentaryPlayerId,
                 ballIsCount: true,
                 ballType: 0,
                 ballIsDot: false,
@@ -784,8 +789,8 @@ const setEntityCom2Service = async (request , fastify) =>{
                 devCurrentOverBall: null,
                 ballFielderId2: 0,
                 overIsMaiden: false,
-                nextBatStrikeId:  strikePlayer.commentaryPlayerId,
-                nextBatNonStrikeId: nonStrikePlayer.commentaryPlayerId,
+                nextBatStrikeId:  strikePlayer?.commentaryPlayerId,
+                nextBatNonStrikeId: nonStrikePlayer?.commentaryPlayerId,
                 currentInnings: comDetails.currentInnings
             };
             const ball = await virtualBallByBallQuery(
@@ -839,13 +844,53 @@ const setEntityCom2Service = async (request , fastify) =>{
       await matchCompleteService(request.body , fastify , comDetails)
     }
 
+    const ALLOWED_GAME_STATES = [
+      GAME_STATUS["Default"],
+      GAME_STATUS["Toss"],
+      GAME_STATUS["Play Ongoing"]
+    ];
+    let currentState
+    const currentGameState = response?.live?.game_state;
+    if (typeof currentGameState === "number") {
+      currentState = Number(currentGameState);
+    }
+    if (!ALLOWED_GAME_STATES.includes(currentState) && typeof currentState === "number" && !isNaN(currentState)) {
+      const commDisplayStatus = Object.keys(GAME_STATUS).find(
+        key => GAME_STATUS[key] == currentState
+      );
+      await updateCommentaryStatusQuery(
+        {
+          displayStatus: commDisplayStatus,
+          commentaryId: comDetails?.commentaryId
+        },
+        fastify,
+        request
+      );
     
+      const index = global.tblCommentaries.findIndex(
+        item => item.commentaryId == comDetails?.commentaryId
+      );
+    
+      if (index !== -1) {
+        global.tblCommentaries[index].displayStatus = commDisplayStatus;
+      }
+      scoreResponse.commentaryDetails = global.tblCommentaries[index]
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module: "commentaryDetails",
+        type: "update",
+        data: scoreResponse.commentaryDetails,
+      });
+      global.clientSocketIo.forEach((socket) => {
+        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      });
+    }
     return true;
-
   } catch (error) {
+    console.log("error", error);
     errorLogger(
       fastify,
-      error.message,
+      `${error.message}-${matchID}`,
+      // error.message,
       "Error --> services/entitySport.js/setEntityCom2servie",
       null,
       request.body
@@ -865,6 +910,8 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     let batters = part?.batsmen?.map((i)=>i.batsman_id) || []
     let isChangeStrike = false;
     const prtship = [];
+    let live_score_data = response?.live?.live_score;
+    let liveTeamScore = response?.live?.live_score?.runs;
     // let onStrikePlayer = global.tblCommentaryPlayers.find(
     //     (item) =>
     //     item.commentaryId == comDetails.commentaryId &&
@@ -885,7 +932,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
       let res =await handleStoreBall({
           response,
           battingTeam,
-          matchType
+          // matchType
       }, fastify, comDetails, request)
     }
     // store ballbyball
@@ -1020,6 +1067,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             batFour: p.fours,
             batSix: p.sixes,
             batterOrder,
+            batsmanStrikeRate: parseFloat(p.strike_rate) ?? "0",
           };
           currentPlayers.push(comP.commentaryPlayerId);
         }
@@ -1030,7 +1078,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     const existingBowlers = global.tblCommentaryPlayers.filter(i =>
       i.commentaryId === comDetails.commentaryId &&
       i.currentInnings === comDetails.currentInnings &&
-      i.teamId === bowlingTeam.teamId &&
+      i.teamId === bowlingTeam?.teamId &&
       i.bowlerOrder != null
     ) ||[]
 
@@ -1083,7 +1131,9 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             bowlerOver: b.overs,
             bowlerRun: b.runs_conceded,
             bowlerWicket: b.wickets,
+            bowlerEconomy: parseFloat(b.econ) ?? "0",
             bowlerOrder,
+            bowlerMaidenOver: b?.maidens ?? 0,
           };
           currentPlayers.push(comP.commentaryPlayerId);
         }
@@ -1106,9 +1156,12 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     const bowlerDotMap = {};  // key: bowler_id, value: dot balls
     const wickets = []; // optional: cache to avoid re-checking db
 
-    let upComDetails;
-    upComDetails = {
-      rmk : response.live.status_note
+    let upComDetails = {};
+    let inningNo = response?.live?.live_inning_number
+    if (inningNo == 1) {
+      upComDetails.rmk = ""
+    } else {
+      upComDetails.rmk = response.live.status_note;
     }
     if(commentaries?.length > 0){
       if(comDetails.commentaryStatus == commentaryStatus.INNINGCHANGE){
@@ -1243,12 +1296,16 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                 ballExtraRun : runToUpdate,
                 tpId : c.event_id
               }
-              battingTeam["teamScore"] = (battingTeam.teamScore || 0) + runToUpdate;
+              // battingTeam["teamScore"] = (battingTeam.teamScore || 0) + runToUpdate;
+              battingTeam["teamScore"] = liveTeamScore;
               battingTeam.teamOver = `${c.over}.${c.ball}`;
+              battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
+              battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
               battingTeam.teamWideRuns = (battingTeam.teamWideRuns || 0) + runToUpdate;       
               // over.ballCount += 1;
               over.totalRun += c.run;
-              over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+              over.teamScore = `${liveTeamScore || 0}/${battingTeam?.teamWicket || 0}`;
+              // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
               over.totalWideBall += 1;
               over.totalWideRun += runToUpdate;
               updateBall.overCount = battingTeam.teamOver;
@@ -1262,8 +1319,110 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               playersMap[c.bowler_id].bowlerWideBallRun = (playersMap[c.bowler_id].bowlerWideBallRun || 0) + runToUpdate;
               playersMap[c.bowler_id].bowlerRun = (playersMap[c.bowler_id].bowlerRun || 0) + runToUpdate;
               updateBall.bowlerId = playersMap[c.bowler_id].commentaryPlayerId;
-              playersMap[c.bowler_id].bowlerTotalBall =  (playersMap[c.bowler_id]?.bowlerTotalBall || 0) + 1;
-
+            } else if (c.score && String(c.score).includes('nb')) {
+              const runToUpdate = +(c?.run ?? 0);
+              if(!over) {
+                over = global.tblOvers.find((i)=> i.commentaryId == comDetails.commentaryId && i.currentInnings == comDetails.currentInnings
+                  && i.over == c.over
+                  && i.teamId == battingTeam.teamId);
+                if (over) {
+                  over.type = "update";
+                }
+                if(!over){
+                  // generate new over
+                  let newOver = generateOverEt({
+                          commentaryDetails :comDetails,
+                          teams: {
+                              battingTeam: battingTeam,
+                              bowlingTeam,
+                          },
+                          bowler: playerTpIdObj[c.bowler_id],
+                          overNumber : c.over,
+                  })
+                  over = await virtualOverQuery(newOver, request, fastify);
+                  // add over to global variable
+                  global.tblOvers.push(over);
+                  over.type = "create";
+                  const commentaryBallByBall = {
+                      commentaryBallByBallId: 0,
+                      commentaryId: comDetails?.commentaryId,
+                      teamId: battingTeam.teamId,
+                      overId: over?.overId,
+                      overCount: `${c.over}.0`,
+                      currentOverBalls: 0,
+                      bowlerId: playerTpIdObj[c.bowler_id].commentaryPlayerId,
+                      batStrikeId: playerTpIdObj[c.batsman_id].commentaryPlayerId,
+                      batNonStrikeId: nonStrike.commentaryPlayerId,
+                      ballIsCount: true,
+                      ballType: 0,
+                      ballIsDot: false,
+                      ballRun: 0,
+                      ballExtraRun: 0,
+                      ballIsBoundry: false,
+                      ballFour: 0,
+                      ballSix: 0,
+                      ballIsWicket: false,
+                      ballWicketType: 0,
+                      ballPlayerId: 0,
+                      ballBowlerId: playerTpIdObj[c.bowler_id].commentaryPlayerId,
+                      ballFielderId1: 0,
+                      devOver: null,
+                      devCurrentOverBall: null,
+                      ballFielderId2: 0,
+                      overIsMaiden: false,
+                      nextBatStrikeId: strikePId,
+                      nextBatNonStrikeId: nonStrikePId,
+                      currentInnings: comDetails.currentInnings,
+                      commentaryPartnershipId: partnership.commentaryPartnershipId || 0,
+                      teamScore: battingTeam?.teamScore || 0,
+                      teamWicket: battingTeam?.teamWicket || 0,
+                  };
+                  const oball = await virtualBallByBallQuery(
+                      commentaryBallByBall,
+                      request,
+                      fastify
+                  );
+                  global.tblCommentaryBallByBall.push(oball);
+                  oball.type = "create";
+                  ballbyball.push(oball)
+                }
+                oversMap[overKey] = over;
+              }
+              updateBall = {
+                ballIsCount: false,
+                ballType: BALL_TYPE.NO_BALL,
+                ballRun: 0,
+                batStrikeId: playerTpIdObj[c.batsman_id]?.commentaryPlayerId,
+                batNonStrikeId: nonStrikePId,
+                teamId: battingTeam.teamId,
+                overId: over.overId,
+                nextBatStrikeId: strikePId,
+                nextBatNonStrikeId: nonStrikePId,
+                ballExtraRun: runToUpdate,
+                tpId: c.event_id
+              }
+              // battingTeam["teamScore"] = (battingTeam.teamScore || 0) + runToUpdate;
+              battingTeam["teamScore"] = liveTeamScore;
+              battingTeam.teamOver = `${c.over}.${c.ball}`;
+              battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
+              battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
+              battingTeam.teamNoBallRuns = (battingTeam.teamNoBallRuns || 0) + runToUpdate;       
+              over.totalRun += c.run;
+              over.teamScore = `${liveTeamScore || 0}/${battingTeam?.teamWicket || 0}`;
+              // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+              over.totalNoball += 1;
+              over.totalNoBallRun += runToUpdate;
+              updateBall.overCount = battingTeam.teamOver;
+              updateBall.currentOverBalls = c.ball;
+              if(!playersMap[c.bowler_id]){
+                playersMap[c.bowler_id] = {
+                  ...playerTpIdObj[c.bowler_id],
+                }
+              }
+              playersMap[c.bowler_id].bowlerNoBall = (playersMap[c.bowler_id].bowlerNoBall || 0) + 1;
+              playersMap[c.bowler_id].bowlerNoBallRun = (playersMap[c.bowler_id].bowlerNoBallRun || 0) + runToUpdate;
+              playersMap[c.bowler_id].bowlerRun = (playersMap[c.bowler_id].bowlerRun || 0) + runToUpdate;
+              updateBall.bowlerId = playersMap[c.bowler_id].commentaryPlayerId;
             }
             else {
               if(!over) {
@@ -1336,9 +1495,13 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                 }
                 oversMap[overKey] = over; // store reference
               }
+              let ball_Type = BALL_TYPE.REGULAR;
+              if (Number(c?.legbye_run) > 0) {
+                ball_Type = BALL_TYPE.LEG_BYE;
+              }
               updateBall = {
                   ballIsCount : true,
-                  ballType : BALL_TYPE.REGULAR,
+                  ballType : ball_Type,
                   ballRun : c.run,
                   batStrikeId : playerTpIdObj[c.batsman_id].commentaryPlayerId,
                   batNonStrikeId : nonStrikePId,
@@ -1347,17 +1510,20 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                   nextBatStrikeId : strikePId,
                   nextBatNonStrikeId : nonStrikePId,
                   tpId : c.event_id
-                  // autoStrikeBallCount
               }
-              battingTeam["teamScore"] = (battingTeam.teamScore || 0) + run;
+              // battingTeam["teamScore"] = (battingTeam.teamScore || 0) + run;
+              battingTeam["teamScore"] = liveTeamScore;
               battingTeam.teamOver = `${c.over}.${c.ball}`;
+              battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
+              battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
               battingTeam.teamLegByRuns =( battingTeam.teamLegByRuns || 0) + parseInt(c.legbye_run)
               battingTeam.teamNoBallRuns =( battingTeam.teamNoBallRuns || 0) + parseInt(c.noball_run)
               battingTeam.teamByRuns =( battingTeam.teamByRuns || 0) + parseInt(c.bye_run)
 
-              over.ballCount += 1;
+              over.ballCount = c.ball;
               over.totalRun += c.run;
-              over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+              // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+              over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
               updateBall.overCount = battingTeam.teamOver;
               updateBall.currentOverBalls = over.ballCount;
               updateBall.bowlerId = playerTpIdObj[c.bowler_id].commentaryPlayerId;
@@ -1554,8 +1720,12 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             bowlerName : playerTpIdObj[c.bowler_id]?.playerName,
           };
           battingTeam.teamOver = `${c.over}.${c.ball}`;
-          battingTeam["teamScore"] = (battingTeam.teamScore || 0) + c?.run ?? 0;
-          battingTeam.teamWicket = (battingTeam.teamWicket || 0) + 1;
+          // battingTeam["teamScore"] = (battingTeam.teamScore || 0) + c?.run ?? 0;
+          battingTeam["teamScore"] = liveTeamScore;
+          // battingTeam.teamWicket = (battingTeam.teamWicket || 0) + 1;
+          battingTeam.teamWicket = live_score_data?.wickets ?? 0;
+          battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
+          battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
           if(!over) {
             over = global.tblOvers.find((i)=> i.commentaryId == comDetails.commentaryId && i.currentInnings == comDetails.currentInnings
               && i.over == c.over
@@ -1619,15 +1789,19 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                     fastify
                 );
                 // add ball to global variable
+                oball.type = "create";
                 global.tblCommentaryBallByBall.push(oball);
+                ballbyball.push(oball)
             }
             oversMap[overKey] = over; // store reference
           }
           over.totalWicket = (over.totalWicket || 0) + 1;
           over.totalRun += c?.run ?? 0;
-          over.ballCount += 1;
+          // over.ballCount += 1;
+          over.ballCount = c.ball;
           over.dotBall += 1;
-          over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+          // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+          over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
           if(playersMap[c.batsman_id]){
             playersMap[c.batsman_id] = {
               ...playersMap[c.batsman_id],
@@ -1724,7 +1898,6 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               ...oldPart,
               isActive: false,
             };
-
             await upActivePartQuery(partData, fastify);
             let partIndex = global.tblCommentaryPartnership.findIndex(
               (item) => item.commentaryPartnershipId == partData.commentaryPartnershipId
@@ -1735,13 +1908,56 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           }
         }
         upTeams = [battingTeam, bowlingTeam]
-        upComDetails.displayStatus = c.commentary;
+        // upComDetails.displayStatus = c.commentary;
       }
     }
     // console.log(oversMap)
     let plyArr = Object.values(playersMap);
     let overArr = Object.values(oversMap)
-   
+    if (commentaries?.length > 0) {
+      let displayData = {}
+      let latestBall = commentaries.filter(c => c.event != "overend").at(-1);
+      const currentBall = global.tblCommentaryBallByBall.find(item => 
+        item.tpId == latestBall?.event_id
+      );
+      if(currentBall) {
+        displayData.currentBall = currentBall
+      }
+      if (latestBall && String(latestBall?.score) == "w") {
+        // // onStrike player code
+        // const currentInning = response?.scorecard?.innings?.find(
+        //   i => i.number == response?.live?.live_inning_number
+        // );
+        // const batter = currentInning?.batsmen?.find(
+        //   b => b.position == "striker" && b.batting == "true"
+        // );
+        
+        if (latestBall?.wicket_batsman_id) {
+          const onStrike = plyArr.find(item => item.tpId == latestBall?.wicket_batsman_id);
+          if (onStrike) {
+            displayData.playerSwitch = null;
+            displayData.onStrikePlayer = onStrike;
+          }
+        }
+      }
+      if (Object.keys(displayData).length > 0) {
+        const commDisplayStatus = await generateDisplayStatus(displayData);
+        upComDetails.displayStatus = commDisplayStatus;
+      }
+      let overEndBall = commentaries.at(-1)?.event === "overend"
+      if (overEndBall) {
+        upTeams = upTeams.map(item => {
+          if(item.teamId == battingTeam.teamId) {
+            const newOver = Math.ceil(Number(item.teamOver || 0));
+            return {
+              ...item,
+              teamOver: `${newOver}`
+            };
+          }
+          return item;
+        })
+      }
+    }
 
     await syncEntitySportCommentaryService({
       commentaryId : comDetails.commentaryId,
@@ -1791,9 +2007,9 @@ const onInningChangeService = async (data, fastify, comDetails) => {
   let bowlTeam = teams.find((i)=> i.teamStatus == 2)
   let matchType = global.tblMatchTypes.find((i)=> i.matchTypeId == comDetails.matchTypeId)
   const runDifference =
-    (batTeam.teamScore || 0) +
-    (batTeam.teamLeadRuns || 0) -
-    (batTeam.teamTrialRuns || 0);
+    (batTeam?.teamScore || 0) +
+    (batTeam?.teamLeadRuns || 0) -
+    (batTeam?.teamTrialRuns || 0);
   const leadRuns = Math.max(runDifference * -1, 0);
   const trialRuns = Math.max(runDifference, 0);
   const partnership = global.tblCommentaryPartnership
@@ -1819,7 +2035,8 @@ const onInningChangeService = async (data, fastify, comDetails) => {
     ];
    let commentaryUpdates = {
       commentaryStatus : commentaryStatus.INNINGCHANGE,
-      displayStatus: response.live.status_note,
+      // displayStatus: response.live.status_note,
+      displayStatus: "Innings Break",
       rmk : generateRemainingRuns({
         team: { ...bowlTeam, teamTrialRuns: trialRuns},
         ballsPerOver: matchType.ballsPerOver || 6,
@@ -1911,14 +2128,1112 @@ const matchCompleteService = async (data , fastify,comDetails) =>{
   return true
 
 }
+// const handleStoreBall = async (data, fastify, comDetails, request) => {
+//   const { response, battingTeam } = data;
+//   let com = response.live.commentaries;
+//   let storedCom = com.slice(-5) 
+//   storedCom = storedCom.filter((i)=> i.event != "overend").sort((i1 , i2)=> i2.event_id - i1.event_id)
+//   let playerTpIdObj = {};
+//   let comPlayers = global.tblCommentaryPlayers.filter((cp) => cp.commentaryId == comDetails.commentaryId && cp.currentInnings == comDetails.currentInnings)
+//   for (let cp of comPlayers) {
+//     playerTpIdObj[cp.tpId] = {
+//       ...cp,
+//       playerName: cp.playerName,
+//       playerId: cp.playerId,
+//     };
+//   }
+//   let playersMap = {};
+//   let deleteBallByBallIds = [];
+//   let deleteOverIds = []
+//   let oversMap = {};
+//   let partnershipMap = {};
+//   for (let c of storedCom) {
+//     let event = c.event;
+//     if (String(c.score) === "w") {
+//       event = "wicket";
+//     } else if (c.score && String(c.score).includes("wd")) {
+//       event = "wide";
+//     } else if (c.score && String(c.score).includes("nb")) {
+//       event = "noball";
+//     } else {
+//       event = "ball";
+//     }
+//     let live_score_data = response?.live?.live_score;
+//     let liveTeamScore = response?.live?.live_score?.runs;
+//     if (String(c.score) == "w") {
+//       event = "wicket"
+//       // wicket code
+//       let index = global.tblCommentaryBallByBall.findIndex((i) => i.tpId == c.event_id);
+//       if (index == -1) continue; // skip not created ball
+//       let BallByBall = global.tblCommentaryBallByBall.find((i) => i.tpId == c.event_id);
+//       if (BallByBall.ballIsWicket == true) {
+//         continue;
+//       }
+//       let afterBalls = global.tblCommentaryBallByBall.filter(
+//         (i) =>
+//           i.commentaryBallByBallId >= BallByBall.commentaryBallByBallId &&
+//           i.commentaryId == comDetails.commentaryId &&
+//           i.currentInnings == comDetails.currentInnings
+//       );
+//       for (let b1 of afterBalls) {
+//         deleteBallByBallIds.push(b1.commentaryBallByBallId);
+//         const overNumber = Number(c.over);
+//         const overKey = `${comDetails.commentaryId}-${comDetails.currentInnings}-${battingTeam.teamId}-${overNumber}`;
+//         let over = oversMap[overKey];
+//         over = global.tblOvers.find((i) => i.overId == b1.overId)
+//         oversMap[overKey] = over
+//         let tpBall = com.find((i) => i.event_id == b1.tpId);
+//         if (!tpBall) continue;
+//         if (b1.ballIsWicket == true) {
+//           event = "wicket"
+
+//           // Update batting team
+//           battingTeam.teamWicket = Math.max(0, battingTeam.teamWicket - 1);
+//           const prevBall = Math.max(0, c.ball - 1);
+//           battingTeam.teamOver = `${c.over}.${prevBall}`;
+//           // Update overs
+//           if (over) {
+//             over.totalWicket = Math.max(0, (over.totalWicket || 0) - 1);
+//             over.ballCount = Math.max(0, (over.ballCount || 0) - 1);
+
+//             // if after undo, no balls left → delete over
+//             if (over.ballCount === 0) {
+//               deleteOverIds.push(over.overId);
+//             } else {
+//               over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
+//               over.teamScore = `${battingTeam.teamScore || 0}/${battingTeam.teamWicket || 0}`;
+//               // over.teamScore = `${liveTeamScore}/${battingTeam.teamWicket || 0}`;
+//               if (over) {
+//                 over.type = "update"
+//               }
+//               oversMap[overKey] = over;
+//             }
+//           }
+
+//           // Update Batter and Bowler stats
+//           if (!playersMap[tpBall.bowler_id]) {
+//             playersMap[tpBall.bowler_id] = {
+//               ...playerTpIdObj[tpBall.bowler_id]
+//             }
+//           }
+//           if (!playersMap[tpBall.batsman_id]) {
+//             playersMap[tpBall.batsman_id] = {
+//               ...playerTpIdObj[tpBall.batsman_id]
+//             }
+//           }
+
+//           playersMap[tpBall.bowler_id].bowlerTotalWicket = playersMap[tpBall.bowler_id].bowlerTotalWicket > 0 ? playersMap[tpBall.bowler_id].bowlerTotalWicket - 1 : 0;
+//           playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
+//           playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playersMap[tpBall.bowler_id].bowlerDotBall - 1 : 0;
+//           let o = parseFloat(playersMap[tpBall.bowler_id].bowlerOver || 0);
+//           let overs = Math.floor(o);
+//           let balls = Math.round((o % 1) * 10);
+//           let val = parseFloat(`${balls ? overs : overs - 1}.${balls ? balls - 1 : 5}`);
+//           playersMap[tpBall.bowler_id].bowlerOver = Math.max(0, val);
+
+//           playersMap[tpBall.batsman_id].isBatterOut = null;
+//           playersMap[tpBall.batsman_id].wicketType = 0;
+//           playersMap[tpBall.batsman_id].bowlerId = 0;
+//           playersMap[tpBall.batsman_id].fielderId1 = 0;
+//           playersMap[tpBall.batsman_id].fielderId2 = 0;
+//           playersMap[tpBall.batsman_id].isPlay = true;
+//           playersMap[tpBall.batsman_id].onStrike = true;
+          
+//           let part = response.live?.live_inning?.current_partnership;
+//           let batters = part?.batsmen?.map((i)=>i.batsman_id) || []
+//           let partnership = {}
+//           if(batters.length == 2){
+//             let [b1, b2] = batters;
+//             let partExist = global.tblCommentaryPartnership.find((i)=>
+//                 i.commentaryId == comDetails.commentaryId &&
+//                 i.currentInnings == comDetails.currentInnings &&
+//                 (
+//                     (i.batter1Id == playerTpIdObj[b1].commentaryPlayerId && i.batter2Id == playerTpIdObj[b2].commentaryPlayerId) ||
+//                     (i.batter1Id == playerTpIdObj[b2].commentaryPlayerId && i.batter2Id == playerTpIdObj[b1].commentaryPlayerId) // order doesn’t matter
+//                 )
+//             );
+//             if(partExist){
+//                 let comPlayerId1 = global.tblCommentaryPlayers.find((i)=> i.commentaryPlayerId == partExist.batter1Id)
+//                 let comPlayerId2 = global.tblCommentaryPlayers.find((i)=> i.commentaryPlayerId == partExist.batter2Id)
+//                 let cp1 = part.batsmen.find((i)=> i.batsman_id == comPlayerId1.tpId)
+//                 let cp2 = part.batsmen.find((i)=> i.batsman_id == comPlayerId2.tpId)
+//                 partnership = {
+//                     ...partExist,
+//                     totalRuns : part.runs,
+//                     totalBalls : part.balls,
+//                     batter1Runs : cp1.runs,
+//                     batter2Runs :cp2.runs,
+//                     batter1Balls : cp1.balls,
+//                     batter2Balls : cp2.balls
+//                 }
+//                 let par = await updateVirtualPartnershipQuery(partnership,fastify, null)
+//                 //update partnersip in db
+//                 let pI = global.tblCommentaryPartnership.findIndex((i)=> i.commentaryPartnershipId == partnership.commentaryPartnershipId)
+//                 global.tblCommentaryPartnership[pI] = par[0]; 
+//             } else {
+//                 let cp1 = playerTpIdObj[part.batsmen[0].batsman_id]
+//                 let cp2 = playerTpIdObj[part.batsmen[1].batsman_id]
+//                 partnership = genEtPartnership({
+//                     currentPartnership :{
+//                         batter1Id : cp1.commentaryPlayerId,
+//                         batter1Name : cp1.playerName,
+//                         batter2Id : cp2.commentaryPlayerId,
+//                         batter2Name : cp2.playerName,
+//                         totalRuns : part.runs,
+//                         totalBalls : part.balls,
+//                         batter1Runs : part.batsmen[0].runs,
+//                         batter2Runs :  part.batsmen[1].runs,
+//                         batter1Balls : part.batsmen[0].balls,
+//                         batter2Balls :part.batsmen[1].balls,
+//                         order : response.live.live_inning.equations.wickets + 1,
+//                         isActive : true
+//                     },
+//                     commentaryDetails : comDetails,
+//                     updateBattingTeam : battingTeam
+//                 })
+//                 partnership = await virtualPartnershipQuery(
+//                     partnership,
+//                     request,
+//                     fastify
+//                 );
+//                 global.tblCommentaryPartnership.push(partnership);
+//             }
+//           }
+//         }
+
+//         if ((b1.ballType == BALL_TYPE.REGULAR  || b1.ballType == BALL_TYPE.LEG_BYE) && b1.ballIsWicket == false) {
+//             let run = b1.ballRun
+//             battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
+//             // battingTeam["teamScore"] = liveTeamScore;
+//             // reducse teamOver
+//             let previousBall = c.ball - 1;
+//             battingTeam.teamOver = `${c.over}.${previousBall}`
+//             battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
+//             battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
+//             battingTeam.teamLegByRuns = battingTeam.teamLegByRuns > 0 ? (battingTeam.teamLegByRuns || 0) - parseInt(b1.teamLegByRuns) : 0;
+//             battingTeam.teamByRuns = battingTeam.teamByRuns > 0 ? (battingTeam.teamByRuns || 0) - parseInt(b1.teamByRuns) : 0;
+//             over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
+//             over.totalRun = over.totalRun > 0 ? over.totalRun - b1.ballRun : 0;
+//             over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+//             // over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
+//             if (!playersMap[tpBall.bowler_id]) {
+//               playersMap[tpBall.bowler_id] = {
+//                 ...playerTpIdObj[tpBall.bowler_id]
+//               }
+//             }
+//             if (!playersMap[tpBall.batsman_id]) {
+//               playersMap[tpBall.batsman_id] = {
+//                 ...playerTpIdObj[tpBall.batsman_id]
+//               }
+//             }
+//             playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
+//             playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
+//             playersMap[tpBall.batsman_id].runs = playersMap[tpBall.batsman_id].runs > 0 ? playersMap[tpBall.batsman_id].runs - 1 : 0;
+//             playersMap[tpBall.batsman_id].batBall = playersMap[tpBall.batsman_id].batBall > 0 ? playersMap[tpBall.batsman_id].batBall - 1 : 0;
+//             let isBoundary = run == 4 || run == 6 ? true : false;
+//             if (run == 0) {
+//               over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
+//               playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
+//               playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 : 0;
+//             }
+//             else if (isBoundary) {
+//               if (run == 4) {
+//                 over.totalFour = over.totalFour > 0 ? over.totalFour - 1 : 0
+//                 playersMap[tpBall.bowler_id].bowlerFour = playersMap[tpBall.bowler_id].bowlerFour > 0 ? playersMap[tpBall.bowler_id].bowlerFour - 1 : 0
+//               }
+//               if (run == 6) {
+//                 over.totalSix -= 1;
+//                 playersMap[tpBall.bowler_id].bowlerSix = playersMap[tpBall.bowler_id].bowlerSix > 0 ? playersMap[tpBall.bowler_id].bowlerSix - 1 : 0
+//               }
+//             }
+//             if (over.ballCount === 0) {
+//               deleteOverIds.push(over.overId);
+//             }
+//         }
+//           if (b1.ballType == BALL_TYPE.WIDE  && b1.ballIsWicket == false) {
+//             // let run = +(c?.run ?? 0);
+//             let run = b1?.ballExtraRun ?? 0;
+//             battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
+//             // battingTeam["teamScore"] = liveTeamScore;
+//             let previousBall = c.ball - 1;
+//             battingTeam.teamOver = `${c.over}.${previousBall}`
+//             battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
+//             battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
+//             battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - run : 0;
+//             // over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
+//             over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
+//             over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
+//             over.totalWideBall = over.totalWideBall > 0 ? over.totalWideBall - 1 : 0;
+//             over.totalWideRun = over.totalWideRun > 0 ? over.totalWideRun - run : 0;
+//             if (!playersMap[tpBall.bowler_id]) {
+//               playersMap[tpBall.bowler_id] = {
+//                 ...playerTpIdObj[tpBall.bowler_id]
+//               }
+//             }
+//             if (!playersMap[tpBall.batsman_id]) {
+//               playersMap[tpBall.batsman_id] = {
+//                 ...playerTpIdObj[tpBall.batsman_id]
+//               }
+//             }
+//             playersMap[tpBall.bowler_id].bowlerWideBall = playersMap[tpBall.bowler_id].bowlerWideBall > 0 ? playersMap[tpBall.bowler_id].bowlerWideBall - 1 : 0;
+//             playersMap[tpBall.bowler_id].bowlerWideBallRun = playersMap[tpBall.bowler_id].bowlerWideBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerWideBallRun - run : 0;
+//             playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
+//             playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
+
+//             if (over.ballCount === 0) {
+//               deleteOverIds.push(over.overId);
+//             }
+//           }
+//         if (b1.ballType == BALL_TYPE.NO_BALL && b1.ballIsWicket == false) {
+//           let run = b1?.ballExtraRun ?? 0;
+//           battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
+//           // battingTeam["teamScore"] = liveTeamScore;
+//           // let previousBall = c.ball - 1;
+//           battingTeam.teamOver = `${c.over}.${c.ball}`
+//           battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
+//           battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
+//           battingTeam.teamNoBallRuns = battingTeam.teamNoBallRuns > 0 ? battingTeam.teamNoBallRuns - run : 0;
+//           over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
+//           // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+//           over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
+//           over.totalNoball = over.totalNoball > 0 ? over.totalNoball - 1 : 0;
+//           over.totalNoBallRun = over.totalNoBallRun > 0 ? over.totalNoBallRun - run : 0;
+//           if (!playersMap[tpBall.bowler_id]) {
+//             playersMap[tpBall.bowler_id] = {
+//               ...playerTpIdObj[tpBall.bowler_id]
+//             }
+//           }
+//           if (!playersMap[tpBall.batsman_id]) {
+//             playersMap[tpBall.batsman_id] = {
+//               ...playerTpIdObj[tpBall.batsman_id]
+//             }
+//           }
+//           playersMap[tpBall.bowler_id].bowlerNoBall = playersMap[tpBall.bowler_id].bowlerNoBall > 0 ? playersMap[tpBall.bowler_id].bowlerNoBall - 1 : 0;
+//           playersMap[tpBall.bowler_id].bowlerNoBallRun = playersMap[tpBall.bowler_id].bowlerNoBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerNoBallRun - run : 0;
+//           playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
+//           if (over.ballCount === 0) {
+//             deleteOverIds.push(over.overId);
+//           }
+//         }
+//       }
+//     }
+//     if (event == "ball") {
+//       let index = global.tblCommentaryBallByBall.findIndex((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
+//        if (index == -1) continue; // skip not created ball
+//       let ball = global.tblCommentaryBallByBall.find((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
+
+//       if (!ball.ballIsWicket && ball.ballRun === c.run && ball.ballType == BALL_TYPE.REGULAR) {
+//         continue;
+//       }
+      
+//       // delete this ball and other ball
+//       let ballAfterThis = global.tblCommentaryBallByBall.filter((i) => i.commentaryBallByBallId >= ball.commentaryBallByBallId &&
+//         i.commentaryId == comDetails.commentaryId && i.currentInnings == comDetails.currentInnings)
+//       for (let b1 of ballAfterThis) {
+//         const overNumber = Number(c.over);
+//         const overKey = `${comDetails.commentaryId}-${comDetails.currentInnings}-${battingTeam.teamId}-${overNumber}`;
+//         let over = oversMap[overKey];
+//         over = global.tblOvers.find((i) => i.overId == b1.overId)
+//         oversMap[overKey] = over
+//         deleteBallByBallIds.push(b1.commentaryBallByBallId)
+//         let tpBall = com.find((i) => i.event_id == b1.tpId)
+//         let tpId = tpBall.event_id;
+//         // let event = c.event;
+//         if (b1.ballIsWicket == true) {
+//           event = "wicket"
+//           // Update batting team
+//           battingTeam.teamWicket = Math.max(0, battingTeam.teamWicket - 1);
+//           const prevBall = Math.max(0, c.ball - 1);
+//           battingTeam.teamOver = `${c.over}.${prevBall}`;
+//           // Update overs
+//           if (over) {
+//             over.totalWicket = Math.max(0, (over.totalWicket || 0) - 1);
+//             over.ballCount = Math.max(0, (over.ballCount || 0) - 1);
+
+//             // if after undo, no balls left → delete over
+//             if (over.ballCount === 0) {
+//               deleteOverIds.push(over.overId);
+//             } else {
+//               // over.teamScore = `${battingTeam.teamScore || 0}/${battingTeam.teamWicket || 0}`;
+//               over.teamScore = `${liveTeamScore}/${battingTeam.teamWicket || 0}`;
+//               over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
+//               if (over) {
+//                 over.type = "update"
+//               }
+//               oversMap[overKey] = over;
+//             }
+//           }
+
+//           // Update Batter and Bowler stats
+//           if (!playersMap[tpBall.bowler_id]) {
+//             playersMap[tpBall.bowler_id] = {
+//               ...playerTpIdObj[tpBall.bowler_id]
+//             }
+//           }
+//           if (!playersMap[tpBall.batsman_id]) {
+//             playersMap[tpBall.batsman_id] = {
+//               ...playerTpIdObj[tpBall.batsman_id]
+//             }
+//           }
+
+//           playersMap[tpBall.bowler_id].bowlerTotalWicket = playersMap[tpBall.bowler_id].bowlerTotalWicket > 0 ? playersMap[tpBall.bowler_id].bowlerTotalWicket - 1 : 0;
+//           playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
+//           playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playersMap[tpBall.bowler_id].bowlerDotBall - 1 : 0;
+//           let o = parseFloat(playersMap[tpBall.bowler_id].bowlerOver || 0);
+//           let overs = Math.floor(o);
+//           let balls = Math.round((o % 1) * 10);
+//           let val = parseFloat(`${balls ? overs : overs - 1}.${balls ? balls - 1 : 5}`);
+//           playersMap[tpBall.bowler_id].bowlerOver = Math.max(0, val);
+          
+//           playersMap[tpBall.batsman_id].isBatterOut = null;
+//           playersMap[tpBall.batsman_id].isBatterOut = false;
+//           playersMap[tpBall.batsman_id].wicketType = 0;
+//           playersMap[tpBall.batsman_id].bowlerId = 0;
+//           playersMap[tpBall.batsman_id].fielderId1 = 0;
+//           playersMap[tpBall.batsman_id].fielderId2 = 0;
+//           playersMap[tpBall.batsman_id].isPlay = true;
+//           playersMap[tpBall.batsman_id].onStrike = true;
+          
+//           let part = response.live?.live_inning?.current_partnership;
+//           let batters = part?.batsmen?.map((i)=>i.batsman_id) || []
+//           let partnership = {}
+//           if(batters.length == 2){
+//             let [b1, b2] = batters;
+//             let partExist = global.tblCommentaryPartnership.find((i)=>
+//                 i.commentaryId == comDetails.commentaryId &&
+//                 i.currentInnings == comDetails.currentInnings &&
+//                 (
+//                     (i.batter1Id == playerTpIdObj[b1].commentaryPlayerId && i.batter2Id == playerTpIdObj[b2].commentaryPlayerId) ||
+//                     (i.batter1Id == playerTpIdObj[b2].commentaryPlayerId && i.batter2Id == playerTpIdObj[b1].commentaryPlayerId) // order doesn’t matter
+//                 )
+//             );
+//             if(partExist){
+//                 let comPlayerId1 = global.tblCommentaryPlayers.find((i)=> i.commentaryPlayerId == partExist.batter1Id)
+//                 let comPlayerId2 = global.tblCommentaryPlayers.find((i)=> i.commentaryPlayerId == partExist.batter2Id)
+//                 let cp1 = part.batsmen.find((i)=> i.batsman_id == comPlayerId1.tpId)
+//                 let cp2 = part.batsmen.find((i)=> i.batsman_id == comPlayerId2.tpId)
+//                 partnership = {
+//                     ...partExist,
+//                     totalRuns : part.runs,
+//                     totalBalls : part.balls,
+//                     batter1Runs : cp1.runs,
+//                     batter2Runs :cp2.runs,
+//                     batter1Balls : cp1.balls,
+//                     batter2Balls : cp2.balls
+//                     // totalFour,
+//                     // totalSix
+//                 }
+//                 let par = await updateVirtualPartnershipQuery(partnership,fastify, null)
+//                 //update partnersip in db
+//                 let pI = global.tblCommentaryPartnership.findIndex((i)=> i.commentaryPartnershipId == partnership.commentaryPartnershipId)
+//                 global.tblCommentaryPartnership[pI] = par[0]; 
+//             } else {
+//                 let cp1 = playerTpIdObj[part.batsmen[0].batsman_id]
+//                 let cp2 = playerTpIdObj[part.batsmen[1].batsman_id]
+//                 partnership = genEtPartnership({
+//                     currentPartnership :{
+//                         batter1Id : cp1.commentaryPlayerId,
+//                         batter1Name : cp1.playerName,
+//                         batter2Id : cp2.commentaryPlayerId,
+//                         batter2Name : cp2.playerName,
+//                         totalRuns : part.runs,
+//                         totalBalls : part.balls,
+//                         batter1Runs : part.batsmen[0].runs,
+//                         batter2Runs :  part.batsmen[1].runs,
+//                         batter1Balls : part.batsmen[0].balls,
+//                         batter2Balls :part.batsmen[1].balls,
+//                         order : response.live.live_inning.equations.wickets + 1,
+//                         isActive : true
+//                     },
+//                     commentaryDetails : comDetails,
+//                     updateBattingTeam : battingTeam
+//                 })
+//                 partnership = await virtualPartnershipQuery(
+//                     partnership,
+//                     request,
+//                     fastify
+//                 );
+//                 global.tblCommentaryPartnership.push(partnership);
+//             }
+//           }
+//         }
+//         if (b1.ballType == BALL_TYPE.REGULAR || b1.ballType == BALL_TYPE.LEG_BYE) {
+//             let run = b1.ballRun
+//             battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
+//             // battingTeam["teamScore"] = liveTeamScore;
+//             let previousBall = c.ball - 1;
+//             battingTeam.teamOver = `${c.over}.${previousBall}`
+//             battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
+//             battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
+//             battingTeam.teamLegByRuns = battingTeam.teamLegByRuns > 0 ? (battingTeam.teamLegByRuns || 0) - parseInt(b1.teamLegByRuns) : 0;
+//             battingTeam.teamByRuns = battingTeam.teamByRuns > 0 ? (battingTeam.teamByRuns || 0) - parseInt(b1.teamByRuns) : 0;
+//             over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
+//             over.totalRun = over.totalRun > 0 ? over.totalRun - 1 : 0;
+//             // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+//             over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
+//             if (!playersMap[tpBall.bowler_id]) {
+//               playersMap[tpBall.bowler_id] = {
+//                 ...playerTpIdObj[tpBall.bowler_id]
+//               }
+//             }
+//             if (!playersMap[tpBall.batsman_id]) {
+//               playersMap[tpBall.batsman_id] = {
+//                 ...playerTpIdObj[tpBall.batsman_id]
+//               }
+//             }
+//             playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
+//             playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
+//             playersMap[tpBall.batsman_id].runs = playersMap[tpBall.batsman_id].runs > 0 ? playersMap[tpBall.batsman_id].runs - 1 : 0;
+//             playersMap[tpBall.batsman_id].batBall = playersMap[tpBall.batsman_id].batBall > 0 ? playersMap[tpBall.batsman_id].batBall - 1 : 0;
+//             let isBoundary = run == 4 || run == 6 ? true : false;
+//             if (run == 0) {
+//               over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
+//               playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
+//               playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 : 0;
+//             }
+//             else if (isBoundary) {
+//               if (run == 4) {
+//                 playersMap[tpBall.bowler_id].bowlerFour = playersMap[tpBall.bowler_id].bowlerFour > 0 ? playersMap[tpBall.bowler_id].bowlerFour - 1 : 0
+//                 over.totalFour = over.totalFour > 0 ? over.totalFour - 1 : 0
+//               }
+//               if (run == 6) {
+//                 over.totalSix = over.totalSix > 0 ? over.totalSix - 1 : 0;
+//                 playersMap[tpBall.bowler_id].bowlerSix = playersMap[tpBall.bowler_id].bowlerSix > 0 ? playersMap[tpBall.bowler_id].bowlerSix - 1 : 0
+//               }
+//             }
+//             if (over.ballCount === 0) {
+//               deleteOverIds.push(over.overId);
+//             }
+//         }
+//         if (b1.ballType == BALL_TYPE.WIDE) {
+//             // let run = +(c?.run ?? 0);
+//             let run = b1?.ballExtraRun ?? 0;
+//             battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
+//             // battingTeam["teamScore"] = liveTeamScore;
+//             let previousBall = c.ball - 1;
+//             battingTeam.teamOver = `${c.over}.${previousBall}`
+//             battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
+//             battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
+//             battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - run : 0;
+//             over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
+//             over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
+//             // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+//             over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
+//             over.totalWideBall = over.totalWideBall > 0 ? over.totalWideBall - 1 : 0;
+//             over.totalWideRun = over.totalWideRun > 0 ? over.totalWideRun - run : 0;
+//             if (!playersMap[tpBall.bowler_id]) {
+//               playersMap[tpBall.bowler_id] = {
+//                 ...playerTpIdObj[tpBall.bowler_id]
+//               }
+//             }
+//             if (!playersMap[tpBall.batsman_id]) {
+//               playersMap[tpBall.batsman_id] = {
+//                 ...playerTpIdObj[tpBall.batsman_id]
+//               }
+//             }
+//             playersMap[tpBall.bowler_id].bowlerWideBall = playersMap[tpBall.bowler_id].bowlerWideBall > 0 ? playersMap[tpBall.bowler_id].bowlerWideBall - 1 : 0;
+//             playersMap[tpBall.bowler_id].bowlerWideBallRun = playersMap[tpBall.bowler_id].bowlerWideBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerWideBallRun - run : 0;
+//             playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
+//             playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
+            
+//             if (over.ballCount === 0) {
+//               deleteOverIds.push(over.overId);
+//             }
+//           }
+
+//         if (b1.ballType == BALL_TYPE.NO_BALL && b1.ballIsWicket == false) {
+//           let run = b1?.ballExtraRun ?? 0;
+//           battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
+//           // battingTeam["teamScore"] = liveTeamScore;
+//           // let previousBall = c.ball - 1;
+//           battingTeam.teamOver = `${c.over}.${c.ball}`
+//           battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
+//           battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
+//           battingTeam.teamNoBallRuns = battingTeam.teamNoBallRuns > 0 ? battingTeam.teamNoBallRuns - run : 0;
+//           over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
+//           // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+//           over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
+//           over.totalNoball = over.totalNoball > 0 ? over.totalNoball - 1 : 0;
+//           over.totalNoBallRun = over.totalNoBallRun > 0 ? over.totalNoBallRun - run : 0;
+//           if (!playersMap[tpBall.bowler_id]) {
+//             playersMap[tpBall.bowler_id] = {
+//               ...playerTpIdObj[tpBall.bowler_id]
+//             }
+//           }
+//           if (!playersMap[tpBall.batsman_id]) {
+//             playersMap[tpBall.batsman_id] = {
+//               ...playerTpIdObj[tpBall.batsman_id]
+//             }
+//           }
+//           playersMap[tpBall.bowler_id].bowlerNoBall = playersMap[tpBall.bowler_id].bowlerNoBall > 0 ? playersMap[tpBall.bowler_id].bowlerNoBall - 1 : 0;
+//           playersMap[tpBall.bowler_id].bowlerNoBallRun = playersMap[tpBall.bowler_id].bowlerNoBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerNoBallRun - run : 0;
+//           playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
+//           if (over.ballCount === 0) {
+//             deleteOverIds.push(over.overId);
+//           }
+//         }
+//       }      
+//     }
+//     if (event == "wide") {
+//       let index = global.tblCommentaryBallByBall.findIndex((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
+//       if (index == -1) continue; // skip not created ball
+//       let ball = global.tblCommentaryBallByBall.find((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
+//       if (!ball.ballIsWicket && ball.ballType == BALL_TYPE.WIDE && ball.ballExtraRun == c.run) {
+//         continue;
+//       }
+//       let ballAfterThis = global.tblCommentaryBallByBall.filter((i) => i.commentaryBallByBallId >= ball.commentaryBallByBallId &&
+//         i.commentaryId == comDetails.commentaryId && i.currentInnings == comDetails.currentInnings)
+//       // let ballIds = ballAfterThis.map((i)=> i.commentaryBallByBallId)
+//       for (let b1 of ballAfterThis) {
+//         const overNumber = Number(c.over);
+//         const overKey = `${comDetails.commentaryId}-${comDetails.currentInnings}-${battingTeam.teamId}-${overNumber}`;
+//         let over = oversMap[overKey];
+//         over = global.tblOvers.find((i) => i.overId == b1.overId)
+//         oversMap[overKey] = over
+//         deleteBallByBallIds.push(b1.commentaryBallByBallId)
+//         let tpBall = com.find((i) => i.event_id == b1.tpId)
+//         let tpId = tpBall.event_id;
+//         if (b1.ballIsWicket == true) {
+//           event = "wicket"
+//           // Update batting team
+//           battingTeam.teamWicket = Math.max(0, battingTeam.teamWicket - 1);
+//           const prevBall = Math.max(0, c.ball - 1);
+//           battingTeam.teamOver = `${c.over}.${prevBall}`;
+//           // Update overs
+//           if (over) {
+//             over.totalWicket = Math.max(0, (over.totalWicket || 0) - 1);
+//             over.ballCount = Math.max(0, (over.ballCount || 0) - 1);
+
+//             // if after undo, no balls left → delete over
+//             if (over.ballCount === 0) {
+//               deleteOverIds.push(over.overId);
+//             } else {
+//               // over.teamScore = `${battingTeam.teamScore || 0}/${battingTeam.teamWicket || 0}`;
+//               over.teamScore = `${liveTeamScore}/${battingTeam.teamWicket || 0}`;
+//               over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
+//               if (over) {
+//                 over.type = "update"
+//               }
+//               oversMap[overKey] = over;
+//             }
+//           }
+
+//           // Update Batter and Bowler stats
+//           if (!playersMap[tpBall.bowler_id]) {
+//             playersMap[tpBall.bowler_id] = {
+//               ...playerTpIdObj[tpBall.bowler_id]
+//             }
+//           }
+//           if (!playersMap[tpBall.batsman_id]) {
+//             playersMap[tpBall.batsman_id] = {
+//               ...playerTpIdObj[tpBall.batsman_id]
+//             }
+//           }
+
+//           playersMap[tpBall.bowler_id].bowlerTotalWicket = playersMap[tpBall.bowler_id].bowlerTotalWicket > 0 ? playersMap[tpBall.bowler_id].bowlerTotalWicket - 1 : 0;
+//           playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
+//           playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playersMap[tpBall.bowler_id].bowlerDotBall - 1 : 0;
+//           let o = parseFloat(playersMap[tpBall.bowler_id].bowlerOver || 0);
+//           let overs = Math.floor(o);
+//           let balls = Math.round((o % 1) * 10);
+//           let val = parseFloat(`${balls ? overs : overs - 1}.${balls ? balls - 1 : 5}`);
+//           playersMap[tpBall.bowler_id].bowlerOver = Math.max(0, val);
+
+//           playersMap[tpBall.batsman_id].isBatterOut = null;
+//           playersMap[tpBall.batsman_id].wicketType = 0;
+//           playersMap[tpBall.batsman_id].isBatterOut = false;
+//           playersMap[tpBall.batsman_id].bowlerId = 0;
+//           playersMap[tpBall.batsman_id].fielderId1 = 0;
+//           playersMap[tpBall.batsman_id].fielderId2 = 0;
+//           playersMap[tpBall.batsman_id].isPlay = true;
+//           playersMap[tpBall.batsman_id].onStrike = true;
+          
+
+//           if (c.run == 0) {
+//             over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
+//             playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
+//             playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 : 0;
+//           }
+
+//           let part = response.live?.live_inning?.current_partnership;
+//           let batters = part?.batsmen?.map((i)=>i.batsman_id) || []
+//           let partnership = {}
+//           if(batters.length == 2){
+//             let [b1, b2] = batters;
+//             let partExist = global.tblCommentaryPartnership.find((i)=>
+//                 i.commentaryId == comDetails.commentaryId &&
+//                 i.currentInnings == comDetails.currentInnings &&
+//                 (
+//                     (i.batter1Id == playerTpIdObj[b1].commentaryPlayerId && i.batter2Id == playerTpIdObj[b2].commentaryPlayerId) ||
+//                     (i.batter1Id == playerTpIdObj[b2].commentaryPlayerId && i.batter2Id == playerTpIdObj[b1].commentaryPlayerId) // order doesn’t matter
+//                 )
+//             );
+//             if(partExist){
+//                 let comPlayerId1 = global.tblCommentaryPlayers.find((i)=> i.commentaryPlayerId == partExist.batter1Id)
+//                 let comPlayerId2 = global.tblCommentaryPlayers.find((i)=> i.commentaryPlayerId == partExist.batter2Id)
+//                 let cp1 = part.batsmen.find((i)=> i.batsman_id == comPlayerId1.tpId)
+//                 let cp2 = part.batsmen.find((i)=> i.batsman_id == comPlayerId2.tpId)
+//                 partnership = {
+//                     ...partExist,
+//                     totalRuns : part.runs,
+//                     totalBalls : part.balls,
+//                     batter1Runs : cp1.runs,
+//                     batter2Runs :cp2.runs,
+//                     batter1Balls : cp1.balls,
+//                     batter2Balls : cp2.balls
+//                 }
+//                 let par = await updateVirtualPartnershipQuery(partnership,fastify, null)
+//                 //update partnersip in db
+//                 let pI = global.tblCommentaryPartnership.findIndex((i)=> i.commentaryPartnershipId == partnership.commentaryPartnershipId)
+//                 global.tblCommentaryPartnership[pI] = par[0]; 
+//             } else {
+//                 let cp1 = playerTpIdObj[part.batsmen[0].batsman_id]
+//                 let cp2 = playerTpIdObj[part.batsmen[1].batsman_id]
+//                 partnership = genEtPartnership({
+//                     currentPartnership :{
+//                         batter1Id : cp1.commentaryPlayerId,
+//                         batter1Name : cp1.playerName,
+//                         batter2Id : cp2.commentaryPlayerId,
+//                         batter2Name : cp2.playerName,
+//                         totalRuns : part.runs,
+//                         totalBalls : part.balls,
+//                         batter1Runs : part.batsmen[0].runs,
+//                         batter2Runs :  part.batsmen[1].runs,
+//                         batter1Balls : part.batsmen[0].balls,
+//                         batter2Balls :part.batsmen[1].balls,
+//                         order : response.live.live_inning.equations.wickets + 1,
+//                         isActive : true
+//                     },
+//                     commentaryDetails : comDetails,
+//                     updateBattingTeam : battingTeam
+//                 })
+//                 partnership = await virtualPartnershipQuery(
+//                     partnership,
+//                     request,
+//                     fastify
+//                 );
+//                 global.tblCommentaryPartnership.push(partnership);
+//             }
+//           }
+//         }
+//         if ((b1.ballType == BALL_TYPE.REGULAR  || b1.ballType == BALL_TYPE.LEG_BYE) && b1.ballIsWicket == false) {
+//             let run = b1.ballRun
+//             battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
+//             // battingTeam["teamScore"] = liveTeamScore;
+//             let previousBall = c.ball - 1;
+//             battingTeam.teamOver = `${c.over}.${previousBall}`
+//             battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
+//             battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
+//             battingTeam.teamLegByRuns = battingTeam.teamLegByRuns > 0 ? (battingTeam.teamLegByRuns || 0) - parseInt(b1.teamLegByRuns) : 0;
+//             battingTeam.teamNoBallRuns = battingTeam.teamNoBallRuns > 0 ? (battingTeam.teamNoBallRuns || 0) - parseInt(b1.teamNoBallRuns) : 0;
+//             battingTeam.teamByRuns = battingTeam.teamByRuns > 0 ? (battingTeam.teamByRuns || 0) - parseInt(b1.teamByRuns) : 0;
+//             over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
+//             over.totalRun = over.totalRun > 0 ? over.totalRun - 1 : 0;
+//             // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+//             over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
+//             if (!playersMap[tpBall.bowler_id]) {
+//               playersMap[tpBall.bowler_id] = {
+//                 ...playerTpIdObj[tpBall.bowler_id]
+//               }
+//             }
+//             if (!playersMap[tpBall.batsman_id]) {
+//               playersMap[tpBall.batsman_id] = {
+//                 ...playerTpIdObj[tpBall.batsman_id]
+//               }
+//             }
+//             playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
+//             playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
+//             playersMap[tpBall.batsman_id].runs = playersMap[tpBall.batsman_id].runs > 0 ? playersMap[tpBall.batsman_id].runs - 1 : 0;
+//             playersMap[tpBall.batsman_id].batBall = playersMap[tpBall.batsman_id].batBall > 0 ? playersMap[tpBall.batsman_id].batBall - 1 : 0;
+//             let isBoundary = run == 4 || run == 6 ? true : false;
+//             if (run == 0) {
+//               over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
+//               playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
+//               playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 : 0;
+//             }
+//             else if (isBoundary) {
+//               if (run == 4) {
+//                 over.totalFour = over.totalFour > 0 ? over.totalFour - 1 : 0
+//                 playersMap[tpBall.bowler_id].bowlerFour = playersMap[tpBall.bowler_id].bowlerFour > 0 ? playersMap[tpBall.bowler_id].bowlerFour - 1 : 0
+//               }
+//               if (run == 6) {
+//                 over.totalSix -= 1;
+//                 playersMap[tpBall.bowler_id].bowlerSix = playersMap[tpBall.bowler_id].bowlerSix > 0 ? playersMap[tpBall.bowler_id].bowlerSix - 1 : 0
+//               }
+//             }
+//             if (over.ballCount === 0) {
+//               deleteOverIds.push(over.overId);
+//             }
+//         }
+//         if (b1.ballType == BALL_TYPE.WIDE && b1.ballIsWicket == false) {
+//             let run = b1?.ballExtraRun ?? 0;
+//             battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
+//             // battingTeam["teamScore"] = liveTeamScore;
+//             let previousBall = c.ball - 1;
+//             battingTeam.teamOver = `${c.over}.${previousBall}`
+//             battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
+//             battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
+//             battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - run : 0;
+//             over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
+//             over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
+//             // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+//             over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
+//             over.totalWideBall = over.totalWideBall > 0 ? over.totalWideBall - 1 : 0;
+//             over.totalWideRun = over.totalWideRun > 0 ? over.totalWideRun - run : 0;
+//             if (!playersMap[tpBall.bowler_id]) {
+//               playersMap[tpBall.bowler_id] = {
+//                 ...playerTpIdObj[tpBall.bowler_id]
+//               }
+//             }
+//             if (!playersMap[tpBall.batsman_id]) {
+//               playersMap[tpBall.batsman_id] = {
+//                 ...playerTpIdObj[tpBall.batsman_id]
+//               }
+//             }
+//             playersMap[tpBall.bowler_id].bowlerWideBall = playersMap[tpBall.bowler_id].bowlerWideBall > 0 ? playersMap[tpBall.bowler_id].bowlerWideBall - 1 : 0;
+//             playersMap[tpBall.bowler_id].bowlerWideBallRun = playersMap[tpBall.bowler_id].bowlerWideBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerWideBallRun - run : 0;
+//             playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
+//             playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
+            
+//             if (over.ballCount === 0) {
+//               deleteOverIds.push(over.overId);
+//             }
+//           }
+
+//         if (b1.ballType == BALL_TYPE.NO_BALL && b1.ballIsWicket == false) {
+//           let run = b1?.ballExtraRun ?? 0;
+//           battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
+//           // battingTeam["teamScore"] = liveTeamScore;
+//           // let previousBall = c.ball - 1;
+//           battingTeam.teamOver = `${c.over}.${c.ball}`
+//           battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
+//           battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
+//           battingTeam.teamNoBallRuns = battingTeam.teamNoBallRuns > 0 ? battingTeam.teamNoBallRuns - run : 0;
+//           over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
+//           // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+//           over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
+//           over.totalNoball = over.totalNoball > 0 ? over.totalNoball - 1 : 0;
+//           over.totalNoBallRun = over.totalNoBallRun > 0 ? over.totalNoBallRun - run : 0;
+//           if (!playersMap[tpBall.bowler_id]) {
+//             playersMap[tpBall.bowler_id] = {
+//               ...playerTpIdObj[tpBall.bowler_id]
+//             }
+//           }
+//           if (!playersMap[tpBall.batsman_id]) {
+//             playersMap[tpBall.batsman_id] = {
+//               ...playerTpIdObj[tpBall.batsman_id]
+//             }
+//           }
+//           playersMap[tpBall.bowler_id].bowlerNoBall = playersMap[tpBall.bowler_id].bowlerNoBall > 0 ? playersMap[tpBall.bowler_id].bowlerNoBall - 1 : 0;
+//           playersMap[tpBall.bowler_id].bowlerNoBallRun = playersMap[tpBall.bowler_id].bowlerNoBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerNoBallRun - run : 0;
+//           playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
+//           if (over.ballCount === 0) {
+//             deleteOverIds.push(over.overId);
+//           }
+//         }
+//       } 
+//     }
+
+//     if (event == "noball") {
+//       let index = global.tblCommentaryBallByBall.findIndex((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
+//       if (index == -1) continue; // skip not created ball
+//       let ball = global.tblCommentaryBallByBall.find((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
+//       if (!ball.ballIsWicket && ball.ballType == BALL_TYPE.NO_BALL && ball.ballExtraRun == c.run) {
+//         continue;
+//       }
+//       let ballAfterThis = global.tblCommentaryBallByBall.filter((i) => i.commentaryBallByBallId >= ball.commentaryBallByBallId &&
+//         i.commentaryId == comDetails.commentaryId && i.currentInnings == comDetails.currentInnings)
+//       for (let b1 of ballAfterThis) {
+//         const overNumber = Number(c.over);
+//         const overKey = `${comDetails.commentaryId}-${comDetails.currentInnings}-${battingTeam.teamId}-${overNumber}`;
+//         let over = oversMap[overKey];
+//         over = global.tblOvers.find((i) => i.overId == b1.overId)
+//         oversMap[overKey] = over
+//         deleteBallByBallIds.push(b1.commentaryBallByBallId)
+//         let tpBall = com.find((i) => i.event_id == b1.tpId)
+//         if (b1.ballIsWicket == true) {
+//           event = "wicket"
+//           // Update batting team
+//           battingTeam.teamWicket = Math.max(0, battingTeam.teamWicket - 1);
+//           const prevBall = Math.max(0, c.ball - 1);
+//           battingTeam.teamOver = `${c.over}.${prevBall}`;
+//           // Update overs
+//           if (over) {
+//             over.totalWicket = Math.max(0, (over.totalWicket || 0) - 1);
+//             over.ballCount = Math.max(0, (over.ballCount || 0) - 1);
+
+//             // if after undo, no balls left → delete over
+//             if (over.ballCount === 0) {
+//               deleteOverIds.push(over.overId);
+//             } else {
+//               // over.teamScore = `${battingTeam.teamScore || 0}/${battingTeam.teamWicket || 0}`;
+//               over.teamScore = `${liveTeamScore}/${battingTeam.teamWicket || 0}`;
+//               over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
+//               if (over) {
+//                 over.type = "update"
+//               }
+//               oversMap[overKey] = over;
+//             }
+//           }
+
+//           // Update Batter and Bowler stats
+//           if (!playersMap[tpBall.bowler_id]) {
+//             playersMap[tpBall.bowler_id] = {
+//               ...playerTpIdObj[tpBall.bowler_id]
+//             }
+//           }
+//           if (!playersMap[tpBall.batsman_id]) {
+//             playersMap[tpBall.batsman_id] = {
+//               ...playerTpIdObj[tpBall.batsman_id]
+//             }
+//           }
+
+//           playersMap[tpBall.bowler_id].bowlerTotalWicket = playersMap[tpBall.bowler_id].bowlerTotalWicket > 0 ? playersMap[tpBall.bowler_id].bowlerTotalWicket - 1 : 0;
+//           playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
+//           playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playersMap[tpBall.bowler_id].bowlerDotBall - 1 : 0;
+//           let o = parseFloat(playersMap[tpBall.bowler_id].bowlerOver || 0);
+//           let overs = Math.floor(o);
+//           let balls = Math.round((o % 1) * 10);
+//           let val = parseFloat(`${balls ? overs : overs - 1}.${balls ? balls - 1 : 5}`);
+//           playersMap[tpBall.bowler_id].bowlerOver = Math.max(0, val);
+
+//           playersMap[tpBall.batsman_id].isBatterOut = null;
+//           playersMap[tpBall.batsman_id].wicketType = 0;
+//           playersMap[tpBall.batsman_id].isBatterOut = false;
+//           playersMap[tpBall.batsman_id].bowlerId = 0;
+//           playersMap[tpBall.batsman_id].fielderId1 = 0;
+//           playersMap[tpBall.batsman_id].fielderId2 = 0;
+//           playersMap[tpBall.batsman_id].isPlay = true;
+//           playersMap[tpBall.batsman_id].onStrike = true;
+
+
+//           if (c.run == 0) {
+//             over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
+//             playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
+//             playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 : 0;
+//           }
+
+//           let part = response.live?.live_inning?.current_partnership;
+//           let batters = part?.batsmen?.map((i) => i.batsman_id) || []
+//           let partnership = {}
+//           if (batters.length == 2) {
+//             let [b1, b2] = batters;
+//             let partExist = global.tblCommentaryPartnership.find((i) =>
+//               i.commentaryId == comDetails.commentaryId &&
+//               i.currentInnings == comDetails.currentInnings &&
+//               (
+//                 (i.batter1Id == playerTpIdObj[b1].commentaryPlayerId && i.batter2Id == playerTpIdObj[b2].commentaryPlayerId) ||
+//                 (i.batter1Id == playerTpIdObj[b2].commentaryPlayerId && i.batter2Id == playerTpIdObj[b1].commentaryPlayerId) // order doesn’t matter
+//               )
+//             );
+//             if (partExist) {
+//               let comPlayerId1 = global.tblCommentaryPlayers.find((i) => i.commentaryPlayerId == partExist.batter1Id)
+//               let comPlayerId2 = global.tblCommentaryPlayers.find((i) => i.commentaryPlayerId == partExist.batter2Id)
+//               let cp1 = part.batsmen.find((i) => i.batsman_id == comPlayerId1.tpId)
+//               let cp2 = part.batsmen.find((i) => i.batsman_id == comPlayerId2.tpId)
+//               partnership = {
+//                 ...partExist,
+//                 totalRuns: part.runs,
+//                 totalBalls: part.balls,
+//                 batter1Runs: cp1.runs,
+//                 batter2Runs: cp2.runs,
+//                 batter1Balls: cp1.balls,
+//                 batter2Balls: cp2.balls
+//               }
+//               let par = await updateVirtualPartnershipQuery(partnership, fastify, null)
+//               //update partnersip in db
+//               let pI = global.tblCommentaryPartnership.findIndex((i) => i.commentaryPartnershipId == partnership.commentaryPartnershipId)
+//               global.tblCommentaryPartnership[pI] = par[0];
+//             } else {
+//               let cp1 = playerTpIdObj[part.batsmen[0].batsman_id]
+//               let cp2 = playerTpIdObj[part.batsmen[1].batsman_id]
+//               partnership = genEtPartnership({
+//                 currentPartnership: {
+//                   batter1Id: cp1.commentaryPlayerId,
+//                   batter1Name: cp1.playerName,
+//                   batter2Id: cp2.commentaryPlayerId,
+//                   batter2Name: cp2.playerName,
+//                   totalRuns: part.runs,
+//                   totalBalls: part.balls,
+//                   batter1Runs: part.batsmen[0].runs,
+//                   batter2Runs: part.batsmen[1].runs,
+//                   batter1Balls: part.batsmen[0].balls,
+//                   batter2Balls: part.batsmen[1].balls,
+//                   order: response.live.live_inning.equations.wickets + 1,
+//                   isActive: true
+//                 },
+//                 commentaryDetails: comDetails,
+//                 updateBattingTeam: battingTeam
+//               })
+//               partnership = await virtualPartnershipQuery(
+//                 partnership,
+//                 request,
+//                 fastify
+//               );
+//               global.tblCommentaryPartnership.push(partnership);
+//             }
+//           }
+//         }
+//         if ((b1.ballType == BALL_TYPE.REGULAR || b1.ballType == BALL_TYPE.LEG_BYE) && b1.ballIsWicket == false) {
+//           let run = b1.ballRun
+//           battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
+//           // battingTeam["teamScore"] = liveTeamScore;
+//           let previousBall = c.ball - 1;
+//           battingTeam.teamOver = `${c.over}.${previousBall}`
+//           battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
+//           battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
+//           battingTeam.teamLegByRuns = battingTeam.teamLegByRuns > 0 ? (battingTeam.teamLegByRuns || 0) - parseInt(b1.teamLegByRuns) : 0;
+//           battingTeam.teamByRuns = battingTeam.teamByRuns > 0 ? (battingTeam.teamByRuns || 0) - parseInt(b1.teamByRuns) : 0;
+//           over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
+//           over.totalRun = over.totalRun > 0 ? over.totalRun - 1 : 0;
+//           // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+//           over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
+//           if (!playersMap[tpBall.bowler_id]) {
+//             playersMap[tpBall.bowler_id] = {
+//               ...playerTpIdObj[tpBall.bowler_id]
+//             }
+//           }
+//           if (!playersMap[tpBall.batsman_id]) {
+//             playersMap[tpBall.batsman_id] = {
+//               ...playerTpIdObj[tpBall.batsman_id]
+//             }
+//           }
+//           playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
+//           playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
+//           playersMap[tpBall.batsman_id].runs = playersMap[tpBall.batsman_id].runs > 0 ? playersMap[tpBall.batsman_id].runs - 1 : 0;
+//           playersMap[tpBall.batsman_id].batBall = playersMap[tpBall.batsman_id].batBall > 0 ? playersMap[tpBall.batsman_id].batBall - 1 : 0;
+//           let isBoundary = run == 4 || run == 6 ? true : false;
+//           if (run == 0) {
+//             over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
+//             playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
+//             playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 : 0;
+//           }
+//           else if (isBoundary) {
+//             if (run == 4) {
+//               over.totalFour = over.totalFour > 0 ? over.totalFour - 1 : 0
+//               playersMap[tpBall.bowler_id].bowlerFour = playersMap[tpBall.bowler_id].bowlerFour > 0 ? playersMap[tpBall.bowler_id].bowlerFour - 1 : 0
+//             }
+//             if (run == 6) {
+//               over.totalSix -= 1;
+//               playersMap[tpBall.bowler_id].bowlerSix = playersMap[tpBall.bowler_id].bowlerSix > 0 ? playersMap[tpBall.bowler_id].bowlerSix - 1 : 0
+//             }
+//           }
+//           if (over.ballCount === 0) {
+//             deleteOverIds.push(over.overId);
+//           }
+//         }
+//         if (b1.ballType == BALL_TYPE.WIDE && b1.ballIsWicket == false) {
+//           let run = b1?.ballExtraRun ?? 0;
+//           battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
+//           // battingTeam["teamScore"] = liveTeamScore;
+//           let previousBall = c.ball - 1;
+//           battingTeam.teamOver = `${c.over}.${previousBall}`
+//           battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
+//           battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
+//           battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - run : 0;
+//           over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
+//           over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
+//           // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+//           over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
+//           over.totalWideBall = over.totalWideBall > 0 ? over.totalWideBall - 1 : 0;
+//           over.totalWideRun = over.totalWideRun > 0 ? over.totalWideRun - run : 0;
+//           if (!playersMap[tpBall.bowler_id]) {
+//             playersMap[tpBall.bowler_id] = {
+//               ...playerTpIdObj[tpBall.bowler_id]
+//             }
+//           }
+//           if (!playersMap[tpBall.batsman_id]) {
+//             playersMap[tpBall.batsman_id] = {
+//               ...playerTpIdObj[tpBall.batsman_id]
+//             }
+//           }
+//           playersMap[tpBall.bowler_id].bowlerWideBall = playersMap[tpBall.bowler_id].bowlerWideBall > 0 ? playersMap[tpBall.bowler_id].bowlerWideBall - 1 : 0;
+//           playersMap[tpBall.bowler_id].bowlerWideBallRun = playersMap[tpBall.bowler_id].bowlerWideBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerWideBallRun - run : 0;
+//           playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
+//           playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
+
+//           if (over.ballCount === 0) {
+//             deleteOverIds.push(over.overId);
+//           }
+//         }
+//         if (b1.ballType == BALL_TYPE.NO_BALL && b1.ballIsWicket == false) {
+//           let run = b1?.ballExtraRun ?? 0;
+//           battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
+//           // battingTeam["teamScore"] = liveTeamScore;
+//           let previousBall = c.ball - 1;
+//           battingTeam.teamOver = `${c.over}.${previousBall}`
+//           battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
+//           battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
+//           battingTeam.teamNoBallRuns = battingTeam.teamNoBallRuns > 0 ? battingTeam.teamNoBallRuns - run : 0;
+//           over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
+//           // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+//           over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
+//           over.totalNoball = over.totalNoball > 0 ? over.totalNoball - 1 : 0;
+//           over.totalNoBallRun = over.totalNoBallRun > 0 ? over.totalNoBallRun - run : 0;
+//           if (!playersMap[tpBall.bowler_id]) {
+//             playersMap[tpBall.bowler_id] = {
+//               ...playerTpIdObj[tpBall.bowler_id]
+//             }
+//           }
+//           if (!playersMap[tpBall.batsman_id]) {
+//             playersMap[tpBall.batsman_id] = {
+//               ...playerTpIdObj[tpBall.batsman_id]
+//             }
+//           }
+//           playersMap[tpBall.bowler_id].bowlerNoBall = playersMap[tpBall.bowler_id].bowlerNoBall > 0 ? playersMap[tpBall.bowler_id].bowlerNoBall - 1 : 0;
+//           playersMap[tpBall.bowler_id].bowlerNoBallRun = playersMap[tpBall.bowler_id].bowlerNoBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerNoBallRun - run : 0;
+//           playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
+//           if (over.ballCount === 0) {
+//             deleteOverIds.push(over.overId);
+//           }
+//         }
+//       }
+//     }
+//   }
+//   let plyArr = Object.values(playersMap);
+//   let overArr = Object.values(oversMap)
+//   let partnershipArr = Object.values(partnershipMap)
+//   if (deleteOverIds?.length > 0) {
+//     const remainingBallIds = global.tblCommentaryBallByBall
+//       .filter(item => deleteOverIds.includes(item.overId))
+//       .map(item => item.commentaryBallByBallId);
+//     for (const id of remainingBallIds) {
+//       if (!deleteBallByBallIds.includes(id)) {
+//         deleteBallByBallIds.push(id);
+//       }
+//     }
+//   }
+//   // const result = {
+//   //   commentaryId: comDetails.commentaryId,
+//   //   commentaryPlayers: plyArr,
+//   //   deleteBallByBallIds: deleteBallByBallIds,
+//   //   commentaryOvers: overArr,
+//   //   commentaryPartnership: partnershipArr,
+//   //   deleteOverIds: deleteOverIds,
+//   //   commentaryTeams: [battingTeam]
+//   // }
+//   // console.log("result", result)
+//   if(deleteBallByBallIds.length > 0 || deleteOverIds.length > 0){
+//     await syncEntitySportCommentaryService({
+//     commentaryId : comDetails.commentaryId,
+//     commentaryPlayers : plyArr,
+//     deleteBallByBallIds : deleteBallByBallIds,
+//     commentaryOvers : overArr,
+//     commentaryPartnership: partnershipArr,
+//     commentaryTeams : [battingTeam],
+//     deleteOverIds: deleteOverIds
+//     },fastify,request)
+  
+//   }
+  
+//   return true;
+// }
+
 const handleStoreBall = async (data, fastify, comDetails, request) => {
-  const { response, battingTeam ,matchType } = data;
+  let { response, battingTeam } = data;
   let com = response.live.commentaries;
-  let storedCom = com.slice(-5) 
-  // console.log("storedCom" ,storedCom)
-  storedCom = storedCom.filter((i)=> i.event != "overend").sort((i1 , i2)=> i2.event_id - i1.event_id)
-  // console.log("storedCom" ,storedCom)
-  let tpIds = storedCom.map((i) => i.event_id)
+  let storedCom = com.slice(-5)
+  storedCom = storedCom.filter((i) => i.event != "overend").sort((i1, i2) => i2.event_id - i1.event_id)
   let playerTpIdObj = {};
   let comPlayers = global.tblCommentaryPlayers.filter((cp) => cp.commentaryId == comDetails.commentaryId && cp.currentInnings == comDetails.currentInnings)
   for (let cp of comPlayers) {
@@ -1929,25 +3244,29 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
     };
   }
   let playersMap = {};
-  let upOvers = [];
   let deleteBallByBallIds = [];
   let deleteOverIds = []
   let oversMap = {};
   let partnershipMap = {};
-  let upTeams = []
   for (let c of storedCom) {
-    let updateBall = {}
-    let ball = 1;
-    let tpId = c.event_id;
     let event = c.event;
-    String(c.score) == "w" ? event = "wicket" : event ="ball";
-    c.score && String(c.score).includes('wd') ?event = "wide" : event = "ball"
-    let isBoundary = c.run == 4 || c.run == 6 ? true : false
+    if (String(c.score) === "w") {
+      event = "wicket";
+    } else if (c.score && String(c.score).includes("wd")) {
+      event = "wide";
+    } else if (c.score && String(c.score).includes("nb")) {
+      event = "noball";
+    } else if (c.score && String(c.score).includes("lb")) {
+      event = "legbye";
+    } else {
+      event = "ball";
+    }
+    // let live_score_data = response?.live?.live_score;
+    // let liveTeamScore = response?.live?.live_score?.runs;
     if (String(c.score) == "w") {
       event = "wicket"
-      // wicket code
       let index = global.tblCommentaryBallByBall.findIndex((i) => i.tpId == c.event_id);
-      if (index == -1) continue; // skip not created ball
+      if (index == -1) continue;
       let BallByBall = global.tblCommentaryBallByBall.find((i) => i.tpId == c.event_id);
       if (BallByBall.ballIsWicket == true) {
         continue;
@@ -1967,317 +3286,38 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
         oversMap[overKey] = over
         let tpBall = com.find((i) => i.event_id == b1.tpId);
         if (!tpBall) continue;
-        // if (String(tpBall.score) == "w") {
-        if (b1.ballIsWicket == true) {
-          event = "wicket"
-
-          // Update batting team
-          battingTeam.teamWicket = Math.max(0, battingTeam.teamWicket - 1);
-          const prevBall = Math.max(0, c.ball - 1);
-          battingTeam.teamOver = `${c.over}.${prevBall}`;
-          // Update overs
-          if (over) {
-            over.totalWicket = Math.max(0, (over.totalWicket || 0) - 1);
-            over.ballCount = Math.max(0, (over.ballCount || 0) - 1);
-
-            // if after undo, no balls left → delete over
-            if (over.ballCount === 0) {
-              deleteOverIds.push(over.overId);
-            } else {
-              over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
-              over.teamScore = `${battingTeam.teamScore || 0}/${battingTeam.teamWicket || 0}`;
-              if (over) {
-                over.type = "update"
-              }
-              oversMap[overKey] = over;
-            }
-          }
-
-          // Update Batter and Bowler stats
-          if (!playersMap[tpBall.bowler_id]) {
-            playersMap[tpBall.bowler_id] = {
-              ...playerTpIdObj[tpBall.bowler_id]
-            }
-          }
-          if (!playersMap[tpBall.batsman_id]) {
-            playersMap[tpBall.batsman_id] = {
-              ...playerTpIdObj[tpBall.batsman_id]
-            }
-          }
-
-          playersMap[tpBall.bowler_id].bowlerTotalWicket = playersMap[tpBall.bowler_id].bowlerTotalWicket > 0 ? playersMap[tpBall.bowler_id].bowlerTotalWicket - 1 : 0;
-          playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
-          playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playersMap[tpBall.bowler_id].bowlerDotBall - 1 : 0;
-          let o = parseFloat(playersMap[tpBall.bowler_id].bowlerOver || 0);
-          let overs = Math.floor(o);
-          let balls = Math.round((o % 1) * 10);
-          let val = parseFloat(`${balls ? overs : overs - 1}.${balls ? balls - 1 : 5}`);
-          playersMap[tpBall.bowler_id].bowlerOver = Math.max(0, val);
-
-          playersMap[tpBall.batsman_id].isBatterOut = null;
-          playersMap[tpBall.batsman_id].wicketType = 0;
-          playersMap[tpBall.batsman_id].bowlerId = 0;
-          playersMap[tpBall.batsman_id].fielderId1 = 0;
-          playersMap[tpBall.batsman_id].fielderId2 = 0;
-          playersMap[tpBall.batsman_id].isPlay = true;
-          playersMap[tpBall.batsman_id].onStrike = true;
-          
-          let part = response.live?.live_inning?.current_partnership;
-          let batters = part?.batsmen?.map((i)=>i.batsman_id) || []
-          let partnership = {}
-          if(batters.length == 2){
-            let [b1, b2] = batters;
-            let partExist = global.tblCommentaryPartnership.find((i)=>
-                i.commentaryId == comDetails.commentaryId &&
-                i.currentInnings == comDetails.currentInnings &&
-                (
-                    (i.batter1Id == playerTpIdObj[b1].commentaryPlayerId && i.batter2Id == playerTpIdObj[b2].commentaryPlayerId) ||
-                    (i.batter1Id == playerTpIdObj[b2].commentaryPlayerId && i.batter2Id == playerTpIdObj[b1].commentaryPlayerId) // order doesn’t matter
-                )
-            );
-            if(partExist){
-                let comPlayerId1 = global.tblCommentaryPlayers.find((i)=> i.commentaryPlayerId == partExist.batter1Id)
-                let comPlayerId2 = global.tblCommentaryPlayers.find((i)=> i.commentaryPlayerId == partExist.batter2Id)
-                let cp1 = part.batsmen.find((i)=> i.batsman_id == comPlayerId1.tpId)
-                let cp2 = part.batsmen.find((i)=> i.batsman_id == comPlayerId2.tpId)
-                partnership = {
-                    ...partExist,
-                    totalRuns : part.runs,
-                    totalBalls : part.balls,
-                    batter1Runs : cp1.runs,
-                    batter2Runs :cp2.runs,
-                    batter1Balls : cp1.balls,
-                    batter2Balls : cp2.balls
-                }
-                let par = await updateVirtualPartnershipQuery(partnership,fastify, null)
-                //update partnersip in db
-                let pI = global.tblCommentaryPartnership.findIndex((i)=> i.commentaryPartnershipId == partnership.commentaryPartnershipId)
-                global.tblCommentaryPartnership[pI] = par[0]; 
-            } else {
-                let cp1 = playerTpIdObj[part.batsmen[0].batsman_id]
-                let cp2 = playerTpIdObj[part.batsmen[1].batsman_id]
-                partnership = genEtPartnership({
-                    currentPartnership :{
-                        batter1Id : cp1.commentaryPlayerId,
-                        batter1Name : cp1.playerName,
-                        batter2Id : cp2.commentaryPlayerId,
-                        batter2Name : cp2.playerName,
-                        totalRuns : part.runs,
-                        totalBalls : part.balls,
-                        batter1Runs : part.batsmen[0].runs,
-                        batter2Runs :  part.batsmen[1].runs,
-                        batter1Balls : part.batsmen[0].balls,
-                        batter2Balls :part.batsmen[1].balls,
-                        order : response.live.live_inning.equations.wickets + 1,
-                        isActive : true
-                    },
-                    commentaryDetails : comDetails,
-                    updateBattingTeam : battingTeam
-                })
-                partnership = await virtualPartnershipQuery(
-                    partnership,
-                    request,
-                    fastify
-                );
-                global.tblCommentaryPartnership.push(partnership);
-            }
-          }
-
-          // if (c.run == 0) {
-          //   over.dotBall = over.dotBall - 1;
-          //   playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
-          //   playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 : 0;
-          // }
-
-          // Update bowler stats
-          // const bowlerId = b1.bowlerId;
-          // const bowlerData = global.tblCommentaryPlayers.find(
-          //   (item) => item.commentaryPlayerId == bowlerId
-          // );
-
-          // if (bowlerData) {
-          //   const currentWickets = bowlerData?.bowlerTotalWicket || 0;
-          //   const tBalls = bowlerData?.bowlerTotalBall || 0;
-
-          //   playersMap[bowlerId] = {
-          //     ...playerTpIdObj[bowlerId],
-          //     ...bowlerData,
-          //     bowlerTotalWicket: currentWickets > 0 ? currentWickets - 1 : 0,
-          //     bowlerTotalBall: tBalls > 0 ? tBalls - 1 : 0
-          //   };
-          //   if (c?.run == 0) {
-          //     playersMap[bowlerId].bowlerDotBall = playersMap[bowlerId].bowlerDotBall > 0 ? playersMap[bowlerId].bowlerDotBall - 1 : 0;
-          //   }
-          // }
-
-          // // Reset the batter who was out
-          // const partnershipData = global.tblCommentaryPartnership
-          //   .filter(item =>
-          //     item.commentaryId === comDetails?.commentaryId &&
-          //     item.currentInnings === comDetails?.currentInnings &&
-          //     item.teamId === battingTeam?.teamId
-          //   )
-          //   .sort((a, b) => b.order - a.order)
-          //   .slice(0, 2);
-
-          // const [currentPartnership, prevPartnership] = partnershipData;
-
-          // let newBatterId = null;
-          // let replacedBatterId = null;
-          // // let commonBatterId = null;
-
-          // if (currentPartnership && prevPartnership) {
-          //   const currBatters = [currentPartnership.batter1Id, currentPartnership.batter2Id].filter(Boolean);
-          //   const prevBatters = [prevPartnership.batter1Id, prevPartnership.batter2Id].filter(Boolean);
-
-          //   // commonBatterId = currBatters.find(id => prevBatters.includes(id)) || null;
-          //   newBatterId = currBatters.find(id => !prevBatters.includes(id)) || null;
-          //   replacedBatterId = prevBatters.find(id => !currBatters.includes(id)) || null;
-          // }
-          // const onStrikeValue = global.tblCommentaryPlayers.find(item => item.commentaryPlayerId == newBatterId)?.onStrike ?? false;
-          // if (newBatterId && replacedBatterId) {
-          //   const batters = global.tblCommentaryPlayers.filter(
-          //     (item) => [newBatterId, replacedBatterId].includes(item.commentaryPlayerId)
-          //   );
-
-          //   for (const bat of batters) {
-          //     const isNewBatter = bat.commentaryPlayerId === newBatterId;
-          //     const isReplacedBatter = bat.commentaryPlayerId === replacedBatterId;
-          //     if (bat?.onStrike == true && b1?.run == 0) {
-          //       playersMap[bowlerId].bowlerDotBall = playersMap[bowlerId].bowlerDotBall > 0 ? playerTpIdObj[bowlerId].bowlerDotBall - 1 : 0;
-          //     }
-
-          //     let batterUpdate = {
-          //       ...bat,
-          //       isBatterOut: null,
-          //       wicketType: null,
-          //       bowlerId: 0,
-          //       fielderId1: 0,
-          //       fielderId2: 0,
-          //     };
-
-          //     if (isNewBatter) {
-          //       batterUpdate = { ...batterUpdate, isPlay: false, onStrike: false };
-          //     } else if (isReplacedBatter) {
-          //       batterUpdate = { ...batterUpdate, isPlay: true, onStrike: onStrikeValue };
-          //     }
-
-          //     playersMap[batterUpdate.commentaryPlayerId] = batterUpdate;
-          //   }
-          // }
-
-          // //Set old partnership active true        
-          // const oldPartnership = partnershipData[1];
-          // if (oldPartnership) {
-          //   const key = `${comDetails.commentaryId}-${comDetails.currentInnings}-${battingTeam.teamId}`;
-          //   partnershipMap[key] = { ...oldPartnership, isActive: true };
-          // }
+        const requestData = {
+          response,
+          battingTeam,
+          comDetails,
+          commBall: b1,
+          commPlayers: playerTpIdObj,
+          tpBall,
+          deleteOverIds,
+          over,
+          tpCurrentBall: c,
         }
+        const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
 
-        // if (tpBall.event == "ball") {
-        if (b1.ballType == BALL_TYPE.REGULAR && b1.ballIsWicket == false) {
-            let run = b1.ballRun
-            battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
-            // reducse teamOver
-            let previousBall = c.ball - 1;
-            battingTeam.teamOver = `${c.over}.${previousBall}`
-            battingTeam.teamLegByRuns = battingTeam.teamLegByRuns > 0 ? (battingTeam.teamLegByRuns || 0) - parseInt(b1.teamLegByRuns) : 0;
-            battingTeam.teamNoBallRuns = battingTeam.teamNoBallRuns > 0 ? (battingTeam.teamNoBallRuns || 0) - parseInt(b1.teamNoBallRuns) : 0;
-            battingTeam.teamByRuns = battingTeam.teamByRuns > 0 ? (battingTeam.teamByRuns || 0) - parseInt(b1.teamByRuns) : 0;
-            over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
-            over.totalRun = over.totalRun > 0 ? over.totalRun - 1 : 0;
-            over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
-            if (!playersMap[tpBall.bowler_id]) {
-              playersMap[tpBall.bowler_id] = {
-                ...playerTpIdObj[tpBall.bowler_id]
-              }
-            }
-            if (!playersMap[tpBall.batsman_id]) {
-              playersMap[tpBall.batsman_id] = {
-                ...playerTpIdObj[tpBall.batsman_id]
-              }
-            }
-            playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
-            playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
-            playersMap[tpBall.batsman_id].runs = playersMap[tpBall.batsman_id].runs > 0 ? playersMap[tpBall.batsman_id].runs - 1 : 0;
-            playersMap[tpBall.batsman_id].batBall = playersMap[tpBall.batsman_id].batBall > 0 ? playersMap[tpBall.batsman_id].batBall - 1 : 0;
-            // playersMap[tpBall.batsman_id].batDotBall =playersMap[tpBall.batsman_id].batDotBall > 0 ?playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
-            // playersMap[tpBall.batsman_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 :0;
-            let isBoundary = run == 4 || run == 6 ? true : false;
-            if (run == 0) {
-              over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
-              playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
-              playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 : 0;
-              // playersMap[tpBall.batsman_id] = {
-              //   ...playerTpIdObj[tpBall.batsman_id],
-              //   batDotBall : playersMap[tpBall.batsman_id].batDotBall > 0 ?playersMap[tpBall.batsman_id].batDotBall - 1 : 0,
-              //   bowlerDotBall: playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 :0
-              // }
-            }
-            else if (isBoundary) {
-              if (run == 4) {
-                over.totalFour = over.totalFour > 0 ? over.totalFour - 1 : 0
-                playersMap[tpBall.bowler_id].bowlerFour = playersMap[tpBall.bowler_id].bowlerFour > 0 ? playersMap[tpBall.bowler_id].bowlerFour - 1 : 0
-              }
-              if (run == 6) {
-                over.totalSix -= 1;
-                playersMap[tpBall.bowler_id].bowlerSix = playersMap[tpBall.bowler_id].bowlerSix > 0 ? playersMap[tpBall.bowler_id].bowlerSix - 1 : 0
-              }
-            }
-            if (over.ballCount === 0) {
-              deleteOverIds.push(over.overId);
-            }
+        if (undoResult) {
+          battingTeam = undoResult.battingTeam;
+          deleteOverIds.push(...undoResult.deleteOverIds);
+          oversMap[overKey] = undoResult.over;
+          Object.assign(playersMap, undoResult.playersMap);
         }
-          if (b1.ballType == BALL_TYPE.WIDE  && b1.ballIsWicket == false) {
-            isWide = true;
-            // let run = +matchType.valueOfWideBall || 0;
-            let run = +(c?.run ?? 0);
-            battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
-            let previousBall = c.ball - 1;
-            battingTeam.teamOver = `${c.over}.${previousBall}`
-            battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - 1 : 0;
-            over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
-            over.totalRun = over.totalRun > 0 ? over.totalRun - 1 : 0;
-            over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
-            over.totalWideBall = over.totalWideBall > 0 ? over.totalWideBall - 1 : 0;
-            over.totalWideRun = over.totalWideRun > 0 ? over.totalWideRun - run : 0;
-            if (!playersMap[tpBall.bowler_id]) {
-              playersMap[tpBall.bowler_id] = {
-                ...playerTpIdObj[tpBall.bowler_id]
-              }
-            }
-            if (!playersMap[tpBall.batsman_id]) {
-              playersMap[tpBall.batsman_id] = {
-                ...playerTpIdObj[tpBall.batsman_id]
-              }
-            }
-            playersMap[tpBall.bowler_id].bowlerWideBall = playersMap[tpBall.bowler_id].bowlerWideBall > 0 ? playersMap[tpBall.bowler_id].bowlerWideBall - 1 : 0;
-            playersMap[tpBall.bowler_id].bowlerWideBallRun = playersMap[tpBall.bowler_id].bowlerWideBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerWideBallRun - run : 0;
-            playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
-            playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - run : 0;
-
-            if (over.ballCount === 0) {
-              deleteOverIds.push(over.overId);
-            }
-          }
       }
     }
     if (event == "ball") {
       let index = global.tblCommentaryBallByBall.findIndex((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
-       if (index == -1) continue; // skip not created ball
+      if (index == -1) continue;
       let ball = global.tblCommentaryBallByBall.find((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
-      // if (ball.ballRun == c.run) {
-      //   continue;
-      // }  
 
       if (!ball.ballIsWicket && ball.ballRun === c.run && ball.ballType == BALL_TYPE.REGULAR) {
         continue;
       }
-      
-      // delete this ball and other ball
+
       let ballAfterThis = global.tblCommentaryBallByBall.filter((i) => i.commentaryBallByBallId >= ball.commentaryBallByBallId &&
         i.commentaryId == comDetails.commentaryId && i.currentInnings == comDetails.currentInnings)
-      // let ballIds = ballAfterThis.map((i)=> i.commentaryBallByBallId)
       for (let b1 of ballAfterThis) {
         const overNumber = Number(c.over);
         const overKey = `${comDetails.commentaryId}-${comDetails.currentInnings}-${battingTeam.teamId}-${overNumber}`;
@@ -2286,344 +3326,36 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
         oversMap[overKey] = over
         deleteBallByBallIds.push(b1.commentaryBallByBallId)
         let tpBall = com.find((i) => i.event_id == b1.tpId)
-        let tpId = tpBall.event_id;
-        // let event = c.event;
-        // if (String(tpBall.score) == "w") {
-        if (b1.ballIsWicket == true) {
-          event = "wicket"
-          // Update batting team
-          battingTeam.teamWicket = Math.max(0, battingTeam.teamWicket - 1);
-          const prevBall = Math.max(0, c.ball - 1);
-          battingTeam.teamOver = `${c.over}.${prevBall}`;
-          // Update overs
-          if (over) {
-            over.totalWicket = Math.max(0, (over.totalWicket || 0) - 1);
-            over.ballCount = Math.max(0, (over.ballCount || 0) - 1);
-
-            // if after undo, no balls left → delete over
-            if (over.ballCount === 0) {
-              deleteOverIds.push(over.overId);
-            } else {
-              over.teamScore = `${battingTeam.teamScore || 0}/${battingTeam.teamWicket || 0}`;
-              over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
-              if (over) {
-                over.type = "update"
-              }
-              oversMap[overKey] = over;
-            }
-          }
-
-          // Update Batter and Bowler stats
-          if (!playersMap[tpBall.bowler_id]) {
-            playersMap[tpBall.bowler_id] = {
-              ...playerTpIdObj[tpBall.bowler_id]
-            }
-          }
-          if (!playersMap[tpBall.batsman_id]) {
-            playersMap[tpBall.batsman_id] = {
-              ...playerTpIdObj[tpBall.batsman_id]
-            }
-          }
-
-          playersMap[tpBall.bowler_id].bowlerTotalWicket = playersMap[tpBall.bowler_id].bowlerTotalWicket > 0 ? playersMap[tpBall.bowler_id].bowlerTotalWicket - 1 : 0;
-          playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
-          playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playersMap[tpBall.bowler_id].bowlerDotBall - 1 : 0;
-          let o = parseFloat(playersMap[tpBall.bowler_id].bowlerOver || 0);
-          let overs = Math.floor(o);
-          let balls = Math.round((o % 1) * 10);
-          let val = parseFloat(`${balls ? overs : overs - 1}.${balls ? balls - 1 : 5}`);
-          playersMap[tpBall.bowler_id].bowlerOver = Math.max(0, val);
-          
-          playersMap[tpBall.batsman_id].isBatterOut = null;
-          playersMap[tpBall.batsman_id].wicketType = 0;
-          playersMap[tpBall.batsman_id].bowlerId = 0;
-          playersMap[tpBall.batsman_id].fielderId1 = 0;
-          playersMap[tpBall.batsman_id].fielderId2 = 0;
-          playersMap[tpBall.batsman_id].isPlay = true;
-          playersMap[tpBall.batsman_id].onStrike = true;
-          
-          let part = response.live?.live_inning?.current_partnership;
-          let batters = part?.batsmen?.map((i)=>i.batsman_id) || []
-          let partnership = {}
-          if(batters.length == 2){
-            let [b1, b2] = batters;
-            let partExist = global.tblCommentaryPartnership.find((i)=>
-                i.commentaryId == comDetails.commentaryId &&
-                i.currentInnings == comDetails.currentInnings &&
-                (
-                    (i.batter1Id == playerTpIdObj[b1].commentaryPlayerId && i.batter2Id == playerTpIdObj[b2].commentaryPlayerId) ||
-                    (i.batter1Id == playerTpIdObj[b2].commentaryPlayerId && i.batter2Id == playerTpIdObj[b1].commentaryPlayerId) // order doesn’t matter
-                )
-            );
-            if(partExist){
-                let comPlayerId1 = global.tblCommentaryPlayers.find((i)=> i.commentaryPlayerId == partExist.batter1Id)
-                let comPlayerId2 = global.tblCommentaryPlayers.find((i)=> i.commentaryPlayerId == partExist.batter2Id)
-                let cp1 = part.batsmen.find((i)=> i.batsman_id == comPlayerId1.tpId)
-                let cp2 = part.batsmen.find((i)=> i.batsman_id == comPlayerId2.tpId)
-                partnership = {
-                    ...partExist,
-                    totalRuns : part.runs,
-                    totalBalls : part.balls,
-                    batter1Runs : cp1.runs,
-                    batter2Runs :cp2.runs,
-                    batter1Balls : cp1.balls,
-                    batter2Balls : cp2.balls
-                    // totalFour,
-                    // totalSix
-                }
-                let par = await updateVirtualPartnershipQuery(partnership,fastify, null)
-                //update partnersip in db
-                let pI = global.tblCommentaryPartnership.findIndex((i)=> i.commentaryPartnershipId == partnership.commentaryPartnershipId)
-                global.tblCommentaryPartnership[pI] = par[0]; 
-            } else {
-                let cp1 = playerTpIdObj[part.batsmen[0].batsman_id]
-                let cp2 = playerTpIdObj[part.batsmen[1].batsman_id]
-                partnership = genEtPartnership({
-                    currentPartnership :{
-                        batter1Id : cp1.commentaryPlayerId,
-                        batter1Name : cp1.playerName,
-                        batter2Id : cp2.commentaryPlayerId,
-                        batter2Name : cp2.playerName,
-                        totalRuns : part.runs,
-                        totalBalls : part.balls,
-                        batter1Runs : part.batsmen[0].runs,
-                        batter2Runs :  part.batsmen[1].runs,
-                        batter1Balls : part.batsmen[0].balls,
-                        batter2Balls :part.batsmen[1].balls,
-                        order : response.live.live_inning.equations.wickets + 1,
-                        isActive : true
-                    },
-                    commentaryDetails : comDetails,
-                    updateBattingTeam : battingTeam
-                })
-                partnership = await virtualPartnershipQuery(
-                    partnership,
-                    request,
-                    fastify
-                );
-                global.tblCommentaryPartnership.push(partnership);
-            }
-          }
-
-          // if (c.run == 0) {
-          //   over.dotBall = over.dotBall - 1;
-          //   playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
-          //   playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 : 0;
-          // }
-
-          // Update bowler stats
-          // const bowlerId = b1.bowlerId;
-          // const bowlerData = global.tblCommentaryPlayers.find(
-          //   (item) => item.commentaryPlayerId == bowlerId
-          // );
-
-          // if (bowlerData) {
-          //   const currentWickets = bowlerData?.bowlerTotalWicket || 0;
-          //   const tBalls = bowlerData?.bowlerTotalBall || 0;
-
-          //   playersMap[bowlerId] = {
-          //     ...playerTpIdObj[bowlerId],
-          //     ...bowlerData,
-          //     bowlerTotalWicket: currentWickets > 0 ? currentWickets - 1 : 0,
-          //     bowlerTotalBall: tBalls > 0 ? tBalls - 1 : 0
-          //   };
-          //   if (c?.run == 0) {
-          //     playersMap[bowlerId].bowlerDotBall = playersMap[bowlerId].bowlerDotBall > 0 ? playersMap[bowlerId].bowlerDotBall - 1 : 0;
-          //   }
-          // }
-
-          // // Reset the batter who was out
-          // const partnershipData = global.tblCommentaryPartnership
-          //   .filter(item =>
-          //     item.commentaryId === comDetails?.commentaryId &&
-          //     item.currentInnings === comDetails?.currentInnings &&
-          //     item.teamId === battingTeam?.teamId
-          //   )
-          //   .sort((a, b) => b.order - a.order)
-          //   .slice(0, 2);
-
-          // const [currentPartnership, prevPartnership] = partnershipData;
-
-          // let newBatterId = null;
-          // let replacedBatterId = null;
-          // // let commonBatterId = null;
-
-          // if (currentPartnership && prevPartnership) {
-          //   const currBatters = [currentPartnership.batter1Id, currentPartnership.batter2Id].filter(Boolean);
-          //   const prevBatters = [prevPartnership.batter1Id, prevPartnership.batter2Id].filter(Boolean);
-
-          //   // commonBatterId = currBatters.find(id => prevBatters.includes(id)) || null;
-          //   newBatterId = currBatters.find(id => !prevBatters.includes(id)) || null;
-          //   replacedBatterId = prevBatters.find(id => !currBatters.includes(id)) || null;
-          // }
-          // const onStrikeValue = global.tblCommentaryPlayers.find(item => item.commentaryPlayerId == newBatterId)?.onStrike ?? false;
-          // if (newBatterId && replacedBatterId) {
-          //   const batters = global.tblCommentaryPlayers.filter(
-          //     (item) => [newBatterId, replacedBatterId].includes(item.commentaryPlayerId)
-          //   );
-
-          //   for (const bat of batters) {
-          //     const isNewBatter = bat.commentaryPlayerId === newBatterId;
-          //     const isReplacedBatter = bat.commentaryPlayerId === replacedBatterId;
-          //     if (bat?.onStrike == true && b1?.run == 0) {
-          //       playersMap[bowlerId].bowlerDotBall = playersMap[bowlerId].bowlerDotBall > 0 ? playerTpIdObj[bowlerId].bowlerDotBall - 1 : 0;
-          //     }
-
-          //     let batterUpdate = {
-          //       ...bat,
-          //       isBatterOut: null,
-          //       wicketType: null,
-          //       bowlerId: 0,
-          //       fielderId1: 0,
-          //       fielderId2: 0,
-          //     };
-
-          //     if (isNewBatter) {
-          //       batterUpdate = { ...batterUpdate, isPlay: false, onStrike: false };
-          //     } else if (isReplacedBatter) {
-          //       batterUpdate = { ...batterUpdate, isPlay: true, onStrike: onStrikeValue };
-          //     }
-
-          //     playersMap[batterUpdate.commentaryPlayerId] = batterUpdate;
-          //   }
-          // }
-
-          // //Set old partnership active true        
-          // const oldPartnership = partnershipData[1];
-          // if (oldPartnership) {
-          //   const key = `${comDetails.commentaryId}-${comDetails.currentInnings}-${battingTeam.teamId}`;
-          //   partnershipMap[key] = { ...oldPartnership, isActive: true };
-          // }
+        const requestData = {
+          response,
+          battingTeam,
+          comDetails,
+          commBall: b1,
+          commPlayers: playerTpIdObj,
+          tpBall,
+          deleteOverIds,
+          over,
+          tpCurrentBall: c,
         }
-        // if (tpBall.event == "ball") {
-        if (b1.ballType == BALL_TYPE.REGULAR) {
-          // if (tpBall.score && String(tpBall.score).includes('wd')) {
-          //   isWide = true;
-          //   let run = +matchType.valueOfWideBall || 0;
-          //   battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
-          //   let previousBall = c.ball - 1;
-          //   battingTeam.teamOver = `${c.over}.${previousBall}`
-          //   battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - 1 : 0;
-          //   over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
-          //   over.totalRun = over.totalRun > 0 ? over.totalRun - 1 : 0;
-          //   over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
-          //   over.totalWideBall = over.totalWideBall > 0 ? over.totalWideBall - 1 : 0;
-          //   over.totalWideRun = over.totalWideRun > 0 ? over.totalWideRun - run : 0;
-          //   if (!playersMap[tpBall.bowler_id]) {
-          //     playersMap[tpBall.bowler_id] = {
-          //       ...playerTpIdObj[tpBall.bowler_id]
-          //     }
-          //   }
-          //   if (!playersMap[tpBall.batsman_id]) {
-          //     playersMap[tpBall.batsman_id] = {
-          //       ...playerTpIdObj[tpBall.batsman_id]
-          //     }
-          //   }
-          //   playersMap[tpBall.bowler_id].bowlerWideBall = playersMap[tpBall.bowler_id].bowlerWideBall > 0 ? playersMap[tpBall.bowler_id].bowlerWideBall - 1 : 0;
-          //   playersMap[tpBall.bowler_id].bowlerWideBallRun = playersMap[tpBall.bowler_id].bowlerWideBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerWideBallRun - run : 0;
-          //   playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
-          //   playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - run : 0;
-          // }
-          // else {
-            let run = b1.ballRun
-            battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
-            // reducse teamOver
-            let previousBall = c.ball - 1;
-            battingTeam.teamOver = `${c.over}.${previousBall}`
-            battingTeam.teamLegByRuns = battingTeam.teamLegByRuns > 0 ? (battingTeam.teamLegByRuns || 0) - parseInt(b1.teamLegByRuns) : 0;
-            battingTeam.teamNoBallRuns = battingTeam.teamNoBallRuns > 0 ? (battingTeam.teamNoBallRuns || 0) - parseInt(b1.teamNoBallRuns) : 0;
-            battingTeam.teamByRuns = battingTeam.teamByRuns > 0 ? (battingTeam.teamByRuns || 0) - parseInt(b1.teamByRuns) : 0;
-            over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
-            over.totalRun = over.totalRun > 0 ? over.totalRun - 1 : 0;
-            over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
-            if (!playersMap[tpBall.bowler_id]) {
-              playersMap[tpBall.bowler_id] = {
-                ...playerTpIdObj[tpBall.bowler_id]
-              }
-            }
-            if (!playersMap[tpBall.batsman_id]) {
-              playersMap[tpBall.batsman_id] = {
-                ...playerTpIdObj[tpBall.batsman_id]
-              }
-            }
-            playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
-            playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
-            playersMap[tpBall.batsman_id].runs = playersMap[tpBall.batsman_id].runs > 0 ? playersMap[tpBall.batsman_id].runs - 1 : 0;
-            playersMap[tpBall.batsman_id].batBall = playersMap[tpBall.batsman_id].batBall > 0 ? playersMap[tpBall.batsman_id].batBall - 1 : 0;
-            // playersMap[tpBall.batsman_id].batDotBall =playersMap[tpBall.batsman_id].batDotBall > 0 ?playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
-            // playersMap[tpBall.batsman_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 :0;
-            let isBoundary = run == 4 || run == 6 ? true : false;
-            if (run == 0) {
-              over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
-              playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
-              playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 : 0;
-              // playersMap[tpBall.batsman_id] = {
-              //   ...playerTpIdObj[tpBall.batsman_id],
-              //   batDotBall : playersMap[tpBall.batsman_id].batDotBall > 0 ?playersMap[tpBall.batsman_id].batDotBall - 1 : 0,
-              //   bowlerDotBall: playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 :0
-              // }
-            }
-            else if (isBoundary) {
-              if (run == 4) {
-                playersMap[tpBall.bowler_id].bowlerFour = playersMap[tpBall.bowler_id].bowlerFour > 0 ? playersMap[tpBall.bowler_id].bowlerFour - 1 : 0
-                over.totalFour = over.totalFour > 0 ? over.totalFour - 1 : 0
-              }
-              if (run == 6) {
-                over.totalSix = over.totalSix > 0 ? over.totalSix - 1 : 0;
-                playersMap[tpBall.bowler_id].bowlerSix = playersMap[tpBall.bowler_id].bowlerSix > 0 ? playersMap[tpBall.bowler_id].bowlerSix - 1 : 0
-              }
-            }
-            if (over.ballCount === 0) {
-              deleteOverIds.push(over.overId);
-            }
-          // }
+        const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
+
+        if (undoResult) {
+          battingTeam = undoResult.battingTeam;
+          deleteOverIds.push(...undoResult.deleteOverIds);
+          oversMap[overKey] = undoResult.over;
+          Object.assign(playersMap, undoResult.playersMap);
         }
-        if (b1.ballType == BALL_TYPE.WIDE) {
-            isWide = true;
-            let run = +(c?.run ?? 0);
-            battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
-            let previousBall = c.ball - 1;
-            battingTeam.teamOver = `${c.over}.${previousBall}`
-            battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - 1 : 0;
-            over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
-            over.totalRun = over.totalRun > 0 ? over.totalRun - 1 : 0;
-            over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
-            over.totalWideBall = over.totalWideBall > 0 ? over.totalWideBall - 1 : 0;
-            over.totalWideRun = over.totalWideRun > 0 ? over.totalWideRun - run : 0;
-            if (!playersMap[tpBall.bowler_id]) {
-              playersMap[tpBall.bowler_id] = {
-                ...playerTpIdObj[tpBall.bowler_id]
-              }
-            }
-            if (!playersMap[tpBall.batsman_id]) {
-              playersMap[tpBall.batsman_id] = {
-                ...playerTpIdObj[tpBall.batsman_id]
-              }
-            }
-            playersMap[tpBall.bowler_id].bowlerWideBall = playersMap[tpBall.bowler_id].bowlerWideBall > 0 ? playersMap[tpBall.bowler_id].bowlerWideBall - 1 : 0;
-            playersMap[tpBall.bowler_id].bowlerWideBallRun = playersMap[tpBall.bowler_id].bowlerWideBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerWideBallRun - run : 0;
-            playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
-            playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - run : 0;
-            
-            if (over.ballCount === 0) {
-              deleteOverIds.push(over.overId);
-            }
-          }
-      }      
+      }
     }
     if (event == "wide") {
       let index = global.tblCommentaryBallByBall.findIndex((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
-      if (index == -1) continue; // skip not created ball
+      if (index == -1) continue;
       let ball = global.tblCommentaryBallByBall.find((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
-      // if (!ball.ballIsWicket && ball.ballType == BALL_TYPE.WIDE && ball.ballRun == c.run) {
-      //   continue;
-      // }
       if (!ball.ballIsWicket && ball.ballType == BALL_TYPE.WIDE && ball.ballExtraRun == c.run) {
         continue;
       }
       let ballAfterThis = global.tblCommentaryBallByBall.filter((i) => i.commentaryBallByBallId >= ball.commentaryBallByBallId &&
         i.commentaryId == comDetails.commentaryId && i.currentInnings == comDetails.currentInnings)
-      // let ballIds = ballAfterThis.map((i)=> i.commentaryBallByBallId)
       for (let b1 of ballAfterThis) {
         const overNumber = Number(c.over);
         const overKey = `${comDetails.commentaryId}-${comDetails.currentInnings}-${battingTeam.teamId}-${overNumber}`;
@@ -2632,337 +3364,122 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
         oversMap[overKey] = over
         deleteBallByBallIds.push(b1.commentaryBallByBallId)
         let tpBall = com.find((i) => i.event_id == b1.tpId)
-        let tpId = tpBall.event_id;
-        // let event = c.event;
-        // if (String(tpBall.score) == "w") {
-        if (b1.ballIsWicket == true) {
-          event = "wicket"
-          // Update batting team
-          battingTeam.teamWicket = Math.max(0, battingTeam.teamWicket - 1);
-          const prevBall = Math.max(0, c.ball - 1);
-          battingTeam.teamOver = `${c.over}.${prevBall}`;
-          // Update overs
-          if (over) {
-            over.totalWicket = Math.max(0, (over.totalWicket || 0) - 1);
-            over.ballCount = Math.max(0, (over.ballCount || 0) - 1);
-
-            // if after undo, no balls left → delete over
-            if (over.ballCount === 0) {
-              deleteOverIds.push(over.overId);
-            } else {
-              over.teamScore = `${battingTeam.teamScore || 0}/${battingTeam.teamWicket || 0}`;
-              over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
-              if (over) {
-                over.type = "update"
-              }
-              oversMap[overKey] = over;
-            }
-          }
-
-          // Update Batter and Bowler stats
-          if (!playersMap[tpBall.bowler_id]) {
-            playersMap[tpBall.bowler_id] = {
-              ...playerTpIdObj[tpBall.bowler_id]
-            }
-          }
-          if (!playersMap[tpBall.batsman_id]) {
-            playersMap[tpBall.batsman_id] = {
-              ...playerTpIdObj[tpBall.batsman_id]
-            }
-          }
-
-          playersMap[tpBall.bowler_id].bowlerTotalWicket = playersMap[tpBall.bowler_id].bowlerTotalWicket > 0 ? playersMap[tpBall.bowler_id].bowlerTotalWicket - 1 : 0;
-          playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
-          playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playersMap[tpBall.bowler_id].bowlerDotBall - 1 : 0;
-          let o = parseFloat(playersMap[tpBall.bowler_id].bowlerOver || 0);
-          let overs = Math.floor(o);
-          let balls = Math.round((o % 1) * 10);
-          let val = parseFloat(`${balls ? overs : overs - 1}.${balls ? balls - 1 : 5}`);
-          playersMap[tpBall.bowler_id].bowlerOver = Math.max(0, val);
-
-          playersMap[tpBall.batsman_id].isBatterOut = null;
-          playersMap[tpBall.batsman_id].wicketType = 0;
-          playersMap[tpBall.batsman_id].bowlerId = 0;
-          playersMap[tpBall.batsman_id].fielderId1 = 0;
-          playersMap[tpBall.batsman_id].fielderId2 = 0;
-          playersMap[tpBall.batsman_id].isPlay = true;
-          playersMap[tpBall.batsman_id].onStrike = true;
-          
-
-          if (c.run == 0) {
-            over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
-            playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
-            playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 : 0;
-          }
-
-          let part = response.live?.live_inning?.current_partnership;
-          let batters = part?.batsmen?.map((i)=>i.batsman_id) || []
-          let partnership = {}
-          if(batters.length == 2){
-            let [b1, b2] = batters;
-            let partExist = global.tblCommentaryPartnership.find((i)=>
-                i.commentaryId == comDetails.commentaryId &&
-                i.currentInnings == comDetails.currentInnings &&
-                (
-                    (i.batter1Id == playerTpIdObj[b1].commentaryPlayerId && i.batter2Id == playerTpIdObj[b2].commentaryPlayerId) ||
-                    (i.batter1Id == playerTpIdObj[b2].commentaryPlayerId && i.batter2Id == playerTpIdObj[b1].commentaryPlayerId) // order doesn’t matter
-                )
-            );
-            if(partExist){
-                let comPlayerId1 = global.tblCommentaryPlayers.find((i)=> i.commentaryPlayerId == partExist.batter1Id)
-                let comPlayerId2 = global.tblCommentaryPlayers.find((i)=> i.commentaryPlayerId == partExist.batter2Id)
-                let cp1 = part.batsmen.find((i)=> i.batsman_id == comPlayerId1.tpId)
-                let cp2 = part.batsmen.find((i)=> i.batsman_id == comPlayerId2.tpId)
-                partnership = {
-                    ...partExist,
-                    totalRuns : part.runs,
-                    totalBalls : part.balls,
-                    batter1Runs : cp1.runs,
-                    batter2Runs :cp2.runs,
-                    batter1Balls : cp1.balls,
-                    batter2Balls : cp2.balls
-                    // totalFour,
-                    // totalSix
-                }
-                let par = await updateVirtualPartnershipQuery(partnership,fastify, null)
-                //update partnersip in db
-                let pI = global.tblCommentaryPartnership.findIndex((i)=> i.commentaryPartnershipId == partnership.commentaryPartnershipId)
-                global.tblCommentaryPartnership[pI] = par[0]; 
-            } else {
-                let cp1 = playerTpIdObj[part.batsmen[0].batsman_id]
-                let cp2 = playerTpIdObj[part.batsmen[1].batsman_id]
-                partnership = genEtPartnership({
-                    currentPartnership :{
-                        batter1Id : cp1.commentaryPlayerId,
-                        batter1Name : cp1.playerName,
-                        batter2Id : cp2.commentaryPlayerId,
-                        batter2Name : cp2.playerName,
-                        totalRuns : part.runs,
-                        totalBalls : part.balls,
-                        batter1Runs : part.batsmen[0].runs,
-                        batter2Runs :  part.batsmen[1].runs,
-                        batter1Balls : part.batsmen[0].balls,
-                        batter2Balls :part.batsmen[1].balls,
-                        order : response.live.live_inning.equations.wickets + 1,
-                        isActive : true
-                    },
-                    commentaryDetails : comDetails,
-                    updateBattingTeam : battingTeam
-                })
-                partnership = await virtualPartnershipQuery(
-                    partnership,
-                    request,
-                    fastify
-                );
-                global.tblCommentaryPartnership.push(partnership);
-            }
-          }
-          // Update bowler stats
-          // const bowlerId = b1.bowlerId;
-          // const bowlerData = global.tblCommentaryPlayers.find(
-          //   (item) => item.commentaryPlayerId == bowlerId
-          // );
-
-          // if (bowlerData) {
-          //   const currentWickets = bowlerData?.bowlerTotalWicket || 0;
-          //   const tBalls = bowlerData?.bowlerTotalBall || 0;
-
-          //   playersMap[bowlerId] = {
-          //     ...playerTpIdObj[bowlerId],
-          //     ...bowlerData,
-          //     bowlerTotalWicket: currentWickets > 0 ? currentWickets - 1 : 0,
-          //     bowlerTotalBall: tBalls > 0 ? tBalls - 1 : 0
-          //   };
-          //   if (c?.run == 0) {
-          //     playersMap[bowlerId].bowlerDotBall = playersMap[bowlerId].bowlerDotBall > 0 ? playersMap[bowlerId].bowlerDotBall - 1 : 0;
-          //   }
-          // }
-
-          // // // Reset the batter who was out
-          // const partnershipData = global.tblCommentaryPartnership
-          //   .filter(item =>
-          //     item.commentaryId === comDetails?.commentaryId &&
-          //     item.currentInnings === comDetails?.currentInnings &&
-          //     item.teamId === battingTeam?.teamId
-          //   )
-          //   .sort((a, b) => b.order - a.order)
-          //   .slice(0, 2);
-
-          // const [currentPartnership, prevPartnership] = partnershipData;
-
-          // let newBatterId = null;
-          // let replacedBatterId = null;
-          // // let commonBatterId = null;
-
-          // if (currentPartnership && prevPartnership) {
-          //   const currBatters = [currentPartnership.batter1Id, currentPartnership.batter2Id].filter(Boolean);
-          //   const prevBatters = [prevPartnership.batter1Id, prevPartnership.batter2Id].filter(Boolean);
-
-          //   // commonBatterId = currBatters.find(id => prevBatters.includes(id)) || null;
-          //   newBatterId = currBatters.find(id => !prevBatters.includes(id)) || null;
-          //   replacedBatterId = prevBatters.find(id => !currBatters.includes(id)) || null;
-          // }
-          // const onStrikeValue = global.tblCommentaryPlayers.find(item => item.commentaryPlayerId == newBatterId)?.onStrike ?? false;
-          // if (newBatterId && replacedBatterId) {
-          //   const batters = global.tblCommentaryPlayers.filter(
-          //     (item) => [newBatterId, replacedBatterId].includes(item.commentaryPlayerId)
-          //   );
-
-          //   for (const bat of batters) {
-          //     const isNewBatter = bat.commentaryPlayerId === newBatterId;
-          //     const isReplacedBatter = bat.commentaryPlayerId === replacedBatterId;
-          //     if (bat?.onStrike == true && b1?.run == 0) {
-          //       playersMap[bowlerId].bowlerDotBall = playersMap[bowlerId].bowlerDotBall > 0 ? playerTpIdObj[bowlerId].bowlerDotBall - 1 : 0;
-          //     }
-
-          //     let batterUpdate = {
-          //       ...bat,
-          //       isBatterOut: null,
-          //       wicketType: null,
-          //       bowlerId: 0,
-          //       fielderId1: 0,
-          //       fielderId2: 0,
-          //     };
-
-          //     if (isNewBatter) {
-          //       batterUpdate = { ...batterUpdate, isPlay: false, onStrike: false };
-          //     } else if (isReplacedBatter) {
-          //       batterUpdate = { ...batterUpdate, isPlay: true, onStrike: onStrikeValue };
-          //     }
-
-          //     playersMap[batterUpdate.commentaryPlayerId] = batterUpdate;
-          //   }
-          // }
-
-          // //Set old partnership active true        
-          // const oldPartnership = partnershipData[1];
-          // if (oldPartnership) {
-          //   const key = `${comDetails.commentaryId}-${comDetails.currentInnings}-${battingTeam.teamId}`;
-          //   partnershipMap[key] = { ...oldPartnership, isActive: true };
-          // }
+        const requestData = {
+          response,
+          battingTeam,
+          comDetails,
+          commBall: b1,
+          commPlayers: playerTpIdObj,
+          tpBall,
+          deleteOverIds,
+          over,
+          tpCurrentBall: c,
         }
-        // if (tpBall.event == "ball") {
-        if (b1.ballType == BALL_TYPE.REGULAR && b1.ballIsWicket == false) {
-          // if (tpBall.score && String(tpBall.score).includes('wd')) {
-          //   isWide = true;
-          //   let run = +matchType.valueOfWideBall || 0;
-          //   battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
-          //   let previousBall = c.ball - 1;
-          //   battingTeam.teamOver = `${c.over}.${previousBall}`
-          //   battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - 1 : 0;
-          //   over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
-          //   over.totalRun = over.totalRun > 0 ? over.totalRun - 1 : 0;
-          //   over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
-          //   over.totalWideBall = over.totalWideBall > 0 ? over.totalWideBall - 1 : 0;
-          //   over.totalWideRun = over.totalWideRun > 0 ? over.totalWideRun - run : 0;
-          //   if (!playersMap[tpBall.bowler_id]) {
-          //     playersMap[tpBall.bowler_id] = {
-          //       ...playerTpIdObj[tpBall.bowler_id]
-          //     }
-          //   }
-          //   if (!playersMap[tpBall.batsman_id]) {
-          //     playersMap[tpBall.batsman_id] = {
-          //       ...playerTpIdObj[tpBall.batsman_id]
-          //     }
-          //   }
-          //   playersMap[tpBall.bowler_id].bowlerWideBall = playersMap[tpBall.bowler_id].bowlerWideBall > 0 ? playersMap[tpBall.bowler_id].bowlerWideBall - 1 : 0;
-          //   playersMap[tpBall.bowler_id].bowlerWideBallRun = playersMap[tpBall.bowler_id].bowlerWideBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerWideBallRun - run : 0;
-          //   playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
-          //   playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - run : 0;
-          // }
-          // else {
-            let run = b1.ballRun
-            battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
-            // reducse teamOver
-            let previousBall = c.ball - 1;
-            battingTeam.teamOver = `${c.over}.${previousBall}`
-            battingTeam.teamLegByRuns = battingTeam.teamLegByRuns > 0 ? (battingTeam.teamLegByRuns || 0) - parseInt(b1.teamLegByRuns) : 0;
-            battingTeam.teamNoBallRuns = battingTeam.teamNoBallRuns > 0 ? (battingTeam.teamNoBallRuns || 0) - parseInt(b1.teamNoBallRuns) : 0;
-            battingTeam.teamByRuns = battingTeam.teamByRuns > 0 ? (battingTeam.teamByRuns || 0) - parseInt(b1.teamByRuns) : 0;
-            over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
-            over.totalRun = over.totalRun > 0 ? over.totalRun - 1 : 0;
-            over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
-            if (!playersMap[tpBall.bowler_id]) {
-              playersMap[tpBall.bowler_id] = {
-                ...playerTpIdObj[tpBall.bowler_id]
-              }
-            }
-            if (!playersMap[tpBall.batsman_id]) {
-              playersMap[tpBall.batsman_id] = {
-                ...playerTpIdObj[tpBall.batsman_id]
-              }
-            }
-            playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
-            playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
-            playersMap[tpBall.batsman_id].runs = playersMap[tpBall.batsman_id].runs > 0 ? playersMap[tpBall.batsman_id].runs - 1 : 0;
-            playersMap[tpBall.batsman_id].batBall = playersMap[tpBall.batsman_id].batBall > 0 ? playersMap[tpBall.batsman_id].batBall - 1 : 0;
-            // playersMap[tpBall.batsman_id].batDotBall =playersMap[tpBall.batsman_id].batDotBall > 0 ?playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
-            // playersMap[tpBall.batsman_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 :0;
-            let isBoundary = run == 4 || run == 6 ? true : false;
-            if (run == 0) {
-              over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
-              playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
-              playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 : 0;
-              // playersMap[tpBall.batsman_id] = {
-              //   ...playerTpIdObj[tpBall.batsman_id],
-              //   batDotBall : playersMap[tpBall.batsman_id].batDotBall > 0 ?playersMap[tpBall.batsman_id].batDotBall - 1 : 0,
-              //   bowlerDotBall: playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playerTpIdObj[tpBall.bowler_id].bowlerDotBall - 1 :0
-              // }
-            }
-            else if (isBoundary) {
-              if (run == 4) {
-                over.totalFour = over.totalFour > 0 ? over.totalFour - 1 : 0
-                playersMap[tpBall.bowler_id].bowlerFour = playersMap[tpBall.bowler_id].bowlerFour > 0 ? playersMap[tpBall.bowler_id].bowlerFour - 1 : 0
-              }
-              if (run == 6) {
-                over.totalSix -= 1;
-                playersMap[tpBall.bowler_id].bowlerSix = playersMap[tpBall.bowler_id].bowlerSix > 0 ? playersMap[tpBall.bowler_id].bowlerSix - 1 : 0
-              }
-            }
-            if (over.ballCount === 0) {
-              deleteOverIds.push(over.overId);
-            }
-          // }
+        const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
+
+        if (undoResult) {
+          battingTeam = undoResult.battingTeam;
+          deleteOverIds.push(...undoResult.deleteOverIds);
+          oversMap[overKey] = undoResult.over;
+          Object.assign(playersMap, undoResult.playersMap);
         }
-        if (b1.ballType == BALL_TYPE.WIDE && b1.ballIsWicket == false) {
-            isWide = true;
-            // let run = +matchType.valueOfWideBall || 0;
-            let run = +(c?.run ?? 0);
-            battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
-            let previousBall = c.ball - 1;
-            battingTeam.teamOver = `${c.over}.${previousBall}`
-            battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - 1 : 0;
-            over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
-            over.totalRun = over.totalRun > 0 ? over.totalRun - 1 : 0;
-            over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
-            over.totalWideBall = over.totalWideBall > 0 ? over.totalWideBall - 1 : 0;
-            over.totalWideRun = over.totalWideRun > 0 ? over.totalWideRun - run : 0;
-            if (!playersMap[tpBall.bowler_id]) {
-              playersMap[tpBall.bowler_id] = {
-                ...playerTpIdObj[tpBall.bowler_id]
-              }
-            }
-            if (!playersMap[tpBall.batsman_id]) {
-              playersMap[tpBall.batsman_id] = {
-                ...playerTpIdObj[tpBall.batsman_id]
-              }
-            }
-            playersMap[tpBall.bowler_id].bowlerWideBall = playersMap[tpBall.bowler_id].bowlerWideBall > 0 ? playersMap[tpBall.bowler_id].bowlerWideBall - 1 : 0;
-            playersMap[tpBall.bowler_id].bowlerWideBallRun = playersMap[tpBall.bowler_id].bowlerWideBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerWideBallRun - run : 0;
-            playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
-            playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - run : 0;
-            
-            if (over.ballCount === 0) {
-              deleteOverIds.push(over.overId);
-            }
-          }
-      } 
-       
+      }
+    }
+
+    if (event == "noball") {
+      let index = global.tblCommentaryBallByBall.findIndex((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
+      if (index == -1) continue;
+      let ball = global.tblCommentaryBallByBall.find((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
+      if (!ball.ballIsWicket && ball.ballType == BALL_TYPE.NO_BALL && ball.ballExtraRun == c.run) {
+        continue;
+      }
+      let ballAfterThis = global.tblCommentaryBallByBall.filter((i) => i.commentaryBallByBallId >= ball.commentaryBallByBallId &&
+        i.commentaryId == comDetails.commentaryId && i.currentInnings == comDetails.currentInnings)
+      for (let b1 of ballAfterThis) {
+        const overNumber = Number(c.over);
+        const overKey = `${comDetails.commentaryId}-${comDetails.currentInnings}-${battingTeam.teamId}-${overNumber}`;
+        let over = oversMap[overKey];
+        over = global.tblOvers.find((i) => i.overId == b1.overId)
+        oversMap[overKey] = over
+        deleteBallByBallIds.push(b1.commentaryBallByBallId);
+        let tpBall = com.find((i) => i.event_id == b1.tpId);
+        const requestData = {
+          response,
+          battingTeam,
+          comDetails,
+          commBall: b1,
+          commPlayers: playerTpIdObj,
+          tpBall,
+          deleteOverIds,
+          over,
+          tpCurrentBall: c,
+        }
+        const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
+
+        if (undoResult) {
+          battingTeam = undoResult.battingTeam;
+          deleteOverIds.push(...undoResult.deleteOverIds);
+          oversMap[overKey] = undoResult.over;
+          Object.assign(playersMap, undoResult.playersMap);
+        }
+      }
+    }
+
+    if (event == "legbye") {
+      let index = global.tblCommentaryBallByBall.findIndex((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
+      if (index == -1) continue;
+      let ball = global.tblCommentaryBallByBall.find((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
+
+      if (!ball.ballIsWicket && ball.ballRun === c.run && ball.ballType == BALL_TYPE.LEG_BYE) {
+        continue;
+      }
+
+      let ballAfterThis = global.tblCommentaryBallByBall.filter((i) => i.commentaryBallByBallId >= ball.commentaryBallByBallId &&
+        i.commentaryId == comDetails.commentaryId && i.currentInnings == comDetails.currentInnings)
+      for (let b1 of ballAfterThis) {
+        const overNumber = Number(c.over);
+        const overKey = `${comDetails.commentaryId}-${comDetails.currentInnings}-${battingTeam.teamId}-${overNumber}`;
+        let over = oversMap[overKey];
+        over = global.tblOvers.find((i) => i.overId == b1.overId)
+        oversMap[overKey] = over
+        deleteBallByBallIds.push(b1.commentaryBallByBallId)
+        let tpBall = com.find((i) => i.event_id == b1.tpId)
+        const requestData = {
+          response,
+          battingTeam,
+          comDetails,
+          commBall: b1,
+          commPlayers: playerTpIdObj,
+          tpBall,
+          deleteOverIds,
+          over,
+          tpCurrentBall: c,
+        }
+        const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
+
+        if (undoResult) {
+          battingTeam = undoResult.battingTeam;
+          deleteOverIds.push(...undoResult.deleteOverIds);
+          oversMap[overKey] = undoResult.over;
+          Object.assign(playersMap, undoResult.playersMap);
+        }
+      }
     }
   }
+
   let plyArr = Object.values(playersMap);
   let overArr = Object.values(oversMap)
   let partnershipArr = Object.values(partnershipMap)
+  if (deleteOverIds?.length > 0) {
+    const remainingBallIds = global.tblCommentaryBallByBall
+      .filter(item => deleteOverIds.includes(item.overId))
+      .map(item => item.commentaryBallByBallId);
+    for (const id of remainingBallIds) {
+      if (!deleteBallByBallIds.includes(id)) {
+        deleteBallByBallIds.push(id);
+      }
+    }
+  }
   // const result = {
   //   commentaryId: comDetails.commentaryId,
   //   commentaryPlayers: plyArr,
@@ -2972,22 +3489,382 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
   //   deleteOverIds: deleteOverIds,
   //   commentaryTeams: [battingTeam]
   // }
-  // console.log("result", result)
-  if(deleteBallByBallIds.length > 0 || deleteOverIds.length > 0){
+
+  if (deleteBallByBallIds.length > 0 || deleteOverIds.length > 0) {
     await syncEntitySportCommentaryService({
-    commentaryId : comDetails.commentaryId,
-    commentaryPlayers : plyArr,
-    deleteBallByBallIds : deleteBallByBallIds,
-    commentaryOvers : overArr,
-    commentaryPartnership: partnershipArr,
-    commentaryTeams : [battingTeam],
-    deleteOverIds: deleteOverIds
-    },fastify,request)
-  
+      commentaryId: comDetails.commentaryId,
+      commentaryPlayers: plyArr,
+      deleteBallByBallIds: deleteBallByBallIds,
+      commentaryOvers: overArr,
+      commentaryPartnership: partnershipArr,
+      commentaryTeams: [battingTeam],
+      deleteOverIds: deleteOverIds
+    }, fastify, request)
   }
-  
   return true;
 }
+
+const wicketUndoService = async (data, fastify, request) => {
+  let {
+    response,
+    battingTeam,
+    comDetails,
+    commBall,
+    commPlayers,
+    tpBall,
+    deleteOverIds,
+    over,
+    tpCurrentBall,
+  } = data;
+
+  let playersMap = {};
+  let liveTeamScore = response?.live?.live_score?.runs;
+  battingTeam.teamWicket = Math.max(0, battingTeam.teamWicket - 1);
+  const prevBall = Math.max(0, tpCurrentBall?.ball - 1);
+  battingTeam.teamOver = `${tpCurrentBall?.over}.${prevBall}`;
+  // Update overs
+  if (over) {
+    let ball_Type = commBall?.ballType;
+    over.totalWicket = Math.max(0, (over.totalWicket || 0) - 1);
+    if (![2, 5].includes(ball_Type)) {
+      over.ballCount = Math.max(0, (over.ballCount || 0) - 1);
+      if (commBall?.batRun == 0) {
+        over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
+      }
+    }
+
+    if (over.ballCount === 0) {
+      deleteOverIds.push(over.overId);
+    } else {
+      // over.teamScore = `${battingTeam.teamScore || 0}/${battingTeam.teamWicket || 0}`;
+      over.teamScore = `${liveTeamScore}/${battingTeam.teamWicket || 0}`;
+      if (over) {
+        over.type = "update"
+      }
+    }
+  }
+
+  // Update Batter and Bowler stats
+  if (!playersMap[tpBall.bowler_id]) {
+    playersMap[tpBall.bowler_id] = {
+      ...commPlayers[tpBall.bowler_id]
+    }
+  }
+  if (!playersMap[tpBall.batsman_id]) {
+    playersMap[tpBall.batsman_id] = {
+      ...commPlayers[tpBall.batsman_id]
+    }
+  }
+
+  playersMap[tpBall.bowler_id].bowlerTotalWicket = playersMap[tpBall.bowler_id].bowlerTotalWicket > 0 ? playersMap[tpBall.bowler_id].bowlerTotalWicket - 1 : 0;
+  playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
+  playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playersMap[tpBall.bowler_id].bowlerDotBall - 1 : 0;
+  let o = parseFloat(playersMap[tpBall.bowler_id].bowlerOver || 0);
+  let overs = Math.floor(o);
+  let balls = Math.round((o % 1) * 10);
+  let val = parseFloat(`${balls ? overs : overs - 1}.${balls ? balls - 1 : 5}`);
+  playersMap[tpBall.bowler_id].bowlerOver = Math.max(0, val);
+
+  let batter = response?.scorecard?.innings.find((i) => i.number == response?.live?.live_inning_number)?.batsmen
+  .find((i1) => i1.batsman_id == tpBall.batsman_id)
+  let onStrike = batter.position == "striker" ? true : false
+
+  playersMap[tpBall.batsman_id].isBatterOut = null;
+  playersMap[tpBall.batsman_id].wicketType = null;
+  playersMap[tpBall.batsman_id].bowlerId = null;
+  playersMap[tpBall.batsman_id].fielderId1 = null;
+  playersMap[tpBall.batsman_id].fielderId2 = null;
+  playersMap[tpBall.batsman_id].isPlay = true;
+  playersMap[tpBall.batsman_id].onStrike = onStrike;
+
+
+  let part = response.live?.live_inning?.current_partnership;
+  let batters = part?.batsmen?.map((i) => i.batsman_id) || []
+  let partnership = {}
+  if (batters.length == 2) {
+    let [b1, b2] = batters;
+    let partExist = global.tblCommentaryPartnership.find((i) =>
+      i.commentaryId == comDetails.commentaryId &&
+      i.currentInnings == comDetails.currentInnings &&
+      (
+        (i.batter1Id == commPlayers[b1].commentaryPlayerId && i.batter2Id == commPlayers[b2].commentaryPlayerId) ||
+        (i.batter1Id == commPlayers[b2].commentaryPlayerId && i.batter2Id == commPlayers[b1].commentaryPlayerId) // order doesn’t matter
+      )
+    );
+    if (partExist) {
+      let comPlayerId1 = global.tblCommentaryPlayers.find((i) => i.commentaryPlayerId == partExist.batter1Id)
+      let comPlayerId2 = global.tblCommentaryPlayers.find((i) => i.commentaryPlayerId == partExist.batter2Id)
+      let cp1 = part.batsmen.find((i) => i.batsman_id == comPlayerId1.tpId)
+      let cp2 = part.batsmen.find((i) => i.batsman_id == comPlayerId2.tpId)
+      partnership = {
+        ...partExist,
+        totalRuns: part.runs,
+        totalBalls: part.balls,
+        batter1Runs: cp1.runs,
+        batter2Runs: cp2.runs,
+        batter1Balls: cp1.balls,
+        batter2Balls: cp2.balls
+      }
+      let par = await updateVirtualPartnershipQuery(partnership, fastify, null)
+      //update partnersip in db
+      let pI = global.tblCommentaryPartnership.findIndex((i) => i.commentaryPartnershipId == partnership.commentaryPartnershipId)
+      global.tblCommentaryPartnership[pI] = par[0];
+    } else {
+      let cp1 = commPlayers[part.batsmen[0].batsman_id]
+      let cp2 = commPlayers[part.batsmen[1].batsman_id]
+      partnership = genEtPartnership({
+        currentPartnership: {
+          batter1Id: cp1.commentaryPlayerId,
+          batter1Name: cp1.playerName,
+          batter2Id: cp2.commentaryPlayerId,
+          batter2Name: cp2.playerName,
+          totalRuns: part.runs,
+          totalBalls: part.balls,
+          batter1Runs: part.batsmen[0].runs,
+          batter2Runs: part.batsmen[1].runs,
+          batter1Balls: part.batsmen[0].balls,
+          batter2Balls: part.batsmen[1].balls,
+          order: response.live.live_inning.equations.wickets + 1,
+          isActive: true
+        },
+        commentaryDetails: comDetails,
+        updateBattingTeam: battingTeam
+      })
+      partnership = await virtualPartnershipQuery(
+        partnership,
+        request,
+        fastify
+      );
+      global.tblCommentaryPartnership.push(partnership);
+    }
+  }
+  return {
+    over,
+    deleteOverIds,
+    playersMap,
+    battingTeam,
+  }
+}
+
+const regularBallUndoService = async (data, fastify, request) => {
+  let {
+    response,
+    battingTeam,
+    comDetails,
+    commPlayers,
+    commBall,
+    tpBall,
+    deleteOverIds,
+    over,
+    tpCurrentBall,
+  } = data;
+
+  let playersMap = {};
+  let liveTeamScore = response?.live?.live_score?.runs;
+  let live_score_data = response?.live?.live_score;
+  let run = commBall.ballRun;
+  // battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
+  battingTeam["teamScore"] = liveTeamScore;
+  let previousBall = tpCurrentBall?.ball - 1;
+  battingTeam.teamOver = `${tpCurrentBall?.over}.${previousBall}`
+  battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
+  battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
+  battingTeam.teamLegByRuns = battingTeam.teamLegByRuns > 0 ? (battingTeam.teamLegByRuns || 0) - parseInt(commBall.teamLegByRuns) : 0;
+  battingTeam.teamByRuns = battingTeam.teamByRuns > 0 ? (battingTeam.teamByRuns || 0) - parseInt(commBall.teamByRuns) : 0;
+  over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
+  over.totalRun = over.totalRun > 0 ? over.totalRun - 1 : 0;
+  // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+  over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
+  if (!playersMap[tpBall.bowler_id]) {
+    playersMap[tpBall.bowler_id] = {
+      ...commPlayers[tpBall.bowler_id]
+    }
+  }
+  if (!playersMap[tpBall.batsman_id]) {
+    playersMap[tpBall.batsman_id] = {
+      ...commPlayers[tpBall.batsman_id]
+    }
+  }
+  playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
+  playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
+  playersMap[tpBall.batsman_id].runs = playersMap[tpBall.batsman_id].runs > 0 ? playersMap[tpBall.batsman_id].runs - 1 : 0;
+  playersMap[tpBall.batsman_id].batBall = playersMap[tpBall.batsman_id].batBall > 0 ? playersMap[tpBall.batsman_id].batBall - 1 : 0;
+  let isBoundary = run == 4 || run == 6 ? true : false;
+  if (run == 0) {
+    over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
+    playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
+    playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playersMap[tpBall.bowler_id].bowlerDotBall - 1 : 0;
+  }
+  else if (isBoundary) {
+    if (run == 4) {
+      over.totalFour = over.totalFour > 0 ? over.totalFour - 1 : 0
+      playersMap[tpBall.bowler_id].bowlerFour = playersMap[tpBall.bowler_id].bowlerFour > 0 ? playersMap[tpBall.bowler_id].bowlerFour - 1 : 0
+    }
+    if (run == 6) {
+      over.totalSix -= 1;
+      playersMap[tpBall.bowler_id].bowlerSix = playersMap[tpBall.bowler_id].bowlerSix > 0 ? playersMap[tpBall.bowler_id].bowlerSix - 1 : 0
+    }
+  }
+  if (over.ballCount === 0) {
+    deleteOverIds.push(over.overId);
+  }
+  return {
+    over,
+    deleteOverIds,
+    playersMap,
+    battingTeam,
+  }
+}
+
+const wideBallUndoService = async (data, fastify, request) => {
+  let {
+    response,
+    battingTeam,
+    comDetails,
+    commPlayers,
+    commBall,
+    tpBall,
+    deleteOverIds,
+    over,
+    tpCurrentBall,
+  } = data;
+
+  let playersMap = {};
+  let liveTeamScore = response?.live?.live_score?.runs;
+  let live_score_data = response?.live?.live_score;
+  let run = commBall?.ballExtraRun ?? 0;
+  // battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
+  battingTeam["teamScore"] = liveTeamScore;
+  let previousBall = tpCurrentBall?.ball - 1;
+  battingTeam.teamOver = `${tpCurrentBall?.over}.${previousBall}`
+  battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
+  battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
+  battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - run : 0;
+  over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
+  // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+  over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
+  over.totalWideBall = over.totalWideBall > 0 ? over.totalWideBall - 1 : 0;
+  over.totalWideRun = over.totalWideRun > 0 ? over.totalWideRun - run : 0;
+  if (!playersMap[tpBall.bowler_id]) {
+    playersMap[tpBall.bowler_id] = {
+      ...commPlayers[tpBall.bowler_id]
+    }
+  }
+  if (!playersMap[tpBall.batsman_id]) {
+    playersMap[tpBall.batsman_id] = {
+      ...commPlayers[tpBall.batsman_id]
+    }
+  }
+  playersMap[tpBall.bowler_id].bowlerWideBall = playersMap[tpBall.bowler_id].bowlerWideBall > 0 ? playersMap[tpBall.bowler_id].bowlerWideBall - 1 : 0;
+  playersMap[tpBall.bowler_id].bowlerWideBallRun = playersMap[tpBall.bowler_id].bowlerWideBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerWideBallRun - run : 0;
+  playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
+  playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
+  if (over.ballCount === 0) {
+    deleteOverIds.push(over.overId);
+  }
+  return {
+    over,
+    deleteOverIds,
+    playersMap,
+    battingTeam,
+  }
+}
+
+const noballUndoService = async (data, fastify, request) => {
+  let {
+    response,
+    battingTeam,
+    comDetails,
+    commPlayers,
+    commBall,
+    tpBall,
+    deleteOverIds,
+    over,
+    tpCurrentBall,
+  } = data;
+
+  let playersMap = {};
+  let liveTeamScore = response?.live?.live_score?.runs;
+  let live_score_data = response?.live?.live_score;
+  let run = commBall?.ballExtraRun ?? 0;
+  // battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
+  battingTeam["teamScore"] = liveTeamScore;
+  let previousBall = tpCurrentBall?.ball - 1;
+  battingTeam.teamOver = `${tpCurrentBall?.over}.${previousBall}`
+  battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
+  battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
+  battingTeam.teamNoBallRuns = battingTeam.teamNoBallRuns > 0 ? battingTeam.teamNoBallRuns - run : 0;
+  over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
+  // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+  over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
+  over.totalNoball = over.totalNoball > 0 ? over.totalNoball - 1 : 0;
+  over.totalNoBallRun = over.totalNoBallRun > 0 ? over.totalNoBallRun - run : 0;
+  if (!playersMap[tpBall.bowler_id]) {
+    playersMap[tpBall.bowler_id] = {
+      ...commPlayers[tpBall.bowler_id]
+    }
+  }
+  if (!playersMap[tpBall.batsman_id]) {
+    playersMap[tpBall.batsman_id] = {
+      ...commPlayers[tpBall.batsman_id]
+    }
+  }
+  playersMap[tpBall.bowler_id].bowlerNoBall = playersMap[tpBall.bowler_id].bowlerNoBall > 0 ? playersMap[tpBall.bowler_id].bowlerNoBall - 1 : 0;
+  playersMap[tpBall.bowler_id].bowlerNoBallRun = playersMap[tpBall.bowler_id].bowlerNoBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerNoBallRun - run : 0;
+  playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
+  if (over.ballCount === 0) {
+    deleteOverIds.push(over.overId);
+  }
+  return {
+    over,
+    deleteOverIds,
+    playersMap,
+    battingTeam,
+  }
+}
+
+
+const applyUndoForAllTypes = async(requestData, b1, fastify, request) => {
+  try {
+    if (b1.ballIsWicket === true) {
+      const result = await wicketUndoService(requestData, fastify, request);
+      if (!result) {
+        return
+      }
+      return result;
+    }
+
+    const undoFuncTypes = undoHandlers[b1.ballType];
+
+    if (undoFuncTypes) {
+      const result = await undoFuncTypes(requestData, fastify, request);
+      if (!result) {
+        return
+      }
+      return result;
+    }
+    return null;
+  } catch (err) {
+    console.log("console on applyUndoForAllTypes", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/entitySport.js/applyUndoForAllTypes",
+      request
+    );
+    return null;
+  }
+}
+
+const undoHandlers = {
+    [BALL_TYPE.REGULAR]: regularBallUndoService,
+    [BALL_TYPE.WIDE]: wideBallUndoService,
+    [BALL_TYPE.NO_BALL]: noballUndoService,
+    [BALL_TYPE.LEG_BYE]: regularBallUndoService,
+    // [BALL_TYPE.BYE]: byeUndoService,
+    // [BALL_TYPE.PENALTY]: penaltyUndoService,
+};
+
 module.exports = {
     saveTeamsService,
     savePlayersService,

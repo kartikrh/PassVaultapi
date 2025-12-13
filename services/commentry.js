@@ -97,6 +97,7 @@ const {
   bowlingTypeChangeQuery,
   updateCommentaryViewsQuery,
   playingElevenChangeOnCommPlayersQuery,
+  updateCommentaryDateByCommentaryIdQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -208,7 +209,7 @@ const {
   updatePitchConditionQuery,
   deletePitchConditionWithCommIdQuery,
 } = require("../repository/TablePitchCondition");
-const { PlayerType, nullTeamtpIds } = require("../utilities/entityConst");
+const { PlayerType, nullTeamtpIds, autoUpdateCommentaryDataStatus } = require("../utilities/entityConst");
 const { insertPlayerEntityQuery, insertPlayerQuery, updateExchangePlayerQuery } = require("../repository/TablePlayer");
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { insertVenueQuery, updateVenueQuery } = require("../repository/TableVenue");
@@ -219,6 +220,7 @@ const { insertTeamPlayersByTeamId, insertCommentaryPlayersByTeam } = require("./
 const cron = require('node-cron');
 const { insertAutoImportDataService } = require("./autoImportData");
 const { insertTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
+const { insertAutoUpdateCommentaryDataQuery, getAllAutoUpdateCommentaryDataQuery } = require("../repository/TableAutoUpdateCommentaryData");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -1431,11 +1433,9 @@ const updateCommentaryService = async (request, fastify) => {
           const validateCommPlayers = global.tblCommentaryPlayers
             .filter(item => item.commentaryId == request.body.commentaryId)
             .map(item => item.playerId);
-            console.log("validateCommPlayers", validateCommPlayers)
           const removedPlayers = validateCommPlayers.filter(
             playerId => ![...request.body.team1Players, ...request.body.team2Players].includes(playerId)
           );
-          console.log("removedPlayers", removedPlayers)
           if (removedPlayers && removedPlayers.length > 0) {
             await deleteCommentaryPlayersByPlayerId(
               {
@@ -1450,7 +1450,6 @@ const updateCommentaryService = async (request, fastify) => {
             );
           }
         } else {
-          console.log("all players Delete")
           await deleteCommentaryPlayers(request, fastify);
           global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(
             (item) => ![request.body.commentaryId].includes(item?.commentaryId)
@@ -1989,7 +1988,8 @@ const cloneCommentaryService = async (request, fastify) => {
           request.body.team2Players.length > 0
         ) {
           let data = [
-            ...request.body.team1Players.map((item, i) => {
+            ...request.body.team1Players.filter(p => p.currentInnings === currentInning)
+            .map((item, i) => {
               const playerTpId = global.tblPlayers.find(elem => elem.playerId === item.playerId);
               return {
                 commentaryId: newCommentary.commentaryId,
@@ -1999,7 +1999,8 @@ const cloneCommentaryService = async (request, fastify) => {
                 displayOrder: i + 1,
               };
             }),
-            ...request.body.team2Players.map((item, i) => {
+            ...request.body.team2Players.filter(p => p.currentInnings === currentInning)
+            .map((item, i) => {
               const playTpId = global.tblPlayers.find(elem => elem.playerId === item.playerId);
               return {
                 commentaryId: newCommentary.commentaryId,
@@ -23305,11 +23306,21 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
           global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(
             (item) => !deleteBallByBallIds.includes(item?.commentaryBallByBallId)
           );
+          response.deleteBallByBallIds = true;
+          sendDataForSocketUpdate.dataToUpdate.push({
+            module: "deleteOverWicketParnerBallIds",
+            data: { commentaryBallByBallId: deleteBallByBallIds },
+          });
         }
         if (deleteOverIds && deleteOverIds.length > 0) {
           global.tblOvers = global.tblOvers.filter(
             (item) => !deleteOverIds.includes(item?.overId)
           );
+          response.deleteOverIds = true;
+          sendDataForSocketUpdate.dataToUpdate.push({
+            module: "deleteOverIds",
+            data: { overId: deleteOverIds },
+          });
         }
         // call the getscore and emit the event data
         if (
@@ -23476,7 +23487,12 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
     console.error("Default Python API not found");
   }
 
-  const competitionData = {
+  const checkCompetition = global.tblCompetitions.find(tc => [entitySportCompetitionResponse?.cid, cid].includes(tc.tpId));
+  if (checkCompetition) {
+    return checkCompetition;
+  }
+
+  let competitionData = {
     competition: entitySportCompetitionResponse?.title,
     eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
     refId: entitySportCompetitionResponse?.cid,
@@ -23491,6 +23507,17 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
     endDate: entitySportCompetitionResponse?.dateend,
     tpId: entitySportCompetitionResponse?.cid,
     pythonId: pythonIdData?.id || null,
+    isPointTable: entitySportCompetitionResponse?.table === "1"
+  }
+
+  if (competitionData.isPointTable) {
+    competitionData = {
+      ...competitionData,
+      winPoint: 2,
+      tiePoint: 0,
+      lossPoint: 0,
+      cancelPoint: 1
+    }
   }
 
   const insertCompetition = await insertCompetitionQuery({
@@ -23498,19 +23525,22 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
     body: competitionData
   }, fastify);
   global.tblCompetitions.push(insertCompetition);
-  
   return insertCompetition;
 }
 
-const insertTeamAndPlayers = async (teamTpId, eventType, request, fastify) => {
+const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getTeamDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
     errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/commentary.js/insertTeamAndPlayers - checkEntitySportAPIEndpoint", request);
     return false;
   }
 
-  const url = checkEntitySportAPIEndpoint.data.replace("{tid}", teamTpId);
+  const url = checkEntitySportAPIEndpoint.data.replace("{tid}", data.tid);
   const entitySportTeamPlayers = await callEntitySportAPI(url, request, fastify);
+
+  if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
+    global.autoImportData.esApiResponseData = entitySportTeamPlayers?.data?.result?.items;
+  }
 
   let entitySportTeamPlayersResponse = entitySportTeamPlayers?.data?.result?.items;
   if (!entitySportTeamPlayersResponse) {
@@ -23689,6 +23719,12 @@ const matchImportService = async (data, fastify, request = null) => {
   const url = checkEntitySportAPIEndpoint.data.replace("{mid}", data.mid);
   const entitySportMatch = await callEntitySportAPI(url, request, fastify);
 
+  if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
+    global.autoImportData.esApiResponseData = {
+      commentary: entitySportMatch?.data?.result
+    }
+  }
+
   let entitySportMatchResponse = entitySportMatch?.data?.result;
   if (!entitySportMatchResponse) {
     errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/commentary.js/matchImportService - entitySportMatchResponse", {
@@ -23697,8 +23733,6 @@ const matchImportService = async (data, fastify, request = null) => {
     }, entitySportMatch?.data);
     return false;
   }
-
-  let checkCommentary = global.tblCommentaries.find(item => item.tpId === data.mid);
 
   const matchInfoResponse = entitySportMatchResponse?.match_info;
   let matchType = global.tblMatchTypes.find(item => item.entityEnum === matchInfoResponse.format);
@@ -23759,139 +23793,74 @@ const matchImportService = async (data, fastify, request = null) => {
       global.tblVenues[index] = checkVenue;
     }
   }
-  
-  if (matchInfoResponse?.weather && matchInfoResponse?.weather.length > 0) {
-    const checkWeather = global.tblWeather.find(item => item.commentaryId === checkCommentary.commentaryId);
-    if (checkWeather) {
-      const matchWeather = matchInfoResponse?.weather[0];
-      const weatherData = {
-        weatherCondition: matchWeather?.weather ?? checkWeather?.weatherCondition,
-        description: matchWeather?.weather_desc ?? checkWeather?.description,
-        commentaryId: checkCommentary.commentaryId ?? checkWeather?.commentaryId,
-        temp: matchWeather?.temp ?? checkWeather?.temp,
-        humidity: matchWeather?.humidity ?? checkWeather?.humidity,
-        visibility: matchWeather?.visibility ?? checkWeather?.visibility,
-        windSpeed: matchWeather?.wind_speed ?? checkWeather?.windSpeed,
-        clouds: matchWeather?.clouds ?? checkWeather?.clouds,
-        id: checkWeather?.id
-      };
-      const updateWeather = await updateWeatherQuery(weatherData, fastify, request);
-      const index = global.tblWeather.findIndex(item => item?.commentaryId === checkCommentary.commentaryId);
-      if (index !== -1) {
-        global.tblWeather[index] = updateWeather[0]
-      } else {
-        global.tblWeather.push(updateWeather[0]);
-      }
-    } else {
-      const matchWeather = matchInfoResponse?.weather[0];
-      const weatherData = {
-        weatherCondition: matchWeather?.weather,
-        description: matchWeather?.weather_desc,
-        commentaryId: checkCommentary.commentaryId,
-        temp: matchWeather?.temp,
-        humidity: matchWeather?.humidity,
-        visibility: matchWeather?.visibility,
-        windSpeed: matchWeather?.wind_speed,
-        clouds: matchWeather?.clouds
-      };
-      const insertWeather = await insertWeatherQuery(weatherData, fastify, request);
-      global.tblWeather.push(insertWeather);
-    }
-  }
-
-  if (matchInfoResponse?.pitch_details && (matchInfoResponse?.pitch_details?.pitch_condition != "" || matchInfoResponse?.pitch_details?.batting_condition != "" || matchInfoResponse?.pitch_details?.pace_bowling_condition != "" || matchInfoResponse?.pitch_details?.spine_bowling_condition != "")) {
-    const checkPitchDetails = global.tblPitchConditions.find(item => item?.commentaryId === checkCommentary.commentaryId);
-    if (checkPitchDetails) {
-      const pitchConditionData = {
-        pitchCondition: matchInfoResponse?.pitch_details?.pitch_condition ?? checkPitchDetails?.pitchCondition,
-        battingCondition: matchInfoResponse?.pitch_details?.batting_condition ?? checkPitchDetails?.battingCondition,
-        paceBowlingCondition: matchInfoResponse?.pitch_details?.pace_bowling_condition ?? checkPitchDetails?.paceBowlingCondition,
-        spineBowlingConniton: matchInfoResponse?.pitch_details?.spine_bowling_condition ?? checkPitchDetails?.spineBowlingCondition,
-        commentaryId: checkCommentary.commentaryId,
-        id: checkPitchDetails?.id
-      };
-      const updatePitch = await updatePitchConditionQuery(pitchConditionData, fastify, request);
-      const index = global.tblPitchConditions.findIndex(item => item?.commentaryId === request.body.commentaryId);
-      if (index !== -1) {
-        global.tblPitchConditions[index] = updatePitch[0]
-      } else {
-        global.tblPitchConditions.push(updatePitch[0]);
-      }
-    } else {
-      const pitchConditionData = {
-        pitchCondition: matchInfoResponse?.pitch_details?.pitch_condition,
-        battingCondition: matchInfoResponse?.pitch_details?.batting_condition,
-        paceBowlingCondition: matchInfoResponse?.pitch_details?.pace_bowling_condition,
-        spineBowlingConniton: matchInfoResponse?.pitch_details?.spine_bowling_condition,
-        commentaryId: checkCommentary.commentaryId
-      };
-
-      const insertPitchDetails = await insertPitchConditionQuery(pitchConditionData, fastify, request);
-      global.tblPitchConditions.push(insertPitchDetails);
-    }
-  }
 
   const teamA = matchInfoResponse?.teama?.team_id;
   const teamB = matchInfoResponse?.teamb?.team_id;
   let teamAData, teamBData;
   if (teamA && !nullTeamtpIds.includes(teamA)) {
-    teamAData = await insertTeamAndPlayers(teamA, eventType, request, fastify);
+    teamAData = await insertTeamAndPlayers({
+      tid: teamA
+    }, eventType, request, fastify);
   }
   if (teamB && !nullTeamtpIds.includes(teamB)) {
-    teamBData = await insertTeamAndPlayers(teamB, eventType, request, fastify);
+    teamBData = await insertTeamAndPlayers({
+      tid: teamB
+    }, eventType, request, fastify);
   }
 
   const isMen = !teamAData?.teamName?.toLowerCase().includes("women");
 
+  let checkCommentary = null;
   if (teamAData && teamBData) {
-    let onfieldUmpires = null, thirdUmpire = null;
-    if (matchInfoResponse?.umpires) {
-      onfieldUmpires = parseUmpires(matchInfoResponse?.umpires).onFieldUmpires.join(', ') || null;
-      thirdUmpire = parseUmpires(matchInfoResponse?.umpires).thirdUmpire || null;
-    }
-    let commentaryData = {
-      eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
-      matchTypeId: matchType?.matchTypeId,
-      competitionId: checkCompetition?.competitionId,
-      eventDate: matchInfoResponse?.date_start,
-      eventName: matchInfoResponse?.title,
-      team1Id: teamAData?.teamId,
-      team2Id: teamBData?.teamId,
-      location: checkVenue?.name && checkVenue?.countryName ? `${checkVenue.name}, ${checkVenue.countryName}` : null,
-      displayStatus: matchInfoResponse?.status_note,
-      isClientShow: false,
-      commentaryStatus: 1,
-      tpId: entitySportMatchResponse?.match_id,
-      createdBy: -2,
-      CurrentInnings: -1,
-      isPlayersShow: false,
-      isPredictMarket: false,
-      delay: 0,
-      isActive: true,
-      isTeamPredictionOn: true,
-      isClientShow: true,
-      eventNo: matchInfoResponse?.match_number,
-      isVirtual: false,
-      session: 1,
-      pythonId: pythonIdData?.id,
-      pythonURI: pythonIdData?.URI,
-      isMatchDraw: false,
-      isWheelShow: false,
-      shotType: false,
-      tossRmk: false,
-      matchReferee: matchInfoResponse?.referee,
-      onfieldUmpires,
-      thirdUmpire,
-      isTest: matchInfoResponse?.status_str.includes('test') ? true : false,
-      isSignalROn: false,
-      isEventStart: false,
-      isCountInPoint: checkCompetition?.isPointTable,
-      countryId: checkCountry?.id,
-      venueId: checkVenue?.id,
-      scoringType: ScoringTypes.Entity
-    }
-
+    checkCommentary = global.tblCommentaries.find(item => item.tpId === data.mid);
     if (!checkCommentary) {
+      let onfieldUmpires = null, thirdUmpire = null;
+      if (matchInfoResponse?.umpires) {
+        onfieldUmpires = parseUmpires(matchInfoResponse?.umpires).onFieldUmpires.join(', ') || null;
+        thirdUmpire = parseUmpires(matchInfoResponse?.umpires).thirdUmpire || null;
+      }
+
+      let commentaryData = {
+        eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
+        matchTypeId: matchType?.matchTypeId,
+        competitionId: checkCompetition?.competitionId,
+        eventDate: matchInfoResponse?.date_start,
+        eventName: matchInfoResponse?.title,
+        team1Id: teamAData?.teamId,
+        team2Id: teamBData?.teamId,
+        location: checkVenue?.name && checkVenue?.city ? `${checkVenue.name}, ${checkVenue.city}` : null,
+        displayStatus: matchInfoResponse?.status_note,
+        isClientShow: false,
+        commentaryStatus: 1,
+        tpId: entitySportMatchResponse?.match_id,
+        createdBy: -2,
+        CurrentInnings: -1,
+        isPlayersShow: false,
+        isPredictMarket: false,
+        delay: 0,
+        isActive: true,
+        isTeamPredictionOn: true,
+        isClientShow: true,
+        eventNo: matchInfoResponse?.match_number,
+        isVirtual: false,
+        session: 1,
+        pythonId: pythonIdData?.id,
+        pythonURI: pythonIdData?.URI,
+        isMatchDraw: false,
+        isWheelShow: false,
+        shotType: false,
+        tossRmk: false,
+        matchReferee: matchInfoResponse?.referee,
+        onfieldUmpires,
+        thirdUmpire,
+        isTest: matchInfoResponse?.status_str.includes('test') ? true : false,
+        isSignalROn: false,
+        isEventStart: false,
+        isCountInPoint: checkCompetition?.isPointTable,
+        countryId: checkCountry?.id,
+        venueId: checkVenue?.id,
+        scoringType: ScoringTypes.Entity
+      }
       const insertCommentary = await insertCommentaryQuery({
         ...request,
         body: commentaryData
@@ -23901,77 +23870,186 @@ const matchImportService = async (data, fastify, request = null) => {
       checkCommentary = insertCommentary;
     }
 
-    const noOfInning = matchType.noOfIningsPerSide;
-    const maxOver = matchType.maxOversInFirstInings;
-    const matchPlaying11Squad = entitySportMatchResponse?.["match-playing11"];
-    let teamASquad = matchPlaying11Squad?.teama?.squads?.length > 0 ? matchPlaying11Squad?.teama?.squads : [];
-    let teamBSquad = matchPlaying11Squad?.teamb?.squads?.length > 0 ? matchPlaying11Squad?.teamb?.squads : [];
+    if (checkCommentary && checkCommentary?.commentaryId) {
+      const upsertedCommentaryId = checkCommentary.commentaryId;
 
-    if (teamASquad.length === 0) {
-      teamASquad = await getAllPlayersByTeamIdQuery(teamAData.teamId, fastify, request);
-      teamASquad = teamASquad.filter(item => item.tpId != null);
-      if (teamASquad.length === 0) {
-        teamASquad = await insertTeamPlayersByTeamId(teamAData.teamId, teamAData.tpId, checkCompetition?.isMen, request, fastify);
-        teamASquad = teamASquad.filter(item => item.tpId != null);
-      }
-      teamASquad = teamASquad?.map(item => ({
-        player_id: `${item.tpId}`,
-        playing11: `${true}`
-      }))
-    }
+      const esStart = matchInfoResponse?.date_start
+        ? new Date(matchInfoResponse?.date_start)
+        : null;
 
-    if (teamBSquad.length === 0) {
-      teamBSquad = await getAllPlayersByTeamIdQuery(teamBData.teamId, fastify, request);
-      teamBSquad = teamBSquad.filter(item => item.tpId != null);
-      if (teamBSquad.length === 0) {
-        teamBSquad = await insertTeamPlayersByTeamId(teamBData.teamId, teamBData.tpId, checkCompetition?.isMen, request, fastify);
-        teamBSquad = teamBSquad.filter(item => item.tpId != null);
-      }
-      teamBSquad = teamBSquad?.map(item => ({
-        player_id: `${item.tpId}`,
-        playing11: `${true}`
-      }))
-    }
+      const localStart = checkCommentary?.eventDate
+        ? new Date(checkCommentary?.eventDate)
+        : null;
 
-    for (let i = 1; i <= noOfInning; i++) {
-      let commentaryTeam = global.tblCommentaryTeams.findIndex(
-        (item) =>
-          item.commentaryId === checkCommentary.commentaryId &&
-          item.currentInnings === i
-      );
-      if (commentaryTeam === -1) {
-        await insertCommentaryTeams({
+      if (esStart && (!localStart || esStart.getTime() !== localStart.getTime())) {
+        const updated = await updateCommentaryDateByCommentaryIdQuery({
           ...request,
           body: {
-            commentaryId: checkCommentary.commentaryId,
-            team1Id: teamAData?.teamId,
-            team2Id: teamBData?.teamId,
-            currentInnings: i,
-            teamMaxOver: maxOver,
-            team1TpId: teamAData?.tpId,
-            team2TpId: teamBData?.tpId
-          },
+            eventDate: esStart,
+            commentaryId: checkCommentary?.commentaryId
+          }
         }, fastify);
-        const teamACommentaryTeam = await getCommentaryTeamsQuery({
-          commentaryId: checkCommentary.commentaryId,
-          teamId: teamAData?.teamId,
-          currentInnings: i
-        }, fastify, request);
-        const teamBCommentaryTeam = await getCommentaryTeamsQuery({
-          commentaryId: checkCommentary.commentaryId,
-          teamId: teamBData?.teamId,
-          currentInnings: i
-        }, fastify, request);
-        global.tblCommentaryTeams.push(teamACommentaryTeam, teamBCommentaryTeam);
+        const index = global.tblCommentaries.findIndex(tc => tc.commentaryId === upsertedCommentaryId);
+        if (index !== -1) {
+          global.tblCommentaries[index] = {
+            ...global.tblCommentaries[index],
+            ...updated
+          };
+          checkCommentary = global.tblCommentaries[index];
+        }
       }
 
-      await insertCommentaryPlayersByTeam(i, checkCommentary.commentaryId, teamAData.teamId, teamASquad, entitySportMatchResponse?.players, matchType?.matchTypeId, isMen, fastify, request);
-      await insertCommentaryPlayersByTeam(i, checkCommentary.commentaryId, teamBData.teamId, teamBSquad, entitySportMatchResponse?.players, matchType?.matchTypeId, isMen, fastify, request);
+      if (matchInfoResponse?.weather && matchInfoResponse?.weather.length > 0) {
+        const checkWeather = global.tblWeather.find(item => item.commentaryId === upsertedCommentaryId);
+        if (checkWeather) {
+          const matchWeather = matchInfoResponse?.weather[0];
+          const weatherData = {
+            weatherCondition: matchWeather?.weather ?? checkWeather?.weatherCondition,
+            description: matchWeather?.weather_desc ?? checkWeather?.description,
+            commentaryId: upsertedCommentaryId ?? checkWeather?.commentaryId,
+            temp: matchWeather?.temp ?? checkWeather?.temp,
+            humidity: matchWeather?.humidity ?? checkWeather?.humidity,
+            visibility: matchWeather?.visibility ?? checkWeather?.visibility,
+            windSpeed: matchWeather?.wind_speed ?? checkWeather?.windSpeed,
+            clouds: matchWeather?.clouds ?? checkWeather?.clouds,
+            id: checkWeather?.id
+          };
+          const updateWeather = await updateWeatherQuery(weatherData, fastify, request);
+          const index = global.tblWeather.findIndex(item => item?.commentaryId === upsertedCommentaryId);
+          if (index !== -1) {
+            global.tblWeather[index] = updateWeather[0]
+          } else {
+            global.tblWeather.push(updateWeather[0]);
+          }
+        } else {
+          const matchWeather = matchInfoResponse?.weather[0];
+          const weatherData = {
+            weatherCondition: matchWeather?.weather,
+            description: matchWeather?.weather_desc,
+            commentaryId: upsertedCommentaryId,
+            temp: matchWeather?.temp,
+            humidity: matchWeather?.humidity,
+            visibility: matchWeather?.visibility,
+            windSpeed: matchWeather?.wind_speed,
+            clouds: matchWeather?.clouds
+          };
+          const insertWeather = await insertWeatherQuery(weatherData, fastify, request);
+          global.tblWeather.push(insertWeather);
+        }
+      }
+
+      if (matchInfoResponse?.pitch_details && (matchInfoResponse?.pitch_details?.pitch_condition != "" || matchInfoResponse?.pitch_details?.batting_condition != "" || matchInfoResponse?.pitch_details?.pace_bowling_condition != "" || matchInfoResponse?.pitch_details?.spine_bowling_condition != "")) {
+        const checkPitchDetails = global.tblPitchConditions.find(item => item?.commentaryId === upsertedCommentaryId);
+        if (checkPitchDetails) {
+          const pitchConditionData = {
+            pitchCondition: matchInfoResponse?.pitch_details?.pitch_condition ?? checkPitchDetails?.pitchCondition,
+            battingCondition: matchInfoResponse?.pitch_details?.batting_condition ?? checkPitchDetails?.battingCondition,
+            paceBowlingCondition: matchInfoResponse?.pitch_details?.pace_bowling_condition ?? checkPitchDetails?.paceBowlingCondition,
+            spineBowlingConniton: matchInfoResponse?.pitch_details?.spine_bowling_condition ?? checkPitchDetails?.spineBowlingCondition,
+            commentaryId: upsertedCommentaryId,
+            id: checkPitchDetails?.id
+          };
+          const updatePitch = await updatePitchConditionQuery(pitchConditionData, fastify, request);
+          const index = global.tblPitchConditions.findIndex(item => item?.commentaryId === request.body.commentaryId);
+          if (index !== -1) {
+            global.tblPitchConditions[index] = updatePitch[0]
+          } else {
+            global.tblPitchConditions.push(updatePitch[0]);
+          }
+        } else {
+          const pitchConditionData = {
+            pitchCondition: matchInfoResponse?.pitch_details?.pitch_condition,
+            battingCondition: matchInfoResponse?.pitch_details?.batting_condition,
+            paceBowlingCondition: matchInfoResponse?.pitch_details?.pace_bowling_condition,
+            spineBowlingConniton: matchInfoResponse?.pitch_details?.spine_bowling_condition,
+            commentaryId: upsertedCommentaryId
+          };
+
+          const insertPitchDetails = await insertPitchConditionQuery(pitchConditionData, fastify, request);
+          global.tblPitchConditions.push(insertPitchDetails);
+        }
+      }
+
+      const noOfInning = matchType.noOfIningsPerSide;
+      const maxOver = matchType.maxOversInFirstInings;
+      const matchPlaying11Squad = entitySportMatchResponse?.["match-playing11"];
+      let teamASquad = matchPlaying11Squad?.teama?.squads?.length > 0 ? matchPlaying11Squad?.teama?.squads : [];
+      let teamBSquad = matchPlaying11Squad?.teamb?.squads?.length > 0 ? matchPlaying11Squad?.teamb?.squads : [];
+
+      if (teamASquad.length === 0) {
+        teamASquad = await getAllPlayersByTeamIdQuery(teamAData.teamId, fastify, request);
+        teamASquad = teamASquad.filter(item => item.tpId != null);
+        if (teamASquad.length === 0) {
+          teamASquad = await insertTeamPlayersByTeamId(teamAData.teamId, teamAData.tpId, checkCompetition?.isMen, request, fastify);
+          teamASquad = teamASquad.filter(item => item.tpId != null);
+        }
+        teamASquad = teamASquad?.map(item => ({
+          player_id: `${item.tpId}`,
+          playing11: `${true}`
+        }))
+      }
+
+      if (teamBSquad.length === 0) {
+        teamBSquad = await getAllPlayersByTeamIdQuery(teamBData.teamId, fastify, request);
+        teamBSquad = teamBSquad.filter(item => item.tpId != null);
+        if (teamBSquad.length === 0) {
+          teamBSquad = await insertTeamPlayersByTeamId(teamBData.teamId, teamBData.tpId, checkCompetition?.isMen, request, fastify);
+          teamBSquad = teamBSquad.filter(item => item.tpId != null);
+        }
+        teamBSquad = teamBSquad?.map(item => ({
+          player_id: `${item.tpId}`,
+          playing11: `${true}`
+        }))
+      }
+
+      for (let i = 1; i <= noOfInning; i++) {
+        let commentaryTeam = global.tblCommentaryTeams.findIndex(
+          (item) =>
+            item.commentaryId === upsertedCommentaryId &&
+            item.currentInnings === i
+        );
+        if (commentaryTeam === -1) {
+          await insertCommentaryTeams({
+            ...request,
+            body: {
+              commentaryId: upsertedCommentaryId,
+              team1Id: teamAData?.teamId,
+              team2Id: teamBData?.teamId,
+              currentInnings: i,
+              teamMaxOver: maxOver,
+              team1TpId: teamAData?.tpId,
+              team2TpId: teamBData?.tpId,
+              drsCount: checkCompetition?.drsCount || 2
+            },
+          }, fastify);
+          const teamACommentaryTeam = await getCommentaryTeamsQuery({
+            commentaryId: upsertedCommentaryId,
+            teamId: teamAData?.teamId,
+            currentInnings: i
+          }, fastify, request);
+          const teamBCommentaryTeam = await getCommentaryTeamsQuery({
+            commentaryId: upsertedCommentaryId,
+            teamId: teamBData?.teamId,
+            currentInnings: i
+          }, fastify, request);
+          global.tblCommentaryTeams.push(teamACommentaryTeam, teamBCommentaryTeam);
+        }
+
+        await insertCommentaryPlayersByTeam(i, upsertedCommentaryId, teamAData.teamId, teamASquad, entitySportMatchResponse?.players, matchType?.matchTypeId, isMen, fastify, request);
+        await insertCommentaryPlayersByTeam(i, upsertedCommentaryId, teamBData.teamId, teamBSquad, entitySportMatchResponse?.players, matchType?.matchTypeId, isMen, fastify, request);
+      }
+    } else {
+      errorLogger(
+        fastify,
+        `Commentary data not available of commentary TpId ${data.mid} - checkCommentary`,
+        "ERROR --> services/commentary.js/matchImportService",
+        request
+      );
     }
   } else {
     errorLogger(
       fastify,
-      `Team data not available of TpIds ${teamA} and ${teamB} in commentary TpId ${data.mid}`,
+      `Team data not available of TpIds ${teamA} and ${teamB} in commentary TpId ${data.mid} - checkTeam`,
       "ERROR --> services/commentary.js/matchImportService",
       request
     );
@@ -24003,6 +24081,23 @@ const matchImportService = async (data, fastify, request = null) => {
       );
     });
   }
+
+  const commentaryId = checkCommentary?.commentaryId;
+  const getAutoUpdateCommentary = await getAllAutoUpdateCommentaryDataQuery(
+    `"wrCommentaryId" = '${commentaryId}' AND "wrOffsetHour" IS NULL`,
+    fastify
+  );
+  const isExists = getAutoUpdateCommentary && getAutoUpdateCommentary.length > 0;
+  const insertDataInCommentaryUpdate = {
+    commentaryId: commentaryId,
+    offsetHour: null,
+    status: isExists ? autoUpdateCommentaryDataStatus.noupdate : autoUpdateCommentaryDataStatus.added,
+    message: `Commentary ${isExists ? "updated" : "added"}`,
+    responseData: entitySportMatchResponse,
+  };
+
+  await insertAutoUpdateCommentaryDataQuery(insertDataInCommentaryUpdate, fastify);
+
   return checkCommentary;
 }
 const clientSocketCountService = async (fastify) => {

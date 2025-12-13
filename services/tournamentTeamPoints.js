@@ -14,9 +14,10 @@ const {
   getTournamentPointsByGroupNameQuery,
   getTournamentTeamPointsQuery,
 } = require("../repository/TableTournmentTeamPoints");
-const { callClientAPI, ServiceType, APIEndpointModuleType, callEntitySportAPI, extractGroupDataFromArray, teamRemarkType, checkEntitySportAPIEndpointIsActive } = require("../utilities");
+const { callClientAPI, ServiceType, APIEndpointModuleType, callEntitySportAPI, extractGroupDataFromArray, teamRemarkType, checkEntitySportAPIEndpointIsActive, compStatus } = require("../utilities");
 const { nullTeamtpIds } = require("../utilities/entityConst");
 const { errorLogger } = require("../utilities/logger");
+const { saveCompetitionService } = require("./competition");
 
 const allTournamentTeamPointsService = async (request, fastify) => {
   const { competitionId, teamId, groupId, isActive } = request.body;
@@ -608,6 +609,8 @@ const getAllTournamentTeamPointsService = async (request, fastify) => {
 };
 
 const addEditTournamentTeamPointDataService = async (result, competitionId, fastify = null, request = null) => {
+  const competitionRoundType = result?.rounds?.[0]?.type;
+  const isValidCompetitionRoundType = competitionRoundType === "series" || competitionRoundType === "group";
   let alltournamentTeamPoints = await getAllTournamentTeamPointsQuery(fastify);
   alltournamentTeamPoints = alltournamentTeamPoints.filter(item => item.competitionId === competitionId);
 
@@ -643,6 +646,45 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
           }
         }
       }
+
+      if (isValidCompetitionRoundType && result?.standing?.standings?.length === 0) {
+        const checkTournamentTeamPoint = alltournamentTeamPoints.find(item => item.competitionId === competitionId && item.teamId === checkTeam?.teamId && item.groupId === 1);
+        if (!checkTournamentTeamPoint) {
+          const data = {
+            groupId: 1,
+            groupName: competitionRoundType === "series" ? result?.title : "Group A",
+            teamId: checkTeam?.teamId,
+            competitionId,
+            tpId: checkTeam?.tpId || null,
+            isActive: true,
+          }
+
+          const pointData = await insertTournamentTeamPointsQuery(data, fastify, request);
+          let validateComp = global.tblCompetitions.find(item => item.compeitionId == competitionId);
+          if (validateComp && validateComp?.isActive == true) {
+            const res = await responseChangeService(pointData?.teamId, pointData?.competitionId);
+            callClientAPI(
+              {
+                serviceType: ServiceType.clientAPI,
+                moduleType: APIEndpointModuleType.updateSeoModule,
+                data: {
+                  module: 'tournamentTeamPoints',
+                  type: "add",
+                  data: { ...pointData, ...res }
+                }
+              }, null, fastify)
+              .catch((err) => {
+                errorLogger(
+                  fastify,
+                  err.message,
+                  "services/tournamentTeamPoints.js/addEditTournamentTeamPointDataService - callClientAPI",
+                  null
+                );
+              });
+          }
+        }
+      }
+
       const groupData = extractGroupDataFromArray(result?.standing?.standings, team?.tid);
       for (let gd of groupData) {
         let validateComp = global.tblCompetitions.find(item => item.compeitionId == competitionId)
@@ -737,12 +779,26 @@ const importUpdateTournamentTeamPointFromEntitySportService = async (data, fasti
   const url = checkEntitySportAPIEndpoint.data.replace("{cid}", competitionTpId);
   const entitySportCompetitionInfo = await callEntitySportAPI(url, request, fastify);
 
+  if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
+    global.autoImportData.esApiResponseData = entitySportCompetitionInfo?.data?.result;
+  }
+
   let entitySportCompetitionInfoResponse = entitySportCompetitionInfo?.data?.result;
   if (!entitySportCompetitionInfoResponse) {
     throw new Error("Invalid response from Entit-Sport API - entitySportCompetitionInfo");
   }
 
   await addEditTournamentTeamPointDataService(entitySportCompetitionInfoResponse, checkCompetition?.competitionId, fastify, request);
+  const entityCompetitionStatus = compStatus[entitySportCompetitionInfoResponse?.status]
+  if (entityCompetitionStatus !== checkCompetition?.commStatus) {
+    await saveCompetitionService({
+      ...request,
+      body: {
+        ...checkCompetition,
+        commStatus: entityCompetitionStatus
+      }
+    }, fastify);
+  }
   return entitySportCompetitionInfoResponse;
 };
 

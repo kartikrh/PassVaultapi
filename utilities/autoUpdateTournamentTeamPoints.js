@@ -1,11 +1,15 @@
-const { compStatus } = require(".");
-const { saveCompetitionService } = require("../services/competition");
-const { importUpdateTournamentTeamPointFromEntitySportService } = require("../services/tournamentTeamPoints");
+const { RefType } = require(".");
+const { insertAutoImportDataService } = require("../services/autoImportData");
 const { errorLogger } = require("./logger");
 
 const formatDate = (date) => date.toISOString().split("T")[0];
 
 const autoUpdateTournamentTeamPoints = async (fastify) => {
+    const request = {
+        userTokenInfo: {
+            WrUserId: -2
+        }
+    }
     try {
         const yesterdayStr = formatDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
         const competitionList = global.tblCompetitions.filter(cp => {
@@ -16,33 +20,25 @@ const autoUpdateTournamentTeamPoints = async (fastify) => {
         })
 
         for (const competition of competitionList) {
-            const request = {
+            await insertAutoImportDataService({
+                ...request,
+                body: {
+                    refId: competition?.tpId || competition?.competitionId,
+                    refType: RefType.tournamentTeamPointUpdate,
+                    sourceId: 3
+                },
                 userTokenInfo: {
-                    WrUserId: -2
+                    WrUserId: request?.userTokenInfo?.WrUserId ?? -2
                 }
-            }
-            const result = await importUpdateTournamentTeamPointFromEntitySportService({
-                cid: competition.tpId
-            }, fastify, request);
-            const entityCompetitionStatus = compStatus[result?.status]
-            if (entityCompetitionStatus !== competition.commStatus) {
-                await saveCompetitionService({
-                    ...request,
-                    body: {
-                        ...competition,
-                        commStatus: entityCompetitionStatus
-                    }
-                }, fastify);
-            }
+            }, fastify);
         }
     } catch (error) {
         errorLogger(
             fastify,
             error.message,
             "ERROR --> utilities/autoUpdateTournamentTeamPoints.js/autoUpdateTournamentTeamPoints",
-            null
+            request
         );
-
     }
 }
 

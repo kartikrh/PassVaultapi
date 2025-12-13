@@ -35,38 +35,6 @@ const getImportPayload = (importFn, refId) => {
     return mapping[importFn.name] || {};
 };
 
-const processImport = async (importFn, importData, fastify) => {
-    importData.isImportStart = true;
-    importData.importStartTime = new Date();
-
-    try {
-        await importUpdate(importData, fastify);
-
-        const payload = getImportPayload(importFn, importData.refId);
-
-        await importFn(payload, fastify, {
-            userTokenInfo: { WrUserId: -2 }
-        });
-
-        importData.importEndTime = new Date();
-        importData.isImported = false;
-        await importUpdate(importData, fastify);
-    } catch (error) {
-        await importUpdate({
-            ...importData,
-            errorStackData: error.stack
-        }, fastify);
-        errorLogger(
-            fastify,
-            error.message,
-            `DB ERROR --> utilities/entitySportAutoImport.js/processImport/${importFn.name}`,
-            null,
-            importData
-        );
-        throw error;
-    }
-};
-
 const validateImportData = (data, fastify) => {
     if (!data || !data.id) return false;
     const { id, refId, refType } = data;
@@ -97,48 +65,82 @@ const validateImportData = (data, fastify) => {
 };
 
 const entitySportAutoImportProcess = async (fastify) => {
-    try {
-        const condition = `"wrIsImported" = true AND "wrIsImportStart" = false AND "wrSourceId" = 3 ORDER BY "wrId" ASC LIMIT 1`;
-        const autoImportData = await getAllAutoImportDataQuery(null, fastify, condition);
+    const condition = `"wrIsImported" = true AND "wrIsImportStart" = false AND "wrSourceId" = 3 AND "wrImportStartTime" IS NULL ORDER BY "wrId" ASC`;
+    const autoImportData = await getAllAutoImportDataQuery(null, fastify, condition);
 
-        if (!autoImportData?.length) return;
+    for (const aID of autoImportData) {
+        let importData = aID;
+        global.autoImportData = null;
+        try {
 
-        const importData = autoImportData[0];
-        if (!validateImportData(importData, fastify)) return;
+            if (!validateImportData(importData, fastify)) continue;
+            const { id, refId, refType } = importData;
 
-        const { refId, refType } = importData;
+            const importMap = {
+                [RefType.Competition]: competitionImportService,
+                [RefType.Match]: matchImportService,
+                [RefType.Team]: teamImportService,
+                [RefType.Player]: playerImportService,
+                [RefType.TeamUpdate]: UpdateTeamFromEntityService,
+                [RefType.PlayerUpdate]: UpdatePlayerFromEntityService,
+                [RefType.tournamentTeamPointUpdate]: importUpdateTournamentTeamPointFromEntitySportService,
+            };
 
-        const importMap = {
-            [RefType.Competition]: competitionImportService,
-            [RefType.Match]: matchImportService,
-            [RefType.Team]: teamImportService,
-            [RefType.Player]: playerImportService,
-            [RefType.TeamUpdate]: UpdateTeamFromEntityService,
-            [RefType.PlayerUpdate]: UpdatePlayerFromEntityService,
-            [RefType.tournamentTeamPointUpdate]: importUpdateTournamentTeamPointFromEntitySportService,
-        };
+            const importFn = importMap[Number(refType)];
+            if (!importFn) {
+                errorLogger(
+                    fastify,
+                    `Unknown refType: ${refType} for refId: ${refId}`,
+                    "ERROR --> services/entitySportAutoImport.js/entitySportAutoImportProcess - importFn",
+                    null,
+                    refType
+                );
+                continue;
+            }
 
-        const importFn = importMap[Number(refType)];
-        if (!importFn) {
+            importData.isImportStart = true;
+            importData.importStartTime = new Date();
+
+            global.autoImportData = {
+                id,
+                esApiResponseData: null
+            }
+
+            await importUpdate(importData, fastify);
+
+            const payload = getImportPayload(importFn, refId);
+
+            await importFn({ ...payload, autoImportId: id }, fastify, {
+                userTokenInfo: { WrUserId: -2 }
+            });
+
+            importData.importEndTime = new Date();
+            importData.isImported = false;
+
+            if (global?.autoImportData && global?.autoImportData?.id === id) {
+                importData.esApiResponseData = global.autoImportData.esApiResponseData;
+            }
+            await importUpdate(importData, fastify);
+        } catch (error) {
+            if (importData && global?.autoImportData && global?.autoImportData?.id) {
+                if (global?.autoImportData?.id === importData.id) {
+                    importData.esApiResponseData = global.autoImportData.esApiResponseData;
+                }
+                await importUpdate({
+                    ...importData,
+                    errorStackData: error.stack
+                }, fastify);
+            }
             errorLogger(
                 fastify,
-                `Unknown refType: ${refType} for refId: ${refId}`,
-                "ERROR --> services/entitySportAutoImport.js/entitySportAutoImportProcess - importFn",
-                null,
-                refType
+                error.message,
+                "ERROR --> services/entitySportAutoImport.js/entitySportAutoImportProcess",
+                null
             );
-            return;
+        } finally {
+            importData = null;
+            global.autoImportData = null;
         }
-
-        await processImport(importFn, importData, fastify);
-    } catch (error) {
-        console.error("Error in autoImportProcess", error);
-        errorLogger(
-            fastify,
-            error.message,
-            "ERROR --> services/entitySportAutoImport.js/entitySportAutoImportProcess",
-            null
-        );
     }
 };
 

@@ -582,7 +582,9 @@ const insertCommentaryPlayers = async (
         tpt."wrPlayerType" AS "playerType",
         tcp."wrJerseyPlayerImage" AS "jerseyPlayerImage",
         tcp."wrJerseyPlayerImagePath" AS "jerseyPlayerImagePath",
-        tcp."wrTpId" AS "tpId"
+        tcp."wrTpId" AS "tpId",
+        tcp."wrIsPlayInEvent" as "isPlayInEvent",
+        tcp."wrCreatedDate" as "createdDate"
       FROM insert_data tcp
       LEFT JOIN "tblPlayers" tp ON tcp."wrPlayerId" = tp."wrPlayerId"
       LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId";
@@ -1481,6 +1483,7 @@ const getCommentaryPlayersQuery = async (data, fastify, request) => {
       "wrBowlerOrder" as "bowlerOrder",
       "wrBowlingType" as "bowlingType",
       "wrPlayerName" as "playerName",
+      "wrCurrentInnings" as "currentInnings",
       "wrIsInPlayingEleven" as "isInPlayingEleven"
       from "tblCommentaryPlayers"
       where "wrCommentaryId" = $1 and "wrTeamId" = $2 and "wrIsDelete" = false
@@ -7245,7 +7248,8 @@ const updateVirtualPartnershipQuery = async (data, fastify, request) => {
         "wrTotalWide" = $12,
         "wrTotalNoBall" = $13,
         "wrTeamScore" = $14,
-        "wrTeamWicket" = $15
+        "wrTeamWicket" = $15,
+        "wrIsActive" = $18
       WHERE "wrCommentaryPartnershipId" = $16
       AND "wrCommentaryId" = $17
       AND "wrIsDelete" = false
@@ -7301,6 +7305,7 @@ const updateVirtualPartnershipQuery = async (data, fastify, request) => {
           data.teamWicket,
           data.commentaryPartnershipId,
           data.commentaryId,
+          data.isActive ?? false,
         ],
       }
     );
@@ -8704,6 +8709,117 @@ const upTeamNameInComQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+const updateCommentaryDateByCommentaryIdQuery = async (request, fastify) => {
+  try {
+    const sql = `
+      WITH update_data AS (
+        UPDATE "tblCommentaries"
+        SET
+          "wrEventDate" = $1,
+          "wrModifyDate" = NOW()
+        WHERE "wrCommentaryId" = $2
+        RETURNING *
+      )
+      SELECT 
+        tc."wrCommentaryId" AS "commentaryId",
+        tc."wrMatchTypeId" AS "matchTypeId",
+        mt."wrMatchType" AS "matchType",
+        tc."wrEventTypeId" AS "eventTypeId",
+        tc."wrTeam1Id" AS "team1Id",
+        tc."wrTeam2Id" AS "team2Id",
+        tt1."wrTeamName" AS "team1Name",
+        tt2."wrTeamName" AS "team2Name",
+        tc."wrCompetitionId" AS "competitionId",
+        co."wrCompetition" AS "competition",
+        tc."wrEventId" AS "eventId",
+        tc."wrEventDate" AS "eventDate",
+        tc."wrEventName" AS "eventName",
+        tc."wrEventRefId" AS "eventRefId",
+        tc."wrLocation" AS "location",
+        tc."wrWeather" AS "weather",
+        tc."wrPitchCracks" AS "pitchCracks",
+        tc."wrTossWonBy" AS "tossWonBy",
+        tc."wrChoseTo" AS "choseTo",
+        tc."wrWinnerId" AS "winnerId",
+        tc."wrWinnerName" AS "winnerName",
+        tc."wrIsClientShow" AS "isClientShow",
+        tc."wrDisplayStatus" AS "displayStatus",
+        tc."wrRmk" AS "rmk",
+        tc."wrWinRmk" AS "winRmk",
+        tc."wrCardType" AS "cardType",
+        tc."wrTossRmk" AS "tossRmk",
+        tc."wrCommentaryStatus" AS "commentaryStatus",
+        tc."wrUpdateTime" AS "updateTime",
+        tc."wrIsMatchDraw" AS "isMatchDraw",
+        tc."wrTarget" AS "target",
+        tc."wrMarketID" AS "marketId",
+        tc."wrTpId" AS "tpId",
+        tc."isSignalROn" AS "isSignalROn",
+        tc."wrCurrentInnings" AS "currentInnings",
+        tc."wrSystemPlayerCount" AS "systemPlayerCount",
+        tc."wrIsPlayersShow" AS "isPlayersShow",
+        tc."wrIsPredictMarket" AS "isPredictMarket",
+        tc."wrIsActive" AS "isActive",
+        tc."wrIsTeamPredictionOn" AS "isTeamPredictionOn",
+        tu."WrName" AS "createdBy",
+        tc."wrLineRatio" AS "lineRatio",
+        tc."wrDelay" AS "delay",
+        tc."wrHistoryMatchTypeId" AS "historyMatchTypeId",
+        tc."wrIsCountInPoint" AS "isCountInPoint",
+        tc."wrShotType" AS "shotType",
+        tc."wrIsWheelShow" AS "isWheelShow",
+        tc."wrIsTest" AS "isTest",
+        tc."wrEventNo" AS "eventNo",
+        tc."wrIsEventStart" AS "isEventStart",
+        tc."wrDifficulty" AS "difficulty",
+        tc."wrPitchHardness" AS "pitchHardness",
+        tc."wrPitchWareSpeed" AS "pitchWareSpeed",
+        tc."wrPitchType" AS "pitchType",
+        tc."wrLawnStriping" AS "lawnStriping",
+        tc."wrPitchAge" AS "pitchAge",
+        tc."wrIsVirtual" AS "isVirtual",
+        tc."wrOnfieldUmpires" AS "onfieldUmpires",
+        tc."wrThirdUmpire" AS "thirdUmpire",
+        tc."wrMatchReferee" AS "matchReferee",
+        tc."wrSession" AS "session",
+        tc."wrTestDayCount" AS "testDayCount",
+        tc."wrCountryId" AS "countryId",
+        tc."wrVenueId" AS "venueId",
+        tc."wrScoringType" AS "scoringType",
+        tc."wrPythonId" AS "pythonId",
+        tc."wrPythonURI" AS "pythonURI",
+        tc."wrCancelTime" AS "cancelTime",
+        tc."wrViews" AS "views",
+        tc."wrStreamingUrl" AS "streamingUrl",
+        tc."wrStreamingType" AS "streamingType",
+        tc."wrShuffle" AS "shuffle"
+      FROM update_data tc
+      LEFT JOIN "tblTeams" tt1 ON tt1."wrTeamId" = tc."wrTeam1Id"
+      LEFT JOIN "tblTeams" tt2 ON tt2."wrTeamId" = tc."wrTeam2Id"
+      LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
+      LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
+      LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
+    `;
+
+    const result = await fastify.db.query(sql, {
+      bind: [
+        request.body.eventDate,
+        request.body.commentaryId
+      ],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+
+    return result?.[0] || null;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/updateCommentaryDateByCommentaryIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -8850,5 +8966,6 @@ module.exports = {
   bowlingTypeChangeQuery,
   updateCommentaryViewsQuery,
   playingElevenChangeOnCommPlayersQuery,
-  upTeamNameInComQuery
+  upTeamNameInComQuery,
+  updateCommentaryDateByCommentaryIdQuery
 };

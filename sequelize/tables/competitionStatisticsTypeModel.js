@@ -18,8 +18,8 @@ module.exports = (sequelize) => {
                 type: DataTypes.INTEGER,
                 allowNull: true,
             },
-            wrKeyName: {
-                type: DataTypes.STRING(100),
+            wrEntityEnum: {
+                type: DataTypes.INTEGER,
                 allowNull: true,
             },
             wrName: {

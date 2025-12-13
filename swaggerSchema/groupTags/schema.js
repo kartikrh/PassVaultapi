@@ -1967,6 +1967,20 @@ const Player = {
       },
     },
   },
+  getPlayerPlayInCommentaryListById: {
+    schema: {
+      tags: ["Player"],
+      security: [{ bearerAuth: [] }],
+      description: "get Player play in commentary list by id",
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" },
+        },
+        required: ["playerId"],
+      },
+    },
+  }
 };
 
 const MatchType = {
@@ -11176,7 +11190,8 @@ const CompititionStatisticsType = {
         properties: {
           isActive: { type: "boolean" },
           eventTypeId: { type: "integer" },
-          typeId: { type: "integer" }
+          typeId: { type: "integer" },
+          entityEnum: { type: "integer" }
         },
       },
     },
@@ -11207,7 +11222,7 @@ const CompititionStatisticsType = {
           eventTypeId: { type: "integer" },
           typeId: { type: "integer" },
           name: { type: "string" },
-          keyName: { type: "string" },
+          entityEnum: { type: "integer" },
           displayOrder: { type: "integer" },
           description: { type: "string" },
           isActive: { type: "boolean" }
@@ -11231,6 +11246,24 @@ const CompititionStatisticsType = {
           },
         },
         required: ["competitionStatisticsTypeId"],
+      },
+    },
+  },
+  updateDisplayOrder: {
+    schema: {
+      tags: ["Compitition Statistics Type"],
+      description: "update display order",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            competitionStatisticsTypeId: { type: "integer" },
+            displayOrder: { type: "integer" },
+          },
+        },
+        minItems: 1,
       },
     },
   }
