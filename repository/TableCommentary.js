@@ -5183,8 +5183,9 @@ const getCommentariesResultQuery = async (request, fastify) => {
         ON tc."wrCommentaryId" = tct2."wrCommentaryId" 
         AND tc."wrTeam2Id" = tct2."wrTeamId"
       WHERE tc."wrIsDelete" = false 
-      AND tc."wrIsActive" = true
-      AND tc."wrIsCountInPoint" = true
+      AND tc."wrIsTest" = false
+      -- AND tc."wrIsActive" = true
+      -- AND tc."wrIsCountInPoint" = true
       AND tc."wrCommentaryStatus" = 4
       AND (
         tc."wrCancelTime" IS NULL
