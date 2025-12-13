@@ -1631,7 +1631,7 @@ const competitionImportService = async (data, fastify, request) => {
 
       const commentaryId = checkCommentary?.commentaryId;
       const getAutoUpdateCommentary = await getAllAutoUpdateCommentaryDataQuery(
-        `"wrCommentaryId" = '${commentaryId}' AND "wrOffsetHour" IS NULL`,
+        `"wrCommentaryId" = '${commentaryId}'`,
         fastify
       );
       const isExists = getAutoUpdateCommentary && getAutoUpdateCommentary.length > 0;

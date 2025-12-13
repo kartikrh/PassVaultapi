@@ -57,8 +57,8 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                 const venue = matchInfoData.venue || {};
                                 const pitchDetails = entitySportMatchResponse?.pitch_details || {};
 
-                                const checkCompetiton = global.tblCompetitions.find(item => item.tpId === matchInfoData?.competition?.cid);
-                                if (!checkCompetiton) {
+                                const checkCompetition = global.tblCompetitions.find(item => item.tpId === matchInfoData?.competition?.cid);
+                                if (!checkCompetition) {
                                     throw new Error(`Competition with tpId ${matchInfoData?.competition?.cid} not found`);
                                 }
 
