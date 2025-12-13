@@ -1630,20 +1630,6 @@ const competitionImportService = async (data, fastify, request) => {
       }
 
       const commentaryId = checkCommentary?.commentaryId;
-      const getAutoUpdateCommentary = await getAllAutoUpdateCommentaryDataQuery(
-        `"wrCommentaryId" = '${commentaryId}'`,
-        fastify
-      );
-      const isExists = getAutoUpdateCommentary && getAutoUpdateCommentary.length > 0;
-      const insertDataInCommentaryUpdate = {
-        commentaryId,
-        offsetHour: null,
-        status: isExists ? autoUpdateCommentaryDataStatus.noupdate : autoUpdateCommentaryDataStatus.added,
-        message: `Commentary ${isExists ? "updated" : "added"}`,
-        responseData: match
-      };
-
-      await insertAutoUpdateCommentaryDataQuery(insertDataInCommentaryUpdate, fastify);
 
       if (match?.weather && match?.weather.length > 0) {
         const checkWeather = global.tblWeather.find(item => item.commentaryId === commentaryId);
@@ -1736,6 +1722,20 @@ const competitionImportService = async (data, fastify, request) => {
         }, entitySportMatch?.data);
         return false;
       }
+      const getAutoUpdateCommentary = await getAllAutoUpdateCommentaryDataQuery(
+        `"wrCommentaryId" = '${commentaryId}'`,
+        fastify
+      );
+      const isExists = getAutoUpdateCommentary && getAutoUpdateCommentary.length > 0;
+      const insertDataInCommentaryUpdate = {
+        commentaryId,
+        offsetHour: null,
+        status: isExists ? autoUpdateCommentaryDataStatus.noupdate : autoUpdateCommentaryDataStatus.added,
+        message: `Commentary ${isExists ? "updated" : "added"}`,
+        responseData: entitySportMatch?.data?.result
+      };
+
+      await insertAutoUpdateCommentaryDataQuery(insertDataInCommentaryUpdate, fastify);
 
       const matchPlaying11Squad = entitySportMatchResponse?.["match-playing11"];
       let teamASquad = matchPlaying11Squad?.teama?.squads?.length > 0 ? matchPlaying11Squad?.teama?.squads : [];
