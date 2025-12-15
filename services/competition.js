@@ -85,7 +85,7 @@ const { insertAutoUpdateCommentaryDataQuery, getAllAutoUpdateCommentaryDataQuery
 // };
 
 const allCompetitionService = async (request) => {
-  const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type, isVirtual, pythonId, countryId, commStatus } = request.body;
+  const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type, isVirtual, pythonId, countryId, commStatus, isCompetitionStatisticsCalculation } = request.body;
 
   const filterObject = {};
 
@@ -98,6 +98,7 @@ const allCompetitionService = async (request) => {
   if (typeof isVirtual === 'boolean') filterObject.isVirtual = isVirtual;
   if (pythonId !== undefined && pythonId !== 0) filterObject.pythonId = pythonId;
   if (countryId !== undefined && countryId !== 0) filterObject.countryId = countryId;
+  if (typeof isCompetitionStatisticsCalculation === 'boolean') filterObject.isCompetitionStatisticsCalculation = isCompetitionStatisticsCalculation;
 
   // if (isActive === undefined || isTrending === undefined) {
   //   return global.tblCompetitions.filter((item) => item.isActive === true);
@@ -348,6 +349,9 @@ const updateCompititionService = async (request, fastify) => {
   }
   if("isVirtual" in request.body){
     data.isVirtual = request.body.isVirtual === 'true';
+  }
+  if ("isCompetitionStatisticsCalculation" in request.body) {
+    data.isCompetitionStatisticsCalculation = request.body.isCompetitionStatisticsCalculation
   }
 
   if (request.body.eventTypeId) {
