@@ -9,6 +9,7 @@ const {
   activeInactivePlayerQuery,
   updateExchangePlayerQuery,
   getPlayerCompetitionListByPlayerIdQuery,
+  getPlayerCreatedDetailsQuery,
 } = require("../repository/TablePlayer");
 const {
   insertTeamPlayerQuery,
@@ -163,6 +164,29 @@ const playerByIdService = async (request, fastify) => {
 
     return data;
   }
+};
+
+const getPlayerCreatedDetailsService = async (request, fastify) => {
+  const { playerId } = request.body;
+
+  if (!playerId) {
+    return null;
+  }
+
+  // Fetch createdDate & createdBy from DB
+  const createdDetails = await getPlayerCreatedDetailsQuery(
+    playerId,
+    fastify,
+    request
+  );
+
+  if (!createdDetails) {
+    return null;
+  }
+
+  return {
+    ...createdDetails,
+  };
 };
 
 const insertPlayerService = async (request, fastify) => {
@@ -1383,5 +1407,6 @@ module.exports = {
   mergePlayerNullImageService,
   updatePlayerHomeTeamService,
   getPlayerCompetitionListByIdService,
-  getPlayerPlayInCommentaryListByIdService
+  getPlayerPlayInCommentaryListByIdService,
+  getPlayerCreatedDetailsService,
 };
