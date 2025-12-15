@@ -407,6 +407,39 @@ const deleteTournamentTeamPlayersByCompIdQuery = async (competitionIds, request,
   }
 };
 
+const deletePlayersByTeamAndPlayerIdQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+        `UPDATE "tblTournamentTeamPlayers" SET
+              "wrIsDeleted" = $1,
+              "wrDeletedBy" = $2,
+              "wrDeletedAt" = now()
+          WHERE "wrCompetitionId" = $3
+          AND "wrTeamId" = $4
+           AND "wrPlayerId" = ANY($5);
+        `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [
+          true,
+          request.userTokenInfo.WrUserId,
+          data.competitionId,
+          data.teamId,
+          data.playerIds
+        ],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTournamentTeamPlayers/deletePlayersByTeamAndPlayerIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllTournamentTeamPlayersQuery,
   insertTournamentTeamPlayersQuery,
@@ -420,4 +453,5 @@ module.exports = {
   insertEntityImportLogsQuery,
   getAllTournamentTeamPlayerByIdsQuery,
   deleteTournamentTeamPlayersByCompIdQuery,
+  deletePlayersByTeamAndPlayerIdQuery,
 };

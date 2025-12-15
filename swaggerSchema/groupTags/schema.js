@@ -8386,9 +8386,35 @@ const TournamentTeamPlayers = {
                 },
                 required : ["playerId", "teamId", "competitionId", "playerName"]
               }
+          },
+          addPlayers : {
+              type : "array",
+              items : {
+                type : "object",
+                properties : {
+                  playerId : {type : "integer"},
+                  teamId : {type : "integer"},
+                  competitionId : {type : "integer"},
+                  playerName : {type : "string"},
+                },
+                required : ["playerId", "teamId", "competitionId", "playerName"]
+              }
+          },
+          removePlayers : {
+              type : "array",
+              items : {
+                type : "object",
+                properties : {
+                  playerId : {type : "integer"},
+                  teamId : {type : "integer"},
+                  competitionId : {type : "integer"},
+                  playerName : {type : "string"},
+                },
+                required : ["playerId", "teamId", "competitionId", "playerName"]
+              }
           }
         },
-        required : ["teamPlayers", "competitionId", "teamId"]
+        required : ["addPlayers", "removePlayers", "competitionId", "teamId"]
       },
     },
   },
