@@ -219,7 +219,7 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { insertTeamPlayersByTeamId, insertCommentaryPlayersByTeam } = require("./competition");
 const cron = require('node-cron');
 const { insertAutoImportDataService } = require("./autoImportData");
-const { insertTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
+const { insertTournamentTeamPlayersQuery, deleteTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { insertAutoUpdateCommentaryDataQuery, getAllAutoUpdateCommentaryDataQuery } = require("../repository/TableAutoUpdateCommentaryData");
 
 const allCommentaryService = async (request, fastify) => {
