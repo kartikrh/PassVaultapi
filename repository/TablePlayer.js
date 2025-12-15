@@ -459,6 +459,7 @@ const getPlayerCreatedDetailsQuery = async (playerId, fastify, request) => {
     const query = `
       SELECT
         tp."wrPlayerId" AS "playerId",
+        tp."wrPlayerName" AS "playerName",
         tp."wrCreatedDate" AS "createdDate",
         CASE
           WHEN tp."wrCreatedBy" = -2 THEN 'Entity'
