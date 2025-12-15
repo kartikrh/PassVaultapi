@@ -57,6 +57,7 @@ const getAllTeamPlayersByTeamIdAndPlayerIdQuery = async (data, fastify, request)
         "wrJerseyPlayerImage" as "jerseyPlayerImage",
         "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
         "wrHomeTeam" as "homeTeam",
+        "wrPlayerOrder" as "playerOrder",
         "wrTpId" as "tpId"
       FROM "tblTeamPlayers"
       WHERE "wrRefPlayerId" = $1 AND "wrTeamId" = $2

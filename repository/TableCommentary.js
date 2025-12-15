@@ -5183,8 +5183,9 @@ const getCommentariesResultQuery = async (request, fastify) => {
         ON tc."wrCommentaryId" = tct2."wrCommentaryId" 
         AND tc."wrTeam2Id" = tct2."wrTeamId"
       WHERE tc."wrIsDelete" = false 
-      AND tc."wrIsActive" = true
-      AND tc."wrIsCountInPoint" = true
+      AND tc."wrIsTest" = false
+      -- AND tc."wrIsActive" = true
+      -- AND tc."wrIsCountInPoint" = true
       AND tc."wrCommentaryStatus" = 4
       AND (
         tc."wrCancelTime" IS NULL
@@ -7248,8 +7249,7 @@ const updateVirtualPartnershipQuery = async (data, fastify, request) => {
         "wrTotalWide" = $12,
         "wrTotalNoBall" = $13,
         "wrTeamScore" = $14,
-        "wrTeamWicket" = $15,
-        "wrIsActive" = $18
+        "wrTeamWicket" = $15
       WHERE "wrCommentaryPartnershipId" = $16
       AND "wrCommentaryId" = $17
       AND "wrIsDelete" = false
@@ -7305,7 +7305,6 @@ const updateVirtualPartnershipQuery = async (data, fastify, request) => {
           data.teamWicket,
           data.commentaryPartnershipId,
           data.commentaryId,
-          data.isActive ?? false,
         ],
       }
     );

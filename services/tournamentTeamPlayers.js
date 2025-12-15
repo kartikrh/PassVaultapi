@@ -2,7 +2,10 @@ const {
   insertTournamentTeamPlayersQuery,
   deleteTournamentTeamPlayersQuery,
   getAllPlayersByTeamIdQuery,
+  getAllPlayersByTeamAndCompetitionIdQuery,
 } = require("../repository/TableTournamentsTeamPlayers");
+const { insertCommentaryPlayers, deleteCommentaryPlayersByPlayerId } = require("../repository/TableCommentary");
+const { getAllTeamPlayersByTeamIdAndPlayerIdQuery } = require("../repository/TableTeamPlayer");
 
 const allTournamentTeamPlayersService = async (request) => {
   const { competitionId, teamId } = request.body || {};
@@ -35,12 +38,14 @@ const addTournamentTeamPlayersService = async (request, fastify) => {
     (item) => !newPlayerIds.includes(item.playerId)
   );
 
+
   // delete this player from the existingPlayers
   await deleteTournamentTeamPlayersQuery(newPlayers.map((item) => item.id), request, fastify);
   global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(
     (item) => !newPlayers.map((elem) => elem.id).includes(item.id)
   );
 
+  // await addAndRemovePlayersFromTournamentTeams(request, fastify);
 
   const insertPromises = teamPlayers?.map(async (item) => {
     const playerTpId = global.tblPlayers.find(elem => elem.playerId === item.playerId);
@@ -108,6 +113,101 @@ const deleteTournamentTeamPlayersService = async (request, fastify) => {
   );
 
   return `TournamentTeamPlayer(s) deleted successfully`;
+};
+
+const addAndRemovePlayersFromTournamentTeams = async (request, fastify) => {
+  const { teamPlayers, competitionId, teamId } = request.body;
+
+  if (teamPlayers.length == 0) {
+    return;
+  }
+  const getTeamPlayersData =
+    await getAllPlayersByTeamAndCompetitionIdQuery(
+      { competitionId, teamId },
+      request,
+      fastify
+    );
+
+  const inputPlayerIdSet = new Set(teamPlayers.map(p => p.playerId));
+  const existingPlayerIdSet = new Set(getTeamPlayersData.map(p => p.playerId));
+
+  const playersToAdd = teamPlayers.filter(p =>
+    !existingPlayerIdSet.has(p.playerId)
+  );
+
+  const playersToRemove = getTeamPlayersData.filter(p =>
+    !inputPlayerIdSet.has(p.playerId)
+  );
+
+  if (playersToAdd.length > 0) {
+    const comDetails = global.tblCommentaries.filter(item =>
+      [1, 2, 3].includes(item.commentaryStatus) &&
+      item.competitionId === competitionId
+    );
+
+    for (const ply of playersToAdd) {
+      const checkPlayer = global.tblPlayers.find(
+        item => item.playerId === ply.playerId
+      );
+      if (!checkPlayer) continue;
+
+      const teamPlayers = await getAllTeamPlayersByTeamIdAndPlayerIdQuery(
+        { playerId: ply.playerId, teamId }, fastify, request
+      );
+
+      for (const com of comDetails) {
+        const exists = global.tblCommentaryPlayers.find(item =>
+          item.commentaryId === com.commentaryId &&
+          item.teamId === teamId &&
+          item.playerId === ply.playerId
+        );
+        if (exists) continue;
+        const [newComm] = await insertCommentaryPlayers(
+          {
+            commentaryId: com.commentaryId,
+            teamId,
+            playerId: ply.playerId,
+            displayOrder: teamPlayers?.playerOrder ?? 0,
+            matchTypeId: com.matchTypeId,
+            tpId: checkPlayer.tpId,
+            jerseyPlayerImage: teamPlayers?.jerseyPlayerImage ?? null,
+            jerseyPlayerImagePath: teamPlayers?.jerseyPlayerImagePath ?? null,
+          },
+          com.currentInnings ?? 1,
+          fastify,
+          request
+        );
+        global.tblCommentaryPlayers.push(newComm);
+
+      }
+    }
+  }
+
+  if (playersToRemove.length > 0) {
+    const playerIds = playersToRemove.map(p => p.playerId);
+
+    const comDetails = global.tblCommentaries.filter(item =>
+      [1].includes(item.commentaryStatus) &&
+      item.competitionId === competitionId
+    );
+
+    for (const com of comDetails) {
+      await deleteCommentaryPlayersByPlayerId(
+        { playerIds, commentaryId: com.commentaryId },
+        request,
+        fastify
+      );
+      global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(item =>
+        !(
+          playerIds.includes(item.playerId) &&
+          item.commentaryId === com.commentaryId &&
+          item.teamId === teamId
+        )
+      );
+    }
+  }
+
+  return
 };
 
 module.exports = {
