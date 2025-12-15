@@ -8796,6 +8796,33 @@ const updateCommentaryDateByCommentaryIdQuery = async (request, fastify) => {
   }
 };
 
+const deleteCommentaryPlayersQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+      UPDATE "tblCommentaryPlayers" SET
+        "wrIsDelete" = $1,
+        "wrDeletedBy" = $2,
+        "wrDeletedAt" = now()
+      WHERE "wrCommentaryId" = $3
+      AND "wrTeamId" = $4
+      AND "wrPlayerId" = ANY($5);
+    `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [true, request.userTokenInfo.WrUserId, data.commentaryId, data.teamId, data.playerIds],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/deleteCommentaryPlayersQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -8942,5 +8969,6 @@ module.exports = {
   bowlingTypeChangeQuery,
   updateCommentaryViewsQuery,
   playingElevenChangeOnCommPlayersQuery,
-  updateCommentaryDateByCommentaryIdQuery
+  updateCommentaryDateByCommentaryIdQuery,
+  deleteCommentaryPlayersQuery,
 };

@@ -29,7 +29,7 @@ const { nullTeamtpIds, autoUpdateCommentaryDataStatus } = require("../utilities/
 const { insertTeamQuery, updateExchangeTeamQuery, getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { insertPlayerQuery, updateExchangePlayerQuery } = require("../repository/TablePlayer");
 const { insertTeamPlayerQuery, updateTeamPlayerHomeTeamQuery } = require("../repository/TableTeamPlayer");
-const { addTournamentTeamPlayersService } = require("./tournamentTeamPlayers");
+const { addDeleteTournamentTeamPlayersService } = require("./tournamentTeamPlayers");
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { errorLogger, commActionLogger } = require("../utilities/logger");
 const { insertVenueQuery, updateVenueQuery } = require("../repository/TableVenue");
@@ -1826,7 +1826,7 @@ const competitionImportService = async (data, fastify, request) => {
     let checkTeam = global.tblTeams.find(item => item.tpId === team);
     if (checkTeam) {
       const teamPlayerByTeamId = await getAllPlayersByTeamIdQuery(checkTeam.teamId, fastify, request);
-      await addTournamentTeamPlayersService({
+      await addDeleteTournamentTeamPlayersService({
         ...request,
         body: {
           teamPlayers: teamPlayerByTeamId,
