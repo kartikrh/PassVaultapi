@@ -4161,6 +4161,7 @@ const Compitition = {
           isActive: { type: "boolean" },
           eventTypeId: { type: "integer" },
           commStatus: { type: "integer" },
+          isCompetitionStatisticsCalculation: { type: "boolean" }
         },
       },
     },
@@ -4234,6 +4235,7 @@ const Compitition = {
           drsCount: { type: "integer" },
           countryId: { type: "integer" },
           setOfRules: { type: "string" },
+          isCompetitionStatisticsCalculation: { type: "boolean" }
         },
         required: ["competitionId"],
       },
@@ -4478,6 +4480,21 @@ const Compitition = {
           commStatus: { type: "integer" }, // e.g., "active", "inactive"
         },
         required: ["competitionId", "commStatus"],
+      },
+    },
+  },
+  changeIsCompetitionStatisticsCalculationStatus: {
+    schema: {
+      tags: ["Compitition"],
+      description: "change IsCompetitionStatisticsCalculationStatus status",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+          isCompetitionStatisticsCalculation: { type: "boolean" },
+        },
+        required: ["competitionId", "isCompetitionStatisticsCalculation"],
       },
     },
   }
