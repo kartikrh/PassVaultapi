@@ -26,6 +26,7 @@ const {
   updatePlayerHomeTeam,
   getPlayerCompetitionListById,
   getPlayerPlayInCommentaryListById,
+  getPlayerCreatedDetails,
 } = require("../../../controller/users/admin/teamsAndPlayer/players");
 const {
   getTeamList,
@@ -81,6 +82,18 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => getPlayerById(request, reply, fastify),
+  });
+  fastify.post("/createdDetails", {
+    schema: Player.getById.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Players",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => getPlayerCreatedDetails(request, reply, fastify),
   });
   fastify.post("/byTeamId", {
     schema: Teams.getById.schema,
