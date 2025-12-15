@@ -1149,6 +1149,33 @@ const updateCompititionDateByCompetitionIdQuery = async (data, fastify, request)
   }
 };
 
+const changeIsCompetitionStatisticsCalculationStatusQuery = async (data, request, fastify) => {
+  try {
+    const query = `
+      UPDATE "tblCompetitions"
+      SET
+        "wrIsCompetitionStatisticsCalculation" = $1
+      WHERE
+        "wrCompetitionId" = $2
+    `;
+
+    return await fastify.db.query(query, {
+      bind: [
+        data.isCompetitionStatisticsCalculation,
+        data.competitionId
+      ],
+    });
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCompitition.js/changeIsCompetitionStatisticsCalculationStatusQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCompititionQuery,
   insertCompetitionQuery,
@@ -1170,5 +1197,6 @@ module.exports = {
   getCompetitionByIdsQuery,
   getMatchTypeTemplateByCompetitionIdQuery,
   updateTpIdCompQuery,
-  updateCompititionDateByCompetitionIdQuery
+  updateCompititionDateByCompetitionIdQuery,
+  changeIsCompetitionStatisticsCalculationStatusQuery
 };

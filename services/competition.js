@@ -17,6 +17,7 @@ const {
   getMatchTypeTemplateByCompetitionIdQuery,
   updateTpIdCompQuery,
   updateCompititionDateByCompetitionIdQuery,
+  changeIsCompetitionStatisticsCalculationStatusQuery,
 } = require("../repository/TableCompitition");
 const {storeImageOnServer, removeImageFromServer, generateImageName, getImageFromUrl } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
@@ -1870,6 +1871,33 @@ const competitionImportService = async (data, fastify, request) => {
   return checkCompetition;
 }
 
+const changeIsCompetitionStatisticsCalculationStatusService = async (request, fastify) => {
+  const { competitionId, isCompetitionStatisticsCalculation } = request.body;
+
+  const validateId = global.tblCompetitions.find(
+    (item) => item.competitionId === competitionId
+  );
+
+  if (!validateId) {
+    throw new Error("Competition with this id not Found");
+  }
+
+  await changeIsCompetitionStatisticsCalculationStatusQuery(
+    {
+      competitionId,
+      isCompetitionStatisticsCalculation,
+    },
+    request,
+    fastify
+  );
+  const index = global.tblCompetitions.findIndex((item) => item.competitionId == competitionId);
+  if(index != -1){
+    global.tblCompetitions[index].isCompetitionStatisticsCalculation = isCompetitionStatisticsCalculation;
+  }
+  
+  return `Competition isCompetitionStatisticsCalculation status updated successfully`;
+};
+
 module.exports = {
   allCompetitionService,
   competitionByIdService,
@@ -1891,5 +1919,6 @@ module.exports = {
   getMatchTypeTemplateByCompetitionIdService,
   competitionImportService,
   insertTeamPlayersByTeamId,
-  insertCommentaryPlayersByTeam
+  insertCommentaryPlayersByTeam,
+  changeIsCompetitionStatisticsCalculationStatusService
 };

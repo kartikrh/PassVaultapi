@@ -298,4 +298,5 @@ module.exports = {
   upCompStatus,
   allPythonAPIs,
   getMatchTypeTemplateByCompetitionId,
+  changeIsCompetitionStatisticsCalculationStatus,
 };
