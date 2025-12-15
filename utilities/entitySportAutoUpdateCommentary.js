@@ -305,14 +305,18 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                         await deleteCommentaryPlayersByPlayerId({
                                             playerIds,
                                             commentaryId
-                                        }, request, fastify);
+                                        }, {
+                                            userTokenInfo: { WrUserId: -2 }
+                                        }, fastify);
                                         global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(item => !(item.commentaryId === commentaryId && item.teamId === teamId && playerIds.includes(item.playerId)));
                                     }
 
                                     const removedTournamentTeamPlayers = upsertedTournamentTeamPlayers.filter(item => item.teamId === teamId && !players.includes(item.tpId));
                                     if (removedTournamentTeamPlayers && removedTournamentTeamPlayers.length > 0) {
                                         const playerIds = removedTournamentTeamPlayers?.map(item => item.id);
-                                        await deleteTournamentTeamPlayersQuery(playerIds, request, fastify);
+                                        await deleteTournamentTeamPlayersQuery(playerIds, {
+                                            userTokenInfo: { WrUserId: -2 }
+                                        }, fastify);
                                         global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(item => !playerIds.includes(item.id));
                                     }
                                 }
