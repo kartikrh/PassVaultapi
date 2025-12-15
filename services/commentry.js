@@ -23979,7 +23979,7 @@ const matchImportService = async (data, fastify, request = null) => {
 
       if (teamASquad && teamASquad.length > 0) {
         commentaryTeamPlayers.push({
-          commentaryId,
+          commentaryId: upsertedCommentaryId,
           teamId: teamA.teamId,
           players: teamASquad.map(item => Number(item.player_id))
         });
@@ -24000,7 +24000,7 @@ const matchImportService = async (data, fastify, request = null) => {
 
       if (teamBSquad && teamBSquad.length > 0) {
         commentaryTeamPlayers.push({
-          commentaryId,
+          commentaryId: upsertedCommentaryId,
           teamId: teamB.teamId,
           players: teamBSquad.map(item => Number(item.player_id))
         });
