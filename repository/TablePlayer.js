@@ -453,6 +453,42 @@ const getAllTeamsByPlayerIdQuery = async (playerId, fastify, request) => {
     throw new Error(err.message);
   }
 };
+
+const getPlayerCreatedDetailsQuery = async (playerId, fastify, request) => {
+  try {
+    const query = `
+      SELECT
+        tp."wrPlayerId" AS "playerId",
+        tp."wrCreatedDate" AS "createdDate",
+        CASE
+          WHEN tp."wrCreatedBy" = -2 THEN 'Entity'
+          ELSE u."WrName"
+        END                    AS "createdBy",
+        tp."wrCreatedBy" AS "createdById"
+      FROM "tblPlayers" tp
+      LEFT JOIN "tblUsers" u
+        ON tp."wrCreatedBy" = u."WrUserId"
+      WHERE tp."wrPlayerId" = $1
+        AND tp."wrIsDeleted" = false
+    `;
+
+    const result = await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [playerId],
+    });
+
+    return result[0] || null;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePlayer/getPlayerCreatedDetailsQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 const updateIsSystemPlayerQuery = async (data, fastify, request) => {
   try {
     
@@ -929,4 +965,5 @@ module.exports = {
   getPlayersWithoutTeamQuery,
   getPlayersWithoutHomeTeamQuery,
   getTeamPlayerJerseyByPlayerIdQuery,
+  getPlayerCreatedDetailsQuery,
 };
