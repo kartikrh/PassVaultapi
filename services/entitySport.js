@@ -457,6 +457,27 @@ const setEntityCom2Service = async (request , fastify) =>{
             socket.client.emit("updateFullscore", sendDataForSocketUpdate);
           });
       }
+      if(comDetails.commentaryStatus == commentaryStatus.TOSSDONE){
+        // check if getting same data from entity
+        const tossInfo = response.match_info.toss;
+        // get in comteam
+        let team1 = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.tpId == tossInfo.winner && ct.currentInnings == comDetails.currentInnings)
+        if(!team1){
+            throw new Error("Team1 not found in commentary teams.")
+        }
+        let team2 = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.commentaryTeamId != team1.commentaryTeamId && ct.currentInnings == comDetails.currentInnings)
+        if(!team1 || !team2){
+            throw new Error("Batting or Bowling team not found in commentary teams.")
+        }
+        let comWinTeam = comDetails.tossWonBy;
+        if(team1.teamId != comWinTeam){
+          // update toss info again
+          await updateToss(request , fastify,comDetails);
+          return true;
+        }
+        return true;
+
+      }
       return true;
     }
     // set the players
@@ -898,6 +919,141 @@ const setEntityCom2Service = async (request , fastify) =>{
     return true;
   }
 }
+const updateToss = async (request , fastify,comDetails = null) =>{
+    const {response} = request.body;
+    const scoreResponse = {};
+    const sendDataForSocketUpdate = {};
+    sendDataForSocketUpdate.commentaryId = comDetails?.commentaryId;
+    sendDataForSocketUpdate.eventRefId = comDetails?.eventRefId;
+    sendDataForSocketUpdate.dataToUpdate = [];
+    let matchID = request.body?.response?.match_id
+    const tossInfo = response.match_info.toss;
+    // get in comteam
+    let team1 = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.tpId == tossInfo.winner && ct.currentInnings == comDetails.currentInnings)
+    if(!team1){
+      throw new Error("Team1 not found in commentary teams.,updateToss")
+    }
+    let team2 = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.commentaryTeamId != team1.commentaryTeamId && ct.currentInnings == comDetails.currentInnings)
+    if(!team1 || !team2){
+      throw new Error("Batting or Bowling team not found in commentary teams.,updateToss")
+    }
+    let comTeams;
+    if(tossInfo.decision == 1){
+    comTeams = [
+        {
+            ...team1,
+            teamStatus : 1,
+            teamBattingOrder : 1,
+            subInning : 1
+        },
+        {
+            ...team2,
+            teamStatus : 2,
+            teamBattingOrder :2,
+            subInning : 2
+        }
+    ]
+    }
+    if(tossInfo.decision == 2){
+    comTeams = [
+        {
+            ...team1,
+            teamStatus : 2,
+            teamBattingOrder : 2,
+            subInning : 2
+        },
+        {
+            ...team2,
+            teamStatus : 1,
+            teamBattingOrder :1,
+            subInning : 1
+        }
+    ]
+    }
+    let teamChoseTo = tossInfo?.decision === 1 ? "Bat" : "Bowl"
+    let upComData = {
+    ...comDetails,
+    commentaryStatus : commentaryStatus.TOSSDONE,
+    tossWonBy : team1.teamId,
+    choseTo : tossInfo.decision,
+    tossRmk : `Toss won by ${team1.teamName} and chose to ${teamChoseTo}.`,
+    displayStatus : `Toss won by ${team1.teamName} and chose to ${teamChoseTo}.`,
+    }
+    let commentaryId = comDetails.commentaryId;
+    // return {
+    //     comTeams,
+    //     upComData
+    // }
+    let updatedData = await fastify.db.query(
+        `CALL proc_commentary_toss(
+        $1, $2, $3
+            )`,
+        {
+            bind: [
+                comTeams ? JSON.stringify(comTeams) : null,
+                upComData ? JSON.stringify(upComData) : null,
+                commentaryId,
+            ],
+            type: fastify.db.QueryTypes.SELECT,
+        }
+    );
+    updatedData = updatedData[0];
+    if (upComData) {
+        let comI = global.tblCommentaries.findIndex((c)=> c.commentaryId == upComData.commentaryId)
+        global.tblCommentaries[comI] = {
+            ...global.tblCommentaries[comI],
+            modifyDate: upComData.modifyDate,
+            commentaryStatus: upComData.commentaryStatus,
+            tossWonBy: upComData.tossWonBy,
+            choseTo: upComData.choseTo,
+            tossRmk: upComData.tossRmk,
+            displayStatus: upComData.displayStatus,
+        };
+        scoreResponse.commentaryDetails = global.tblCommentaries[comI]
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module: "commentaryDetails",
+          type: "update",
+          data: scoreResponse.commentaryDetails,
+        });
+    }
+    if(comTeams && comTeams.length > 0){
+      scoreResponse.commentaryTeams = [];
+        for (let ct of comTeams){
+            let comTI = global.tblCommentaryTeams.findIndex((c)=> c.commentaryTeamId == ct.commentaryTeamId)
+            global.tblCommentaryTeams[comTI] = {
+                ...global.tblCommentaryTeams[comTI],
+                teamStatus: ct.teamStatus,
+                teamBattingOrder: ct.teamBattingOrder,
+                subInning: ct.subInning,
+            };
+            scoreResponse.commentaryTeams.push(global.tblCommentaryTeams[comTI]);
+        }
+        scoreResponse.commentaryTeams.forEach(async (team) => {
+          const _teamsC1 = global.tblTeams.filter(
+            (item) => item.teamId === team.teamId
+          );
+          if (_teamsC1.length > 0) {
+            team.image = _teamsC1[0].image;
+            team.jersey = _teamsC1[0].jersey;
+            team.nimage = _teamsC1[0].imagePath;
+            team.njersey = _teamsC1[0].jerseyPath;
+          }
+        });
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module: "commentaryTeams",
+          type: "update",
+          data: scoreResponse.commentaryTeams.map((team) => ({
+            ...team,
+            crr: parseFloat(team?.crr) || 0,
+            rrr: parseFloat(team?.rrr) || 0,
+          })),
+        });
+    }
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+    });
+    return true;
+  }
 const handleComArr = async (data , request , fastify , comDetails) =>{
     const {response} = data;
     const commentaries = response.live.commentaries;
