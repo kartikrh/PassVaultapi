@@ -474,6 +474,11 @@ const importICCRankingFromEntitySportService = async (data = null, fastify, requ
     }
 
     const entitySportICCRanking = await callEntitySportAPI(checkEntitySportAPIEndpoint.data, request, fastify);
+
+    if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
+        global.autoImportData.esApiResponseData = entitySportICCRanking?.data?.result;
+    }
+
     let entitySportICCRankingResponse = entitySportICCRanking?.data?.result;
     if (!entitySportICCRankingResponse) {
         throw new Error("Invalid response from Entit-Sport API");
