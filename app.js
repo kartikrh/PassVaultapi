@@ -46,6 +46,7 @@ const { entitySportAutoUpdateCommentaryTime } = require("./utilities/entityConst
 const { autoUpdatePlayerStatisticsDataProcess } = require("./utilities/autoUpdatePlayerStatisticsData.js");
 const { ISPLAYERCALCULATIONON } = require("./utilities/configConstants.js");
 const { autoUpdateTournamentTeamPoints } = require("./utilities/autoUpdateTournamentTeamPoints.js");
+const { insertCompetitionstatisticsInAutoImportService } = require("./services/competitionStatistics.js");
 // const { nodeProfilingIntegration } = require('@sentry/profiling-node');
 // const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 // Pass --options via CLI arguments in command to enable these options.
@@ -195,6 +196,16 @@ module.exports = async function (fastify, opts) {
       try {
         if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
           await autoUpdateTournamentTeamPoints(fastify);
+        }
+      } catch (error) {
+        console.error("Error during scheduled task - autoUpdateTournamentTeamPoints:", error);
+      }
+    });
+
+    cron.schedule('00 20 * * *', async () => {
+      try {
+        if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
+          await insertCompetitionstatisticsInAutoImportService(fastify);
         }
       } catch (error) {
         console.error("Error during scheduled task - autoUpdateTournamentTeamPoints:", error);
