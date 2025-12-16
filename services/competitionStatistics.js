@@ -1,6 +1,7 @@
 const { insertCompetitionStatisticsQuery, updateCompetitionStatisticsByIdQuery, deleteCompetitionStatisticsByIdQuery, updateCompetitionStatisticsDisplayOrderQuery } = require("../repository/TableCompetitionStatistics");
-const { CompetitionStatisticsType, getKeyAndValueKey, callEntitySportAPI } = require("../utilities");
+const { CompetitionStatisticsType, getKeyAndValueKey, callEntitySportAPI, RefType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
+const { insertAutoImportDataService } = require("./autoImportData");
 
 const getAllCompetitionStatisticsService = async (request, fastify) => {
     const { isActive, eventTypeId, competitionId, competitionStatisticsTypeEnum } = request.body;
@@ -212,7 +213,7 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
     }
 
     const esResponseData = [];
-    const getCompetitionStatisticsType = global.tblCompetitionStatisticsType.filter(tcst => tcst.isActive === true);
+    const getCompetitionStatisticsType = global.tblCompetitionStatisticsType.filter(tcst => tcst.isActive);
     for (const statType of getCompetitionStatisticsType) {
         const getKey = await getKeyAndValueKey(statType.entityEnum);
         if (getKey) {
@@ -240,21 +241,15 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
                         value: String(res[getKey.valueKey]) || "0"
                     }
                     try {
-                        await createCompetitionStatisticsService({
-                            ...request,
-                            body
-                        }, fastify);
+                        await createCompetitionStatisticsService({ ...request, body }, fastify);
                         displayOrderCount++;
                     } catch (error) {
                         if (error.message.includes("Competition Statistics already exists")) {
                             const competitionStatisticsId = error.message.split("id ")[1];
                             await updateCompetitionStatisticsService({
                                 ...request,
-                                body: {
-                                    ...body,
-                                    competitionStatisticsId: Number(competitionStatisticsId)
-                                }
-                            }, fastify)
+                                body: { ...body, competitionStatisticsId: Number(competitionStatisticsId) }
+                            }, fastify);
                         } else {
                             errorLogger(
                                 fastify,
@@ -263,14 +258,13 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
                                 request
                             );
                         }
-                        continue;
                     }
                 }
             }
         }
     }
 
-    if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
+    if (data?.autoImportId === global?.autoImportData?.id) {
         global.autoImportData.esApiResponseData = { ...esResponseData };
     }
 
@@ -309,6 +303,35 @@ const getCompetitionStatisticsByCompetitionIdService = async (request, fastify) 
     return displayData;
 };
 
+const insertCompetitionstatisticsInAutoImportService = async (fastify) => {
+    const request = {
+        userTokenInfo: {
+            WrUserId: -2
+        }
+    }
+
+    const formatDate = (date) => date.toISOString().split("T")[0];
+
+    const yesterdayStr = formatDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
+    const competitionList = global.tblCompetitions.filter(cp => {
+        const startStr = formatDate(new Date(cp.startDate));
+        const endStr = formatDate(new Date(cp.endDate));
+
+        return yesterdayStr >= startStr && yesterdayStr <= endStr && cp.tpId !== null && cp.isCompetitionStatisticsCalculation;
+    })
+
+    for (const competition of competitionList) {
+        await insertAutoImportDataService({
+            ...request,
+            body: {
+                refId: competition?.tpId || competition?.competitionId,
+                refType: RefType.CompetitionStatistics,
+                sourceId: 3
+            }
+        }, fastify);
+    }
+}
+
 module.exports = {
     getAllCompetitionStatisticsService,
     getCompetitionStatisticsByIdService,
@@ -316,5 +339,6 @@ module.exports = {
     deleteCompetitionStatisticsService,
     updateCompetitionStatisticsDisplayOrderService,
     importCompetitionstatisticsService,
-    getCompetitionStatisticsByCompetitionIdService
+    getCompetitionStatisticsByCompetitionIdService,
+    insertCompetitionstatisticsInAutoImportService
 };
