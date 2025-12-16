@@ -2079,6 +2079,18 @@ const CompetitionStatisticsType = {
     }
   }
 };
+const etWicketObj = {
+  "caught" : wicketTypeObj.CATCH,
+  "bowled" : wicketTypeObj.BOLD,
+  "lbw" : wicketTypeObj.LBW,
+  "stumped" : wicketTypeObj.STUMP,
+  "run out" : wicketTypeObj.RUN_OUT,
+  "hit wicket" : wicketTypeObj.HIT_WICKET,
+  "retired hurt" : wicketTypeObj.RETIRED_OUT,
+  "timed out" : wicketTypeObj.TIMED_OUT,
+  "hit the ball twice" : wicketTypeObj.HIT_BALL_TWICE,
+  "obstructing the field" : wicketTypeObj.OBSTRACT_THE_FIELDING,
+}
 
 const getKeyAndValueKey = async (enumValue) => {
   let result = Object.values(CompetitionStatisticsType)
@@ -2208,5 +2220,6 @@ module.exports = {
   roundToNearestMinutes,
   GAME_STATUS,
   CompetitionStatisticsType,
+  etWicketObj,
   getKeyAndValueKey
 };
