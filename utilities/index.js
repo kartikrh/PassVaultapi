@@ -2,7 +2,7 @@ const uaParser = require("ua-parser-js");
 const crypto = require("crypto");
 const moment = require("moment");
 const { default: axios } = require("axios");
-const pLimit = require("p-limit").default;
+// const pLimit = require("p-limit").default;
 const { mergeAndSaveImage } = require("./imageMerge");
 const configConstants = require("./configConstants");
 const {
@@ -2050,7 +2050,18 @@ const CompetitionStatisticsType = {
     }
   }
 };
-
+const etWicketObj = {
+  "caught" : wicketTypeObj.CATCH,
+  "bowled" : wicketTypeObj.BOLD,
+  "lbw" : wicketTypeObj.LBW,
+  "stumped" : wicketTypeObj.STUMP,
+  "run out" : wicketTypeObj.RUN_OUT,
+  "hit wicket" : wicketTypeObj.HIT_WICKET,
+  "retired hurt" : wicketTypeObj.RETIRED_OUT,
+  "timed out" : wicketTypeObj.TIMED_OUT,
+  "hit the ball twice" : wicketTypeObj.HIT_BALL_TWICE,
+  "obstructing the field" : wicketTypeObj.OBSTRACT_THE_FIELDING,
+}
 module.exports = {    
   ERROR_CODES,
   error,
@@ -2166,5 +2177,6 @@ module.exports = {
   playersMergeImageService,
   roundToNearestMinutes,
   GAME_STATUS,
-  CompetitionStatisticsType
+  CompetitionStatisticsType,
+  etWicketObj
 };
