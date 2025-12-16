@@ -75,7 +75,7 @@ module.exports = async (fastify, opts) => {
             (request, reply) =>
                 checkPermission(request, reply, fastify, {
                     tabName: "Competition Statistics",
-                    mode: "edit",
+                    mode: "view",
                 }),
         ],
         handler: (request, reply) => getCompetitionStatisticsByCompetitionId(request, reply, fastify),
