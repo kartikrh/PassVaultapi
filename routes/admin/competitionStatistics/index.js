@@ -9,7 +9,7 @@ module.exports = async (fastify, opts) => {
             (request, reply) => authorize(request, reply, fastify),
             (request, reply) =>
                 checkPermission(request, reply, fastify, {
-                    tabName: "Competition Statistics",
+                    tabName: "competition",
                     mode: "view",
                 }),
         ],
@@ -22,7 +22,7 @@ module.exports = async (fastify, opts) => {
             (request, reply) => authorize(request, reply, fastify),
             (request, reply) =>
                 checkPermission(request, reply, fastify, {
-                    tabName: "Competition Statistics",
+                    tabName: "competition",
                     mode: "view",
                 }),
         ],
@@ -35,7 +35,7 @@ module.exports = async (fastify, opts) => {
             (request, reply) => authorize(request, reply, fastify),
             (request, reply) =>
                 checkPermission(request, reply, fastify, {
-                    tabName: "Competition Statistics",
+                    tabName: "competition",
                     mode: request.body.competitionStatisticsId === 0 ? "add" : "edit",
                 }),
         ],
@@ -48,7 +48,7 @@ module.exports = async (fastify, opts) => {
             (request, reply) => authorize(request, reply, fastify),
             (request, reply) =>
                 checkPermission(request, reply, fastify, {
-                    tabName: "Competition Statistics",
+                    tabName: "competition",
                     mode: "delete",
                 }),
         ],
@@ -61,7 +61,7 @@ module.exports = async (fastify, opts) => {
             (request, reply) => authorize(request, reply, fastify),
             (request, reply) =>
                 checkPermission(request, reply, fastify, {
-                    tabName: "Competition Statistics",
+                    tabName: "competition",
                     mode: "edit",
                 }),
         ],
@@ -74,7 +74,7 @@ module.exports = async (fastify, opts) => {
             (request, reply) => authorize(request, reply, fastify),
             (request, reply) =>
                 checkPermission(request, reply, fastify, {
-                    tabName: "Competition Statistics",
+                    tabName: "competition",
                     mode: "view",
                 }),
         ],
