@@ -12,6 +12,7 @@ const {
     EntityCommentaryStatus,
     wicketTypeObj,
     GAME_STATUS,
+    etWicketObj,
 } = require("../utilities/index");
 const { getCountryByIds } = require("../repository/TableCountryCodes")
 const { getVenueByIds } = require("../repository/TableVenue")
@@ -1910,11 +1911,23 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               bowlerDotBall : playerTpIdObj[c.bowler_id].bowlerDotBall ? playerTpIdObj[c.bowler_id].bowlerDotBall + 1 : 1,  
             }
           }
-          // let wicketBatsMan = playerTpIdObj[c.wicket_batsman_id];
+          let wicketBatsId = c.wicket_batsman_id || c.batsman_id;
+          console.log("wicketsf batild", wicketBatsId)
+          const dismissalKey =
+            typeof c.dismissal === "string"
+              ? c.dismissal.trim().toLowerCase()
+              : null;
+          console.log("dismissalKey", dismissalKey)
+
+          const wicket_type = etWicketObj[dismissalKey] ?? null;
+          console.log("wicket_type", wicket_type)
+
           let wicketData = {
-            wicketType: wicketTypeObj.BOLD,
-            batterId: playerTpIdObj[c.batsman_id]?.commentaryPlayerId,
-            batterName : playerTpIdObj[c.batsman_id]?.playerName,
+            wicketType: wicket_type,
+            // batterId: playerTpIdObj[c.batsman_id]?.commentaryPlayerId,
+            // batterName : playerTpIdObj[c.batsman_id]?.playerName,
+            batterId: playerTpIdObj[wicketBatsId]?.commentaryPlayerId,
+            batterName : playerTpIdObj[wicketBatsId]?.playerName,
             runs: c?.run ?? 0,
             fieldPlayerId : playerTpIdObj[c.bowler_id]?.commentaryPlayerId,
             fieldPlayerName : playerTpIdObj[c.bowler_id]?.playerName,
@@ -2006,47 +2019,47 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           over.dotBall += 1;
           // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
           over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
-          if(playersMap[c.batsman_id]){
-            playersMap[c.batsman_id] = {
-              ...playersMap[c.batsman_id],
+          if(playersMap[wicketBatsId]){
+            playersMap[wicketBatsId] = {
+              ...playersMap[wicketBatsId],
               isBatterOut: true,
               isBatterRetir: false,
-              wicketType: wicketData.wicketType,
+              wicketType: wicket_type,
               bowlerId: playerTpIdObj[c.bowler_id]?.commentaryPlayerId,
               fielderId1: wicketData.fielder1,
               fielderId2: wicketData.fielder2,
               isPlay: null,
               onStrike: null,
               // batBall: (playersMap[c.batsman_id]?.batBall || 0) + 1,
-              batDotBall: (playersMap[c.batsman_id]?.batDotBall || 0) + 1,
+              batDotBall: (playersMap[wicketBatsId]?.batDotBall || 0) + 1,
             }
           }
           else {
-            playersMap[c.batsman_id] = {
-              ...playerTpIdObj[c.batsman_id],
+            playersMap[wicketBatsId] = {
+              ...playerTpIdObj[wicketBatsId],
               isBatterOut: true,
               isBatterRetir: false,
-              wicketType: wicketData.wicketType,
+              wicketType: wicket_type,
               bowlerId: playerTpIdObj[c.bowler_id]?.commentaryPlayerId,
               fielderId1: wicketData.fielder1,
               fielderId2: wicketData.fielder2,
               isPlay: null,
               onStrike: null,
               // batBall: (playerTpIdObj[c.batsman_id].batBall || 0) + 1,
-              batDotBall: (playerTpIdObj[c.batsman_id].batDotBall || 0) + 1,
+              batDotBall: (playerTpIdObj[wicketBatsId].batDotBall || 0) + 1,
               // batBall: 1,
               // batDotBall: 1,
             }
           }
           let updateBall = {
             ballIsWicket: true,
-            ballWicketType: wicketTypeObj.BOLD,
+            ballWicketType: wicket_type,
             ballFielderId1: wicketData.fielder1,
             ballFielderId2: wicketData.fielder2,
-            batStrikeId: playerTpIdObj[c.batsman_id]?.commentaryPlayerId,
+            batStrikeId: playerTpIdObj[wicketBatsId]?.commentaryPlayerId,
             // batNonStrikeId: ,
             batNonStrikeId: nonStrikePId,
-            ballPlayerId: playerTpIdObj[c.batsman_id]?.commentaryPlayerId,
+            ballPlayerId: playerTpIdObj[wicketBatsId]?.commentaryPlayerId,
             ballIsCount: true,
             ballType: BALL_TYPE.REGULAR,
             ballRun: wicketData.runs,
