@@ -4234,6 +4234,7 @@ const Compitition = {
           drsCount: { type: "integer" },
           countryId: { type: "integer" },
           setOfRules: { type: "string" },
+          isCompetitionStatisticsCalculation: { type: "boolean" }
         },
         required: ["competitionId"],
       },
@@ -4478,6 +4479,21 @@ const Compitition = {
           commStatus: { type: "integer" }, // e.g., "active", "inactive"
         },
         required: ["competitionId", "commStatus"],
+      },
+    },
+  },
+  changeIsCompetitionStatisticsCalculationStatus: {
+    schema: {
+      tags: ["Compitition"],
+      description: "change IsCompetitionStatisticsCalculationStatus status",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+          isCompetitionStatisticsCalculation: { type: "boolean" },
+        },
+        required: ["competitionId", "isCompetitionStatisticsCalculation"],
       },
     },
   }
@@ -8386,9 +8402,35 @@ const TournamentTeamPlayers = {
                 },
                 required : ["playerId", "teamId", "competitionId", "playerName"]
               }
+          },
+          addPlayers : {
+              type : "array",
+              items : {
+                type : "object",
+                properties : {
+                  playerId : {type : "integer"},
+                  teamId : {type : "integer"},
+                  competitionId : {type : "integer"},
+                  playerName : {type : "string"},
+                },
+                required : ["playerId", "teamId", "competitionId", "playerName"]
+              }
+          },
+          removePlayers : {
+              type : "array",
+              items : {
+                type : "object",
+                properties : {
+                  playerId : {type : "integer"},
+                  teamId : {type : "integer"},
+                  competitionId : {type : "integer"},
+                  playerName : {type : "string"},
+                },
+                required : ["playerId", "teamId", "competitionId", "playerName"]
+              }
           }
         },
-        required : ["teamPlayers", "competitionId", "teamId"]
+        required : ["addPlayers", "removePlayers", "competitionId", "teamId"]
       },
     },
   },

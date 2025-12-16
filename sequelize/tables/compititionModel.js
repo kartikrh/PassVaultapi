@@ -64,6 +64,10 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(1000),
         allowNull: true,
       },
+      wrIsCompetitionStatisticsCalculation: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+      }
     },
     {
       timestamps: false,

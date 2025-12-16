@@ -232,6 +232,7 @@ const allCommentaryService = async (request, fastify) => {
     startDate,
     endDate,
     pythonId,
+    matchTypeId,
   } = request.body;
   let result;
   if (commentaryStatus === undefined) {
@@ -261,6 +262,10 @@ const allCommentaryService = async (request, fastify) => {
 
   if (competitionId) {
     result = result.filter((item) => item.competitionId === competitionId);
+  }
+
+  if (matchTypeId) {
+    result = result.filter((item) => item.matchTypeId === matchTypeId);
   }
 
   if (pythonId) {
@@ -23980,7 +23985,7 @@ const matchImportService = async (data, fastify, request = null) => {
       if (teamASquad && teamASquad.length > 0) {
         commentaryTeamPlayers.push({
           commentaryId: upsertedCommentaryId,
-          teamId: teamA.teamId,
+          teamId: teamAData.teamId,
           players: teamASquad.map(item => Number(item.player_id))
         });
       }
@@ -24001,7 +24006,7 @@ const matchImportService = async (data, fastify, request = null) => {
       if (teamBSquad && teamBSquad.length > 0) {
         commentaryTeamPlayers.push({
           commentaryId: upsertedCommentaryId,
-          teamId: teamB.teamId,
+          teamId: teamBData.teamId,
           players: teamBSquad.map(item => Number(item.player_id))
         });
       }
