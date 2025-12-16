@@ -1513,7 +1513,8 @@ const RefType = {
   Player: 5,
   TeamUpdate: 6,
   PlayerUpdate: 7,
-  tournamentTeamPointUpdate: 8
+  tournamentTeamPointUpdate: 8,
+  ICCRanking: 9
 };
 const SourceID = {
   Prediction: 1,
