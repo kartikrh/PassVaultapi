@@ -136,6 +136,7 @@ const allCommentaryService = async (request, fastify) => {
     startDate,
     endDate,
     pythonId,
+    matchTypeId,
   } = request.body;
   let result;
   if (commentaryStatus === undefined) {
@@ -169,6 +170,10 @@ const allCommentaryService = async (request, fastify) => {
 
   if (pythonId) {
     result = result.filter((item) => item.pythonId === pythonId);
+  }
+
+  if (matchTypeId) {
+    result = result.filter((item) => item.matchTypeId === matchTypeId);
   }
 
   if (startDate && endDate) {
