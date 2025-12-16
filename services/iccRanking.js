@@ -1,4 +1,4 @@
-const { deleteICCRankingByIdQuery, insertICCRankingQuery, updateICCRankingQuery, activeInactiveICCRankingByIdQuery } = require("../repository/TableICCRanking");
+const { deleteICCRankingByIdQuery, insertICCRankingQuery, updateICCRankingQuery, activeInactiveICCRankingByIdQuery, deleteAllICCRankingQuery } = require("../repository/TableICCRanking");
 const { getTeamPlayerJerseyByPlayerIdQuery } = require("../repository/TablePlayer");
 const { ICCRankingType, callEntitySportAPI, ServiceType, APIEndpointModuleType, callClientAPI, ICCRankingPlayerType, checkEntitySportAPIEndpointIsActive, ICCMatchType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
@@ -367,6 +367,10 @@ const extractEntries = async (json, isMen, request, fastify) => {
                     if (!isNaN(pid) && (item.pid !== '0') && !playerMap.has(pid)) {
                         playerIds.add(pid);
                     }
+                    const team_id = Number(item.team_id)
+                    if (!isNaN(team_id) && (item.team_id !== '0') && !teamMap.has(team_id)) {
+                        teamIds.add(team_id);
+                    }
                 }
             }
         }
@@ -386,9 +390,6 @@ const extractEntries = async (json, isMen, request, fastify) => {
     }
 
     const newTeamMap = new Map(global.tblTeams.map((team) => [team.tpId, team]));
-    const newTeamShortNameMap = new Map(
-        global.tblTeams.map((team) => [team.teamShortName.toLowerCase(), team])
-    );
     const newPlayerMap = new Map(
         global.tblPlayers.map((player) => [player.tpId, player])
     );
@@ -435,8 +436,8 @@ const extractEntries = async (json, isMen, request, fastify) => {
                         );
                     }
                 } else {
-                    const teamId = newTeamShortNameMap.get(item.team.toLowerCase());
-                    let playerId = newPlayerMap.get(Number(item.pid));
+                    const teamId = newTeamMap.get(Number(item.team_id));
+                    const playerId = newPlayerMap.get(Number(item.pid));
                     const playerTypeId = playerTypeMap.get(
                         ICCRankingPlayerType[category].toLowerCase()
                     );
@@ -454,7 +455,7 @@ const extractEntries = async (json, isMen, request, fastify) => {
                     } else {
                         errorLogger(
                             fastify,
-                            `Skipping player entry due to missing data: Team(${item.team}), PlayerID(${item.pid}), PlayerType(${ICCRankingPlayerType[category]})`,
+                            `Skipping player entry due to missing data: Team(${item.team_id}), PlayerID(${item.pid}), PlayerType(${ICCRankingPlayerType[category]})`,
                             "ERROR --> utilities/index.js/extractEntries - Player Data Missing",
                             request
                         );
@@ -466,13 +467,18 @@ const extractEntries = async (json, isMen, request, fastify) => {
     return output;
 };
 
-const importICCRankingFromEntitySportService = async (request, fastify) => {
+const importICCRankingFromEntitySportService = async (data = null, fastify, request) => {
     const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getICCRankingData);
     if (!checkEntitySportAPIEndpoint.data) {
         throw new Error(checkEntitySportAPIEndpoint.message);
     }
 
     const entitySportICCRanking = await callEntitySportAPI(checkEntitySportAPIEndpoint.data, request, fastify);
+
+    if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
+        global.autoImportData.esApiResponseData = entitySportICCRanking?.data?.result;
+    }
+
     let entitySportICCRankingResponse = entitySportICCRanking?.data?.result;
     if (!entitySportICCRankingResponse) {
         throw new Error("Invalid response from Entit-Sport API");
@@ -481,29 +487,15 @@ const importICCRankingFromEntitySportService = async (request, fastify) => {
     const menEntries = await extractEntries(entitySportICCRankingResponse.ranks, true, request, fastify);
     const womenEntries = await extractEntries(entitySportICCRankingResponse.women_ranks, false, request, fastify);
     const resultEntries = [...menEntries, ...womenEntries];
-    const rankingMap = new Map();
-    for (const item of global.tblICCRanking) {
-        const key = `${item.sportId}-${item.matchTypeId}-${item.type}-${item.isMen}-${item.teamId}-${item.playerId}-${item.playerTypeId}-${item.rank}`;
-        rankingMap.set(key, item);
-    }
+
+    await deleteAllICCRankingQuery(request, fastify);
+    global.tblICCRanking = [];
 
     for (const entry of resultEntries) {
-        const key = `${entry.sportId}-${entry.matchTypeId}-${entry.type}-${entry.isMen}-${entry.teamId}-${entry.playerId}-${entry.playerTypeId}-${entry.rank}`;
-        const checkEntry = rankingMap.get(key);
-        if (checkEntry) {
-            await updateICCRankingByIdService({
-                ...request,
-                body: {
-                    ...checkEntry,
-                    ...entry
-                }
-            }, fastify);
-        } else {
-            await createICCRankingService({
-                ...request,
-                body: entry
-            }, fastify);
-        }
+        await createICCRankingService({
+            ...request,
+            body: entry
+        }, fastify);
     }
     return `ICC Ranking data imported successfully`;
 };

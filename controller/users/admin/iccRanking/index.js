@@ -76,7 +76,7 @@ const AllICCRankings = async (request, reply, fastify) => {
 
 const importICCRankingFromEntitySport = async (request, reply, fastify) => {
   try {
-    const result = await importICCRankingFromEntitySportService(request, fastify);
+    const result = await importICCRankingFromEntitySportService(null, fastify, request);
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/importICCRankingFromEntitySport", request);

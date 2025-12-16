@@ -17,6 +17,7 @@ const {
   getMatchTypeTemplateByCompetitionIdQuery,
   updateTpIdCompQuery,
   updateCompititionDateByCompetitionIdQuery,
+  changeIsCompetitionStatisticsCalculationStatusQuery,
 } = require("../repository/TableCompitition");
 const {storeImageOnServer, removeImageFromServer, generateImageName, getImageFromUrl } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
@@ -29,7 +30,7 @@ const { nullTeamtpIds, autoUpdateCommentaryDataStatus } = require("../utilities/
 const { insertTeamQuery, updateExchangeTeamQuery, getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { insertPlayerQuery, updateExchangePlayerQuery } = require("../repository/TablePlayer");
 const { insertTeamPlayerQuery, updateTeamPlayerHomeTeamQuery } = require("../repository/TableTeamPlayer");
-const { addTournamentTeamPlayersService } = require("./tournamentTeamPlayers");
+const { addDeleteTournamentTeamPlayersService } = require("./tournamentTeamPlayers");
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { errorLogger, commActionLogger } = require("../utilities/logger");
 const { insertVenueQuery, updateVenueQuery } = require("../repository/TableVenue");
@@ -85,7 +86,7 @@ const { insertAutoUpdateCommentaryDataQuery, getAllAutoUpdateCommentaryDataQuery
 // };
 
 const allCompetitionService = async (request) => {
-  const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type, isVirtual, pythonId, countryId, commStatus } = request.body;
+  const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type, isVirtual, pythonId, countryId, commStatus, isCompetitionStatisticsCalculation } = request.body;
 
   const filterObject = {};
 
@@ -98,6 +99,7 @@ const allCompetitionService = async (request) => {
   if (typeof isVirtual === 'boolean') filterObject.isVirtual = isVirtual;
   if (pythonId !== undefined && pythonId !== 0) filterObject.pythonId = pythonId;
   if (countryId !== undefined && countryId !== 0) filterObject.countryId = countryId;
+  if (typeof isCompetitionStatisticsCalculation === 'boolean') filterObject.isCompetitionStatisticsCalculation = isCompetitionStatisticsCalculation;
 
   // if (isActive === undefined || isTrending === undefined) {
   //   return global.tblCompetitions.filter((item) => item.isActive === true);
@@ -348,6 +350,9 @@ const updateCompititionService = async (request, fastify) => {
   }
   if("isVirtual" in request.body){
     data.isVirtual = request.body.isVirtual === 'true';
+  }
+  if ("isCompetitionStatisticsCalculation" in request.body) {
+    data.isCompetitionStatisticsCalculation = request.body.isCompetitionStatisticsCalculation
   }
 
   if (request.body.eventTypeId) {
@@ -1826,7 +1831,7 @@ const competitionImportService = async (data, fastify, request) => {
     let checkTeam = global.tblTeams.find(item => item.tpId === team);
     if (checkTeam) {
       const teamPlayerByTeamId = await getAllPlayersByTeamIdQuery(checkTeam.teamId, fastify, request);
-      await addTournamentTeamPlayersService({
+      await addDeleteTournamentTeamPlayersService({
         ...request,
         body: {
           teamPlayers: teamPlayerByTeamId,
@@ -1866,6 +1871,33 @@ const competitionImportService = async (data, fastify, request) => {
   return checkCompetition;
 }
 
+const changeIsCompetitionStatisticsCalculationStatusService = async (request, fastify) => {
+  const { competitionId, isCompetitionStatisticsCalculation } = request.body;
+
+  const validateId = global.tblCompetitions.find(
+    (item) => item.competitionId === competitionId
+  );
+
+  if (!validateId) {
+    throw new Error("Competition with this id not Found");
+  }
+
+  await changeIsCompetitionStatisticsCalculationStatusQuery(
+    {
+      competitionId,
+      isCompetitionStatisticsCalculation,
+    },
+    request,
+    fastify
+  );
+  const index = global.tblCompetitions.findIndex((item) => item.competitionId == competitionId);
+  if(index != -1){
+    global.tblCompetitions[index].isCompetitionStatisticsCalculation = isCompetitionStatisticsCalculation;
+  }
+  
+  return `Competition isCompetitionStatisticsCalculation status updated successfully`;
+};
+
 module.exports = {
   allCompetitionService,
   competitionByIdService,
@@ -1887,5 +1919,6 @@ module.exports = {
   getMatchTypeTemplateByCompetitionIdService,
   competitionImportService,
   insertTeamPlayersByTeamId,
-  insertCommentaryPlayersByTeam
+  insertCommentaryPlayersByTeam,
+  changeIsCompetitionStatisticsCalculationStatusService
 };

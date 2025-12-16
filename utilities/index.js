@@ -946,7 +946,8 @@ const ModuleTypes = {
   CommentaryById: 42,
   PythonAPI: 43,
   EntitySocket: 44,
-  CompetitionStatisticsType: 45
+  CompetitionStatisticsType: 45,
+  CompetitionStatistics: 46
 };
 const callTPAPI = async (data, fastify) => {
   try {
@@ -1513,7 +1514,9 @@ const RefType = {
   Player: 5,
   TeamUpdate: 6,
   PlayerUpdate: 7,
-  tournamentTeamPointUpdate: 8
+  tournamentTeamPointUpdate: 8,
+  ICCRanking: 9,
+  CompetitionStatistics: 10
 };
 const SourceID = {
   Prediction: 1,
@@ -1942,111 +1945,137 @@ const CompetitionStatisticsType = {
   batting: {
     "Most Runs": {
       key: "batting_most_runs",
-      enum: 1
+      enum: 1,
+      valueKey: "runs"
     },
     "Highest Individual Score": {
       key: "batting_most_runs_innings",
-      enum: 2
+      enum: 2,
+      valueKey: "runs"
     },
     "Highest Strike Rates": {
       key: "batting_highest_strikerate",
-      enum: 3
+      enum: 3,
+      valueKey: "strike"
     },
     "Highest Strike Rates (Innings)": {
       key: "batting_highest_strikerate_innings",
-      enum: 4
+      enum: 4,
+      valueKey: "average"
     },
     "Highest Average": {
       key: "batting_highest_average",
-      enum: 5
+      enum: 5,
+      valueKey: "average"
     },
     "Most Centuries": {
       key: "batting_most_run100",
-      enum: 6
+      enum: 6,
+      valueKey: "run100"
     },
     "Most Fifties": {
       key: "batting_most_run50",
-      enum: 7
+      enum: 7,
+      valueKey: "run50"
     },
     "Most Sixes": {
       key: "batting_most_run6",
-      enum: 8
+      enum: 8,
+      valueKey: "run6"
     },
     "Most Sixes (Innings)": {
       key: "batting_most_run6_innings",
-      enum: 9
+      enum: 9,
+      valueKey: "run6"
     },
     "Most Fours": {
       key: "batting_most_run4",
-      enum: 10
+      enum: 10,
+      valueKey: "run4"
     },
     "Most Fours (Innings)": {
       key: "batting_most_run4_innings",
-      enum: 11
+      enum: 11,
+      valueKey: "run4"
     }
   },
   bowling: {
     "Top Wicket Takers": {
       key: "bowling_top_wicket_takers",
-      enum: 1
+      enum: 12,
+      valueKey: "wickets"
     },
     "Best Economy Rates": {
       key: "bowling_best_economy_rates",
-      enum: 2
+      enum: 13,
+      valueKey: "econ"
     },
     "Best Economy Rates (Innings)": {
       key: "bowling_best_economy_rates_innings",
-      enum: 3
+      enum: 14,
+      valueKey: "econ"
     },
     "Best Bowling Figures": {
       key: "bowling_best_bowling_figures",
-      enum: 4
+      enum: 15,
+      valueKey: ""
     },
     "Best Strike Rates": {
       key: "bowling_best_strike_rates",
-      enum: 5
+      enum: 16,
+      valueKey: "strike"
     },
     "Best Strike Rates (Innings)": {
       key: "bowling_best_strike_rates_innings",
-      enum: 6
+      enum: 17,
+      valueKey: "strike"
     },
     "Best Averages": {
       key: "bowling_best_averages",
-      enum: 7
+      enum: 18,
+      valueKey: "average"
     },
     "Most runs conceded in an innings": {
       key: "bowling_most_runs_conceded_innings",
-      enum: 8
+      enum: 19,
+      valueKey: ""
     },
     "Four Wickets": {
       key: "bowling_four_wickets",
-      enum: 9
+      enum: 20,
+      valueKey: "wicket4i"
     },
     "Five Wickets": {
       key: "bowling_five_wickets",
-      enum: 10
+      enum: 21,
+      valueKey: "wicket5i"
     },
     "Maidens": {
       key: "bowling_maidens",
-      enum: 11
+      enum: 22,
+      valueKey: "maidens"
     }
   },
   team: {
     "Total Runs": {
       key: "team_total_runs",
-      enum: 1
+      enum: 23,
+      valueKey: "runs"
     },
     "Most Centuries": {
       key: "team_total_run100",
-      enum: 2
+      enum: 24,
+      valueKey: "run100"
     },
     "Most Fifties": {
       key: "team_total_run50",
-      enum: 3
+      enum: 25,
+      valueKey: "run50"
     },
     "Total Wickets": {
       key: "team_total_wickets",
-      enum: 4
+      enum: 26,
+      valueKey: "wickets"
     }
   }
 };
@@ -2062,6 +2091,19 @@ const etWicketObj = {
   "hit the ball twice" : wicketTypeObj.HIT_BALL_TWICE,
   "obstructing the field" : wicketTypeObj.OBSTRACT_THE_FIELDING,
 }
+
+const getKeyAndValueKey = async (enumValue) => {
+  let result = Object.values(CompetitionStatisticsType)
+    .flatMap(category => Object.values(category))
+    .find(stat => stat.enum === enumValue);
+
+  if (result) {
+    return { key: result.key, valueKey: result.valueKey };
+  } else {
+    return null;
+  }
+}
+
 module.exports = {    
   ERROR_CODES,
   error,
@@ -2178,5 +2220,6 @@ module.exports = {
   roundToNearestMinutes,
   GAME_STATUS,
   CompetitionStatisticsType,
-  etWicketObj
+  etWicketObj,
+  getKeyAndValueKey
 };

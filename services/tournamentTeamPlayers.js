@@ -3,8 +3,9 @@ const {
   deleteTournamentTeamPlayersQuery,
   getAllPlayersByTeamIdQuery,
   getAllPlayersByTeamAndCompetitionIdQuery,
+  deletePlayersByTeamAndPlayerIdQuery,
 } = require("../repository/TableTournamentsTeamPlayers");
-const { insertCommentaryPlayers, deleteCommentaryPlayersByPlayerId } = require("../repository/TableCommentary");
+const { insertCommentaryPlayers, deleteCommentaryPlayersQuery } = require("../repository/TableCommentary");
 const { getAllTeamPlayersByTeamIdAndPlayerIdQuery } = require("../repository/TableTeamPlayer");
 
 const allTournamentTeamPlayersService = async (request) => {
@@ -20,7 +21,7 @@ const allTournamentTeamPlayersService = async (request) => {
   }
 };
 
-const addTournamentTeamPlayersService = async (request, fastify) => {
+const addDeleteTournamentTeamPlayersService = async (request, fastify) => {
   // get all the player for the team
   const {teamPlayers , competitionId , teamId} = request.body
   let existingPlayers = global.tblTournamentTeamPlayers.filter(
@@ -44,8 +45,6 @@ const addTournamentTeamPlayersService = async (request, fastify) => {
   global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(
     (item) => !newPlayers.map((elem) => elem.id).includes(item.id)
   );
-
-  // await addAndRemovePlayersFromTournamentTeams(request, fastify);
 
   const insertPromises = teamPlayers?.map(async (item) => {
     const playerTpId = global.tblPlayers.find(elem => elem.playerId === item.playerId);
@@ -92,6 +91,67 @@ const addTournamentTeamPlayersService = async (request, fastify) => {
   return "Tournaments Team players added successfully";
 };
 
+const addTournamentTeamPlayersService = async (request, fastify) => {
+  const { addPlayers, removePlayers, competitionId, teamId } = request.body;
+
+  await addAndRemovePlayersFromTournamentTeams(request, fastify);
+
+  if (removePlayers.length > 0) {
+    const removeIds = removePlayers.map(item => item.playerId);
+    const data = {
+      competitionId,
+      teamId,
+      playerIds: removeIds
+    };
+    await deletePlayersByTeamAndPlayerIdQuery(data, request, fastify);
+    global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(
+      item =>
+        !(
+          removeIds.includes(item.playerId) &&
+          item.teamId === teamId &&
+          item.competitionId === competitionId
+        )
+    );
+  }
+
+  if (addPlayers.length > 0) {
+    for (const item of addPlayers) {
+      const playerTp = global.tblPlayers.find(
+        elem => elem.playerId === item.playerId
+      );
+
+      const exists = global.tblTournamentTeamPlayers.some(
+        elem =>
+          elem.competitionId === competitionId &&
+          elem.teamId === teamId &&
+          elem.playerId === item.playerId
+      );
+
+      if (exists) continue;
+
+      const insertData = {
+        competitionId,
+        teamId,
+        playerId: item.playerId,
+        playerName: item.playerName,
+        userId: request.userTokenInfo.WrUserId,
+        tpId: playerTp?.tpId ?? null
+      };
+
+      const data = await insertTournamentTeamPlayersQuery(
+        insertData,
+        request,
+        fastify
+      );
+
+      if (data?.[0]) {
+        global.tblTournamentTeamPlayers.push(data[0]);
+      }
+    }
+  }
+  return "Tournament team players updated successfully";
+};
+
 const getPlayersByTeamIdService = async(request, fastify) => {
   const { teamId , competitionId } = request.body;
   const tournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(
@@ -116,98 +176,94 @@ const deleteTournamentTeamPlayersService = async (request, fastify) => {
 };
 
 const addAndRemovePlayersFromTournamentTeams = async (request, fastify) => {
-  const { teamPlayers, competitionId, teamId } = request.body;
+  const { addPlayers, removePlayers, competitionId, teamId } = request.body;
 
-  if (teamPlayers.length == 0) {
-    return;
+  if (removePlayers.length > 0) {
+    const playerIds = removePlayers.map(p => p.playerId);
+    const comDetails = global.tblCommentaries.filter(
+      item =>
+        item.commentaryStatus === 1 &&
+        item.competitionId === competitionId &&
+        (item.team1Id == teamId || item.team2Id == teamId)
+    );
+
+    for (const com of comDetails) {
+      await deleteCommentaryPlayersQuery(
+        { playerIds, commentaryId: com.commentaryId, teamId },
+        request,
+        fastify
+      );
+
+      global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(
+        item =>
+          !(
+            playerIds.includes(item.playerId) &&
+            item.commentaryId === com.commentaryId &&
+            item.teamId === teamId
+          )
+      );
+    }
   }
-  const getTeamPlayersData =
-    await getAllPlayersByTeamAndCompetitionIdQuery(
-      { competitionId, teamId },
-      request,
-      fastify
+
+  if (addPlayers.length > 0) {
+    const comDetails = global.tblCommentaries.filter(
+      item =>
+        [1, 2, 3].includes(item.commentaryStatus) &&
+        item.competitionId === competitionId &&
+        (item.team1Id == teamId || item.team2Id == teamId)
     );
 
-  const inputPlayerIdSet = new Set(teamPlayers.map(p => p.playerId));
-  const existingPlayerIdSet = new Set(getTeamPlayersData.map(p => p.playerId));
-
-  const playersToAdd = teamPlayers.filter(p =>
-    !existingPlayerIdSet.has(p.playerId)
-  );
-
-  const playersToRemove = getTeamPlayersData.filter(p =>
-    !inputPlayerIdSet.has(p.playerId)
-  );
-
-  if (playersToAdd.length > 0) {
-    const comDetails = global.tblCommentaries.filter(item =>
-      [1, 2, 3].includes(item.commentaryStatus) &&
-      item.competitionId === competitionId
-    );
-
-    for (const ply of playersToAdd) {
+    for (const ply of addPlayers) {
       const checkPlayer = global.tblPlayers.find(
         item => item.playerId === ply.playerId
       );
       if (!checkPlayer) continue;
 
       const teamPlayers = await getAllTeamPlayersByTeamIdAndPlayerIdQuery(
-        { playerId: ply.playerId, teamId }, fastify, request
+        { playerId: ply.playerId, teamId },
+        fastify,
+        request
       );
 
       for (const com of comDetails) {
-        const exists = global.tblCommentaryPlayers.find(item =>
-          item.commentaryId === com.commentaryId &&
-          item.teamId === teamId &&
-          item.playerId === ply.playerId
+        const matchType = global.tblMatchTypes.find(
+          mt => mt.matchTypeId === com.matchTypeId
         );
-        if (exists) continue;
-        const [newComm] = await insertCommentaryPlayers(
-          {
-            commentaryId: com.commentaryId,
-            teamId,
-            playerId: ply.playerId,
-            displayOrder: teamPlayers?.playerOrder ?? 0,
-            matchTypeId: com.matchTypeId,
-            tpId: checkPlayer.tpId,
-            jerseyPlayerImage: teamPlayers?.jerseyPlayerImage ?? null,
-            jerseyPlayerImagePath: teamPlayers?.jerseyPlayerImagePath ?? null,
-          },
-          com.currentInnings ?? 1,
-          fastify,
-          request
-        );
-        global.tblCommentaryPlayers.push(newComm);
 
+        const inningsCount = matchType?.noOfIningsPerSide ?? 1;
+        for (let i = 1; i <= inningsCount; i++) {
+          const exists = global.tblCommentaryPlayers.some(
+            item =>
+              item.commentaryId === com.commentaryId &&
+              item.teamId === teamId &&
+              item.playerId === ply.playerId &&
+              item.currentInnings === i
+          );
+          if (exists) continue;
+
+          const [newComm] = await insertCommentaryPlayers(
+            {
+              commentaryId: com.commentaryId,
+              teamId,
+              playerId: ply.playerId,
+              displayOrder: teamPlayers?.playerOrder ?? 0,
+              matchTypeId: com.matchTypeId,
+              tpId: checkPlayer.tpId,
+              jerseyPlayerImage: teamPlayers?.jerseyPlayerImage ?? null,
+              jerseyPlayerImagePath: teamPlayers?.jerseyPlayerImagePath ?? null
+            },
+            i,
+            fastify,
+            request
+          );
+
+          if (newComm) {
+            global.tblCommentaryPlayers.push(newComm);
+          }
+        }
       }
     }
   }
-
-  if (playersToRemove.length > 0) {
-    const playerIds = playersToRemove.map(p => p.playerId);
-
-    const comDetails = global.tblCommentaries.filter(item =>
-      [1].includes(item.commentaryStatus) &&
-      item.competitionId === competitionId
-    );
-
-    for (const com of comDetails) {
-      await deleteCommentaryPlayersByPlayerId(
-        { playerIds, commentaryId: com.commentaryId },
-        request,
-        fastify
-      );
-      global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(item =>
-        !(
-          playerIds.includes(item.playerId) &&
-          item.commentaryId === com.commentaryId &&
-          item.teamId === teamId
-        )
-      );
-    }
-  }
-
-  return
 };
 
 module.exports = {
@@ -215,4 +271,5 @@ module.exports = {
   addTournamentTeamPlayersService,
   getPlayersByTeamIdService,
   deleteTournamentTeamPlayersService,
+  addDeleteTournamentTeamPlayersService,
 };
