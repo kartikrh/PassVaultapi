@@ -2,6 +2,7 @@ const { RefType } = require(".");
 const { getAllAutoImportDataQuery, updateAutoImportDataQuery } = require("../repository/TableAutoImportData");
 const { matchImportService } = require("../services/commentry");
 const { competitionImportService } = require("../services/competition");
+const { importCompetitionstatisticsService } = require("../services/competitionStatistics");
 const { importICCRankingFromEntitySportService } = require("../services/iccRanking");
 const { playerImportService, UpdatePlayerFromEntityService } = require("../services/player");
 const { teamImportService, UpdateTeamFromEntityService } = require("../services/teams");
@@ -32,6 +33,7 @@ const getImportPayload = (importFn, refId) => {
         [UpdateTeamFromEntityService.name]: { tid: refId },
         [playerImportService.name]: { pid: refId },
         [UpdatePlayerFromEntityService.name]: { pid: refId },
+        [importCompetitionstatisticsService.name]: { cid: refId }
     };
     return mapping[importFn.name] || {};
 };
@@ -89,6 +91,7 @@ const entitySportAutoImportProcess = async (fastify) => {
                 [RefType.PlayerUpdate]: UpdatePlayerFromEntityService,
                 [RefType.tournamentTeamPointUpdate]: importUpdateTournamentTeamPointFromEntitySportService,
                 [RefType.ICCRanking]: importICCRankingFromEntitySportService,
+                [RefType.CompetitionStatistics]: importCompetitionstatisticsService,
             };
 
             const importFn = importMap[Number(refType)];
