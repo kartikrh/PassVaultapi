@@ -2,6 +2,7 @@ const { RefType } = require(".");
 const { getAllAutoImportDataQuery, updateAutoImportDataQuery } = require("../repository/TableAutoImportData");
 const { matchImportService } = require("../services/commentry");
 const { competitionImportService } = require("../services/competition");
+const { importICCRankingFromEntitySportService } = require("../services/iccRanking");
 const { playerImportService, UpdatePlayerFromEntityService } = require("../services/player");
 const { teamImportService, UpdateTeamFromEntityService } = require("../services/teams");
 const { importUpdateTournamentTeamPointFromEntitySportService } = require("../services/tournamentTeamPoints");
@@ -37,23 +38,26 @@ const getImportPayload = (importFn, refId) => {
 
 const validateImportData = (data, fastify) => {
     if (!data || !data.id) return false;
-    const { id, refId, refType } = data;
-    if (!refId || !refType) {
-        errorLogger(
-            fastify,
-            `Invalid refId or refType for wrId: ${id}, skipping import`,
-            "ERROR --> services/entitySportAutoImport.js/entitySportAutoImportProcess - validateImportData",
-            null,
-            data
-        );
-        return false;
+    if (data.refType !== RefType.ICCRanking) {
+        const { id, refId, refType } = data;
+        if (!refId || !refType) {
+            errorLogger(
+                fastify,
+                `Invalid refId or refType for wrId: ${id}, skipping import`,
+                "ERROR --> services/entitySportAutoImport.js/entitySportAutoImportProcess - validateImportData",
+                null,
+                data
+            );
+            return false;
+        }
     }
 
+
     const validRefTypes = Object.values(RefType);
-    if (!validRefTypes.includes(Number(refType))) {
+    if (!validRefTypes.includes(Number(data.refType))) {
         errorLogger(
             fastify,
-            `Unknown refType: ${refType} for wrId: ${id}, skipping import`,
+            `Unknown refType: ${data.refType} for wrId: ${id}, skipping import`,
             "ERROR --> services/entitySportAutoImport.js/entitySportAutoImportProcess - validRefTypes",
             null,
             data
@@ -84,6 +88,7 @@ const entitySportAutoImportProcess = async (fastify) => {
                 [RefType.TeamUpdate]: UpdateTeamFromEntityService,
                 [RefType.PlayerUpdate]: UpdatePlayerFromEntityService,
                 [RefType.tournamentTeamPointUpdate]: importUpdateTournamentTeamPointFromEntitySportService,
+                [RefType.ICCRanking]: importICCRankingFromEntitySportService,
             };
 
             const importFn = importMap[Number(refType)];

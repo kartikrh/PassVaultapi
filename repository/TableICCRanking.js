@@ -260,11 +260,42 @@ const activeInactiveICCRankingByIdQuery = async (data, request, fastify) => {
   }
 };
 
+const deleteAllICCRankingQuery = async (request, fastify) => {
+    try {
+        return await fastify.db.query(
+            `
+                UPDATE "tblICCRanking" SET
+                    "wrIsActive" = $1,
+                    "wrIsDeleted" = $2,
+                    "wrDeletedBy" = $3,
+                    "wrDeletedAt" = NOW()
+                WHERE "wrIsDeleted" = $4
+            `, {
+                bind: [
+                    false,
+                    true,
+                    request?.userTokenInfo?.WrUserId,
+                    false
+                ],
+            }
+        );
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/tblICCRanking.js/deleteAllICCRankingQuery",
+            request
+        );
+        throw new Error(err.message);
+    }
+};
+
 module.exports = {
     getAllICCRankingQuery,
     getICCRankingByIdQuery,
     insertICCRankingQuery,
     updateICCRankingQuery,
     deleteICCRankingByIdQuery,
-    activeInactiveICCRankingByIdQuery
+    activeInactiveICCRankingByIdQuery,
+    deleteAllICCRankingQuery
 };
