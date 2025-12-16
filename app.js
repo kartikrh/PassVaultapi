@@ -208,7 +208,7 @@ module.exports = async function (fastify, opts) {
           await insertCompetitionstatisticsInAutoImportService(fastify);
         }
       } catch (error) {
-        console.error("Error during scheduled task - autoUpdateTournamentTeamPoints:", error);
+        console.error("Error during scheduled task - insertCompetitionstatisticsInAutoImportService:", error);
       }
     });
 
