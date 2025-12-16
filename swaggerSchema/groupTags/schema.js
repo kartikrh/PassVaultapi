@@ -4161,7 +4161,6 @@ const Compitition = {
           isActive: { type: "boolean" },
           eventTypeId: { type: "integer" },
           commStatus: { type: "integer" },
-          isCompetitionStatisticsCalculation: { type: "boolean" }
         },
       },
     },
