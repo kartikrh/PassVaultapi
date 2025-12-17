@@ -5298,6 +5298,20 @@ const Score = {
       },
     },
   },
+  getPlayerByPlayerId: {
+    schema: {
+      tags: ["Score"],
+      description: "get player by playerid",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" }
+        },
+        required: ["playerId"],
+      },
+    },
+  }
 };
 
 const News = {

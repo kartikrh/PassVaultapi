@@ -5,7 +5,9 @@ const {
   upPlayerBallHistQuery,
   savePlayerBatHistQuery,
   savePlayerBallHistQuery,
-  getCommPlayerBowlHistQuery
+  getCommPlayerBowlHistQuery,
+  getAllCommentaryBattingHistory,
+  getAllCommentaryBowlingHistory
 } = require("../repository/TableCommPlayerHistory");
 const { 
   getAllPlayerBowlingHistory, 
@@ -1289,6 +1291,14 @@ const calculationOfCommPlayerBowlHistService = async(request, fastify) => {
   return "Player bowling history updated successfully";
 }
 
+const getPlayerCommentaryHistoryService = async (request, fastify) => {
+  const whereCondition = `tcpbh."wrPlayerId" = ${request.body.playerId} AND tcpbh."wrIsDeleted" = false`
+  const playerBatHistory = await getAllCommentaryBattingHistory(fastify, whereCondition);
+  const playerBallHistory = await getAllCommentaryBowlingHistory(fastify, whereCondition);
+
+  return { playerBatHistory, playerBallHistory }
+}
+
 module.exports = {
   createPlayerBattingHistoryService,
   createPlayerBowlingHistoryService,
@@ -1306,4 +1316,5 @@ module.exports = {
   playerBowlHistSummaryCalculationService,
   calculationOfCommPlayerBatHistService,
   calculationOfCommPlayerBowlHistService,
+  getPlayerCommentaryHistoryService
 };  
