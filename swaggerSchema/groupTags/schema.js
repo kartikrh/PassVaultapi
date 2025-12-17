@@ -5308,9 +5308,23 @@ const Score = {
         properties: {
           playerId: { type: "integer" }
         },
-        required: ["playerId"],
-      },
-    },
+        required: ["playerId"]
+      }
+    }
+  },
+  getByCompetitionId: {
+    schema: {
+      tags: ["Score"],
+      description: "get competition by competition id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" }
+        },
+        required: ["competitionId"]
+      }
+    }
   }
 };
 
