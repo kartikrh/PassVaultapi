@@ -364,7 +364,7 @@ const getCompetitionStatisticsByCompetitionIdService = async (request, fastify) 
         .sort((a, b) => a.typeId - b.typeId || a.entityEnum - b.entityEnum);
 
     for (const competitionStatisticsType of getCompetitionStatisticsType) {
-        const existingType = displayData.find(item => item.competitionStatisticsType.typeId === competitionStatisticsType.typeId);
+        const existingType = displayData.find(item => item.competitionStatisticsType.entityEnum === competitionStatisticsType.entityEnum);
 
         if (!existingType) {
             const competitionStatisticsData = getCompetitionStatistics.filter(item => item.competitionStatisticsTypeId === competitionStatisticsType.competitionStatisticsTypeId);
