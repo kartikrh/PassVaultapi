@@ -185,6 +185,7 @@ const assignAwardService = async (request, fastify) => {
             awardName: awardData?.awardName ?? null,
             playerStat: commPlayer
         }
+        
         callClientAPI(
             {
                 serviceType: ServiceType.clientAPI,
