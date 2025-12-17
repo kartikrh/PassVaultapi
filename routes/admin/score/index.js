@@ -79,6 +79,7 @@ const { deleteClient, deleteClientByEncrypt } = require("../../../controller/use
 const { AllICCRankings } = require("../../../controller/users/admin/iccRanking/index");
 const { getPlayerById } = require("../../../controller/users/admin/teamsAndPlayer/players");
 const { getAllPlayersHistory, getPlayerCommentaryHistory } = require("../../../controller/users/admin/playerHistory");
+const { getCompetitionStatisticsByCompetitionId } = require("../../../controller/users/admin/competitionStatistics");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/getscore", {
@@ -441,6 +442,10 @@ module.exports = async (fastify, opts) => {
   fastify.post("/getPlayerCommentaryHistoryByPlayerId", {
     schema: Score.getPlayerByPlayerId.schema,
     handler: (request, reply) => getPlayerCommentaryHistory(request, reply, fastify),
+  });
+  fastify.post("/getCompetitionStatisticsById", {
+    schema: Score.getByCompetitionId.schema,
+    handler: (request, reply) => getCompetitionStatisticsByCompetitionId(request, reply, fastify),
   });
 };
 
