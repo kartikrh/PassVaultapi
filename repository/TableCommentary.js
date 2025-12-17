@@ -8847,6 +8847,36 @@ const deleteCommentaryPlayersQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+
+const getHeadToHeadCommentaryQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `
+        SELECT * FROM "tblCommentaries"
+        WHERE ("wrTeam1Id" IN ($1, $2) OR "wrTeam2Id" IN ($1, $2)) AND "wrMatchTypeId" = $3
+        ORDER BY "wrCommentaryId" DESC
+    `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          data.team1Id,
+          data.team2Id,
+          data.matchTypeId
+        ]
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/getHeadToHeadCommentaryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -8997,4 +9027,5 @@ module.exports = {
   updateCommentaryDateByCommentaryIdQuery,
   updateCommentaryDateByCommentaryIdQuery,
   deleteCommentaryPlayersQuery,
+  getHeadToHeadCommentaryQuery
 };

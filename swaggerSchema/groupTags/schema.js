@@ -4147,6 +4147,22 @@ const Commentary = {
       },
     },
   },
+  getHeadToHeadCommentary: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get all head to head commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          team1Id: { type: "integer" },
+          team2Id: { type: "integer" },
+          matchTypeId: { type: "integer" }
+        },
+        required: ["team1Id", "team2Id", "matchTypeId"]
+      }
+    }
+  }
 };
 
 const Compitition = {
@@ -5323,6 +5339,22 @@ const Score = {
           competitionId: { type: "integer" }
         },
         required: ["competitionId"]
+      }
+    }
+  },
+  getHeadToHeadCommentary: {
+    schema: {
+      tags: ["Score"],
+      description: "get all head to head commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          team1Id: { type: "integer" },
+          team2Id: { type: "integer" },
+          matchTypeId: { type: "integer" }
+        },
+        required: ["team1Id", "team2Id", "matchTypeId"]
       }
     }
   }
