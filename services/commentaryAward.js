@@ -162,6 +162,29 @@ const assignAwardService = async (request, fastify) => {
     let addAward = await assignAwardQuery(comAwards, request, fastify);
     global.tblCommentaryAwards.push(...addAward); 
     for (const awardData of addAward) {
+        const commPlayer = global.tblCommentaryPlayers.filter(elem =>
+            elem.commentaryId == awardData.commentaryId &&
+            elem.playerId == awardData.playerId
+        ).map(ply => ({
+            totalRuns: ply?.batRun ?? null,
+            ballsFaced: ply?.batBall ?? null,
+            bowlerRun: ply?.bowlerRun ?? null,
+            totalWickets: ply?.bowlerTotalWicket ?? null,
+            overs: ply?.bowlerOver ?? null,
+            ballsDelivered: ply?.bowlerTotalBall ?? null,
+            inningCount: ply?.currentInnings ?? null,
+        }));
+        let award = {
+            id: awardData.id,
+            commentaryId: awardData.commentaryId,
+            teamId: awardData.teamId,
+            teamName: awardData.teamName,
+            playerId: awardData.playerId,
+            playerName: awardData.playerName,
+            awardId: awardData.awardId,
+            awardName: awardData?.awardName ?? null,
+            playerStat: commPlayer
+        }
         callClientAPI(
             {
                 serviceType: ServiceType.clientAPI,
@@ -169,7 +192,7 @@ const assignAwardService = async (request, fastify) => {
                 data: {
                     module: 'commentaryAwards',
                     type: "add",
-                    data: awardData
+                    data: award
                 }
             }, request, fastify)
             .catch((err) => {
@@ -190,9 +213,28 @@ const getAssignAwardService = async (request, fastify) => {
 const allCommentaryAwardService = async (fastify) => {
     const commAwards = global.tblCommentaryAwards.map(item => {
         const award = global.tblAwards.find(elem => elem.id === item.awardId);
+        const commPlayer = global.tblCommentaryPlayers.filter(elem =>
+            elem.commentaryId == item.commentaryId &&
+            elem.playerId == item.playerId
+        ).map(ply => ({
+            totalRuns: ply?.batRun ?? null,
+            ballsFaced: ply?.batBall ?? null,
+            bowlerRun: ply?.bowlerRun ?? null,
+            totalWickets: ply?.bowlerTotalWicket ?? null,
+            overs: ply?.bowlerOver ?? null,
+            ballsDelivered: ply?.bowlerTotalBall ?? null,
+            inningCount: ply?.currentInnings ?? null,
+        }));
         return {
-            ...item,
+            id: item.id,
+            commentaryId: item.commentaryId,
+            teamId: item.teamId,
+            teamName: item.teamName,
+            playerId: item.playerId,
+            playerName: item.playerName,
+            awardId: item.awardId,
             awardName: award?.name ?? null,
+            playerStat: commPlayer
         };
     });
 
