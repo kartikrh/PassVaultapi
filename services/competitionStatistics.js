@@ -116,14 +116,14 @@ const createCompetitionStatisticsService = async (request, fastify) => {
         throw new Error(`Competition Statistics already exists with id ${getCompetitionStatisticsData?.competitionStatisticsId}`);
     }
 
-    const displayOrderConflict = global.tblCompetitionStatistics.find(tcs => 
+    const displayOrderConflict = global.tblCompetitionStatistics.find(tcs =>
         tcs.eventTypeId === eventTypeId &&
         tcs.competitionId === competitionId &&
         tcs.competitionStatisticsTypeId === getCompetitionStatisticsTypeData.competitionStatisticsTypeId &&
         tcs.displayOrder === displayOrder &&
         !tcs.isDeleted
     );
-    
+
     if (displayOrderConflict) {
         throw new Error(`Display order ${displayOrder} already exists for this competition statistics type`);
     }
@@ -149,7 +149,7 @@ const updateCompetitionStatisticsService = async (request, fastify) => {
     if (!getCompetitionStatisticsType) {
         throw new Error("Invalid Competition Statistics Type Enum");
     }
-    
+
     const isChange = (
         (eventTypeId !== undefined && eventTypeId !== getCompetitionStatistics.eventTypeId) ||
         (competitionId !== undefined && competitionId !== getCompetitionStatistics.competitionId) ||
@@ -166,7 +166,7 @@ const updateCompetitionStatisticsService = async (request, fastify) => {
     }
 
     if (displayOrder !== undefined && displayOrder !== getCompetitionStatistics.displayOrder) {
-        const displayOrderConflict = global.tblCompetitionStatistics.find(tcs => 
+        const displayOrderConflict = global.tblCompetitionStatistics.find(tcs =>
             tcs.competitionStatisticsId !== competitionStatisticsId &&
             tcs.eventTypeId === (eventTypeId !== undefined ? eventTypeId : getCompetitionStatistics.eventTypeId) &&
             tcs.competitionId === (competitionId !== undefined ? competitionId : getCompetitionStatistics.competitionId) &&
@@ -174,7 +174,7 @@ const updateCompetitionStatisticsService = async (request, fastify) => {
             tcs.displayOrder === displayOrder &&
             !tcs.isDeleted
         );
-        
+
         if (displayOrderConflict) {
             throw new Error(`Display order ${displayOrder} already exists for this competition statistics type`);
         }
@@ -215,9 +215,9 @@ const saveCompetitionStatisticsService = async (request, fastify) => {
 
 const deleteCompetitionStatisticsService = async (request, fastify) => {
     const { competitionStatisticsId } = request.body;
-    
+
     const idsArray = Array.isArray(competitionStatisticsId) ? competitionStatisticsId : [competitionStatisticsId];
-    
+
     await deleteCompetitionStatisticsByIdQuery(idsArray, fastify, request);
 
     global.tblCompetitionStatistics = global.tblCompetitionStatistics.filter(
@@ -267,10 +267,10 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
                 for (let index = 0; index < response.length; index++) {
                     const res = response[index];
                     const displayOrder = index + 1;
-                    
+
                     const getTeam = global.tblTeams.find(tt => tt.tpId === res?.team?.tid);
                     const getPlayer = global.tblPlayers.find(tp => tp.tpId === res?.player?.pid);
-                    
+
                     let categoryId = null;
                     let competitionStatisticsTypeData = null;
                     for (let category of ["batting", "bowling", "team"]) {
@@ -280,20 +280,20 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
                             break;
                         }
                     }
-                    
+
                     const existingRecord = global.tblCompetitionStatistics.find(tcs => {
                         const commonCondition = tcs.eventTypeId === getCompetition.eventTypeId &&
                             tcs.competitionId === getCompetition.competitionId &&
                             tcs.competitionStatisticsTypeId === statType.competitionStatisticsTypeId;
 
                         if (categoryId === "batting" || categoryId === "bowling") {
-                            return commonCondition && 
-                                   tcs.playerId === getPlayer?.playerId && 
-                                   tcs.teamId === getTeam?.teamId;
+                            return commonCondition &&
+                                tcs.playerId === getPlayer?.playerId &&
+                                tcs.teamId === getTeam?.teamId;
                         } else if (categoryId === "team") {
-                            return commonCondition && 
-                                   tcs.teamId === getTeam?.teamId &&
-                                   !tcs.playerId;
+                            return commonCondition &&
+                                tcs.teamId === getTeam?.teamId &&
+                                !tcs.playerId;
                         }
                         return false;
                     });
@@ -312,9 +312,9 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
                         try {
                             await updateCompetitionStatisticsService({
                                 ...request,
-                                body: { 
-                                    ...body, 
-                                    competitionStatisticsId: existingRecord.competitionStatisticsId 
+                                body: {
+                                    ...body,
+                                    competitionStatisticsId: existingRecord.competitionStatisticsId
                                 }
                             }, fastify);
                         } catch (updateError) {
@@ -358,22 +358,38 @@ const getCompetitionStatisticsByCompetitionIdService = async (request, fastify) 
     }
 
     const getCompetitionStatistics = global.tblCompetitionStatistics.filter(tcs => tcs.competitionId === competitionId);
-    const displayData = [];
+
+    const displayData = [{
+        typeId: 1,
+        type: "batting",
+        data: {}
+    }, {
+        typeId: 2,
+        type: "bowling",
+        data: {}
+    }, {
+        typeId: 3,
+        type: "team",
+        data: {}
+    }];
 
     const getCompetitionStatisticsType = global.tblCompetitionStatisticsType.filter(tcst => tcst.isActive === true)
         .sort((a, b) => a.typeId - b.typeId || a.entityEnum - b.entityEnum);
 
     for (const competitionStatisticsType of getCompetitionStatisticsType) {
-        const existingType = displayData.find(item => item.competitionStatisticsType.entityEnum === competitionStatisticsType.entityEnum);
+        const existingType = displayData.find(item => item.data?.competitionStatisticsType?.entityEnum === competitionStatisticsType.entityEnum);
 
         if (!existingType) {
             const competitionStatisticsData = getCompetitionStatistics.filter(item => item.competitionStatisticsTypeId === competitionStatisticsType.competitionStatisticsTypeId);
 
             if (competitionStatisticsData.length > 0) {
-                displayData.push({
-                    competitionStatisticsType,
-                    competitionStatisticsData
-                });
+                const index = displayData.findIndex(item => item.typeId === competitionStatisticsType.typeId);
+                if (index !== -1) {
+                    displayData[index].data = {
+                        competitionStatisticsType,
+                        competitionStatisticsData
+                    }
+                }
             }
         }
     }
