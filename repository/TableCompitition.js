@@ -1079,6 +1079,36 @@ const updateCompititionDateByCompetitionIdQuery = async (data, fastify, request)
       values.push(data.endDate);
     }
 
+    if ("isMen" in data) {
+      fields.push(`"wrIsMen" = $${idx++}`);
+      values.push(data.isMen);
+    }
+
+    if ("isPointTable" in data) {
+      fields.push(`"wrIsPointTable" = $${idx++}`);
+      values.push(data.isPointTable);
+    }
+
+    if (data.matchTypeId !== undefined) {
+      fields.push(`"wrMatchTypeId" = $${idx++}`);
+      values.push(data.matchTypeId);
+    }
+
+    if (data.competition !== undefined) {
+      fields.push(`"wrCompetition" = $${idx++}`);
+      values.push(data.competition);
+    }
+
+    if (data.commStatus !== undefined) {
+      fields.push(`"wrStatus" = $${idx++}`);
+      values.push(data.commStatus);
+    }
+
+    if (data.type !== undefined) {
+      fields.push(`"wrType" = $${idx++}`);
+      values.push(data.type);
+    }
+
     fields.push(`"wrModifyBy" = $${idx++}`);
     values.push(request?.userTokenInfo?.WrUserId);
 
