@@ -245,10 +245,6 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
         throw new Error(`Competition tpId ${competitionTpId} not found`);
     }
 
-    if (!getCompetition.isCompetitionStatisticsCalculation) {
-        return null;
-    }
-
     const esResponseData = [];
     const getCompetitionStatisticsType = global.tblCompetitionStatisticsType.filter(tcst => tcst.isActive);
     for (const statType of getCompetitionStatisticsType) {
