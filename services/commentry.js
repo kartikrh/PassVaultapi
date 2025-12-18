@@ -22892,6 +22892,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
             global.tblCommentaries[commentaryIndex] = {
                 ...global.tblCommentaries[commentaryIndex],
                 displayStatus: commentaryDetails.displayStatus,
+                isClientShow: commentaryDetails?.isClientShow,
                 updateTime: commentaryDetails.updateTime,
                 modifyDate: commentaryDetails.modifyDate,
                 commentaryStatus: commentaryDetails.commentaryStatus,
