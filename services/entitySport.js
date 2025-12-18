@@ -847,19 +847,36 @@ const setEntityCom2Service = async (request , fastify) =>{
             // }
         }   
         comDetails = global.tblCommentaries.find((i) => i.commentaryId == comDetails.commentaryId)
-        if(comDetails.commentaryStatus == commentaryStatus.INPROGRESS || comDetails.commentaryStatus == commentaryStatus.INNINGCHANGE){
-          let res =await handleComArr(request.body, request,fastify,comDetails)
-          return res;
+        if(comDetails.commentaryStatus == commentaryStatus.INPROGRESS){
+          comDetails.isClientShow = true;
+          const bat = await checkBattingTeamService(response, comDetails);
+          if (bat) {
+            let res = await handleComArr(request.body, request,fastify,comDetails)
+            return res;
+          } else {
+            await onInningChangeService(request.body, fastify, comDetails);
+            let res = await handleComArr(request.body, request,fastify,comDetails)
+            return res;
+          }
         }
     }
 
-    if(response.live.game_state == EntityCommentaryStatus.INNINGCHANGE){
-      if(comDetails.commentaryStatus != commentaryStatus.INNINGCHANGE){
-        await onInningChangeService(request.body, fastify, comDetails);
+    // if(response.live.game_state == EntityCommentaryStatus.INNINGCHANGE){
+    //   if(comDetails.commentaryStatus != commentaryStatus.INNINGCHANGE){
+    //     await onInningChangeService(request.body, fastify, comDetails);
 
-      }
-      else {
-        return true;
+    //   }
+    //   else {
+    //     return true;
+    //   }
+    // }
+    
+    if (response.live.game_state == EntityCommentaryStatus.INNINGCHANGE) {
+      if (comDetails.commentaryStatus != commentaryStatus.INNINGCHANGE) {
+        comDetails.isClientShow = false;
+        await inningChangeStateService(fastify, comDetails);
+        let res = await handleComArr(request.body, request, fastify, comDetails)
+        return res;
       }
     }
     if(response.live.game_state == EntityCommentaryStatus.DEFAULT && comDetails.commentaryStatus != commentaryStatus.COMPLETED){
@@ -920,6 +937,15 @@ const setEntityCom2Service = async (request , fastify) =>{
     return true;
   }
 }
+
+const checkBattingTeamService = async (response, comDetails) => {
+  const batTeamId = global.tblCommentaryTeams.find((i) => i.commentaryId == comDetails.commentaryId &&
+    i.currentInnings == comDetails.currentInnings && i.teamStatus == 1)?.tpId;
+  const liveBattingTeamId = response?.live?.live_inning?.batting_team_id ?? null;
+  if (!batTeamId || !liveBattingTeamId) return false;
+  return batTeamId == liveBattingTeamId
+}
+
 const updateToss = async (request , fastify,comDetails = null) =>{
     const {response} = request.body;
     const scoreResponse = {};
@@ -2220,6 +2246,24 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     return res;
 }
 
+const inningChangeStateService = async (fastify, comDetails) => {
+  let commentaryUpdates = {
+    commentaryStatus: commentaryStatus.INNINGCHANGE,
+    displayStatus: "Innings Break",
+  };
+
+  await syncEntitySportCommentaryService({
+    commentaryId: comDetails.commentaryId,
+    commentaryDetails: {
+      ...comDetails,
+      ...commentaryUpdates
+    },
+    isCallPredict: false,
+  }, fastify)
+
+  return true;
+}
+
 const onInningChangeService = async (data, fastify, comDetails) => {
   const {response} = data;
   const teams = global.tblCommentaryTeams.filter((i) =>i.commentaryId == comDetails.commentaryId &&
@@ -2270,6 +2314,7 @@ const onInningChangeService = async (data, fastify, comDetails) => {
       commentaryStatus : commentaryStatus.INNINGCHANGE,
       // displayStatus: response.live.status_note,
       displayStatus: "Innings Break",
+      isClientShow: true,
       rmk : generateRemainingRuns({
         team: { ...bowlTeam, teamTrialRuns: trialRuns},
         ballsPerOver: matchType.ballsPerOver || 6,

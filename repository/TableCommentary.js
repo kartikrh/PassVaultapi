@@ -8879,6 +8879,43 @@ const getHeadToHeadCommentaryQuery = async (data, request, fastify) => {
   }
 };
 
+
+const getCommentaryPlayerByIdsQuery = async (data, fastify) => {
+  try {
+    return await fastify.db.query(
+      `select
+        "wrCommentaryPlayerId" as "commentaryPlayerId",
+        "wrCommentaryId" as "commentaryId",
+        "wrTeamId" as "teamId",
+        "wrPlayerId" as "playerId",
+        "wrBat_Run" as "batTotalRun",
+        "wrBat_Ball" as "ballsFaced",
+        "wrBowler_Over" as "bowlerOver",
+        "wrBowler_TotalBall" as "ballsDelivered",
+        "wrBowler_Run" as "bowlerTotalRun",
+        "wrBowler_TotalWicket" as "bowlerTotalWicket",
+        "wrCurrentInnings" as "inningCount",
+        "wrJerseyPlayerImage" as "jerseyPlayerImage",
+        "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath"
+      from "tblCommentaryPlayers"
+      WHERE "wrCommentaryId" = $1
+      AND "wrPlayerId" = $2
+      AND "wrIsDelete" = FALSE`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.commentaryId, data.playerId]
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/getCommentaryPlayerByIdsQuery",
+      null
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -9029,5 +9066,6 @@ module.exports = {
   updateCommentaryDateByCommentaryIdQuery,
   updateCommentaryDateByCommentaryIdQuery,
   deleteCommentaryPlayersQuery,
-  getHeadToHeadCommentaryQuery
+  getHeadToHeadCommentaryQuery,
+  getCommentaryPlayerByIdsQuery,
 };
