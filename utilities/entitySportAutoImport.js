@@ -92,6 +92,7 @@ const entitySportAutoImportProcess = async (fastify) => {
                 [RefType.tournamentTeamPointUpdate]: importUpdateTournamentTeamPointFromEntitySportService,
                 [RefType.ICCRanking]: importICCRankingFromEntitySportService,
                 [RefType.CompetitionStatistics]: importCompetitionstatisticsService,
+                [RefType.CompetitionUpdate]: competitionImportService
             };
 
             const importFn = importMap[Number(refType)];

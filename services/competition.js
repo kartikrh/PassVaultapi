@@ -1389,6 +1389,42 @@ const competitionImportService = async (data, fastify, request) => {
       ? new Date(checkCompetition.endDate)
       : null;
 
+    const isMen = checkCompetition?.isMen
+      ? checkCompetition?.isMen
+      : null;
+
+    const esIsMen = entitySportCompetitionResponse?.teams?.[0]?.sex === "male";
+
+    const isCountPointTable = checkCompetition?.isPointTable
+      ? checkCompetition?.isPointTable
+      : null;
+
+    const esPointTable = entitySportCompetitionResponse?.table === "1";
+
+    const competitionMatchType = checkCompetition?.matchTypeId
+      ? checkCompetition?.matchTypeId
+      : null;
+
+    const esCompetitionMatchType = matchType?.matchTypeId;
+
+    const competitionTitle = checkCompetition?.competition
+      ? checkCompetition?.competition
+      : null;
+
+    const esCompetitionTitle = entitySportCompetitionResponse?.title;
+
+    const competitionStatus = checkCompetition?.commStatus
+      ? checkCompetition?.commStatus
+      : null;
+
+    const esCompetitionStatus = compStatus[entitySportCompetitionResponse?.status];
+
+    const competitionType = checkCompetition?.type
+      ? checkCompetition?.type
+      : null;
+
+    const esCompetitionType = CompetitionType[entitySportCompetitionResponse?.category?.toUpperCase()]
+
     const updateData = {};
 
     if (esStart && (!localStart || esStart.getTime() !== localStart.getTime())) {
@@ -1397,6 +1433,30 @@ const competitionImportService = async (data, fastify, request) => {
 
     if (esEnd && (!localEnd || esEnd.getTime() !== localEnd.getTime())) {
       updateData.endDate = esEnd;
+    }
+
+    if (esIsMen && (!isMen || esIsMen !== isMen)) {
+      updateData.isMen = esIsMen;
+    }
+
+    if (esPointTable && (!isCountPointTable || esPointTable !== isCountPointTable)) {
+      updateData.isPointTable = esPointTable;
+    }
+
+    if (esCompetitionMatchType && (!competitionMatchType || esCompetitionMatchType !== competitionMatchType)) {
+      updateData.matchTypeId = esCompetitionMatchType;
+    }
+
+    if (esCompetitionTitle && (!competitionTitle || competitionTitle !== esCompetitionTitle)) {
+      updateData.competition = esCompetitionTitle;
+    }
+
+    if (esCompetitionStatus && (!competitionStatus || esCompetitionStatus !== competitionStatus)) {
+      updateData.commStatus = esCompetitionStatus;
+    }
+
+    if (esCompetitionType && (!competitionType || esCompetitionType !== competitionType)) {
+      updateData.type = esCompetitionType;
     }
 
     if (Object.keys(updateData).length > 0) {
