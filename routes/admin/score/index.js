@@ -25,6 +25,7 @@ const {
   getAllCompletedCommentary,
   getAllCommentariesDataV1,
   getAllCommentariesDataV2,
+  getHeadToHeadCommentary,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { getAllEventMarketsAndRunners } = require('../../../controller/users/admin/eventMarket');
 const { getAllMenuItems } = require("../../../controller/users/admin/menuItem");
@@ -77,6 +78,9 @@ const { getAllSocialMedia } = require("../../../controller/users/admin/socialMed
 const { clientApiWhitelabels, getHideEvent } = require("../../../controller/users/admin/whitelabel");
 const { deleteClient, deleteClientByEncrypt } = require("../../../controller/users/admin/client");
 const { AllICCRankings } = require("../../../controller/users/admin/iccRanking/index");
+const { getPlayerById } = require("../../../controller/users/admin/teamsAndPlayer/players");
+const { getAllPlayersHistory, getPlayerCommentaryHistory } = require("../../../controller/users/admin/playerHistory");
+const { getCompetitionStatisticsByCompetitionId } = require("../../../controller/users/admin/competitionStatistics");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/getscore", {
@@ -427,6 +431,26 @@ module.exports = async (fastify, opts) => {
   });
   fastify.post("/commAwards", {
     handler: (request, reply) => allCommentaryAwards(request, reply, fastify),
+  });
+  fastify.post("/playerInfo", {
+    schema: Score.getPlayerByPlayerId.schema,
+    handler: (request, reply) => getPlayerById(request, reply, fastify),
+  });
+  fastify.post("/getPlayerHistoryByPlayerId", {
+    schema: Score.getPlayerByPlayerId.schema,
+    handler: (request, reply) => getAllPlayersHistory(request, reply, fastify),
+  });
+  fastify.post("/getPlayerCommentaryHistoryByPlayerId", {
+    schema: Score.getPlayerByPlayerId.schema,
+    handler: (request, reply) => getPlayerCommentaryHistory(request, reply, fastify),
+  });
+  fastify.post("/getCompetitionStatisticsById", {
+    schema: Score.getByCompetitionId.schema,
+    handler: (request, reply) => getCompetitionStatisticsByCompetitionId(request, reply, fastify),
+  });
+  fastify.post("/getHeadToHeadCommentary", {
+    schema: Score.getHeadToHeadCommentary.schema,
+    handler: (request , reply) => getHeadToHeadCommentary(request, reply, fastify)
   });
 };
 

@@ -6,6 +6,7 @@ const {
     deleteAwardsQuery
 } = require("../repository/TableCommentaryAward");
 const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { getCommentaryPlayerByIdsQuery } = require("../repository/TableCommentary")
 
 const getAllComAwardService = async (fastify) => {
     return global.tblCommentaryAwards || [];
@@ -162,6 +163,25 @@ const assignAwardService = async (request, fastify) => {
     let addAward = await assignAwardQuery(comAwards, request, fastify);
     global.tblCommentaryAwards.push(...addAward); 
     for (const awardData of addAward) {
+        const commPlayer = await getCommentaryPlayerByIdsQuery(
+            {
+                commentaryId: awardData.commentaryId,
+                playerId: awardData.playerId
+            }, fastify
+        );
+
+        let award = {
+            id: awardData.id,
+            commentaryId: awardData.commentaryId,
+            teamId: awardData.teamId,
+            teamName: awardData.teamName,
+            playerId: awardData.playerId,
+            playerName: awardData.playerName,
+            awardId: awardData.awardId,
+            awardName: awardData?.awardName ?? null,
+            playerStat: commPlayer
+        }
+        
         callClientAPI(
             {
                 serviceType: ServiceType.clientAPI,
@@ -169,7 +189,7 @@ const assignAwardService = async (request, fastify) => {
                 data: {
                     module: 'commentaryAwards',
                     type: "add",
-                    data: awardData
+                    data: award
                 }
             }, request, fastify)
             .catch((err) => {
@@ -188,15 +208,35 @@ const getAssignAwardService = async (request, fastify) => {
     return result;
 }
 const allCommentaryAwardService = async (fastify) => {
-    const commAwards = global.tblCommentaryAwards.map(item => {
-        const award = global.tblAwards.find(elem => elem.id === item.awardId);
-        return {
-            ...item,
-            awardName: award?.name ?? null,
-        };
-    });
+    const commAwards = await Promise.all(
+        global.tblCommentaryAwards.map(async item => {
+            const award = global.tblAwards.find(
+                elem => elem.id === item.awardId
+            );
 
-    return commAwards ?? [];
+            const commPlayer = await getCommentaryPlayerByIdsQuery(
+                {
+                    commentaryId: item.commentaryId,
+                    playerId: item.playerId
+                },
+                fastify
+            );
+
+            return {
+                id: item.id,
+                commentaryId: item.commentaryId,
+                teamId: item.teamId,
+                teamName: item.teamName,
+                playerId: item.playerId,
+                playerName: item.playerName,
+                awardId: item.awardId,
+                awardName: award?.name ?? null,
+                playerStat: commPlayer ?? []
+            };
+        })
+    );
+
+    return commAwards;
 };
 module.exports = {
     getAllComAwardService,

@@ -12,6 +12,7 @@ const {
     EntityCommentaryStatus,
     wicketTypeObj,
     GAME_STATUS,
+    etWicketObj,
 } = require("../utilities/index");
 const { getCountryByIds } = require("../repository/TableCountryCodes")
 const { getVenueByIds } = require("../repository/TableVenue")
@@ -457,6 +458,27 @@ const setEntityCom2Service = async (request , fastify) =>{
             socket.client.emit("updateFullscore", sendDataForSocketUpdate);
           });
       }
+      if(comDetails.commentaryStatus == commentaryStatus.TOSSDONE){
+        // check if getting same data from entity
+        const tossInfo = response.match_info.toss;
+        // get in comteam
+        let team1 = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.tpId == tossInfo.winner && ct.currentInnings == comDetails.currentInnings)
+        if(!team1){
+            throw new Error("Team1 not found in commentary teams.")
+        }
+        let team2 = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.commentaryTeamId != team1.commentaryTeamId && ct.currentInnings == comDetails.currentInnings)
+        if(!team1 || !team2){
+            throw new Error("Batting or Bowling team not found in commentary teams.")
+        }
+        let comWinTeam = comDetails.tossWonBy;
+        if(team1.teamId != comWinTeam){
+          // update toss info again
+          await updateToss(request , fastify,comDetails);
+          return true;
+        }
+        return true;
+
+      }
       return true;
     }
     // set the players
@@ -825,19 +847,36 @@ const setEntityCom2Service = async (request , fastify) =>{
             // }
         }   
         comDetails = global.tblCommentaries.find((i) => i.commentaryId == comDetails.commentaryId)
-        if(comDetails.commentaryStatus == commentaryStatus.INPROGRESS || comDetails.commentaryStatus == commentaryStatus.INNINGCHANGE){
-          let res =await handleComArr(request.body, request,fastify,comDetails)
-          return res;
+        if(comDetails.commentaryStatus == commentaryStatus.INPROGRESS){
+          comDetails.isClientShow = true;
+          const bat = await checkBattingTeamService(response, comDetails);
+          if (bat) {
+            let res = await handleComArr(request.body, request,fastify,comDetails)
+            return res;
+          } else {
+            await onInningChangeService(request.body, fastify, comDetails);
+            let res = await handleComArr(request.body, request,fastify,comDetails)
+            return res;
+          }
         }
     }
 
-    if(response.live.game_state == EntityCommentaryStatus.INNINGCHANGE){
-      if(comDetails.commentaryStatus != commentaryStatus.INNINGCHANGE){
-        await onInningChangeService(request.body, fastify, comDetails);
+    // if(response.live.game_state == EntityCommentaryStatus.INNINGCHANGE){
+    //   if(comDetails.commentaryStatus != commentaryStatus.INNINGCHANGE){
+    //     await onInningChangeService(request.body, fastify, comDetails);
 
-      }
-      else {
-        return true;
+    //   }
+    //   else {
+    //     return true;
+    //   }
+    // }
+    
+    if (response.live.game_state == EntityCommentaryStatus.INNINGCHANGE) {
+      if (comDetails.commentaryStatus != commentaryStatus.INNINGCHANGE) {
+        comDetails.isClientShow = false;
+        await inningChangeStateService(fastify, comDetails);
+        let res = await handleComArr(request.body, request, fastify, comDetails)
+        return res;
       }
     }
     if(response.live.game_state == EntityCommentaryStatus.DEFAULT && comDetails.commentaryStatus != commentaryStatus.COMPLETED){
@@ -898,6 +937,150 @@ const setEntityCom2Service = async (request , fastify) =>{
     return true;
   }
 }
+
+const checkBattingTeamService = async (response, comDetails) => {
+  const batTeamId = global.tblCommentaryTeams.find((i) => i.commentaryId == comDetails.commentaryId &&
+    i.currentInnings == comDetails.currentInnings && i.teamStatus == 1)?.tpId;
+  const liveBattingTeamId = response?.live?.live_inning?.batting_team_id ?? null;
+  if (!batTeamId || !liveBattingTeamId) return false;
+  return batTeamId == liveBattingTeamId
+}
+
+const updateToss = async (request , fastify,comDetails = null) =>{
+    const {response} = request.body;
+    const scoreResponse = {};
+    const sendDataForSocketUpdate = {};
+    sendDataForSocketUpdate.commentaryId = comDetails?.commentaryId;
+    sendDataForSocketUpdate.eventRefId = comDetails?.eventRefId;
+    sendDataForSocketUpdate.dataToUpdate = [];
+    let matchID = request.body?.response?.match_id
+    const tossInfo = response.match_info.toss;
+    // get in comteam
+    let team1 = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.tpId == tossInfo.winner && ct.currentInnings == comDetails.currentInnings)
+    if(!team1){
+      throw new Error("Team1 not found in commentary teams.,updateToss")
+    }
+    let team2 = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.commentaryTeamId != team1.commentaryTeamId && ct.currentInnings == comDetails.currentInnings)
+    if(!team1 || !team2){
+      throw new Error("Batting or Bowling team not found in commentary teams.,updateToss")
+    }
+    let comTeams;
+    if(tossInfo.decision == 1){
+    comTeams = [
+        {
+            ...team1,
+            teamStatus : 1,
+            teamBattingOrder : 1,
+            subInning : 1
+        },
+        {
+            ...team2,
+            teamStatus : 2,
+            teamBattingOrder :2,
+            subInning : 2
+        }
+    ]
+    }
+    if(tossInfo.decision == 2){
+    comTeams = [
+        {
+            ...team1,
+            teamStatus : 2,
+            teamBattingOrder : 2,
+            subInning : 2
+        },
+        {
+            ...team2,
+            teamStatus : 1,
+            teamBattingOrder :1,
+            subInning : 1
+        }
+    ]
+    }
+    let teamChoseTo = tossInfo?.decision === 1 ? "Bat" : "Bowl"
+    let upComData = {
+    ...comDetails,
+    commentaryStatus : commentaryStatus.TOSSDONE,
+    tossWonBy : team1.teamId,
+    choseTo : tossInfo.decision,
+    tossRmk : `Toss won by ${team1.teamName} and chose to ${teamChoseTo}.`,
+    displayStatus : `Toss won by ${team1.teamName} and chose to ${teamChoseTo}.`,
+    }
+    let commentaryId = comDetails.commentaryId;
+    // return {
+    //     comTeams,
+    //     upComData
+    // }
+    let updatedData = await fastify.db.query(
+        `CALL proc_commentary_toss(
+        $1, $2, $3
+            )`,
+        {
+            bind: [
+                comTeams ? JSON.stringify(comTeams) : null,
+                upComData ? JSON.stringify(upComData) : null,
+                commentaryId,
+            ],
+            type: fastify.db.QueryTypes.SELECT,
+        }
+    );
+    updatedData = updatedData[0];
+    if (upComData) {
+        let comI = global.tblCommentaries.findIndex((c)=> c.commentaryId == upComData.commentaryId)
+        global.tblCommentaries[comI] = {
+            ...global.tblCommentaries[comI],
+            modifyDate: upComData.modifyDate,
+            commentaryStatus: upComData.commentaryStatus,
+            tossWonBy: upComData.tossWonBy,
+            choseTo: upComData.choseTo,
+            tossRmk: upComData.tossRmk,
+            displayStatus: upComData.displayStatus,
+        };
+        scoreResponse.commentaryDetails = global.tblCommentaries[comI]
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module: "commentaryDetails",
+          type: "update",
+          data: scoreResponse.commentaryDetails,
+        });
+    }
+    if(comTeams && comTeams.length > 0){
+      scoreResponse.commentaryTeams = [];
+        for (let ct of comTeams){
+            let comTI = global.tblCommentaryTeams.findIndex((c)=> c.commentaryTeamId == ct.commentaryTeamId)
+            global.tblCommentaryTeams[comTI] = {
+                ...global.tblCommentaryTeams[comTI],
+                teamStatus: ct.teamStatus,
+                teamBattingOrder: ct.teamBattingOrder,
+                subInning: ct.subInning,
+            };
+            scoreResponse.commentaryTeams.push(global.tblCommentaryTeams[comTI]);
+        }
+        scoreResponse.commentaryTeams.forEach(async (team) => {
+          const _teamsC1 = global.tblTeams.filter(
+            (item) => item.teamId === team.teamId
+          );
+          if (_teamsC1.length > 0) {
+            team.image = _teamsC1[0].image;
+            team.jersey = _teamsC1[0].jersey;
+            team.nimage = _teamsC1[0].imagePath;
+            team.njersey = _teamsC1[0].jerseyPath;
+          }
+        });
+        sendDataForSocketUpdate.dataToUpdate.push({
+          module: "commentaryTeams",
+          type: "update",
+          data: scoreResponse.commentaryTeams.map((team) => ({
+            ...team,
+            crr: parseFloat(team?.crr) || 0,
+            rrr: parseFloat(team?.rrr) || 0,
+          })),
+        });
+    }
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+    });
+    return true;
+  }
 const handleComArr = async (data , request , fastify , comDetails) =>{
     const {response} = data;
     const commentaries = response.live.commentaries;
@@ -1754,11 +1937,23 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               bowlerDotBall : playerTpIdObj[c.bowler_id].bowlerDotBall ? playerTpIdObj[c.bowler_id].bowlerDotBall + 1 : 1,  
             }
           }
-          // let wicketBatsMan = playerTpIdObj[c.wicket_batsman_id];
+          let wicketBatsId = c.wicket_batsman_id || c.batsman_id;
+          console.log("wicketsf batild", wicketBatsId)
+          const dismissalKey =
+            typeof c.dismissal === "string"
+              ? c.dismissal.trim().toLowerCase()
+              : null;
+          console.log("dismissalKey", dismissalKey)
+
+          const wicket_type = etWicketObj[dismissalKey] ?? null;
+          console.log("wicket_type", wicket_type)
+
           let wicketData = {
-            wicketType: wicketTypeObj.BOLD,
-            batterId: playerTpIdObj[c.batsman_id]?.commentaryPlayerId,
-            batterName : playerTpIdObj[c.batsman_id]?.playerName,
+            wicketType: wicket_type,
+            // batterId: playerTpIdObj[c.batsman_id]?.commentaryPlayerId,
+            // batterName : playerTpIdObj[c.batsman_id]?.playerName,
+            batterId: playerTpIdObj[wicketBatsId]?.commentaryPlayerId,
+            batterName : playerTpIdObj[wicketBatsId]?.playerName,
             runs: c?.run ?? 0,
             fieldPlayerId : playerTpIdObj[c.bowler_id]?.commentaryPlayerId,
             fieldPlayerName : playerTpIdObj[c.bowler_id]?.playerName,
@@ -1850,47 +2045,47 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           over.dotBall += 1;
           // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
           over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
-          if(playersMap[c.batsman_id]){
-            playersMap[c.batsman_id] = {
-              ...playersMap[c.batsman_id],
+          if(playersMap[wicketBatsId]){
+            playersMap[wicketBatsId] = {
+              ...playersMap[wicketBatsId],
               isBatterOut: true,
               isBatterRetir: false,
-              wicketType: wicketData.wicketType,
+              wicketType: wicket_type,
               bowlerId: playerTpIdObj[c.bowler_id]?.commentaryPlayerId,
               fielderId1: wicketData.fielder1,
               fielderId2: wicketData.fielder2,
               isPlay: null,
               onStrike: null,
               // batBall: (playersMap[c.batsman_id]?.batBall || 0) + 1,
-              batDotBall: (playersMap[c.batsman_id]?.batDotBall || 0) + 1,
+              batDotBall: (playersMap[wicketBatsId]?.batDotBall || 0) + 1,
             }
           }
           else {
-            playersMap[c.batsman_id] = {
-              ...playerTpIdObj[c.batsman_id],
+            playersMap[wicketBatsId] = {
+              ...playerTpIdObj[wicketBatsId],
               isBatterOut: true,
               isBatterRetir: false,
-              wicketType: wicketData.wicketType,
+              wicketType: wicket_type,
               bowlerId: playerTpIdObj[c.bowler_id]?.commentaryPlayerId,
               fielderId1: wicketData.fielder1,
               fielderId2: wicketData.fielder2,
               isPlay: null,
               onStrike: null,
               // batBall: (playerTpIdObj[c.batsman_id].batBall || 0) + 1,
-              batDotBall: (playerTpIdObj[c.batsman_id].batDotBall || 0) + 1,
+              batDotBall: (playerTpIdObj[wicketBatsId].batDotBall || 0) + 1,
               // batBall: 1,
               // batDotBall: 1,
             }
           }
           let updateBall = {
             ballIsWicket: true,
-            ballWicketType: wicketTypeObj.BOLD,
+            ballWicketType: wicket_type,
             ballFielderId1: wicketData.fielder1,
             ballFielderId2: wicketData.fielder2,
-            batStrikeId: playerTpIdObj[c.batsman_id]?.commentaryPlayerId,
+            batStrikeId: playerTpIdObj[wicketBatsId]?.commentaryPlayerId,
             // batNonStrikeId: ,
             batNonStrikeId: nonStrikePId,
-            ballPlayerId: playerTpIdObj[c.batsman_id]?.commentaryPlayerId,
+            ballPlayerId: playerTpIdObj[wicketBatsId]?.commentaryPlayerId,
             ballIsCount: true,
             ballType: BALL_TYPE.REGULAR,
             ballRun: wicketData.runs,
@@ -2051,6 +2246,24 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     return res;
 }
 
+const inningChangeStateService = async (fastify, comDetails) => {
+  let commentaryUpdates = {
+    commentaryStatus: commentaryStatus.INNINGCHANGE,
+    displayStatus: "Innings Break",
+  };
+
+  await syncEntitySportCommentaryService({
+    commentaryId: comDetails.commentaryId,
+    commentaryDetails: {
+      ...comDetails,
+      ...commentaryUpdates
+    },
+    isCallPredict: false,
+  }, fastify)
+
+  return true;
+}
+
 const onInningChangeService = async (data, fastify, comDetails) => {
   const {response} = data;
   const teams = global.tblCommentaryTeams.filter((i) =>i.commentaryId == comDetails.commentaryId &&
@@ -2101,6 +2314,7 @@ const onInningChangeService = async (data, fastify, comDetails) => {
       commentaryStatus : commentaryStatus.INNINGCHANGE,
       // displayStatus: response.live.status_note,
       displayStatus: "Innings Break",
+      isClientShow: true,
       rmk : generateRemainingRuns({
         team: { ...bowlTeam, teamTrialRuns: trialRuns},
         ballsPerOver: matchType.ballsPerOver || 6,

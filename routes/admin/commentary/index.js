@@ -113,6 +113,7 @@ const {
   undoCommentary,
   commentaryViewsReport,
   checkSUpdatePassword,
+  getHeadToHeadCommentary,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -1520,5 +1521,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request , reply) => checkSUpdatePassword(request, reply, fastify)
+  });
+  fastify.post("/getHeadToHeadCommentary", {
+    schema: Commentary.getHeadToHeadCommentary.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:["Commentary", "Commentary List"],
+          mode: "view",
+        }),
+    ],
+    handler: (request , reply) => getHeadToHeadCommentary(request, reply, fastify)
   });
 };

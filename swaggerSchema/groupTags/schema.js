@@ -4147,6 +4147,22 @@ const Commentary = {
       },
     },
   },
+  getHeadToHeadCommentary: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get all head to head commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          team1Id: { type: "integer" },
+          team2Id: { type: "integer" },
+          matchTypeId: { type: "integer" }
+        },
+        required: ["team1Id", "team2Id", "matchTypeId"]
+      }
+    }
+  }
 };
 
 const Compitition = {
@@ -5298,6 +5314,50 @@ const Score = {
       },
     },
   },
+  getPlayerByPlayerId: {
+    schema: {
+      tags: ["Score"],
+      description: "get player by playerid",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          playerId: { type: "integer" }
+        },
+        required: ["playerId"]
+      }
+    }
+  },
+  getByCompetitionId: {
+    schema: {
+      tags: ["Score"],
+      description: "get competition by competition id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" }
+        },
+        required: ["competitionId"]
+      }
+    }
+  },
+  getHeadToHeadCommentary: {
+    schema: {
+      tags: ["Score"],
+      description: "get all head to head commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          team1Id: { type: "integer" },
+          team2Id: { type: "integer" },
+          matchTypeId: { type: "integer" }
+        },
+        required: ["team1Id", "team2Id", "matchTypeId"]
+      }
+    }
+  }
 };
 
 const News = {
@@ -11311,6 +11371,111 @@ const CompititionStatisticsType = {
   }
 };
 
+const CompititionStatistics = {
+  getAll: {
+    schema: {
+      tags: ["Compitition Statistics"],
+      description: "get all Compitition Statistics",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+          eventTypeId: { type: "integer" },
+          competitionId: { type: "integer" },
+          competitionStatisticsTypeEnum: { type: "integer" }
+        },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Compitition Statistics"],
+      description: "get Compitition Statistics by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionStatisticsId: { type: "integer" },
+        },
+        required: ["competitionStatisticsId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Compitition Statistics"],
+      description: "save Compitition Statistics",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionStatisticsId: { type: "integer" },
+          eventTypeId: { type: "integer" },
+          competitionId: { type: "integer" },
+          competitionStatisticsTypeEnum: { type: "integer" },
+          teamId: { type: "integer" },
+          playerId: { type: "integer" },
+          displayOrder: { type: "integer" },
+          value: { type: "string" },
+          isActive: { type: "boolean" }
+        },
+        required: ["competitionStatisticsId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Compitition Statistics"],
+      description: "delete Compitition Statistics",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionStatisticsId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["competitionStatisticsId"],
+      },
+    },
+  },
+  updateDisplayOrder: {
+    schema: {
+      tags: ["Compitition Statistics"],
+      description: "update display order",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            competitionStatisticsId: { type: "integer" },
+            displayOrder: { type: "integer" },
+          },
+        },
+        minItems: 1,
+      },
+    },
+  },
+  getByCompetitionId: {
+    schema: {
+      tags: ["Compitition Statistics"],
+      description: "get Compitition Statistics by competition id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+        },
+        required: ["competitionId"],
+      },
+    },
+  }
+};
+
 module.exports = {
   Auth,
   Tabs,
@@ -11392,5 +11557,6 @@ module.exports = {
   Report,
   EntitySocket,
   AutoUpdatePlayerStatisticsData,
-  CompititionStatisticsType
+  CompititionStatisticsType,
+  CompititionStatistics
 };

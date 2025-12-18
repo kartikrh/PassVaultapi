@@ -8683,7 +8683,31 @@ const playingElevenChangeOnCommPlayersQuery = async (data, fastify, request) => 
     throw new Error(err.message);
   }
 };
-
+const upTeamNameInComQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblCommentaryTeams" SET
+        "wrTeamName" =$1
+        WHERE "wrCommentaryTeamId" = ANY($2)
+        RETURNING
+          "wrCommentaryTeamId" as "commentaryTeamId",
+          "wrTeamName" as "teamName"
+      `,
+      {
+        bind: [ data.teamName , data.commentaryTeamId],
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/upTeamNameInComQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 const updateCommentaryDateByCommentaryIdQuery = async (request, fastify) => {
   try {
     const sql = `
@@ -8819,6 +8843,74 @@ const deleteCommentaryPlayersQuery = async (data, request, fastify) => {
       err.message,
       "DB ERROR --> repository/TableCommentary.js/deleteCommentaryPlayersQuery",
       request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const getHeadToHeadCommentaryQuery = async (data, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `
+        SELECT * FROM "tblCommentaries"
+        WHERE ("wrTeam1Id" IN ($1, $2) OR "wrTeam2Id" IN ($1, $2)) AND "wrMatchTypeId" = $3 AND "wrCommentaryStatus" = $4
+        ORDER BY "wrCommentaryId" DESC
+    `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          data.team1Id,
+          data.team2Id,
+          data.matchTypeId,
+          4
+        ]
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/getHeadToHeadCommentaryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+
+const getCommentaryPlayerByIdsQuery = async (data, fastify) => {
+  try {
+    return await fastify.db.query(
+      `select
+        "wrCommentaryPlayerId" as "commentaryPlayerId",
+        "wrCommentaryId" as "commentaryId",
+        "wrTeamId" as "teamId",
+        "wrPlayerId" as "playerId",
+        "wrBat_Run" as "batTotalRun",
+        "wrBat_Ball" as "ballsFaced",
+        "wrBowler_Over" as "bowlerOver",
+        "wrBowler_TotalBall" as "ballsDelivered",
+        "wrBowler_Run" as "bowlerTotalRun",
+        "wrBowler_TotalWicket" as "bowlerTotalWicket",
+        "wrCurrentInnings" as "inningCount",
+        "wrJerseyPlayerImage" as "jerseyPlayerImage",
+        "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath"
+      from "tblCommentaryPlayers"
+      WHERE "wrCommentaryId" = $1
+      AND "wrPlayerId" = $2
+      AND "wrIsDelete" = FALSE`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [data.commentaryId, data.playerId]
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/getCommentaryPlayerByIdsQuery",
+      null
     );
     throw new Error(err.message);
   }
@@ -8969,6 +9061,10 @@ module.exports = {
   bowlingTypeChangeQuery,
   updateCommentaryViewsQuery,
   playingElevenChangeOnCommPlayersQuery,
+  upTeamNameInComQuery,
+  updateCommentaryDateByCommentaryIdQuery,
   updateCommentaryDateByCommentaryIdQuery,
   deleteCommentaryPlayersQuery,
+  getHeadToHeadCommentaryQuery,
+  getCommentaryPlayerByIdsQuery,
 };

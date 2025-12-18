@@ -98,6 +98,7 @@ const {
   updateCommentaryViewsQuery,
   playingElevenChangeOnCommPlayersQuery,
   updateCommentaryDateByCommentaryIdQuery,
+  getHeadToHeadCommentaryQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -25700,6 +25701,31 @@ const processTeamSquadInsertAndUpdate = async ({
   }
 };
 
+const getHeadToHeadCommentaryService = async (request, fastify) => {
+  const { team1Id, team2Id, matchTypeId } = request.body;
+
+  const matchTypeData = global.tblMatchTypes.find(tmt => tmt.matchTypeId === matchTypeId);
+  if (!matchTypeData) {
+    throw new Error(`Match type id ${matchTypeId} not found`);
+  }
+
+  const team1Data = global.tblTeams.find(team => team.teamId === team1Id);
+  if (!team1Data) {
+    throw new Error(`team1Id ${team1Id} not found`);
+  }
+
+  const team2Data = global.tblTeams.find(team => team.teamId === team2Id);
+  if (!team2Data) {
+    throw new Error(`team2Id ${team2Id} not found`);
+  }
+
+  return getHeadToHeadCommentaryQuery(
+    { team1Id, team2Id, matchTypeId },
+    request,
+    fastify
+  );
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -25823,4 +25849,5 @@ module.exports = {
   commentaryViewsReportService,
   checkSUpdatePasswordService,
   updateCommentaryPlayersFromEntityService,
+  getHeadToHeadCommentaryService
 };
