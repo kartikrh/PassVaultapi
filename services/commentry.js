@@ -13201,7 +13201,8 @@ const commentaryHistoryService = async (request, fastify) => {
 
   let whereCondition = `tc."wrIsDelete" = FALSE`;
   if (commentaryStatus === undefined) {
-    whereCondition += ` AND tc."wrCommentaryStatus" != 4`;
+    // whereCondition += ` AND tc."wrCommentaryStatus" != 4`;
+    whereCondition += ` AND tc."wrCommentaryStatus" in (4, 10)`;
   }
   if (commentaryStatus && commentaryStatus != 0) {
     whereCondition += ` AND tc."wrCommentaryStatus" = ${commentaryStatus}`;

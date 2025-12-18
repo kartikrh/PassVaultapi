@@ -847,7 +847,7 @@ const setEntityCom2Service = async (request , fastify) =>{
             // }
         }   
         comDetails = global.tblCommentaries.find((i) => i.commentaryId == comDetails.commentaryId)
-        if(comDetails.commentaryStatus == commentaryStatus.INPROGRESS){
+        if(comDetails.commentaryStatus == commentaryStatus.INPROGRESS || comDetails.commentaryStatus == commentaryStatus.INNINGCHANGE){
           comDetails.isClientShow = true;
           const bat = await checkBattingTeamService(response, comDetails);
           if (bat) {
@@ -872,12 +872,12 @@ const setEntityCom2Service = async (request , fastify) =>{
     // }
     
     if (response.live.game_state == EntityCommentaryStatus.INNINGCHANGE) {
-      if (comDetails.commentaryStatus != commentaryStatus.INNINGCHANGE) {
+      // if (comDetails.commentaryStatus != commentaryStatus.INNINGCHANGE) {
         comDetails.isClientShow = false;
+        await handleComArr(request.body, request, fastify, comDetails)
         await inningChangeStateService(fastify, comDetails);
-        let res = await handleComArr(request.body, request, fastify, comDetails)
-        return res;
-      }
+        return true;
+      // }
     }
     if(response.live.game_state == EntityCommentaryStatus.DEFAULT && comDetails.commentaryStatus != commentaryStatus.COMPLETED){
       await matchCompleteService(request.body , fastify , comDetails)
@@ -1938,15 +1938,12 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             }
           }
           let wicketBatsId = c.wicket_batsman_id || c.batsman_id;
-          console.log("wicketsf batild", wicketBatsId)
           const dismissalKey =
             typeof c.dismissal === "string"
               ? c.dismissal.trim().toLowerCase()
               : null;
-          console.log("dismissalKey", dismissalKey)
 
           const wicket_type = etWicketObj[dismissalKey] ?? null;
-          console.log("wicket_type", wicket_type)
 
           let wicketData = {
             wicketType: wicket_type,
