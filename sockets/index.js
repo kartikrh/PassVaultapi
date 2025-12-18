@@ -68,34 +68,34 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
           
           socketObj.cronJob = cron.schedule(cronExpression, async () => {
             try {
+              if (!socketObj.client || !socketObj.client.connected) {
+                return;
+              }
               socketObj.client.emit("updateRoomUserCount", { message: "Send me user counts" });
               socketObj.client.removeAllListeners("countData");
               socketObj.client.once("countData", async (data) => {
+                const updates = [];
                 for (const elem of data) {
-                  const currentCount = Number(elem.count) || 0;
-                  if (elem.commentaryId) {
-                    const index = global.tblCommentaries.findIndex(i => i.commentaryId == elem.commentaryId);
-                    if(index == -1){
-                      // console.log("elem", elem)
-                      // errorLogger(
-                      //   fastify,
-                      //   "CommentaryId not found in global  socketObj.cronJob",
-                      //   "sockets/index.js/connectClients",
-                      //   null,
-                      //   elem
-                      // )
-                      continue;
-                    }
-                    // console.log("elem.commentaryId",elem)
-                    await updateCommentaryViewsQuery({ views: currentCount, commentaryId: elem.commentaryId }, fastify);
-                    if (index !== -1) {
-                      // const oldCount = Number(global.tblCommentaries[index].views) || 0;
-                      // global.tblCommentaries[index].views = oldCount + currentCount;
-                      const newCount = Number(elem.totalCount) + currentCount
-                      global.tblCommentaries[index].views = newCount;
-                    }
-                  }
+                  const increment = Number(elem.count) || 0;
+                  if (!elem.commentaryId || increment <= 0) continue;
+
+                  const index = global.tblCommentaries.findIndex(
+                    i => i.commentaryId == elem.commentaryId
+                  );
+                  if (index === -1) continue;
+
+                  global.tblCommentaries[index].views =
+                    (Number(global.tblCommentaries[index].views) || 0) + increment;
+
+                  updates.push(
+                    updateCommentaryViewsQuery(
+                      { views: increment, commentaryId: elem.commentaryId },
+                      fastify
+                    )
+                  );
                 }
+                await Promise.all(updates);
+
                 socketObj.client.emit("updateCommentaryCounts", data);
               });
             } catch (error) {
