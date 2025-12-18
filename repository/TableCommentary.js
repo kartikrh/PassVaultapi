@@ -8977,7 +8977,7 @@ const getCommentaryPlayerByIdsQuery = async (data, fastify) => {
         "wrPlayerId" as "playerId",
         "wrBat_Run" as "batTotalRun",
         "wrBat_Ball" as "ballsFaced",
-        "wrBowler_Over" as "bowlerOver",
+        ROUND("wrBowler_Over", 1) as "bowlerOver",
         "wrBowler_TotalBall" as "ballsDelivered",
         "wrBowler_Run" as "bowlerTotalRun",
         "wrBowler_TotalWicket" as "bowlerTotalWicket",
