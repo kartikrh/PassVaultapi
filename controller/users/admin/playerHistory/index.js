@@ -14,7 +14,8 @@ const {
   calculationOfCommPlayerBowlHistService,
   playerBattingHistSummarycalculationService,
   playerBowlHistSummaryCalculationService,
-  getPlayerCommentaryHistoryService,
+  getPlayerHistoryByPlayerIdService,
+  getPlayerCommentaryHistoryByPlayerIdService
 } = require("../../../../services/playerHistory");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -193,12 +194,22 @@ const playerBowlSummarycalculation = async (request, reply, fastify) => {
   }
 };
 
-const getPlayerCommentaryHistory = async (request, reply, fastify) => {
+const getPlayerHistoryByPlayerId = async (request, reply, fastify) => {
   try {
-      const result = await getPlayerCommentaryHistoryService(request, fastify);
+    const result = await getPlayerHistoryByPlayerIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getPlayerHistoryByPlayerId", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const getPlayerCommentaryHistoryByPlayerId = async (request, reply, fastify) => {
+  try {
+      const result = await getPlayerCommentaryHistoryByPlayerIdService(request, fastify);
       reply.status(200).send(success(result, 200));
   } catch (err) {
-      errorLogger(fastify, err.message, commonPath + "/getPlayerCommentaryHistory", request);
+      errorLogger(fastify, err.message, commonPath + "/getPlayerCommentaryHistoryByPlayerId", request);
       reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -219,5 +230,6 @@ module.exports = {
   calculationOfCommPlayerBowlHist,
   playerBatSummarycalculation,
   playerBowlSummarycalculation,
-  getPlayerCommentaryHistory
+  getPlayerHistoryByPlayerId,
+  getPlayerCommentaryHistoryByPlayerId
 };
