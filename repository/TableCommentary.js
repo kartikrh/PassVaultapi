@@ -1,4 +1,3 @@
-const { commentaryStatus } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 
 const getAllCommentaryQuery = async (fastify) => {
@@ -8863,7 +8862,7 @@ const getHeadToHeadCommentaryQuery = async (data, request, fastify) => {
           data.team1Id,
           data.team2Id,
           data.matchTypeId,
-          commentaryStatus.COMPLETED
+          4
         ]
       }
     );
