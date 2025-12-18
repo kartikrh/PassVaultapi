@@ -351,47 +351,54 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
 
 const getCompetitionStatisticsByCompetitionIdService = async (request, fastify) => {
     const { competitionId } = request.body;
-    let getCompetition = global.tblCompetitions.find(item => item.competitionId === competitionId);
 
-    if (!getCompetition) {
+    const competition = global.tblCompetitions.find(
+        c => c.competitionId === competitionId
+    );
+
+    if (!competition) {
         throw new Error(`Competition id ${competitionId} not found`);
     }
 
-    const getCompetitionStatistics = global.tblCompetitionStatistics.filter(tcs => tcs.competitionId === competitionId);
+    const competitionStatistics = global.tblCompetitionStatistics.filter(
+        s => s.competitionId === competitionId
+    );
 
-    const displayData = [{
-        typeId: 1,
-        type: "batting",
-        data: {}
-    }, {
-        typeId: 2,
-        type: "bowling",
-        data: {}
-    }, {
-        typeId: 3,
-        type: "team",
-        data: {}
-    }];
+    const statisticsMap = new Map();
+    for (const stat of competitionStatistics) {
+        if (!statisticsMap.has(stat.competitionStatisticsTypeId)) {
+            statisticsMap.set(stat.competitionStatisticsTypeId, []);
+        }
+        statisticsMap.get(stat.competitionStatisticsTypeId).push(stat);
+    }
 
-    const getCompetitionStatisticsType = global.tblCompetitionStatisticsType.filter(tcst => tcst.isActive === true)
+    const displayData = [
+        { typeId: 1, type: "batting", data: [] },
+        { typeId: 2, type: "bowling", data: [] },
+        { typeId: 3, type: "team", data: [] }
+    ];
+
+    const activeTypes = global.tblCompetitionStatisticsType
+        .filter(t => t.isActive)
         .sort((a, b) => a.typeId - b.typeId || a.entityEnum - b.entityEnum);
 
-    for (const competitionStatisticsType of getCompetitionStatisticsType) {
-        const existingType = displayData.find(item => item.data?.competitionStatisticsType?.entityEnum === competitionStatisticsType.entityEnum);
+    const seenEntityEnums = new Set();
 
-        if (!existingType) {
-            const competitionStatisticsData = getCompetitionStatistics.filter(item => item.competitionStatisticsTypeId === competitionStatisticsType.competitionStatisticsTypeId);
+    for (const type of activeTypes) {
+        if (seenEntityEnums.has(type.entityEnum)) continue;
 
-            if (competitionStatisticsData.length > 0) {
-                const index = displayData.findIndex(item => item.typeId === competitionStatisticsType.typeId);
-                if (index !== -1) {
-                    displayData[index].data = {
-                        competitionStatisticsType,
-                        competitionStatisticsData
-                    }
-                }
-            }
-        }
+        const stats = statisticsMap.get(type.competitionStatisticsTypeId);
+        if (!stats?.length) continue;
+
+        const targetGroup = displayData.find(d => d.typeId === type.typeId);
+        if (!targetGroup) continue;
+
+        targetGroup.data.push({
+            competitionStatisticsType: type,
+            competitionStatisticsData: stats
+        });
+
+        seenEntityEnums.add(type.entityEnum);
     }
 
     return displayData;
