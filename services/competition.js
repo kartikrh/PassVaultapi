@@ -1928,6 +1928,18 @@ const competitionImportService = async (data, fastify, request) => {
     }
   }
 
+  await insertAutoImportDataService({
+    ...request,
+    body: {
+      refId: checkCompetition?.tpId ?? data.cid,
+      refType: RefType.CompetitionStatistics,
+      sourceId: 3
+    },
+    userTokenInfo: {
+      WrUserId: request?.userTokenInfo?.WrUserId ?? -2
+    }
+  }, fastify);
+
   return checkCompetition;
 }
 
