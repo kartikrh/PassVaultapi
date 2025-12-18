@@ -1,3 +1,4 @@
+const { commentaryStatus } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 
 const getAllCommentaryQuery = async (fastify) => {
@@ -8853,7 +8854,7 @@ const getHeadToHeadCommentaryQuery = async (data, request, fastify) => {
     const result = await fastify.db.query(
       `
         SELECT * FROM "tblCommentaries"
-        WHERE ("wrTeam1Id" IN ($1, $2) OR "wrTeam2Id" IN ($1, $2)) AND "wrMatchTypeId" = $3
+        WHERE ("wrTeam1Id" IN ($1, $2) OR "wrTeam2Id" IN ($1, $2)) AND "wrMatchTypeId" = $3 AND "wrCommentaryStatus" = $4
         ORDER BY "wrCommentaryId" DESC
     `,
       {
@@ -8861,7 +8862,8 @@ const getHeadToHeadCommentaryQuery = async (data, request, fastify) => {
         bind: [
           data.team1Id,
           data.team2Id,
-          data.matchTypeId
+          data.matchTypeId,
+          commentaryStatus.COMPLETED
         ]
       }
     );
