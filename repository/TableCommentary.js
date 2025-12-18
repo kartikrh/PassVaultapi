@@ -8855,6 +8855,7 @@ const getHeadToHeadCommentaryQuery = async (data, request, fastify) => {
       SELECT
         tcm."wrCompetitionId" AS "competitionId",
         tcp."wrCompetition" AS "competition",
+        tcm."wrEventNo" AS "eventNo",
         tcm."wrCommentaryId" AS "commentaryId",
         tcm."wrEventName" AS "eventName",
         tcm."wrMatchTypeId" AS "matchTypeId",
