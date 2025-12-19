@@ -8852,10 +8852,98 @@ const getHeadToHeadCommentaryQuery = async (data, request, fastify) => {
   try {
     const result = await fastify.db.query(
       `
-        SELECT * FROM "tblCommentaries"
-        WHERE ("wrTeam1Id" IN ($1, $2) OR "wrTeam2Id" IN ($1, $2)) AND "wrMatchTypeId" = $3 AND "wrCommentaryStatus" = $4
-        ORDER BY "wrCommentaryId" DESC
-    `,
+      SELECT
+        tcm."wrCompetitionId" AS "competitionId",
+        tcp."wrCompetition" AS "competition",
+        tcm."wrEventNo" AS "eventNo",
+        tcm."wrCommentaryId" AS "commentaryId",
+        tcm."wrEventName" AS "eventName",
+        tcm."wrMatchTypeId" AS "matchTypeId",
+        tmt."wrMatchType" AS "matchType",
+        tcm."wrEventDate" AS "eventDate",
+        tcm."wrWinnerId" AS "winnerTeamId",
+        tcm."wrIsMatchDraw" AS "isDraw",
+
+        /* Winner team name */
+        MAX(
+          CASE
+            WHEN tct."wrTeamId" = tcm."wrWinnerId"
+            THEN tct."wrTeamName"
+          END
+        ) AS "winnerTeamName",
+
+        /* Winner short name */
+        MAX(
+          CASE
+            WHEN tct."wrTeamId" = tcm."wrWinnerId"
+            THEN tct."wrShortName"
+          END
+        ) AS "winnerShortName",
+
+        /* Winner team object */
+        (
+          jsonb_agg(
+            jsonb_build_object(
+              'teamId', tct."wrTeamId",
+              'teamName', tct."wrTeamName",
+              'shortName', tct."wrShortName",
+			        'image', tt."wrImage",
+              'score', tct."wrTeamScore",
+              'over', tct."wrTeamOver",
+              'wicket', tct."wrTeamWicket",
+              'isWin', tct."wrIsWin"
+            )
+          ) FILTER (WHERE tct."wrTeamId" = tcm."wrWinnerId")
+        )->0 AS "winnerTeamObject",
+
+        /* All teams */
+        jsonb_agg(
+          jsonb_build_object(
+            'teamId', tct."wrTeamId",
+            'teamName', tct."wrTeamName",
+            'shortName', tct."wrShortName",
+			      'image', tt."wrImage",
+            'score', tct."wrTeamScore",
+            'over', tct."wrTeamOver",
+            'wicket', tct."wrTeamWicket",
+            'isWin', tct."wrIsWin"
+          )
+          ORDER BY COALESCE(tct."wrTeamBattingOrder", 99)
+        ) AS teams
+
+      FROM "tblCommentaries" tcm
+      INNER JOIN "tblCompetitions" tcp
+        ON tcp."wrCompetitionId" = tcm."wrCompetitionId"
+      INNER JOIN "tblMatchTypes" tmt
+        ON tmt."wrMatchTypeId" = tcm."wrMatchTypeId"
+      INNER JOIN "tblCommentaryTeams" tct
+        ON tct."wrCommentaryId" = tcm."wrCommentaryId"
+      LEFT JOIN "tblTeams" tt
+        ON tt."wrTeamId" = tct."wrTeamId"
+
+      WHERE
+        (
+          (tcm."wrTeam1Id" = $1 AND tcm."wrTeam2Id" = $2)
+          OR
+          (tcm."wrTeam1Id" = $2 AND tcm."wrTeam2Id" = $1)
+        )
+        AND tcm."wrMatchTypeId" = $3
+        AND tcm."wrCommentaryStatus" = $4
+        AND tcm."wrIsDelete" = false
+
+      GROUP BY
+        tcm."wrCommentaryId",
+        tcm."wrCompetitionId",
+        tcp."wrCompetition",
+        tcm."wrEventName",
+        tcm."wrMatchTypeId",
+        tmt."wrMatchType",
+        tcm."wrEventDate",
+        tcm."wrWinnerId",
+        tcm."wrIsMatchDraw"
+
+      ORDER BY tcm."wrCommentaryId" DESC;
+      `,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
@@ -8866,6 +8954,7 @@ const getHeadToHeadCommentaryQuery = async (data, request, fastify) => {
         ]
       }
     );
+
     return result;
   } catch (err) {
     errorLogger(
@@ -8874,10 +8963,9 @@ const getHeadToHeadCommentaryQuery = async (data, request, fastify) => {
       "DB ERROR --> repository/TableCommentary.js/getHeadToHeadCommentaryQuery",
       request
     );
-    throw new Error(err.message);
+    throw err;
   }
 };
-
 
 const getCommentaryPlayerByIdsQuery = async (data, fastify) => {
   try {
@@ -8889,7 +8977,7 @@ const getCommentaryPlayerByIdsQuery = async (data, fastify) => {
         "wrPlayerId" as "playerId",
         "wrBat_Run" as "batTotalRun",
         "wrBat_Ball" as "ballsFaced",
-        "wrBowler_Over" as "bowlerOver",
+        ROUND("wrBowler_Over", 1) as "bowlerOver",
         "wrBowler_TotalBall" as "ballsDelivered",
         "wrBowler_Run" as "bowlerTotalRun",
         "wrBowler_TotalWicket" as "bowlerTotalWicket",

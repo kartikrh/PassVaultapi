@@ -1291,12 +1291,31 @@ const calculationOfCommPlayerBowlHistService = async(request, fastify) => {
   return "Player bowling history updated successfully";
 }
 
-const getPlayerCommentaryHistoryService = async (request, fastify) => {
+const getPlayerHistoryByPlayerIdService = async (request, fastify) => {
+  const playerId = request.body.playerId;
+  const player = global.tblPlayers.find(tp => tp.playerId === playerId);
+  if (!player) {
+    return `Player with id ${playerId} not found`;
+  }
+
+  const battingHistory = await getAllPlayersBattingHistory(playerId, fastify)
+  const bowlingHistory = await getAllPlayerBowlingHistory(playerId, fastify)
+
+  return { player, battingHistory, bowlingHistory };
+}
+
+const getPlayerCommentaryHistoryByPlayerIdService = async (request, fastify) => {
+  const playerId = request.body.playerId;
+  const player = global.tblPlayers.find(tp => tp.playerId === playerId);
+  if (!player) {
+    return `Player with id ${playerId} not found`;
+  }
+
   const whereCondition = `tcpbh."wrPlayerId" = ${request.body.playerId} AND tcpbh."wrIsDeleted" = false`
   const playerBatHistory = await getAllCommentaryBattingHistory(fastify, whereCondition);
   const playerBallHistory = await getAllCommentaryBowlingHistory(fastify, whereCondition);
 
-  return { playerBatHistory, playerBallHistory }
+  return { player, playerBatHistory, playerBallHistory };
 }
 
 module.exports = {
@@ -1316,5 +1335,6 @@ module.exports = {
   playerBowlHistSummaryCalculationService,
   calculationOfCommPlayerBatHistService,
   calculationOfCommPlayerBowlHistService,
-  getPlayerCommentaryHistoryService
+  getPlayerHistoryByPlayerIdService,
+  getPlayerCommentaryHistoryByPlayerIdService
 };  

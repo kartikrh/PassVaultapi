@@ -491,6 +491,24 @@ const importICCRankingFromEntitySportService = async (data = null, fastify, requ
     await deleteAllICCRankingQuery(request, fastify);
     global.tblICCRanking = [];
 
+    callClientAPI(
+        {
+            serviceType: ServiceType.clientAPI,
+            moduleType: APIEndpointModuleType.updateSeoModule,
+            data: {
+                module: 'iccRankings',
+                type: "deleteAll"
+            }
+        }, request, fastify)
+        .catch((err) => {
+            errorLogger(
+                fastify,
+                err.message,
+                "services/iccRanking.js/importICCRankingFromEntitySportService - deleteAllICCRanking - callClientAPI",
+                request
+            );
+        });
+
     for (const entry of resultEntries) {
         await createICCRankingService({
             ...request,
