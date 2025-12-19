@@ -526,7 +526,15 @@ module.exports = async function (fastify, opts) {
         "http://localhost:8080"
       ],
       credentials: true,
+      pingInterval: 25000,
+      pingTimeout: 60000,
     },
+    connectionStateRecovery: {
+      // Enable connection state recovery to handle reconnections better
+      maxDisconnectionDuration: 2 * 60 * 1000, // 2 minutes
+      skipMiddlewares: true,
+    },
+    allowEIO3: true, // Allow Engine.IO v3 clients for better compatibility
   });
 
   instrument(io, {
