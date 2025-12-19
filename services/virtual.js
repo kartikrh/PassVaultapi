@@ -18,8 +18,9 @@ const {
   APIEndpointModuleType,
   callDataProvider,
   callVirtualPredictorMarket,
+  callClientAPI,
 } = require("../utilities");
-const { cloneCommentaryService, saveComVirtual, getGroupId } = require("./commentry");
+const { cloneCommentaryService, saveComVirtual, getGroupId, getMatchDataByCId } = require("./commentry");
 const {
   insertVirtualEventQuery,
   virtualEventTossQuery,
@@ -265,7 +266,8 @@ const createVirtualEventService = async (request, fastify) => {
       isPredictMarket,
       pythonId,
       pythonURI,
-      shuffle
+      shuffle,
+      setOfRules: checkComp.setOfRules ? checkComp.setOfRules : null
     };
 
     const commentaryData = await insertVirtualEventQuery(
@@ -445,6 +447,30 @@ const createVirtualEventService = async (request, fastify) => {
         );
       });
     }
+    let cData = await getMatchDataByCId(
+        {
+          commentaryId: commentaryData.commentaryId,
+        },
+        request,
+        fastify
+    );
+    callClientAPI(
+      {
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.commentaryUpdate,
+        data: cData,
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      console.log("call client api console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/cloneCommentaryService",
+        request
+      );
+    });
   }
   // save virtual card data
   if (request.body.cards.length > 0) {

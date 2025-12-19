@@ -82,7 +82,8 @@ const getAllCommentaryQuery = async (fastify) => {
     tc."wrViews" as "views",
     tc."wrStreamingUrl" as "streamingUrl",
     tc."wrStreamingType" as "streamingType",
-    tc."wrShuffle" as "shuffle"
+    tc."wrShuffle" as "shuffle",
+    tc."wrSetOfRules" as "setOfRules"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -335,7 +336,8 @@ const insertCommentaryQuery = async (request, fastify) => {
     "wrStreamingUrl" as "streamingUrl",
     tc."wrViews" as "views",
     "wrStreamingType" as "streamingType",
-    tc."wrShuffle" as "shuffle"
+    tc."wrShuffle" as "shuffle",
+    tc."wrSetOfRules" as "setOfRules"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -6225,7 +6227,7 @@ const insertVirtualEventQuery = async (data, request, fastify) => {
         "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest", "wrEventNo",
         "wrDifficulty", "wrPitchHardness", "wrPitchWareSpeed", "wrIsVirtual", "wrCardType",
         "wrBallDelay", "wrOverDelay", "wrInningDelay", "wrTossDelay", "wrPythonId", "wrPythonURI",
-        "wrCountryId", "wrVenueId", "wrShuffle"
+        "wrCountryId", "wrVenueId", "wrShuffle", "wrSetOfRules"
         ) values (
           $1,
           $2,
@@ -6259,7 +6261,8 @@ const insertVirtualEventQuery = async (data, request, fastify) => {
           $39,
           $40,
           $41,
-          $42
+          $42,
+          $43
         ) returning *         
       )
 
@@ -6326,7 +6329,8 @@ const insertVirtualEventQuery = async (data, request, fastify) => {
     tc."wrScoringType" as "scoringType",
     tc."wrViews" as "views",
     tc."wrPythonURI" as "pythonURI",
-    tc."wrShuffle" as "shuffle"
+    tc."wrShuffle" as "shuffle",
+    tc."wrSetOfRules" as "setOfRules"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -6379,7 +6383,8 @@ const insertVirtualEventQuery = async (data, request, fastify) => {
           data.pythonURI || null,
           data.countryId || null,
           data.venueId || null,
-          data.shuffle || null
+          data.shuffle || null,
+          data.setOfRules || null
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
