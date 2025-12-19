@@ -1938,12 +1938,15 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             }
           }
           let wicketBatsId = c.wicket_batsman_id || c.batsman_id;
+          // console.log("wicketsf batild", wicketBatsId)
           const dismissalKey =
             typeof c.dismissal === "string"
               ? c.dismissal.trim().toLowerCase()
               : null;
+          // console.log("dismissalKey", dismissalKey)
 
           const wicket_type = etWicketObj[dismissalKey] ?? null;
+          // console.log("wicket_type", wicket_type)
 
           let wicketData = {
             wicketType: wicket_type,
@@ -2165,6 +2168,63 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
         }
         upTeams = [battingTeam, bowlingTeam]
         // upComDetails.displayStatus = c.commentary;
+      }
+      
+      let updateWicketData = commentaries.filter((c)=>c.event == "wicket");
+      if(updateWicketData.length > 0){
+        for (let c of updateWicketData){
+          // check if wicket need to update or not
+          let ball = global.tblCommentaryBallByBall.find((i)=> i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId)
+          let w = global.tblCommentaryWicket.find((i)=>i.commentaryBallByBallId == ball.commentaryBallByBallId)
+          if(!w){
+            continue;
+          }
+          if(w.wicketType != null){
+            continue;
+          }
+
+          if(!c.wicket_batsman_id || !c.dismissal){
+            continue;
+          }
+          // update wicketType and batsman_id
+          let wtEnum = etWicketObj[c.dismissal.toLowerCase()] || wicketTypeObj.BOLD;
+          w.wicketType = wtEnum;
+          let batsmanId = playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId;
+          if(w.batterId != batsmanId){
+           
+            playersMap[c.wicket_batsman_id] = {
+              ...playersMap[c.wicket_batsman_id],
+              isBatterOut: true,
+              isBatterRetir: false,
+              wicketType: wtEnum,
+              bowlerId: playerTpIdObj[c.bowler_id]?.commentaryPlayerId,
+              fielderId1: w.fielder1,
+              fielderId2: w.fielder2,
+              isPlay: null,
+              onStrike: null,
+              // batBall: (playersMap[c.batsman_id]?.batBall || 0) + 1,
+              batDotBall: (playersMap[c.wicket_batsman_id]?.batDotBall || 0) + 1,
+            }
+            // change old player
+            let oldBatsman = global.tblCommentaryPlayers.find((i)=> i.commentaryPlayerId == w.batterId && i.commentaryId == comDetails.commentaryId)
+            if(!playersMap[oldBatsman.tpId]){
+              playersMap[oldBatsman.tpId] = {
+                ...playerTpIdObj[oldBatsman.tpId],
+              }
+            }
+            playersMap[oldBatsman.tpId] = {
+              ...playersMap[oldBatsman.tpId],
+              isBatterOut: false,
+              isBatterRetir: null,
+              wicketType: null,
+              bowlerId: null, 
+              batDotBall : playersMap[oldBatsman.tpId]?.batDotBall - 1,
+            }
+            w.batterId = playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId;
+            w.batterName = playerTpIdObj[c.wicket_batsman_id]?.playerName;
+          }
+          wickets.push(w);
+        }
       }
     }
     // console.log(oversMap)
