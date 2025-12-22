@@ -2189,6 +2189,10 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           // update wicketType and batsman_id
           let wtEnum = etWicketObj[c.dismissal.toLowerCase()] || wicketTypeObj.BOLD;
           w.wicketType = wtEnum;
+          let upBall ={
+            ...ball,
+            ballWicketType : wtEnum
+          }
           let batsmanId = playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId;
           if(w.batterId != batsmanId){
            
@@ -2222,7 +2226,10 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             }
             w.batterId = playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId;
             w.batterName = playerTpIdObj[c.wicket_batsman_id]?.playerName;
+            upBall.batStrikeId = batsmanId;
+            upBall.ballPlayerId = batsmanId;
           }
+          ballByBall.push(upBall)
           wickets.push(w);
         }
       }
