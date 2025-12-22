@@ -4,29 +4,49 @@ const getAllCompetitionStatisticsQuery = async (fastify, request = null) => {
     try {
         let query = `
             SELECT
-                tcs."wrCompetitionStatisticsId" as "competitionStatisticsId",
-                tcs."wrEventTypeId" as "eventTypeId",
-                tet."wrEventType" as "eventType",
-                tcs."wrCompetitionId" as "competitionId",
-                tc."wrCompetition" as "competition",
-                tcs."wrCompetitionStatisticsTypeId" as "competitionStatisticsTypeId",
-                tcst."wrName" as "name",
-                tcs."wrTeamId" as "teamId",
-                tt."wrTeamName" as "teamName",
-                tcs."wrPlayerId" as "playerId",
-                tp."wrPlayerName" as "playerName",
-                tcs."wrDisplayOrder" as "displayOrder",
-                tcs."wrValue" as "value",
-                tcs."wrIsActive" as "isActive",
-                tcs."wrCreatedBy" as "createdById",
-                tu."WrName" as "createdBy"
+                tcs."wrCompetitionStatisticsId" AS "competitionStatisticsId",
+                tcs."wrEventTypeId" AS "eventTypeId",
+                tet."wrEventType" AS "eventType",
+                tcs."wrCompetitionId" AS "competitionId",
+                tc."wrCompetition" AS "competition",
+                tcs."wrCompetitionStatisticsTypeId" AS "competitionStatisticsTypeId",
+                tcst."wrName" AS "name",
+                tcs."wrTeamId" AS "teamId",
+                tt."wrTeamName" AS "teamName",
+                tt."wrImage" AS "teamImage",
+                tcs."wrPlayerId" AS "playerId",
+                tp."wrPlayerName" AS "playerName",
+                ttp."wrJerseyPlayerImage" AS "jerseyPlayerImage",
+                tcs."wrDisplayOrder" AS "displayOrder",
+                tcs."wrValue" AS "value",
+                tcs."wrIsActive" AS "isActive",
+                tcs."wrCreatedBy" AS "createdById",
+                tu."WrName" AS "createdBy"
             FROM "tblCompetitionStatistics" tcs
-            LEFT JOIN "tblEventTypes" tet on tcs."wrEventTypeId" = tet."wrEventTypeId"
-            LEFT JOIN "tblCompetitions" tc on tcs."wrCompetitionId" = tc."wrCompetitionId"
-            LEFT JOIN "tblCompetitionStatisticsType" tcst on tcs."wrCompetitionStatisticsTypeId" = tcst."wrCompetitionStatisticsTypeId"
-            LEFT JOIN "tblTeams" tt on tcs."wrTeamId" = tt."wrTeamId"
-            LEFT JOIN "tblPlayers" tp on tcs."wrPlayerId" = tp."wrPlayerId"
-            LEFT JOIN "tblUsers" tu on tcs."wrCreatedBy" = tu."WrUserId"
+            LEFT JOIN "tblEventTypes" tet 
+                ON tcs."wrEventTypeId" = tet."wrEventTypeId"
+            LEFT JOIN "tblCompetitions" tc 
+                ON tcs."wrCompetitionId" = tc."wrCompetitionId"
+            LEFT JOIN "tblCompetitionStatisticsType" tcst 
+                ON tcs."wrCompetitionStatisticsTypeId" = tcst."wrCompetitionStatisticsTypeId"
+            LEFT JOIN "tblTeams" tt 
+                ON tcs."wrTeamId" = tt."wrTeamId"
+            LEFT JOIN "tblPlayers" tp 
+                ON tcs."wrPlayerId" = tp."wrPlayerId"
+
+            -- SINGLE RECORD FROM tblTeamPlayers
+            LEFT JOIN LATERAL (
+                SELECT 
+                    ttp."wrJerseyPlayerImage"
+                FROM "tblTeamPlayers" ttp
+                WHERE ttp."wrRefPlayerId" = tcs."wrPlayerId"
+                  AND ttp."wrIsDeleted" = FALSE
+                ORDER BY ttp."wrTeamPlayerId" DESC
+                LIMIT 1
+            ) ttp ON TRUE
+
+            LEFT JOIN "tblUsers" tu 
+                ON tcs."wrCreatedBy" = tu."WrUserId"
             WHERE tcs."wrIsDeleted" = FALSE
         `;
 
@@ -58,29 +78,40 @@ const insertCompetitionStatisticsQuery = async (data, fastify, request) => {
                   RETURNING *
                 )
                 SELECT
-                    tcs."wrCompetitionStatisticsId" as "competitionStatisticsId",
-                    tcs."wrEventTypeId" as "eventTypeId",
-                    tet."wrEventType" as "eventType",
-                    tcs."wrCompetitionId" as "competitionId",
-                    tc."wrCompetition" as "competition",
-                    tcs."wrCompetitionStatisticsTypeId" as "competitionStatisticsTypeId",
-                    tcst."wrName" as "name",
-                    tcs."wrTeamId" as "teamId",
-                    tt."wrTeamName" as "teamName",
-                    tcs."wrPlayerId" as "playerId",
-                    tp."wrPlayerName" as "playerName",
-                    tcs."wrDisplayOrder" as "displayOrder",
-                    tcs."wrValue" as "value",
-                    tcs."wrIsActive" as "isActive",
-                    tcs."wrCreatedBy" as "createdById",
-                    tu."WrName" as "createdBy"
+                    tcs."wrCompetitionStatisticsId" AS "competitionStatisticsId",
+                    tcs."wrEventTypeId" AS "eventTypeId",
+                    tet."wrEventType" AS "eventType",
+                    tcs."wrCompetitionId" AS "competitionId",
+                    tc."wrCompetition" AS "competition",
+                    tcs."wrCompetitionStatisticsTypeId" AS "competitionStatisticsTypeId",
+                    tcst."wrName" AS "name",
+                    tcs."wrTeamId" AS "teamId",
+                    tt."wrTeamName" AS "teamName",
+                    tt."wrImage" AS "teamImage",
+                    tcs."wrPlayerId" AS "playerId",
+                    tp."wrPlayerName" AS "playerName",
+                    ttp."wrJerseyPlayerImage" AS "jerseyPlayerImage",
+                    tcs."wrDisplayOrder" AS "displayOrder",
+                    tcs."wrValue" AS "value",
+                    tcs."wrIsActive" AS "isActive",
+                    tcs."wrCreatedBy" AS "createdById",
+                    tu."WrName" AS "createdBy"
                 FROM "insert_data" tcs
-                LEFT JOIN "tblEventTypes" tet on tcs."wrEventTypeId" = tet."wrEventTypeId"
-                LEFT JOIN "tblCompetitions" tc on tcs."wrCompetitionId" = tc."wrCompetitionId"
-                LEFT JOIN "tblCompetitionStatisticsType" tcst on tcs."wrCompetitionStatisticsTypeId" = tcst."wrCompetitionStatisticsTypeId"
-                LEFT JOIN "tblTeams" tt on tcs."wrTeamId" = tt."wrTeamId"
-                LEFT JOIN "tblPlayers" tp on tcs."wrPlayerId" = tp."wrPlayerId"
-                LEFT JOIN "tblUsers" tu on tcs."wrCreatedBy" = tu."WrUserId"
+                LEFT JOIN "tblEventTypes" tet ON tcs."wrEventTypeId" = tet."wrEventTypeId"
+                LEFT JOIN "tblCompetitions" tc ON tcs."wrCompetitionId" = tc."wrCompetitionId"
+                LEFT JOIN "tblCompetitionStatisticsType" tcst ON tcs."wrCompetitionStatisticsTypeId" = tcst."wrCompetitionStatisticsTypeId"
+                LEFT JOIN "tblTeams" tt ON tcs."wrTeamId" = tt."wrTeamId"
+                LEFT JOIN "tblPlayers" tp ON tcs."wrPlayerId" = tp."wrPlayerId"
+                LEFT JOIN LATERAL (
+                    SELECT 
+                        ttp."wrJerseyPlayerImage"
+                    FROM "tblTeamPlayers" ttp
+                    WHERE ttp."wrRefPlayerId" = tcs."wrPlayerId"
+                      AND ttp."wrIsDeleted" = FALSE
+                    ORDER BY ttp."wrTeamPlayerId" DESC
+                    LIMIT 1
+                ) ttp ON TRUE
+                LEFT JOIN "tblUsers" tu ON tcs."wrCreatedBy" = tu."WrUserId"
                 WHERE tcs."wrIsDeleted" = FALSE
             `,
             {
@@ -130,29 +161,40 @@ const updateCompetitionStatisticsByIdQuery = async (data, fastify, request) => {
                     RETURNING *
                 )
                 SELECT
-                    tcs."wrCompetitionStatisticsId" as "competitionStatisticsId",
-                    tcs."wrEventTypeId" as "eventTypeId",
-                    tet."wrEventType" as "eventType",
-                    tcs."wrCompetitionId" as "competitionId",
-                    tc."wrCompetition" as "competition",
-                    tcs."wrCompetitionStatisticsTypeId" as "competitionStatisticsTypeId",
-                    tcst."wrName" as "name",
-                    tcs."wrTeamId" as "teamId",
-                    tt."wrTeamName" as "teamName",
-                    tcs."wrPlayerId" as "playerId",
-                    tp."wrPlayerName" as "playerName",
-                    tcs."wrDisplayOrder" as "displayOrder",
-                    tcs."wrValue" as "value",
-                    tcs."wrIsActive" as "isActive",
-                    tcs."wrCreatedBy" as "createdById",
-                    tu."WrName" as "createdBy"
+                    tcs."wrCompetitionStatisticsId" AS "competitionStatisticsId",
+                    tcs."wrEventTypeId" AS "eventTypeId",
+                    tet."wrEventType" AS "eventType",
+                    tcs."wrCompetitionId" AS "competitionId",
+                    tc."wrCompetition" AS "competition",
+                    tcs."wrCompetitionStatisticsTypeId" AS "competitionStatisticsTypeId",
+                    tcst."wrName" AS "name",
+                    tcs."wrTeamId" AS "teamId",
+                    tt."wrTeamName" AS "teamName",
+                    tt."wrImage" AS "teamImage",
+                    tcs."wrPlayerId" AS "playerId",
+                    tp."wrPlayerName" AS "playerName",
+                    ttp."wrJerseyPlayerImage" AS "jerseyPlayerImage",
+                    tcs."wrDisplayOrder" AS "displayOrder",
+                    tcs."wrValue" AS "value",
+                    tcs."wrIsActive" AS "isActive",
+                    tcs."wrCreatedBy" AS "createdById",
+                    tu."WrName" AS "createdBy"
                 FROM "update_data" tcs
-                LEFT JOIN "tblEventTypes" tet on tcs."wrEventTypeId" = tet."wrEventTypeId"
-                LEFT JOIN "tblCompetitions" tc on tcs."wrCompetitionId" = tc."wrCompetitionId"
-                LEFT JOIN "tblCompetitionStatisticsType" tcst on tcs."wrCompetitionStatisticsTypeId" = tcst."wrCompetitionStatisticsTypeId"
-                LEFT JOIN "tblTeams" tt on tcs."wrTeamId" = tt."wrTeamId"
-                LEFT JOIN "tblPlayers" tp on tcs."wrPlayerId" = tp."wrPlayerId"
-                LEFT JOIN "tblUsers" tu on tcs."wrCreatedBy" = tu."WrUserId"
+                LEFT JOIN "tblEventTypes" tet ON tcs."wrEventTypeId" = tet."wrEventTypeId"
+                LEFT JOIN "tblCompetitions" tc ON tcs."wrCompetitionId" = tc."wrCompetitionId"
+                LEFT JOIN "tblCompetitionStatisticsType" tcst ON tcs."wrCompetitionStatisticsTypeId" = tcst."wrCompetitionStatisticsTypeId"
+                LEFT JOIN "tblTeams" tt ON tcs."wrTeamId" = tt."wrTeamId"
+                LEFT JOIN "tblPlayers" tp ON tcs."wrPlayerId" = tp."wrPlayerId"
+                LEFT JOIN LATERAL (
+                    SELECT 
+                        ttp."wrJerseyPlayerImage"
+                    FROM "tblTeamPlayers" ttp
+                    WHERE ttp."wrRefPlayerId" = tcs."wrPlayerId"
+                      AND ttp."wrIsDeleted" = FALSE
+                    ORDER BY ttp."wrTeamPlayerId" DESC
+                    LIMIT 1
+                ) ttp ON TRUE
+                LEFT JOIN "tblUsers" tu ON tcs."wrCreatedBy" = tu."WrUserId"
                 WHERE tcs."wrIsDeleted" = FALSE
             `,
             {
