@@ -1228,6 +1228,7 @@ const ballByBallVirtualEventService = async (request, fastify) => {
 const ballByBallChangeService = async (request, fastify) => {
   let ball = 1;
   let isBoundary = false;
+  console.log("request.body in ballByBallChangeService", request.body);
   // const { commentaryId, run, ballType, isWicket = false } = request.body;
   const { commentaryId, cardType, cardKey, cardValue } = request.body;
   const commentaryDetails = global.tblCommentaries.find(
@@ -1519,6 +1520,7 @@ const ballByBallChangeService = async (request, fastify) => {
     };
   }
 
+  console.log("all function done")
   let getRes = await comResponseService(request, fastify);
   return {
     inningChange: false,
