@@ -259,6 +259,18 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
             });
 
             if (entitySportCompetitionStatistics && entitySportCompetitionStatistics?.data?.result?.stats?.length > 0) {
+                const getRecords = global.tblCompetitionStatistics.filter(tcs => (
+                    tcs.eventTypeId === getCompetition.eventTypeId &&
+                    tcs.competitionId === getCompetition.competitionId &&
+                    tcs.competitionStatisticsTypeId === statType.competitionStatisticsTypeId
+                ));
+
+                if (getRecords.length > 0) {
+                    const getRecordIds = getRecords.map(r => r.competitionStatisticsId);
+                    await deleteCompetitionStatisticsByIdQuery(getRecordIds, fastify, request);
+                    global.tblCompetitionStatistics = global.tblCompetitionStatistics.filter(tcs => !getRecordIds.includes(tcs.competitionStatisticsId));
+                }
+
                 const response = entitySportCompetitionStatistics?.data?.result?.stats;
                 for (let index = 0; index < response.length; index++) {
                     const res = response[index];
@@ -277,23 +289,6 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
                         }
                     }
 
-                    const existingRecord = global.tblCompetitionStatistics.find(tcs => {
-                        const commonCondition = tcs.eventTypeId === getCompetition.eventTypeId &&
-                            tcs.competitionId === getCompetition.competitionId &&
-                            tcs.competitionStatisticsTypeId === statType.competitionStatisticsTypeId;
-
-                        if (categoryId === "batting" || categoryId === "bowling") {
-                            return commonCondition &&
-                                tcs.playerId === getPlayer?.playerId &&
-                                tcs.teamId === getTeam?.teamId;
-                        } else if (categoryId === "team") {
-                            return commonCondition &&
-                                tcs.teamId === getTeam?.teamId &&
-                                !tcs.playerId;
-                        }
-                        return false;
-                    });
-
                     const body = {
                         eventTypeId: getCompetition.eventTypeId,
                         competitionId: getCompetition.competitionId,
@@ -304,34 +299,15 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
                         value: String(res[getKey.valueKey]) || "0"
                     }
 
-                    if (existingRecord) {
-                        try {
-                            await updateCompetitionStatisticsService({
-                                ...request,
-                                body: {
-                                    ...body,
-                                    competitionStatisticsId: existingRecord.competitionStatisticsId
-                                }
-                            }, fastify);
-                        } catch (updateError) {
-                            errorLogger(
-                                fastify,
-                                updateError.message,
-                                "/services/competitionStatistics.js/importCompetitionstatisticsService - updateCompetitionStatisticsService",
-                                request
-                            );
-                        }
-                    } else {
-                        try {
-                            await createCompetitionStatisticsService({ ...request, body }, fastify);
-                        } catch (error) {
-                            errorLogger(
-                                fastify,
-                                error.message,
-                                "/services/competitionStatistics.js/importCompetitionstatisticsService - createCompetitionStatisticsService",
-                                request
-                            );
-                        }
+                    try {
+                        await createCompetitionStatisticsService({ ...request, body }, fastify);
+                    } catch (error) {
+                        errorLogger(
+                            fastify,
+                            error.message,
+                            "/services/competitionStatistics.js/importCompetitionstatisticsService - createCompetitionStatisticsService",
+                            request
+                        );
                     }
                 }
             }
