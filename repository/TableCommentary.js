@@ -1097,60 +1097,88 @@ const updateCommentaryTeams = async (request, fastify, data) => {
     try {
     return await fastify.db.query(
       `
-      WITH ordered AS (
-        SELECT 
-            "wrCommentaryTeamId",
-            "wrTeamId",
-            ROW_NUMBER() OVER (ORDER BY "wrCommentaryTeamId" ASC) AS team_slot
-          FROM "tblCommentaryTeams"
-          WHERE "wrCommentaryId" = $1
-            AND "wrCurrentInnings" = $8
-            AND "wrIsDelete" = FALSE
-        )
-        UPDATE "tblCommentaryTeams" t
+      UPDATE "tblCommentaryTeams" t
         SET
-          "wrTeamId" = CASE
-                         WHEN o.team_slot = 1 THEN $5
-                         WHEN o.team_slot = 2 THEN $2
-                         ELSE t."wrTeamId"
-                       END,
           "wrTeamCaptain" = CASE
-                              WHEN o.team_slot = 1 THEN $6
-                              WHEN o.team_slot = 2 THEN $3
+                              WHEN t."wrTeamId" = $2 THEN $3
+                              WHEN t."wrTeamId" = $5 THEN $6
                               ELSE t."wrTeamCaptain"
                             END,
           "wrTeamKipper" = CASE
-                             WHEN o.team_slot = 1 THEN $7
-                             WHEN o.team_slot = 2 THEN $4
+                             WHEN t."wrTeamId" = $2 THEN $4
+                             WHEN t."wrTeamId" = $5 THEN $7
                              ELSE t."wrTeamKipper"
                            END,
           "wrShortName" = CASE
-                            WHEN o.team_slot = 1 THEN (SELECT "wrTeamShortName" FROM "tblTeams" WHERE "wrTeamId" = $5 LIMIT 1)
-                            WHEN o.team_slot = 2 THEN (SELECT "wrTeamShortName" FROM "tblTeams" WHERE "wrTeamId" = $2 LIMIT 1)
+                            WHEN t."wrTeamId" = $2 THEN (
+                              SELECT "wrTeamShortName"
+                              FROM "tblTeams"
+                              WHERE "wrTeamId" = $2
+                              LIMIT 1
+                            )
+                            WHEN t."wrTeamId" = $5 THEN (
+                              SELECT "wrTeamShortName"
+                              FROM "tblTeams"
+                              WHERE "wrTeamId" = $5
+                              LIMIT 1
+                            )
                             ELSE t."wrShortName"
                           END,
           "wrTeamName" = CASE
-                           WHEN o.team_slot = 1 THEN (SELECT "wrTeamName" FROM "tblTeams" WHERE "wrTeamId" = $5 LIMIT 1)
-                           WHEN o.team_slot = 2 THEN (SELECT "wrTeamName" FROM "tblTeams" WHERE "wrTeamId" = $2 LIMIT 1)
+                           WHEN t."wrTeamId" = $2 THEN (
+                             SELECT "wrTeamName"
+                             FROM "tblTeams"
+                             WHERE "wrTeamId" = $2
+                             LIMIT 1
+                           )
+                           WHEN t."wrTeamId" = $5 THEN (
+                             SELECT "wrTeamName"
+                             FROM "tblTeams"
+                             WHERE "wrTeamId" = $5
+                             LIMIT 1
+                           )
                            ELSE t."wrTeamName"
                          END,
           "wrTeamColor" = CASE
-                            WHEN o.team_slot = 1 THEN (SELECT "wrTeamColor" FROM "tblTeams" WHERE "wrTeamId" = $5 LIMIT 1)
-                            WHEN o.team_slot = 2 THEN (SELECT "wrTeamColor" FROM "tblTeams" WHERE "wrTeamId" = $2 LIMIT 1)
+                            WHEN t."wrTeamId" = $2 THEN (
+                              SELECT "wrTeamColor"
+                              FROM "tblTeams"
+                              WHERE "wrTeamId" = $2
+                              LIMIT 1
+                            )
+                            WHEN t."wrTeamId" = $5 THEN (
+                              SELECT "wrTeamColor"
+                              FROM "tblTeams"
+                              WHERE "wrTeamId" = $5
+                              LIMIT 1
+                            )
                             ELSE t."wrTeamColor"
                           END,
           "wrBackgroundColor" = CASE
-                                  WHEN o.team_slot = 1 THEN (SELECT "wrBackgroundColor" FROM "tblTeams" WHERE "wrTeamId" = $5 LIMIT 1)
-                                  WHEN o.team_slot = 2 THEN (SELECT "wrBackgroundColor" FROM "tblTeams" WHERE "wrTeamId" = $2 LIMIT 1)
+                                  WHEN t."wrTeamId" = $2 THEN (
+                                    SELECT "wrBackgroundColor"
+                                    FROM "tblTeams"
+                                    WHERE "wrTeamId" = $2
+                                    LIMIT 1
+                                  )
+                                  WHEN t."wrTeamId" = $5 THEN (
+                                    SELECT "wrBackgroundColor"
+                                    FROM "tblTeams"
+                                    WHERE "wrTeamId" = $5
+                                    LIMIT 1
+                                  )
                                   ELSE t."wrBackgroundColor"
                                 END,
           "wrGroupId" = CASE
-                          WHEN o.team_slot = 1 THEN $10
-                          WHEN o.team_slot = 2 THEN $9
+                          WHEN t."wrTeamId" = $2 THEN $9
+                          WHEN t."wrTeamId" = $5 THEN $10
                           ELSE t."wrGroupId"
                         END
-        FROM ordered o
-        WHERE t."wrCommentaryTeamId" = o."wrCommentaryTeamId"
+        WHERE
+          t."wrCommentaryId" = $1
+          AND t."wrCurrentInnings" = $8
+          AND t."wrIsDelete" = FALSE
+          AND t."wrTeamId" IN ($2, $5);
       `,
       {
         bind: [
@@ -1178,6 +1206,92 @@ const updateCommentaryTeams = async (request, fastify, data) => {
     throw new Error(err.message);
   }
 };
+
+// const updateCommentaryTeams = async (request, fastify, data) => {
+//     try {
+//     return await fastify.db.query(
+//       `
+//       WITH ordered AS (
+//         SELECT 
+//             "wrCommentaryTeamId",
+//             "wrTeamId",
+//             ROW_NUMBER() OVER (ORDER BY "wrCommentaryTeamId" ASC) AS team_slot
+//           FROM "tblCommentaryTeams"
+//           WHERE "wrCommentaryId" = $1
+//             AND "wrCurrentInnings" = $8
+//             AND "wrIsDelete" = FALSE
+//         )
+//         UPDATE "tblCommentaryTeams" t
+//         SET
+//           "wrTeamId" = CASE
+//                          WHEN o.team_slot = 1 THEN $5
+//                          WHEN o.team_slot = 2 THEN $2
+//                          ELSE t."wrTeamId"
+//                        END,
+//           "wrTeamCaptain" = CASE
+//                               WHEN o.team_slot = 1 THEN $6
+//                               WHEN o.team_slot = 2 THEN $3
+//                               ELSE t."wrTeamCaptain"
+//                             END,
+//           "wrTeamKipper" = CASE
+//                              WHEN o.team_slot = 1 THEN $7
+//                              WHEN o.team_slot = 2 THEN $4
+//                              ELSE t."wrTeamKipper"
+//                            END,
+//           "wrShortName" = CASE
+//                             WHEN o.team_slot = 1 THEN (SELECT "wrTeamShortName" FROM "tblTeams" WHERE "wrTeamId" = $5 LIMIT 1)
+//                             WHEN o.team_slot = 2 THEN (SELECT "wrTeamShortName" FROM "tblTeams" WHERE "wrTeamId" = $2 LIMIT 1)
+//                             ELSE t."wrShortName"
+//                           END,
+//           "wrTeamName" = CASE
+//                            WHEN o.team_slot = 1 THEN (SELECT "wrTeamName" FROM "tblTeams" WHERE "wrTeamId" = $5 LIMIT 1)
+//                            WHEN o.team_slot = 2 THEN (SELECT "wrTeamName" FROM "tblTeams" WHERE "wrTeamId" = $2 LIMIT 1)
+//                            ELSE t."wrTeamName"
+//                          END,
+//           "wrTeamColor" = CASE
+//                             WHEN o.team_slot = 1 THEN (SELECT "wrTeamColor" FROM "tblTeams" WHERE "wrTeamId" = $5 LIMIT 1)
+//                             WHEN o.team_slot = 2 THEN (SELECT "wrTeamColor" FROM "tblTeams" WHERE "wrTeamId" = $2 LIMIT 1)
+//                             ELSE t."wrTeamColor"
+//                           END,
+//           "wrBackgroundColor" = CASE
+//                                   WHEN o.team_slot = 1 THEN (SELECT "wrBackgroundColor" FROM "tblTeams" WHERE "wrTeamId" = $5 LIMIT 1)
+//                                   WHEN o.team_slot = 2 THEN (SELECT "wrBackgroundColor" FROM "tblTeams" WHERE "wrTeamId" = $2 LIMIT 1)
+//                                   ELSE t."wrBackgroundColor"
+//                                 END,
+//           "wrGroupId" = CASE
+//                           WHEN o.team_slot = 1 THEN $10
+//                           WHEN o.team_slot = 2 THEN $9
+//                           ELSE t."wrGroupId"
+//                         END
+//         FROM ordered o
+//         WHERE t."wrCommentaryTeamId" = o."wrCommentaryTeamId"
+//       `,
+//       {
+//         bind: [
+//           data.commentaryId,
+//           data.team1Id,
+//           data.team1Captain || null,
+//           data.team1Kipper || null,
+//           data.team2Id,
+//           data.team2Captain || null,
+//           data.team2Kipper || null,
+//           data.currentInnings,
+//           data.team1GroupId || null,
+//           data.team2GroupId || null,
+//         ],
+//         type: fastify.db.QueryTypes.UPDATE,
+//       }
+//     );
+//   } catch (err) {
+//     errorLogger(
+//       fastify,
+//       err.message,
+//       "DB ERROR --> repository/TableCommentary.js/updateCommentaryTeams",
+//       request
+//     );
+//     throw new Error(err.message);
+//   }
+// };
 
 const deleteCommentaryPlayers = async (request, fastify) => {
   try {

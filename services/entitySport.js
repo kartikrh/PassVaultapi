@@ -3611,7 +3611,6 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
     } else {
       event = "ball";
     }
-    console.log("eventsdfdsf in undo fun", event)
     // let live_score_data = response?.live?.live_score;
     // let liveTeamScore = response?.live?.live_score?.runs;
     if (String(c.score) == "w") {
