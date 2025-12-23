@@ -14541,7 +14541,7 @@ const saveComVirtual = async (request, fastify) => {
         //   pythonURI
         // )
         try {
-          callPredictorMarket(
+          await callPredictorMarket(
             predictionPayload,
             "/api/v1/predictscore",
             fastify,
