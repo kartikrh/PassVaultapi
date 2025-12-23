@@ -50,12 +50,16 @@ const updateClientSocketStatusQuery = async(data,fastify) =>{
 
     for (id of data.clientSocketId) {
         let index = global.tblClientSocket.findIndex((c) => c.clientSocketId === id);
-        global.tblClientSocket[index].status = data.status;
-        if(data.status == clientSocketStatus.disconnected){
-            global.tblClientSocket[index].reconnectCount = 0;
-        }
-        if(data.status == clientSocketStatus.connected){
-            global.tblClientSocket[index].connectCount = global.tblClientSocket[index].connectCount + 1;
+        if (index !== -1) {
+            global.tblClientSocket[index].status = data.status;
+            if(data.status == clientSocketStatus.disconnected){
+                global.tblClientSocket[index].reconnectCount = 0;
+            }
+            if(data.status == clientSocketStatus.connected){
+                global.tblClientSocket[index].connectCount = (global.tblClientSocket[index].connectCount || 0) + 1;
+            }
+        } else {
+            console.log(`Warning: Client socket ${id} not found in global.tblClientSocket when updating status`);
         }
     }
     return result;

@@ -66,12 +66,16 @@ const updateEntitySocketStatusQuery = async(data, fastify) =>{
 
     for (id of data.entitySocketId) {
         let index = global.tblEntitySockets.findIndex((c) => c.entitySocketId === id);
-        global.tblEntitySockets[index].status = data.status;
-        if(data.status == clientSocketStatus.disconnected){
-            global.tblEntitySockets[index].reconnectCount = 0;
-        }
-        if(data.status == clientSocketStatus.connected){
-            global.tblEntitySockets[index].connectCount = global.tblEntitySockets[index].connectCount + 1;
+        if (index !== -1) {
+            global.tblEntitySockets[index].status = data.status;
+            if(data.status == clientSocketStatus.disconnected){
+                global.tblEntitySockets[index].reconnectCount = 0;
+            }
+            if(data.status == clientSocketStatus.connected){
+                global.tblEntitySockets[index].connectCount = (global.tblEntitySockets[index].connectCount || 0) + 1;
+            }
+        } else {
+            console.log(`Warning: Entity socket ${id} not found in global.tblEntitySockets when updating status`);
         }
     }
     return result;
