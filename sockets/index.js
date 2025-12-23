@@ -29,7 +29,12 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
         const existing = global.clientSocketIo.find(c => c.url === urlConfig.url);
 
         // Check if existing connection is still active and connected
-        if (existing && existing.client && existing.client.connected) {
+        // Check both client.connected and io.connected for more accurate state
+        const isConnected = existing && existing.client && 
+          (existing.client.connected === true || 
+           (existing.client.io && existing.client.io.connected === true));
+
+        if (isConnected) {
           console.log(`Connection to ${urlConfig.url} already exists and is connected, skipping reconnection`);
           resolve();
           return;
@@ -37,15 +42,28 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
 
         // If existing but disconnected, clean it up properly
         if (existing) {
-          console.log(`Cleaning up existing disconnected connection to ${urlConfig.url}`);
+          // Check connection state for better logging
+          const connectionState = existing.client ? 
+            (existing.client.io ? existing.client.io.readyState : 'unknown') : 'no-client';
+          const wasConnected = existing.client && existing.client.connected;
+          
+          console.log(`Cleaning up existing disconnected connection to ${urlConfig.url} (state: ${connectionState}, wasConnected: ${wasConnected})`);
+          
           try {
             if (existing.client) {
-              existing.client.removeAllListeners();
-              existing.client.disconnect(true);
+              // Only disconnect if not already disconnected to avoid unnecessary operations
+              if (existing.client.connected || (existing.client.io && existing.client.io.connected)) {
+                existing.client.removeAllListeners();
+                existing.client.disconnect(true);
+              } else {
+                // Already disconnected, just clean up listeners
+                existing.client.removeAllListeners();
+              }
             }
           } catch (err) {
             console.log(`Error cleaning up existing connection: ${err.message}`);
           }
+          // Remove from array regardless of cleanup success
           global.clientSocketIo = global.clientSocketIo.filter(c => c.url !== urlConfig.url);
         }
 
@@ -149,11 +167,27 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
             isConnected = false;
             console.log(`Disconnected from ${urlConfig.url}, reason: ${reason} at ${new Date().toISOString()}`);
 
+            // Log disconnect reason for debugging
+            if (reason === "transport close") {
+              console.log(`  → Transport closed (network issue or server closed connection)`);
+            } else if (reason === "transport error") {
+              console.log(`  → Transport error (network failure)`);
+            } else if (reason === "ping timeout") {
+              console.log(`  → Ping timeout (server not responding to pings - check pingInterval/pingTimeout settings)`);
+            } else if (reason === "io server disconnect") {
+              console.log(`  → Server initiated disconnect`);
+            } else if (reason === "io client disconnect") {
+              console.log(`  → Client initiated disconnect`);
+            }
+
+            // Always remove from global array to prevent stale entries
+            // This ensures cleanup happens regardless of disconnect reason
+            global.clientSocketIo = global.clientSocketIo.filter(
+              (c) => c.client !== client && c.url !== urlConfig.url
+            );
+
             // Only update status if it's not a manual disconnect or server restart
             if (reason !== "io client disconnect" && reason !== "io server disconnect") {
-              global.clientSocketIo = global.clientSocketIo.filter(
-                (c) => c.client !== client
-              );
               updateClientSocketStatusQuery({
                 clientSocketId: [urlConfig.clientSocketId],
                 status: clientSocketStatus.disconnected
@@ -240,6 +274,10 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
           client.io.on("reconnect_failed", () => {
             console.log(`Reconnect failed for ${urlConfig.url} after all attempts at ${new Date().toISOString()}`);
             isConnected = false;
+            // Clean up entry when all reconnection attempts are exhausted
+            global.clientSocketIo = global.clientSocketIo.filter(
+              (c) => c.client !== client && c.url !== urlConfig.url
+            );
           });
 
           resolve();
