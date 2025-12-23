@@ -1490,6 +1490,8 @@ const matchTypesEntity = {
   T100: 18,
   "Women T100": 19,
   "TB-10": 20,
+  "Women T20I": 21,
+  "Women T10": 22
 };
 const matchStatusEntity = {
   Scheduled: 1,
@@ -2105,6 +2107,24 @@ const getKeyAndValueKey = async (enumValue) => {
   }
 }
 
+const competitionMatchTypeEnum = {
+  men: {
+    odi: 1,
+    test: 2,
+    t20i: 3,
+    firstclass: 5,
+    lista: 4,
+    t20: 6,
+    t10: 17
+  },
+  women: {
+    odi: 7,
+    womenodi: 7,
+    woment20: 8,
+    t20i: 21
+  }
+}
+
 module.exports = {    
   ERROR_CODES,
   error,
@@ -2222,5 +2242,6 @@ module.exports = {
   GAME_STATUS,
   CompetitionStatisticsType,
   etWicketObj,
-  getKeyAndValueKey
+  getKeyAndValueKey,
+  competitionMatchTypeEnum
 };

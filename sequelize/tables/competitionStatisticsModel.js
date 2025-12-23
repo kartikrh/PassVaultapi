@@ -18,6 +18,10 @@ module.exports = (sequelize) => {
                 type: DataTypes.INTEGER,
                 allowNull: true,
             },
+            wrMatchTypeId: {
+                type: DataTypes.INTEGER,
+                allowNull: true,
+            },
             wrCompetitionStatisticsTypeId: {
                 type: DataTypes.INTEGER,
                 allowNull: true,
@@ -35,6 +39,10 @@ module.exports = (sequelize) => {
                 allowNull: true,
             },
             wrValue: {
+                type: DataTypes.STRING(1000),
+                allowNull: true
+            },
+            wrInningsCount: {
                 type: DataTypes.STRING(1000),
                 allowNull: true
             },
