@@ -1,4 +1,5 @@
 const ResponseLog = require("../database/schema/responseLogger");
+const configConstants = require("./configConstants");
 const { ISCOMMENTARYLOGGER } = require("./configConstants");
 const { getCurrentDateTime } = require('./datetime');
 
@@ -506,6 +507,33 @@ const commActionLogger = async (data, request, fastify) => {
   }
 }
 
+const cardLogger = async (request , fastify) => {
+  try{
+    let addLog = global.tblConfigs.find((x) => x.key == configConstants.ISCARDLOGGER)?.value || "false";
+    if (addLog == "false") {
+      return true;
+    }
+    return await fastify.db.query(
+      `INSERT INTO "tblCardLogs" ("wrCommentaryId", "wrRequest" ) 
+      VALUES ($1, $2)`, 
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          request.body.commentaryId || null,
+          JSON.stringify(request.body) || null
+        ],
+      })
+
+  }catch(err){
+     errorLogger(
+      fastify,
+      err.message,
+      "Error in cardLogger -> utilities/logger.js/cardLogger",
+      request ?? null
+    )
+    console.log(err);
+  }
+}
 const originalLog = console.log;
 const originalLogError = console.error;
 const originalLogWarn = console.warn;
@@ -521,4 +549,4 @@ console.warn = createLogPrefix(originalLogWarn);
 module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,
   marketDataLogger,tblPredictorAPILogger,tblThirdPartyAPILogger,commentaryLogger,updateWebRequestLogs,
   eventMarketLogger, marektResultLogger,pythonSocketLogger,
-disMissalLogger, commActionLogger};
+disMissalLogger, commActionLogger,cardLogger};
