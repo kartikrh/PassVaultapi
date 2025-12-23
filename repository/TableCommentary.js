@@ -9008,6 +9008,75 @@ const getCommentaryPlayerByIdsQuery = async (data, fastify) => {
     throw new Error(err.message);
   }
 };
+
+const getCommentaryStatisticsQuery = async (competitionId, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `SELECT 
+          "commentaries"."wrMatchTypeId" AS "matchTypeId",
+          "matchTypes"."wrMatchType" AS "matchType",
+          "team1"."wrTeamId" AS "team1Id",
+          "team1"."wrTeamShortName" AS "team1ShortName",
+          "team1"."wrTeamName" AS "team1Name",
+          "team1"."wrImage" AS "team1Image",
+          "team2"."wrTeamId" AS "team2Id",
+          "team2"."wrTeamShortName" AS "team2ShortName",
+          "team2"."wrTeamName" AS "team2Name",
+          "team2"."wrImage" AS "team2Image",
+  
+          COUNT(DISTINCT "commentaries"."wrCommentaryId")::INTEGER AS "totalCommentaries",
+  
+          COUNT(CASE 
+                  WHEN "commentaries"."wrWinnerId" = "team1"."wrTeamId" THEN 1 
+                  ELSE NULL 
+               END)::INTEGER AS "team1WinCount",
+  
+          COUNT(CASE 
+                  WHEN "commentaries"."wrWinnerId" = "team2"."wrTeamId" THEN 1 
+                  ELSE NULL 
+               END)::INTEGER AS "team2WinCount",
+  
+          COUNT(CASE 
+                  WHEN "commentaries"."wrWinnerId" = "team1"."wrTeamId" THEN 1 
+                  WHEN "commentaries"."wrWinnerId" = "team2"."wrTeamId" THEN 1 
+                  ELSE NULL 
+               END)::INTEGER AS "totalWins"
+  
+      FROM 
+          "tblCommentaries" "commentaries"
+      JOIN 
+          "tblMatchTypes" "matchTypes" ON "commentaries"."wrMatchTypeId" = "matchTypes"."wrMatchTypeId"
+      JOIN 
+          "tblTeams" "team1" ON "commentaries"."wrTeam1Id" = "team1"."wrTeamId"
+      JOIN 
+          "tblTeams" "team2" ON "commentaries"."wrTeam2Id" = "team2"."wrTeamId"
+  
+      WHERE 
+          "commentaries"."wrCompetitionId" = $1
+  
+      GROUP BY 
+          "commentaries"."wrMatchTypeId",
+          "matchTypes"."wrMatchType",
+          "team1"."wrTeamId", 
+          "team2"."wrTeamId"
+      ORDER BY 
+          "matchTypeId" DESC`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [competitionId]
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/getCommentaryStatisticsQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -9160,4 +9229,5 @@ module.exports = {
   deleteCommentaryPlayersQuery,
   getHeadToHeadCommentaryQuery,
   getCommentaryPlayerByIdsQuery,
+  getCommentaryStatisticsQuery
 };

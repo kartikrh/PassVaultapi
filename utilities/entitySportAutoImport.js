@@ -131,6 +131,7 @@ const entitySportAutoImportProcess = async (fastify) => {
             }
             await importUpdate(importData, fastify);
         } catch (error) {
+            console.log("🚀 ~ entitySportAutoImportProcess ~ error:", error)
             if (importData && global?.autoImportData && global?.autoImportData?.id) {
                 if (global?.autoImportData?.id === importData.id) {
                     importData.esApiResponseData = global.autoImportData.esApiResponseData;
