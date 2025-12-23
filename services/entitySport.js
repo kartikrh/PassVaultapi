@@ -2189,6 +2189,10 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           // update wicketType and batsman_id
           let wtEnum = etWicketObj[c.dismissal.toLowerCase()] || wicketTypeObj.BOLD;
           w.wicketType = wtEnum;
+          let upBall ={
+            ...ball,
+            ballWicketType : wtEnum
+          }
           let batsmanId = playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId;
           if(w.batterId != batsmanId){
            
@@ -2222,7 +2226,10 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             }
             w.batterId = playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId;
             w.batterName = playerTpIdObj[c.wicket_batsman_id]?.playerName;
+            upBall.batStrikeId = batsmanId;
+            upBall.ballPlayerId = batsmanId;
           }
+          ballByBall.push(upBall)
           wickets.push(w);
         }
       }
@@ -3585,17 +3592,26 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
   let partnershipMap = {};
   for (let c of storedCom) {
     let event = c.event;
-    if (String(c.score) === "w") {
+    const scoreStr = String(c.score).toLowerCase();
+    if (String(scoreStr) === "w") {
       event = "wicket";
-    } else if (c.score && String(c.score).includes("wd")) {
+    } else if (scoreStr && scoreStr.includes("wd")) {
       event = "wide";
-    } else if (c.score && String(c.score).includes("nb")) {
+    } else if (scoreStr && scoreStr.includes("nb")) {
       event = "noball";
-    } else if (c.score && String(c.score).includes("lb")) {
+    } else if (scoreStr && scoreStr.includes("lb")) {
       event = "legbye";
+    } else if (
+      scoreStr &&
+      scoreStr.includes("b") &&
+      !scoreStr.includes("lb") &&
+      !scoreStr.includes("nb")
+    ) {
+      event = "bye";
     } else {
       event = "ball";
     }
+    console.log("eventsdfdsf in undo fun", event)
     // let live_score_data = response?.live?.live_score;
     // let liveTeamScore = response?.live?.live_score?.runs;
     if (String(c.score) == "w") {
@@ -3766,6 +3782,47 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
       let ball = global.tblCommentaryBallByBall.find((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
 
       if (!ball.ballIsWicket && ball.ballRun === c.run && ball.ballType == BALL_TYPE.LEG_BYE) {
+        continue;
+      }
+
+      let ballAfterThis = global.tblCommentaryBallByBall.filter((i) => i.commentaryBallByBallId >= ball.commentaryBallByBallId &&
+        i.commentaryId == comDetails.commentaryId && i.currentInnings == comDetails.currentInnings)
+      for (let b1 of ballAfterThis) {
+        const overNumber = Number(c.over);
+        const overKey = `${comDetails.commentaryId}-${comDetails.currentInnings}-${battingTeam.teamId}-${overNumber}`;
+        let over = oversMap[overKey];
+        over = global.tblOvers.find((i) => i.overId == b1.overId)
+        oversMap[overKey] = over
+        deleteBallByBallIds.push(b1.commentaryBallByBallId)
+        let tpBall = com.find((i) => i.event_id == b1.tpId)
+        const requestData = {
+          response,
+          battingTeam,
+          comDetails,
+          commBall: b1,
+          commPlayers: playerTpIdObj,
+          tpBall,
+          deleteOverIds,
+          over,
+          tpCurrentBall: c,
+        }
+        const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
+
+        if (undoResult) {
+          battingTeam = undoResult.battingTeam;
+          deleteOverIds.push(...undoResult.deleteOverIds);
+          oversMap[overKey] = undoResult.over;
+          Object.assign(playersMap, undoResult.playersMap);
+        }
+      }
+    }
+
+    if (event == "bye") {
+      let index = global.tblCommentaryBallByBall.findIndex((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
+      if (index == -1) continue;
+      let ball = global.tblCommentaryBallByBall.find((i) => i.tpId == c.event_id && i.commentaryId == comDetails.commentaryId);
+
+      if (!ball.ballIsWicket && ball.ballRun === c.run && ball.ballType == BALL_TYPE.BYE) {
         continue;
       }
 
@@ -4004,10 +4061,10 @@ const regularBallUndoService = async (data, fastify, request) => {
   battingTeam.teamOver = `${tpCurrentBall?.over}.${previousBall}`
   battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
   battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
-  battingTeam.teamLegByRuns = battingTeam.teamLegByRuns > 0 ? (battingTeam.teamLegByRuns || 0) - parseInt(commBall.teamLegByRuns) : 0;
-  battingTeam.teamByRuns = battingTeam.teamByRuns > 0 ? (battingTeam.teamByRuns || 0) - parseInt(commBall.teamByRuns) : 0;
+  // battingTeam.teamLegByRuns = battingTeam.teamLegByRuns > 0 ? (battingTeam.teamLegByRuns || 0) - parseInt(commBall.teamLegByRuns) : 0;
+  // battingTeam.teamByRuns = battingTeam.teamByRuns > 0 ? (battingTeam.teamByRuns || 0) - parseInt(commBall.teamByRuns) : 0;
   over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
-  over.totalRun = over.totalRun > 0 ? over.totalRun - 1 : 0;
+  over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
   // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
   over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
   if (!playersMap[tpBall.bowler_id]) {
@@ -4068,7 +4125,6 @@ const wideBallUndoService = async (data, fastify, request) => {
   let liveTeamScore = response?.live?.live_score?.runs;
   let live_score_data = response?.live?.live_score;
   let run = commBall?.ballExtraRun ?? 0;
-  // battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
   battingTeam["teamScore"] = liveTeamScore;
   let previousBall = tpCurrentBall?.ball - 1;
   battingTeam.teamOver = `${tpCurrentBall?.over}.${previousBall}`
@@ -4076,7 +4132,6 @@ const wideBallUndoService = async (data, fastify, request) => {
   battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
   battingTeam.teamWideRuns = battingTeam.teamWideRuns > 0 ? battingTeam.teamWideRuns - run : 0;
   over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
-  // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
   over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
   over.totalWideBall = over.totalWideBall > 0 ? over.totalWideBall - 1 : 0;
   over.totalWideRun = over.totalWideRun > 0 ? over.totalWideRun - run : 0;
@@ -4122,7 +4177,6 @@ const noballUndoService = async (data, fastify, request) => {
   let liveTeamScore = response?.live?.live_score?.runs;
   let live_score_data = response?.live?.live_score;
   let run = commBall?.ballExtraRun ?? 0;
-  // battingTeam["teamScore"] = (battingTeam.teamScore || 0) - run;
   battingTeam["teamScore"] = liveTeamScore;
   let previousBall = tpCurrentBall?.ball - 1;
   battingTeam.teamOver = `${tpCurrentBall?.over}.${previousBall}`
@@ -4130,7 +4184,6 @@ const noballUndoService = async (data, fastify, request) => {
   battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
   battingTeam.teamNoBallRuns = battingTeam.teamNoBallRuns > 0 ? battingTeam.teamNoBallRuns - run : 0;
   over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
-  // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
   over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
   over.totalNoball = over.totalNoball > 0 ? over.totalNoball - 1 : 0;
   over.totalNoBallRun = over.totalNoBallRun > 0 ? over.totalNoBallRun - run : 0;
@@ -4158,6 +4211,145 @@ const noballUndoService = async (data, fastify, request) => {
   }
 }
 
+const legByeRunUndoService = async (data, fastify, request) => {
+  let {
+    response,
+    battingTeam,
+    comDetails,
+    commPlayers,
+    commBall,
+    tpBall,
+    deleteOverIds,
+    over,
+    tpCurrentBall,
+  } = data;
+
+  let playersMap = {};
+  let liveTeamScore = response?.live?.live_score?.runs;
+  let live_score_data = response?.live?.live_score;
+  let run = commBall.ballRun;
+  battingTeam["teamScore"] = liveTeamScore;
+  let previousBall = tpCurrentBall?.ball - 1;
+  battingTeam.teamOver = `${tpCurrentBall?.over}.${previousBall}`
+  battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
+  battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
+  battingTeam.teamLegByRuns = battingTeam.teamLegByRuns > 0 ? (battingTeam.teamLegByRuns || 0) - run : 0;
+  over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
+  over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
+  over.totalLegByesRun = over.totalLegByesRun > 0 ? over.totalLegByesRun - run : 0;
+  over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
+  if (!playersMap[tpBall.bowler_id]) {
+    playersMap[tpBall.bowler_id] = {
+      ...commPlayers[tpBall.bowler_id]
+    }
+  }
+  if (!playersMap[tpBall.batsman_id]) {
+    playersMap[tpBall.batsman_id] = {
+      ...commPlayers[tpBall.batsman_id]
+    }
+  }
+  playersMap[tpBall.bowler_id].bowlerLegByeBall = playersMap[tpBall.bowler_id].bowlerLegByeBall > 0 ? playersMap[tpBall.bowler_id].bowlerLegByeBall - 1 : 0;
+  playersMap[tpBall.bowler_id].bowlerLegByeBallRun = playersMap[tpBall.bowler_id].bowlerLegByeBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerLegByeBallRun - run : 0;
+  playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
+  playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
+  playersMap[tpBall.batsman_id].runs = playersMap[tpBall.batsman_id].runs > 0 ? playersMap[tpBall.batsman_id].runs - run : 0;
+  playersMap[tpBall.batsman_id].batBall = playersMap[tpBall.batsman_id].batBall > 0 ? playersMap[tpBall.batsman_id].batBall - 1 : 0;
+  let isBoundary = run == 4 || run == 6 ? true : false;
+  if (run == 0) {
+    over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
+    playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
+    playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playersMap[tpBall.bowler_id].bowlerDotBall - 1 : 0;
+  }
+  else if (isBoundary) {
+    if (run == 4) {
+      over.totalFour = over.totalFour > 0 ? over.totalFour - 1 : 0
+      playersMap[tpBall.bowler_id].bowlerFour = playersMap[tpBall.bowler_id].bowlerFour > 0 ? playersMap[tpBall.bowler_id].bowlerFour - 1 : 0
+    }
+    if (run == 6) {
+      over.totalSix -= 1;
+      playersMap[tpBall.bowler_id].bowlerSix = playersMap[tpBall.bowler_id].bowlerSix > 0 ? playersMap[tpBall.bowler_id].bowlerSix - 1 : 0
+    }
+  }
+  if (over.ballCount === 0) {
+    deleteOverIds.push(over.overId);
+  }
+  return {
+    over,
+    deleteOverIds,
+    playersMap,
+    battingTeam,
+  }
+}
+
+const byeRunUndoService = async (data, fastify, request) => {
+  let {
+    response,
+    battingTeam,
+    comDetails,
+    commPlayers,
+    commBall,
+    tpBall,
+    deleteOverIds,
+    over,
+    tpCurrentBall,
+  } = data;
+
+  let playersMap = {};
+  let liveTeamScore = response?.live?.live_score?.runs;
+  let live_score_data = response?.live?.live_score;
+  let run = commBall.ballRun;
+  battingTeam["teamScore"] = liveTeamScore;
+  let previousBall = tpCurrentBall?.ball - 1;
+  battingTeam.teamOver = `${tpCurrentBall?.over}.${previousBall}`
+  battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
+  battingTeam.rrr = parseFloat(live_score_data?.required_runrate) ?? 0;
+  battingTeam.teamByRuns = battingTeam.teamByRuns > 0 ? (battingTeam.teamByRuns || 0) - run : 0;
+  over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
+  over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
+  over.totalByesRun = over.totalByesRun > 0 ? over.totalByesRun - run : 0;
+  over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
+  if (!playersMap[tpBall.bowler_id]) {
+    playersMap[tpBall.bowler_id] = {
+      ...commPlayers[tpBall.bowler_id]
+    }
+  }
+  if (!playersMap[tpBall.batsman_id]) {
+    playersMap[tpBall.batsman_id] = {
+      ...commPlayers[tpBall.batsman_id]
+    }
+  }
+  playersMap[tpBall.bowler_id].bowlerByeBall = playersMap[tpBall.bowler_id].bowlerByeBall > 0 ? playersMap[tpBall.bowler_id].bowlerByeBall - 1 : 0;
+  playersMap[tpBall.bowler_id].bowlerByeBallRun = playersMap[tpBall.bowler_id].bowlerByeBallRun > 0 ? playersMap[tpBall.bowler_id].bowlerByeBallRun - run : 0;
+  playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
+  playersMap[tpBall.bowler_id].bowlerRun = playersMap[tpBall.bowler_id].bowlerRun > 0 ? playersMap[tpBall.bowler_id].bowlerRun - run : 0;
+  playersMap[tpBall.batsman_id].runs = playersMap[tpBall.batsman_id].runs > 0 ? playersMap[tpBall.batsman_id].runs - 1 : 0;
+  playersMap[tpBall.batsman_id].batBall = playersMap[tpBall.batsman_id].batBall > 0 ? playersMap[tpBall.batsman_id].batBall - 1 : 0;
+  let isBoundary = run == 4 || run == 6 ? true : false;
+  if (run == 0) {
+    over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
+    playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
+    playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playersMap[tpBall.bowler_id].bowlerDotBall - 1 : 0;
+  }
+  else if (isBoundary) {
+    if (run == 4) {
+      over.totalFour = over.totalFour > 0 ? over.totalFour - 1 : 0
+      playersMap[tpBall.bowler_id].bowlerFour = playersMap[tpBall.bowler_id].bowlerFour > 0 ? playersMap[tpBall.bowler_id].bowlerFour - 1 : 0
+    }
+    if (run == 6) {
+      over.totalSix -= 1;
+      playersMap[tpBall.bowler_id].bowlerSix = playersMap[tpBall.bowler_id].bowlerSix > 0 ? playersMap[tpBall.bowler_id].bowlerSix - 1 : 0
+    }
+  }
+  if (over.ballCount === 0) {
+    deleteOverIds.push(over.overId);
+  }
+  return {
+    over,
+    deleteOverIds,
+    playersMap,
+    battingTeam,
+  } 
+}
 
 const applyUndoForAllTypes = async(requestData, b1, fastify, request) => {
   try {
@@ -4195,9 +4387,8 @@ const undoHandlers = {
     [BALL_TYPE.REGULAR]: regularBallUndoService,
     [BALL_TYPE.WIDE]: wideBallUndoService,
     [BALL_TYPE.NO_BALL]: noballUndoService,
-    [BALL_TYPE.LEG_BYE]: regularBallUndoService,
-    // [BALL_TYPE.BYE]: byeUndoService,
-    // [BALL_TYPE.PENALTY]: penaltyUndoService,
+    [BALL_TYPE.LEG_BYE]: legByeRunUndoService,
+    [BALL_TYPE.BYE]: byeRunUndoService,
 };
 
 const upsertCommPartnershipService = async (data, fastify, request) => {

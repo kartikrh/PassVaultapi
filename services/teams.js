@@ -25,7 +25,7 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { deletePlayersByTeamIdQuery } = require("../repository/TableTournamentsTeamPlayers")
 const { deletePointsByTeamIdQuery } = require("../repository/TableTournmentTeamPoints")
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
-const { trimTextData, callEntitySportAPI, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, EventType, checkEntitySportAPIEndpointIsActive, RefType, commentaryStatus } = require("../utilities/index");
+const { trimTextData, callEntitySportAPI, APIEndpointModuleType, ServiceType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, EventType, checkEntitySportAPIEndpointIsActive, RefType, commentaryStatus, callClientAPI } = require("../utilities/index");
 const { insertPlayerQuery } = require("../repository/TablePlayer");
 const { insertTeamAndPlayers } = require("./commentry");
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
@@ -378,6 +378,28 @@ const updateTeamService = async (request, fastify) => {
     });
     body.image = fullPath;
     body.imagePath = imagePath;
+
+    callClientAPI(
+      {
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.updateSeoModule,
+        data: {
+          module: "TeamLogoUpadate",
+          type: "updateImage",
+          data: body
+        },
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      console.log("teamImage update call client api console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/team.js/updateTeamService",
+        request
+      );
+    });
   }
 
   if (request.body.jersey && request.body.jersey.length) {
@@ -395,6 +417,28 @@ const updateTeamService = async (request, fastify) => {
     });
     body.jersey = fullPath;
     body.jerseyPath = imagePath;
+
+    callClientAPI(
+      {
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.updateSeoModule,
+        data: {
+          module: "TeamLogoUpadate",
+          type: "updateJersey",
+          data: body
+        },
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      console.log("teamJersey update call client api console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/team.js/updateTeamService",
+        request
+      );
+    });
   }
 
   await updateTeamQuery(body, fastify, request);
