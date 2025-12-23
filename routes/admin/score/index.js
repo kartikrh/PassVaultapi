@@ -26,6 +26,7 @@ const {
   getAllCommentariesDataV1,
   getAllCommentariesDataV2,
   getHeadToHeadCommentary,
+  getCommentaryStatistics,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { getAllEventMarketsAndRunners } = require('../../../controller/users/admin/eventMarket');
 const { getAllMenuItems } = require("../../../controller/users/admin/menuItem");
@@ -451,6 +452,10 @@ module.exports = async (fastify, opts) => {
   fastify.post("/getHeadToHeadCommentary", {
     schema: Score.getHeadToHeadCommentary.schema,
     handler: (request , reply) => getHeadToHeadCommentary(request, reply, fastify)
+  });
+  fastify.post("/getCommentaryStatistics", {
+    schema: Score.getCommentaryStatistics.schema,
+    handler: (request , reply) => getCommentaryStatistics(request, reply, fastify)
   });
 };
 

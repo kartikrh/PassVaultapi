@@ -4162,6 +4162,20 @@ const Commentary = {
         required: ["team1Id", "team2Id", "matchTypeId"]
       }
     }
+  },
+  getCommentaryStatistics: {
+    schema: {
+      tags: ["Commentary"],
+      description: "get all commentary stats by competition id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" }
+        },
+        required: ["competitionId"]
+      }
+    }
   }
 };
 
@@ -5355,6 +5369,20 @@ const Score = {
           matchTypeId: { type: "integer" }
         },
         required: ["team1Id", "team2Id", "matchTypeId"]
+      }
+    }
+  },
+  getCommentaryStatistics: {
+    schema: {
+      tags: ["Score"],
+      description: "get all commentary stats by competition id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" }
+        },
+        required: ["competitionId"]
       }
     }
   }

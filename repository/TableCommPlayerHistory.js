@@ -33,7 +33,8 @@ const getAllCommentaryBattingHistory = async (fastify, whereCondition = null) =>
                 tcpbh."wrCreatedAt" as "createdAt",
                 tcpbh."wrOutCount" as "outCount",
                 tcpbh."wrFastest50Balls" as "fastest50Balls",
-                tcpbh."wrFastest100Balls" as "fastest100Balls"
+                tcpbh."wrFastest100Balls" as "fastest100Balls",
+                tc."wrEventDate" as "eventDate"
             FROM "tblCommPlayerBatHist" AS tcpbh
             LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" AND tc."wrIsDelete" = false
             LEFT JOIN "tblEvents" AS te ON te."wrEventId" = tc."wrEventId" AND te."wrIsDeleted" = false
@@ -84,7 +85,8 @@ const getAllCommentaryBowlingHistory = async (fastify, whereCondition = null) =>
             tcpbh."wrCreatedAt" as "createdAt",
             tcpbh."wrOverCount" as "overCount",
             tcpbh."wrHattrickCount" as "hattrickCount",
-            tcpbh."wrExpensiveOverRuns" as "expensiveOverRuns"
+            tcpbh."wrExpensiveOverRuns" as "expensiveOverRuns",
+            tc."wrEventDate" as "eventDate"
             FROM "tblCommPlayerBowlHist" AS tcpbh
             LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" AND tc."wrIsDelete" = false
             LEFT JOIN "tblEvents" AS te ON te."wrEventId" = tc."wrEventId" AND te."wrIsDeleted" = false
