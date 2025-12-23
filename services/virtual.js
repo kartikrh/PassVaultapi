@@ -53,7 +53,7 @@ const {
 } = require("../repository/TableTeamPlayer");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const { commentaryDetailsByEventIdService, weatherAndPitchDataService } = require("./commentry");
-const { errorLogger, marketLogger } = require("../utilities/logger");
+const { errorLogger, marketLogger, cardLogger } = require("../utilities/logger");
 const {
   virtualOverQuery,
   virtualBallByBallQuery,
@@ -1230,6 +1230,10 @@ const ballByBallChangeService = async (request, fastify) => {
   let isBoundary = false;
   // const { commentaryId, run, ballType, isWicket = false } = request.body;
   const { commentaryId, cardType, cardKey, cardValue } = request.body;
+  cardLogger(
+    request,
+    fastify
+  )
   const commentaryDetails = global.tblCommentaries.find(
     (item) => item?.commentaryId === commentaryId
   );
