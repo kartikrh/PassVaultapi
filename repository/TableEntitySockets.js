@@ -90,23 +90,37 @@ const updateEntitySocketStatusQuery = async(data, fastify) =>{
    }
 }
 const updateReconnectCountQuery = async(data, fastify) =>{
-    let result = await fastify.db.query(`
-        UPDATE "tblEntitySockets"
-        SET
-            "wrReconnectCount" = $1
-        WHERE "wrId" = $2 AND "wrIsDeleted" = false
-    `,
-    {
-        type: fastify.db.QueryTypes.UPDATE,
-        bind: [
-            data.reconnectCount,
-            data.entitySocketId
-        ]
-    })
+    try {
+        let result = await fastify.db.query(`
+            UPDATE "tblEntitySockets"
+            SET
+                "wrReconnectCount" = $1
+            WHERE "wrId" = $2 AND "wrIsDeleted" = false
+        `,
+        {
+            type: fastify.db.QueryTypes.UPDATE,
+            bind: [
+                data.reconnectCount,
+                data.entitySocketId
+            ]
+        })
 
-    let index = global.tblEntitySockets.findIndex((c) => c.entitySocketId === data.entitySocketId);
-    global.tblEntitySockets[index].reconnectCount = data.reconnectCount;
-    return result;
+        let index = global.tblEntitySockets.findIndex((c) => c.entitySocketId === data.entitySocketId);
+        if (index !== -1) {
+            global.tblEntitySockets[index].reconnectCount = data.reconnectCount;
+        } else {
+            console.log(`Warning: Entity socket ${data.entitySocketId} not found in global.tblEntitySockets when updating reconnect count`);
+        }
+        return result;
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB Error --> repository/TableEntitySockets/updateReconnectCountQuery",
+            null
+        );
+        throw new Error(error.message);
+    }
 }
 const disConnectEntitySocketQuery = async (fastify) => {
     try {

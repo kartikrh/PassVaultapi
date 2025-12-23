@@ -145,6 +145,12 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
           fastify
         ).catch((error) => {
           console.log("Error updating entity socket status:", error);
+          errorLogger(
+            fastify,
+            error.message,
+            "DB Error --> socketIo.js/entitySports/connectEntitySport/connect",
+            null
+          );
         });
         // Remove any old socket just in case
         global.entitySportSocketIo = global.entitySportSocketIo.filter(
@@ -255,6 +261,12 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
           fastify
         ).catch((error) => {
           console.log("Error updating entity reconnect count:", error);
+          errorLogger(
+            fastify,
+            error.message,
+            "DB Error --> socketIo.js/entitySports/connectEntitySport/reconnect_attempt",
+            null
+          );
         });
 
         let index = global.tblEntitySockets.findIndex(
