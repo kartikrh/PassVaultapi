@@ -254,15 +254,17 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                             (item.teamId === team1Id || item.teamId === team2Id)
                                     );
                                     if (commentaryTeam.length === 0) {
+                                        const team1Data = global.tblTeams.find(tt => tt.teamId === team1Id);
+                                        const team2Data = global.tblTeams.find(tt => tt.teamId === team2Id);
                                         await insertCommentaryTeams({
                                             body: {
                                                 commentaryId: commentary.commentaryId,
-                                                team1Id,
-                                                team2Id,
+                                                team1Id: team1Data.teamId,
+                                                team2Id: team2Data.teamId,
                                                 currentInnings: i,
                                                 teamMaxOver: maxOver,
-                                                team1TpId: teama?.team_id,
-                                                team2TpId: teamb?.team_id
+                                                team1TpId: team1Data?.tpId,
+                                                team2TpId: team2Data?.tpid
                                             },
                                         }, fastify);
                                         const teamACommentaryTeam = await getCommentaryTeamsQuery({
