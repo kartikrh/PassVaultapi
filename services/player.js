@@ -160,6 +160,7 @@ const playerByIdService = async (request, fastify) => {
     const data = {
       ...result,
       teams: playersInTeams,
+      jerseyPlayerImage: playersInTeams?.find(pt => pt.homeTeam)?.jerseyPlayerImage
     };
 
     return data;
