@@ -6955,6 +6955,8 @@ const Banner = {
           startDate: { type: "string" },
           endDate: { type: "string" },
           link: { type: "string" },
+          deviceType: { type: "string" },
+          whitelabelId: { type: "string" },
           // viewerCount: { type: "integer" },
         },
         required: ["bannerId"],
