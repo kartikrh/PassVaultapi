@@ -401,6 +401,7 @@ const updatePlayerService = async (request, fastify) => {
       : [0, '', 'null'].includes(request.body.tpId) ? null
       : request.body.tpId,
     countryId: request.body.countryId || checkPlayerId.countryId,
+    birthDate: request.body.birthDate || checkPlayerId.birthDate,
   };
 
   if ("isActive" in request.body) {
