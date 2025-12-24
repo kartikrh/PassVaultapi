@@ -27,12 +27,14 @@ const getAllPlayersQuery = async (fastify) => {
     tp."wrTpId" AS "tpId",
     tp."wrCountryId" AS "countryId",
     tp."wrIsMen" AS "isMen",
-    tp."wrBirthDate" AS "birthDate"
+    tp."wrBirthDate" AS "birthDate",
+    tcc."wrCountryName" AS "countryName"
 FROM 
     "tblPlayers" tp
     LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
     LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
     LEFT JOIN "tblBowlingTypes" tbt ON tp."wrBowlingType" = tbt."wrBowlingTypeId"
+    LEFT JOIN "tblCountryCodes" tcc ON tp."wrCountryId" = tcc."wrId"
     WHERE tp."wrIsDeleted" = false;
 
      `,
