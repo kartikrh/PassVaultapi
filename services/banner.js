@@ -109,6 +109,8 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       link: request.body.link,
       viewerCount: validateBannerId.viewerCount,
       imagePath: validateBannerId.imagePath,
+      deviceTypeId: request.body.deviceTypeId || validateBannerId?.deviceTypeId,
+      whitelabelId: request.body.whitelabelId || validateBannerId?.whitelabelId,
     };
     if (request.body.image && request.body.image.length) {
       const imgName = generateImageName({
