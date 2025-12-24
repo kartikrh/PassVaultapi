@@ -1,8 +1,8 @@
-name: agent panel  workflow
+name: scoreapi uat  workflow
 on:
   push:
     branches:
-      - 'UAT'
+      - 'uat'
 
 jobs:
   run-entity:
