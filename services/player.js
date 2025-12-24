@@ -151,13 +151,6 @@ const playerByIdService = async (request, fastify) => {
   if (!result) {
     return null;
   } else {
-    let countryName = null;
-    if (result?.countryId) {
-      const getCountry = global.tblCountryCodes.find(tcc => tcc.id === result.countryId);
-      if (getCountry) {
-        countryName = getCountry.countryName
-      }
-    }
     const playersInTeams = await getAllTeamsByPlayerIdQuery(
       playerId,
       fastify,
@@ -167,7 +160,6 @@ const playerByIdService = async (request, fastify) => {
     const data = {
       ...result,
       teams: playersInTeams,
-      countryName
     };
 
     return data;
