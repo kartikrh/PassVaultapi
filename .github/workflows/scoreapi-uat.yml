@@ -2,7 +2,7 @@ name: UAT Deploy
 on:
   push:
     branches:
-      - UAT
+      - 'UAT'
 
 jobs:
   deploy:
