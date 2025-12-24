@@ -4,19 +4,23 @@ const getAllBannerQuery = async (fastify) => {
   
   return await fastify.db.query(
     `select 
-            "wrId" as "bannerId",
-            "wrBannerType" as "bannerType",
-            "wrTitle" as "title",
-            "wrImage" as "image",
-            "wrIsActive" as "isActive",
-            "wrIsPermanent" as "isPermanent",
-            "wrStartDate" as "startDate",
-            "wrEndDate" as "endDate",
-            "wrLink" as "link",
-            "wrViewerCount" as "viewerCount",
-            "wrImagePath" as "imagePath"
-        from "tblBanner"
-        where "wrIsDeleted" = false
+            tb."wrId" as "bannerId",
+            tb."wrBannerType" as "bannerType",
+            tb."wrTitle" as "title",
+            tb."wrImage" as "image",
+            tb."wrIsActive" as "isActive",
+            tb."wrIsPermanent" as "isPermanent",
+            tb."wrStartDate" as "startDate",
+            tb."wrEndDate" as "endDate",
+            tb."wrLink" as "link",
+            tb."wrViewerCount" as "viewerCount",
+            tb."wrImagePath" as "imagePath",
+            tb."wrDeviceTypeId" as "deviceTypeId",
+            tb."wrWhitelabelId" as "whitelabelId",
+            twl."wrDomain" as "domain"
+        from "tblBanner" tb
+        LEFT JOIN "tblWhitelabel" twl ON tb."wrWhitelabelId" = twl."wrId"
+        where tb."wrIsDeleted" = false
         `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -40,23 +44,29 @@ const insertBannerQuery = async (data, request, fastify) => {
                         "wrCreatedDate",
                         "wrLink",
                         "wrViewerCount",
-                        "wrImagePath"
+                        "wrImagePath",
+                        "wrDeviceTypeId",
+                        "wrWhitelabelId"
                     )
-                values ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10, $11) returning *
+                values ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10, $11, $12, $13) returning *
                 )
                 select 
-                    "wrId" as "bannerId",
-                    "wrTitle" as "title",
-                    "wrBannerType" as "bannerType",
-                    "wrImage" as "image",
-                    "wrIsActive" as "isActive",
-                    "wrIsPermanent" as "isPermanent",
-                    "wrStartDate" as "startDate",
-                    "wrEndDate" as "endDate",
-                    "wrLink" as "link",
-                    "wrViewerCount" as "viewerCount",
-                    "wrImagePath" as "imagePath"
-                from "insert_data"
+                    tb."wrId" as "bannerId",
+                    tb."wrTitle" as "title",
+                    tb."wrBannerType" as "bannerType",
+                    tb."wrImage" as "image",
+                    tb."wrIsActive" as "isActive",
+                    tb."wrIsPermanent" as "isPermanent",
+                    tb."wrStartDate" as "startDate",
+                    tb."wrEndDate" as "endDate",
+                    tb."wrLink" as "link",
+                    tb."wrViewerCount" as "viewerCount",
+                    tb."wrImagePath" as "imagePath",
+                    tb."wrDeviceTypeId" as "deviceTypeId",
+                    tb."wrWhitelabelId" as "whitelabelId",
+                    twl."wrDomain" as "domain"
+                from "insert_data" as tb
+                LEFT JOIN "tblWhitelabel" twl ON tb."wrWhitelabelId" = twl."wrId"
             `,
       {
         type: fastify.db.QueryTypes.INSERT,
@@ -71,7 +81,9 @@ const insertBannerQuery = async (data, request, fastify) => {
           data.userId,
           data.link || null,
           data.viewerCount || null,
-          data.imagePath || null
+          data.imagePath || null,
+          data?.deviceTypeId ?? null,
+          data?.whitelabelId ?? null
         ],
       }
     );
@@ -102,7 +114,9 @@ const updateBannerQuery = async (data, request, fastify) => {
                 "wrCreatedDate" = now(),
                 "wrLink" = $10,
                 "wrViewerCount" = $11,
-                "wrImagePath" = $12
+                "wrImagePath" = $12,
+                "wrDeviceTypeId" = $13,
+                "wrWhitelabelId" = $14
                 where "wrId" = $9
             `,
       {
@@ -118,7 +132,9 @@ const updateBannerQuery = async (data, request, fastify) => {
           data.bannerId,
           data.link || null,
           data.viewerCount || null,
-          data.imagePath
+          data.imagePath,
+          data?.deviceTypeId ?? null,
+          data?.whitelabelId ?? null
         ],
       }
     );

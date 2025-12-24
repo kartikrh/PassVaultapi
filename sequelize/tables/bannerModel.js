@@ -54,6 +54,14 @@ module.exports = (sequelize) => {
         type: DataTypes.BOOLEAN,
         allowNull: false,
       },
+      wrDeviceTypeId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
+      wrWhitelabelId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
     },
     {
       timestamps: false,
