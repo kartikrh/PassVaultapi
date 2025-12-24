@@ -9,6 +9,8 @@ const getAllCompetitionStatisticsQuery = async (fastify, request = null) => {
                 tet."wrEventType" AS "eventType",
                 tcs."wrCompetitionId" AS "competitionId",
                 tc."wrCompetition" AS "competition",
+                tcs."wrMatchTypeId" AS "matchTypeId",
+                tmt."wrMatchType" AS "matchType",
                 tcs."wrCompetitionStatisticsTypeId" AS "competitionStatisticsTypeId",
                 tcst."wrName" AS "name",
                 tcs."wrTeamId" AS "teamId",
@@ -21,6 +23,7 @@ const getAllCompetitionStatisticsQuery = async (fastify, request = null) => {
                 ttp."wrJerseyPlayerImage" AS "jerseyPlayerImage",
                 tcs."wrDisplayOrder" AS "displayOrder",
                 tcs."wrValue" AS "value",
+                tcs."wrInningsCount" AS "inningsCount",
                 tcs."wrIsActive" AS "isActive",
                 tcs."wrCreatedBy" AS "createdById",
                 tu."WrName" AS "createdBy"
@@ -35,6 +38,8 @@ const getAllCompetitionStatisticsQuery = async (fastify, request = null) => {
                 ON tcs."wrTeamId" = tt."wrTeamId"
             LEFT JOIN "tblPlayers" tp 
                 ON tcs."wrPlayerId" = tp."wrPlayerId"
+            LEFT JOIN "tblMatchTypes" tmt 
+                ON tcs."wrMatchTypeId" = tmt."wrMatchTypeId"
 
             -- SINGLE RECORD FROM tblTeamPlayers
             LEFT JOIN LATERAL (
@@ -74,9 +79,9 @@ const insertCompetitionStatisticsQuery = async (data, fastify, request) => {
             `
                 WITH insert_data AS (
                   INSERT INTO "tblCompetitionStatistics"
-                  ("wrEventTypeId", "wrCompetitionId", "wrCompetitionStatisticsTypeId", "wrTeamId", "wrPlayerId", "wrDisplayOrder", "wrValue",
-                  "wrIsActive", "wrCreatedBy", "wrIsDeleted")
-                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                  ("wrEventTypeId", "wrCompetitionId", "wrMatchTypeId", "wrCompetitionStatisticsTypeId", "wrTeamId", "wrPlayerId", "wrDisplayOrder", "wrValue",
+                  "wrInningsCount", "wrIsActive", "wrCreatedBy", "wrIsDeleted")
+                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
                   RETURNING *
                 )
                 SELECT
@@ -85,6 +90,8 @@ const insertCompetitionStatisticsQuery = async (data, fastify, request) => {
                     tet."wrEventType" AS "eventType",
                     tcs."wrCompetitionId" AS "competitionId",
                     tc."wrCompetition" AS "competition",
+                    tcs."wrMatchTypeId" AS "matchTypeId",
+                    tmt."wrMatchType" AS "matchType",
                     tcs."wrCompetitionStatisticsTypeId" AS "competitionStatisticsTypeId",
                     tcst."wrName" AS "name",
                     tcs."wrTeamId" AS "teamId",
@@ -95,6 +102,7 @@ const insertCompetitionStatisticsQuery = async (data, fastify, request) => {
                     ttp."wrJerseyPlayerImage" AS "jerseyPlayerImage",
                     tcs."wrDisplayOrder" AS "displayOrder",
                     tcs."wrValue" AS "value",
+                    tcs."wrInningsCount" AS "inningsCount",
                     tcs."wrIsActive" AS "isActive",
                     tcs."wrCreatedBy" AS "createdById",
                     tu."WrName" AS "createdBy"
@@ -104,6 +112,7 @@ const insertCompetitionStatisticsQuery = async (data, fastify, request) => {
                 LEFT JOIN "tblCompetitionStatisticsType" tcst ON tcs."wrCompetitionStatisticsTypeId" = tcst."wrCompetitionStatisticsTypeId"
                 LEFT JOIN "tblTeams" tt ON tcs."wrTeamId" = tt."wrTeamId"
                 LEFT JOIN "tblPlayers" tp ON tcs."wrPlayerId" = tp."wrPlayerId"
+                LEFT JOIN "tblMatchTypes" tmt ON tcs."wrMatchTypeId" = tmt."wrMatchTypeId"
                 LEFT JOIN LATERAL (
                     SELECT 
                         ttp."wrJerseyPlayerImage"
@@ -121,11 +130,13 @@ const insertCompetitionStatisticsQuery = async (data, fastify, request) => {
                 bind: [
                     data?.eventTypeId ?? null,
                     data?.competitionId ?? null,
+                    data?.matchTypeId ?? null,
                     data?.competitionStatisticsTypeId ?? null,
                     data?.teamId ?? null,
                     data?.playerId ?? null,
                     data?.displayOrder ?? null,
                     data?.value ?? null,
+                    data?.inningsCount ?? null,
                     data?.isActive ?? true,
                     request?.userTokenInfo?.WrUserId ?? -5,
                     false
@@ -168,6 +179,8 @@ const updateCompetitionStatisticsByIdQuery = async (data, fastify, request) => {
                     tet."wrEventType" AS "eventType",
                     tcs."wrCompetitionId" AS "competitionId",
                     tc."wrCompetition" AS "competition",
+                    tcs."wrMatchTypeId" AS "matchTypeId",
+                    tmt."wrMatchType" AS "matchType",
                     tcs."wrCompetitionStatisticsTypeId" AS "competitionStatisticsTypeId",
                     tcst."wrName" AS "name",
                     tcs."wrTeamId" AS "teamId",
@@ -178,6 +191,7 @@ const updateCompetitionStatisticsByIdQuery = async (data, fastify, request) => {
                     ttp."wrJerseyPlayerImage" AS "jerseyPlayerImage",
                     tcs."wrDisplayOrder" AS "displayOrder",
                     tcs."wrValue" AS "value",
+                    tcs."wrInningsCount" AS "inningsCount",
                     tcs."wrIsActive" AS "isActive",
                     tcs."wrCreatedBy" AS "createdById",
                     tu."WrName" AS "createdBy"
@@ -187,6 +201,7 @@ const updateCompetitionStatisticsByIdQuery = async (data, fastify, request) => {
                 LEFT JOIN "tblCompetitionStatisticsType" tcst ON tcs."wrCompetitionStatisticsTypeId" = tcst."wrCompetitionStatisticsTypeId"
                 LEFT JOIN "tblTeams" tt ON tcs."wrTeamId" = tt."wrTeamId"
                 LEFT JOIN "tblPlayers" tp ON tcs."wrPlayerId" = tp."wrPlayerId"
+                LEFT JOIN "tblMatchTypes" tmt ON tcs."wrMatchTypeId" = tmt."wrMatchTypeId"
                 LEFT JOIN LATERAL (
                     SELECT 
                         ttp."wrJerseyPlayerImage"

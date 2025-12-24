@@ -99,6 +99,7 @@ const {
   playingElevenChangeOnCommPlayersQuery,
   updateCommentaryDateByCommentaryIdQuery,
   getHeadToHeadCommentaryQuery,
+  getCommentaryStatisticsQuery,
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -25728,6 +25729,17 @@ const getHeadToHeadCommentaryService = async (request, fastify) => {
   );
 };
 
+const getCommentaryStatisticsService = async (request, fastify) => {
+  const competitionId = request.body.competitionId;
+  const result = await getCommentaryStatisticsQuery(competitionId, request, fastify);
+  const filterResult = result?.map(r => r.matchTypeId);
+  const hasDuplicates = new Set(filterResult).size !== filterResult.length;
+  if(hasDuplicates) {
+    throw new Error(`This competition id ${competitionId} has not valid statistics`);
+  }
+  return result || [];
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -25851,5 +25863,6 @@ module.exports = {
   commentaryViewsReportService,
   checkSUpdatePasswordService,
   updateCommentaryPlayersFromEntityService,
-  getHeadToHeadCommentaryService
+  getHeadToHeadCommentaryService,
+  getCommentaryStatisticsService
 };

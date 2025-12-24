@@ -247,21 +247,24 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                 }
 
                                 for (let i = 1; i <= noOfInning; i++) {
-                                    let commentaryTeam = global.tblCommentaryTeams.findIndex(
+                                    let commentaryTeam = global.tblCommentaryTeams.filter(
                                         (item) =>
                                             item.commentaryId === commentary.commentaryId &&
-                                            item.currentInnings === i
+                                            item.currentInnings === i &&
+                                            (item.teamId === team1Id || item.teamId === team2Id)
                                     );
-                                    if (commentaryTeam === -1) {
+                                    if (commentaryTeam.length === 0) {
+                                        const team1Data = global.tblTeams.find(tt => tt.teamId === team1Id);
+                                        const team2Data = global.tblTeams.find(tt => tt.teamId === team2Id);
                                         await insertCommentaryTeams({
                                             body: {
                                                 commentaryId: commentary.commentaryId,
-                                                team1Id,
-                                                team2Id,
+                                                team1Id: team1Data.teamId,
+                                                team2Id: team2Data.teamId,
                                                 currentInnings: i,
                                                 teamMaxOver: maxOver,
-                                                team1TpId: teama?.team_id,
-                                                team2TpId: teamb?.team_id
+                                                team1TpId: team1Data?.tpId,
+                                                team2TpId: team2Data?.tpid
                                             },
                                         }, fastify);
                                         const teamACommentaryTeam = await getCommentaryTeamsQuery({
