@@ -2,7 +2,7 @@ name: scoreapi uat  workflow
 on:
   push:
     branches:
-      - 'uat'
+      - 'UAT'
 
 jobs:
   run-entity:
