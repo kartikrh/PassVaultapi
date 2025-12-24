@@ -436,6 +436,7 @@ const getAllTeamsByPlayerIdQuery = async (playerId, fastify, request) => {
       `select 
       tp."wrTeamId" as "teamId",
       "wrTeamName" as "teamName",
+      tt."wrImage" as "teamLogo",
       tp."wrHomeTeam" as "homeTeam",
       tp."wrJerseyPlayerImage" as "jerseyPlayerImage"
        from "tblTeamPlayers" tp
