@@ -22,6 +22,7 @@ const {
  } = require("../repository/TablePlayerHistory");
 const { getLogByComIdQuery, createTeamPointLogQuery } = require("../repository/TableTeamPointLogs");
  const { exportExcelFile, importPlayersHistoryData } = require("../utilities/exportImportExcel");
+const { playerByIdService } = require("./player");
 
 const createPlayerBattingHistoryService = async (request, fastify) => {    
   await validatePlayerAndMatchType(request.body, request)
@@ -1298,10 +1299,12 @@ const getPlayerHistoryByPlayerIdService = async (request, fastify) => {
     return `Player with id ${playerId} not found`;
   }
 
+  const playerTeamData = await playerByIdService(request, fastify);
+
   const battingHistory = await getAllPlayersBattingHistory(playerId, fastify)
   const bowlingHistory = await getAllPlayerBowlingHistory(playerId, fastify)
 
-  return { player, battingHistory, bowlingHistory };
+  return { player: playerTeamData, battingHistory, bowlingHistory };
 }
 
 const getPlayerCommentaryHistoryByPlayerIdService = async (request, fastify) => {
@@ -1311,11 +1314,13 @@ const getPlayerCommentaryHistoryByPlayerIdService = async (request, fastify) => 
     return `Player with id ${playerId} not found`;
   }
 
+  const playerTeamData = await playerByIdService(request, fastify);
+
   const whereCondition = `tcpbh."wrPlayerId" = ${request.body.playerId} AND tcpbh."wrIsDeleted" = false`
   const playerBatHistory = await getAllCommentaryBattingHistory(fastify, whereCondition);
   const playerBallHistory = await getAllCommentaryBowlingHistory(fastify, whereCondition);
 
-  return { player, playerBatHistory, playerBallHistory };
+  return { player: playerTeamData, playerBatHistory, playerBallHistory };
 }
 
 module.exports = {
