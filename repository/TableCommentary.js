@@ -9127,57 +9127,51 @@ const getCommentaryStatisticsQuery = async (competitionId, request, fastify) => 
   try {
     return await fastify.db.query(
       `SELECT 
-          "commentaries"."wrMatchTypeId" AS "matchTypeId",
-          "matchTypes"."wrMatchType" AS "matchType",
-          "team1"."wrTeamId" AS "team1Id",
-          "team1"."wrTeamShortName" AS "team1ShortName",
-          "team1"."wrTeamName" AS "team1Name",
-          "team1"."wrImage" AS "team1Image",
-          "team2"."wrTeamId" AS "team2Id",
-          "team2"."wrTeamShortName" AS "team2ShortName",
-          "team2"."wrTeamName" AS "team2Name",
-          "team2"."wrImage" AS "team2Image",
+          tcm."wrMatchTypeId" AS "matchTypeId",
+          tmt."wrMatchType" AS "matchType",
+          tt1."wrTeamId" AS "team1Id",
+          tt1."wrTeamShortName" AS "team1ShortName",
+          tt1."wrTeamName" AS "team1Name",
+          tt1."wrImage" AS "team1Image",
+          tt2."wrTeamId" AS "team2Id",
+          tt2."wrTeamShortName" AS "team2ShortName",
+          tt2."wrTeamName" AS "team2Name",
+          tt2."wrImage" AS "team2Image",
   
-          COUNT(DISTINCT "commentaries"."wrCommentaryId")::INTEGER AS "totalCommentaries",
+          COUNT(DISTINCT tcm."wrCommentaryId")::INTEGER AS "totalCommentaries",
+
+          COUNT(*) FILTER (
+            WHERE tcm."wrWinnerId" = tt1."wrTeamId"
+          )::INT AS "team1WinCount",
+
+          COUNT(*) FILTER (
+            WHERE tcm."wrWinnerId" = tt2."wrTeamId"
+          )::INT AS "team2WinCount",
+
+          COUNT(*) FILTER (
+            WHERE tcm."wrCommentaryStatus" IN ($2, $3)
+          )::INT AS "totalPlayed"
   
-          COUNT(CASE 
-                  WHEN "commentaries"."wrWinnerId" = "team1"."wrTeamId" THEN 1 
-                  ELSE NULL 
-               END)::INTEGER AS "team1WinCount",
+      FROM "tblCommentaries" tcm
+      JOIN "tblMatchTypes" tmt ON tcm."wrMatchTypeId" = tmt."wrMatchTypeId"
+      JOIN "tblTeams" tt1 ON tcm."wrTeam1Id" = tt1."wrTeamId"
+      JOIN "tblTeams" tt2 ON tcm."wrTeam2Id" = tt2."wrTeamId"
   
-          COUNT(CASE 
-                  WHEN "commentaries"."wrWinnerId" = "team2"."wrTeamId" THEN 1 
-                  ELSE NULL 
-               END)::INTEGER AS "team2WinCount",
-  
-          COUNT(CASE 
-                  WHEN "commentaries"."wrWinnerId" = "team1"."wrTeamId" THEN 1 
-                  WHEN "commentaries"."wrWinnerId" = "team2"."wrTeamId" THEN 1 
-                  ELSE NULL 
-               END)::INTEGER AS "totalWins"
-  
-      FROM 
-          "tblCommentaries" "commentaries"
-      JOIN 
-          "tblMatchTypes" "matchTypes" ON "commentaries"."wrMatchTypeId" = "matchTypes"."wrMatchTypeId"
-      JOIN 
-          "tblTeams" "team1" ON "commentaries"."wrTeam1Id" = "team1"."wrTeamId"
-      JOIN 
-          "tblTeams" "team2" ON "commentaries"."wrTeam2Id" = "team2"."wrTeamId"
-  
-      WHERE 
-          "commentaries"."wrCompetitionId" = $1
+      WHERE tcm."wrCompetitionId" = $1
   
       GROUP BY 
-          "commentaries"."wrMatchTypeId",
-          "matchTypes"."wrMatchType",
-          "team1"."wrTeamId", 
-          "team2"."wrTeamId"
-      ORDER BY 
-          "matchTypeId" DESC`,
+          tcm."wrMatchTypeId",
+          tmt."wrMatchType",
+          tt1."wrTeamId", 
+          tt2."wrTeamId"
+      ORDER BY "matchTypeId" DESC`,
       {
         type: fastify.db.QueryTypes.SELECT,
-        bind: [competitionId]
+        bind: [
+          competitionId,
+          4,
+          10
+        ]
       }
     );
   } catch (err) {
