@@ -34,11 +34,30 @@ const getAllCommentaryBattingHistory = async (fastify, whereCondition = null) =>
                 tcpbh."wrOutCount" as "outCount",
                 tcpbh."wrFastest50Balls" as "fastest50Balls",
                 tcpbh."wrFastest100Balls" as "fastest100Balls",
-                tc."wrEventDate" as "eventDate"
+                tc."wrEventDate" as "eventDate",
+                tc."wrEventNo" as "eventNo",
+                CASE 
+                  WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tc."wrTeam2Id"
+                  WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tc."wrTeam1Id"
+                  ELSE NULL
+                END as "vsTeamId",
+                CASE 
+                  WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tvs2."wrTeamName"
+                  WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tvs1."wrTeamName"
+                  ELSE NULL
+                END as "vsTeamName",
+                CASE 
+                  WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tvs2."wrTeamShortName"
+                  WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tvs1."wrTeamShortName"
+                  ELSE NULL
+                END as "vsTeamShortName"
             FROM "tblCommPlayerBatHist" AS tcpbh
             LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" AND tc."wrIsDelete" = false
             LEFT JOIN "tblEvents" AS te ON te."wrEventId" = tc."wrEventId" AND te."wrIsDeleted" = false
             LEFT JOIN "tblMatchTypes" AS tmt ON tmt."wrMatchTypeId" = tcpbh."wrMatchTypeId" AND tmt."wrIsDeleted" = false
+            LEFT JOIN "tblCommentaryPlayers" AS tcp ON tcp."wrCommentaryPlayerId" = tcpbh."wrCommentaryPlayerId" AND tcp."wrIsDelete" = false
+            LEFT JOIN "tblTeams" AS tvs1 ON tvs1."wrTeamId" = tc."wrTeam1Id" AND tvs1."wrIsDeleted" = false
+            LEFT JOIN "tblTeams" AS tvs2 ON tvs2."wrTeamId" = tc."wrTeam2Id" AND tvs2."wrIsDeleted" = false
             ${whereCondition ? `WHERE ${whereCondition}` : ""};`,
       { type: fastify.db.QueryTypes.SELECT }
     );
@@ -86,11 +105,30 @@ const getAllCommentaryBowlingHistory = async (fastify, whereCondition = null) =>
             tcpbh."wrOverCount" as "overCount",
             tcpbh."wrHattrickCount" as "hattrickCount",
             tcpbh."wrExpensiveOverRuns" as "expensiveOverRuns",
-            tc."wrEventDate" as "eventDate"
+            tc."wrEventDate" as "eventDate",
+            tc."wrEventNo" as "eventNo",
+            CASE 
+              WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tc."wrTeam2Id"
+              WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tc."wrTeam1Id"
+              ELSE NULL
+            END as "vsTeamId",
+            CASE 
+              WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tvs2."wrTeamName"
+              WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tvs1."wrTeamName"
+              ELSE NULL
+            END as "vsTeamName",
+            CASE 
+              WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tvs2."wrTeamShortName"
+              WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tvs1."wrTeamShortName"
+              ELSE NULL
+            END as "vsTeamShortName"
             FROM "tblCommPlayerBowlHist" AS tcpbh
             LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" AND tc."wrIsDelete" = false
             LEFT JOIN "tblEvents" AS te ON te."wrEventId" = tc."wrEventId" AND te."wrIsDeleted" = false
             LEFT JOIN "tblMatchTypes" AS tmt ON tmt."wrMatchTypeId" = tcpbh."wrMatchTypeId" AND tmt."wrIsDeleted" = false
+            LEFT JOIN "tblCommentaryPlayers" AS tcp ON tcp."wrCommentaryPlayerId" = tcpbh."wrCommentaryPlayerId" AND tcp."wrIsDelete" = false
+            LEFT JOIN "tblTeams" AS tvs1 ON tvs1."wrTeamId" = tc."wrTeam1Id" AND tvs1."wrIsDeleted" = false
+            LEFT JOIN "tblTeams" AS tvs2 ON tvs2."wrTeamId" = tc."wrTeam2Id" AND tvs2."wrIsDeleted" = false
             ${whereCondition ? `WHERE ${whereCondition}` : ""};`,
       { type: fastify.db.QueryTypes.SELECT }
     );
