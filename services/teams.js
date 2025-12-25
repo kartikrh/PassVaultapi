@@ -800,6 +800,7 @@ const UpdateTeamFromEntityService = async (data, fastify, request) => {
         imagePath: playerImageData.imagePath,
         isMen,
         birthDate: player?.birthdate || null,
+        birthPlace: player?.birthplace ?? null,
       };
 
       const insertPlayer = await insertPlayerQuery(data, fastify, request);
