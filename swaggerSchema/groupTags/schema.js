@@ -1832,6 +1832,8 @@ const Player = {
           },
           isSystemPlayer: { type: "boolean" },
           isMen: { type: "boolean" },
+          birthDate: { type: "string" },
+          birthPlace: { type: "string" }
         },
         required: ["playerId"],
       },

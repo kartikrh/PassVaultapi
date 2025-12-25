@@ -22486,7 +22486,9 @@ const updateMatchInfoService = async(request , fastify)=>{
           bowlerEconomy: 0.0,
           tpId: player?.pid || null,
           bowlingStyleId: 0,
-          bowlingTypeId: 0
+          bowlingTypeId: 0,
+          birthDate: player?.birthdate,
+          birthPlace: player?.birthplace
       };
 
       const insertPlayer = await insertPlayerQuery(data, fastify, request);
@@ -23659,6 +23661,7 @@ const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
           imagePath: entitySocketData?.defaultPlayerImagePath || null,
           isMen,
           birthDate: player?.birthdate || null,
+          birthPlace: player?.birthplace ?? null
         };
         const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
         global.tblPlayers.push(insertPlayer);
@@ -25566,7 +25569,8 @@ const processTeamSquadInsertAndUpdate = async ({
           image: entitySocketData?.defaultPlayerImage || null,
           imagePath: entitySocketData?.defaultPlayerImagePath || null,
           isMen: compData?.isMen,
-          birthDate: ply?.birthdate || null
+          birthDate: ply?.birthdate || null,
+          birthPlace: ply?.birthplace ?? null
         };
 
         const newPlayer = await insertPlayerQuery(insertData, fastify, request);
