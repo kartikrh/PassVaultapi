@@ -1167,7 +1167,7 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
     }
   }
 
-  if (birthdate && birthDate && new Date(birthDate).toISOString().split('T')[0] !== new Date(birthdate).toISOString().split('T')[0]) {
+  if (birthdate && (!birthDate || (new Date(birthDate).toISOString().split('T')[0] !== new Date(birthdate).toISOString().split('T')[0]))) {
     changedValues.birthDate = birthdate;
   }
 
