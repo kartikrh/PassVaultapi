@@ -402,6 +402,7 @@ const updatePlayerService = async (request, fastify) => {
       : request.body.tpId,
     countryId: request.body.countryId || checkPlayerId.countryId,
     birthDate: request.body.birthDate || checkPlayerId.birthDate,
+    birthPlace: request.body.birthPlace || checkPlayerId.birthPlace
   };
 
   if ("isActive" in request.body) {
@@ -736,6 +737,7 @@ const updatePlayerStatsService = async (request, fastify) => {
           tpId: checkPlayerId.tpId,
           countryId: checkPlayerId.countryId,
           isSystemPlayer: checkPlayerId.isSystemPlayer,
+          birthPlace: checkPlayerId.birthPlace
         };
         global.tblPlayers[index] = _p;
       }
@@ -1100,8 +1102,8 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
     return false;
   }
 
-  const { playerId, playerTypeId, playerName, displayName, isKipper, isLeftHandedBatting, isLeftArmFielding, bowlingStyleId, bowlingTypeId, countryId, tpId, birthDate } = checkPlayerData;
-  const { playing_role, title, short_name, batting_style, bowling_style, bowling_type, nationality, birthdate } = entitySportPlayerInfoResponse;
+  const { playerId, playerTypeId, playerName, displayName, isKipper, isLeftHandedBatting, isLeftArmFielding, bowlingStyleId, bowlingTypeId, countryId, tpId, birthDate, birthPlace } = checkPlayerData;
+  const { playing_role, title, short_name, batting_style, bowling_style, bowling_type, nationality, birthdate, birthplace } = entitySportPlayerInfoResponse;
 
   let changedValues = { ...checkPlayerData };
 
@@ -1169,6 +1171,10 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
     changedValues.birthDate = birthdate;
   }
 
+  if (birthplace && birthPlace !== birthplace) {
+    changedValues.birthPlace = birthplace;
+  }
+
   const isChanged = (
     changedValues.playerTypeId !== playerTypeId ||
     changedValues.playerName !== playerName ||
@@ -1180,7 +1186,8 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
     changedValues.bowlingTypeId !== bowlingTypeId ||
     changedValues.countryId !== countryId ||
     changedValues.tpId !== tpId ||
-    changedValues.birthDate !== birthDate
+    changedValues.birthDate !== birthDate ||
+    changedValues.birthPlace !== birthPlace
   );
 
   await updatePlayerBatBowlHistory(playerId, entitySportPlayerResponse?.batting, entitySportPlayerResponse?.bowling, request, fastify);
@@ -1269,7 +1276,8 @@ const playerImportService = async (data, fastify, request) => {
         bowlingTypeId: extractBowlingStyle(entitySportPlayerResponse.bowling_type, entitySportPlayerResponse.bowling_style),
         image: entitySocketData?.defaultPlayerImage || null,
         imagePath: entitySocketData?.defaultPlayerImagePath || null,
-        birthDate: entitySportPlayerResponse?.birthdate
+        birthDate: entitySportPlayerResponse?.birthdate,
+        birthPlace: entitySportPlayerResponse?.birthplace
       };
       const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
       global.tblPlayers.push(insertPlayer);
