@@ -1971,6 +1971,32 @@ const changeIsCompetitionStatisticsCalculationStatusService = async (request, fa
   return `Competition isCompetitionStatisticsCalculation status updated successfully`;
 };
 
+const getAllCompetitionsService = async (request) => {
+  const { isActive, isTrending } = request.body;
+
+  const filterObject = {
+    isActive: isActive !== undefined ? isActive : true,
+  };
+
+  if (isTrending !== undefined) {
+    filterObject.isTrending = isTrending;
+  }
+
+  let result = global.tblCompetitions.filter((item) => {
+    return Object.entries(filterObject).every(([key, value]) => item[key] === value);
+  });
+
+  const compData = result.map(item => {
+    const eventType = global.tblEventTypes.find(elem => elem.eventTypeId == item.eventTypeId)?.eventType || null;
+    return {
+      ...item,
+      eventType
+    }
+  });
+
+  return compData;
+};
+
 module.exports = {
   allCompetitionService,
   competitionByIdService,
@@ -1993,5 +2019,6 @@ module.exports = {
   competitionImportService,
   insertTeamPlayersByTeamId,
   insertCommentaryPlayersByTeam,
-  changeIsCompetitionStatisticsCalculationStatusService
+  changeIsCompetitionStatisticsCalculationStatusService,
+  getAllCompetitionsService,
 };

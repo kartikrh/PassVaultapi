@@ -47,7 +47,7 @@ const {
 const { allCongifService } = require("../../../services/config");
 const { getAllBanners } = require("../../../controller/users/admin/banner");
 const { getMarketTypeAndCategoryByMarketType } = require("../../../controller/users/admin/marketTemplate");
-const { getAllCompetition } = require("../../../controller/users/admin/competition");
+const { getAllCompetitions } = require("../../../controller/users/admin/competition");
 const { getAllVideoLibrary } = require("../../../controller/users/admin/videoLibrary/index");
 const { getAllPhotoLibrary, allLibraryImages } = require("../../../controller/users/admin/photoLibrary/index");
 const { getAllTipsClientAPI } = require("../../../controller/users/admin/tips/index");
@@ -339,7 +339,7 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => getMarketTypeAndCategoryByMarketType(request, reply, fastify),
   });
   fastify.post("/getCompetitions", {
-    handler: (request, reply) => getAllCompetition(request, reply, fastify)
+    handler: (request, reply) => getAllCompetitions(request, reply, fastify)
   });
   fastify.post("/videoLibrary", {
     handler: (request, reply) => getAllVideoLibrary(request, reply, fastify)
