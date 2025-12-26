@@ -257,21 +257,26 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
 
     const isMen = getCompetition?.isMen;
 
+    const esResponseData = [];
     const getEntitySportCompetitionStatisticsUrl = `/competition/${competitionTpId}/stats/`;
     const getEntitySportCompetitionStatistics = await callEntitySportAPI(getEntitySportCompetitionStatisticsUrl, request, fastify);
-    if (getEntitySportCompetitionStatistics?.data?.result?.formats?.length < 1) {
+    const getEntitySportCompetitionStatisticsResponse = getEntitySportCompetitionStatistics?.data?.result?.formats;
+    esResponseData.push(getEntitySportCompetitionStatistics?.data?.result);
+
+    if (data?.autoImportId === global?.autoImportData?.id) {
+        global.autoImportData.esApiResponseData = { ...esResponseData };
+    }
+
+    if (!Array.isArray(getEntitySportCompetitionStatisticsResponse) || getEntitySportCompetitionStatisticsResponse.length === 0) {
         return false;
     }
 
-    const getEntitySportCompetitionStatisticsResponse = getEntitySportCompetitionStatistics?.data?.result?.formats;
-
-    const esResponseData = [];
     const getCompetitionStatisticsType = global.tblCompetitionStatisticsType.filter(tcst => tcst.isActive);
     for (const esMatchType of getEntitySportCompetitionStatisticsResponse) {
         for (const statType of getCompetitionStatisticsType) {
             const getKey = await getKeyAndValueKey(statType.entityEnum);
             if (getKey) {
-                const getMatchType = global.tblMatchTypes.find(tmt => tmt.entityEnum === competitionMatchTypeEnum[isMen ? "men":"women"][esMatchType]);
+                const getMatchType = global.tblMatchTypes.find(tmt => tmt.entityEnum === competitionMatchTypeEnum[isMen ? "men" : "women"][esMatchType]);
                 const url = `/competition/${competitionTpId}/stats/${getKey.key}?paged=1&per_page=50&format=${esMatchType}`;
                 const entitySportCompetitionStatistics = await callEntitySportAPI(url, request, fastify);
 
