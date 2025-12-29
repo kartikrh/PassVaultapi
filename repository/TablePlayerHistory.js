@@ -531,6 +531,266 @@ const getPlayersBattingHistoryByIdQuery = async (data, fastify, request) => {
   }
 };
 
+const insertPlayerBattingHistoryQuery = async (data, fastify, request) => {
+  try {
+    const queryResult = await fastify.db.query(
+      `
+      WITH insert_data AS (
+        INSERT INTO "tblPlayerBattingHistory"
+          ("wrMatchTypeId", "wrMatchTypeName", "wrPlayerId", "wrMatchCount", "wrInningsCount", "wrNotOut",
+          "wrTotalRuns", "wrHighestScore", "wrAverage", "wrBallsFacedCount", "wrStrikeRate", "wr100Count",
+          "wr50Count", "wr4Count", "wr6Count", "wrCatchCount", "wrStumpCount", "wrCreatedBy", "wrCreatedAt",
+          "wrOutCount", "wrFastest50Balls", "wrFastest100Balls")
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+          $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
+          $21, $22)
+        RETURNING *
+      )
+      SELECT
+        "wrBattingHistoryId" as "battingHistoryId",
+        "wrMatchTypeId" as "matchTypeId",
+        "wrPlayerId" as "playerId",
+        "wrMatchTypeName" as "matchTypeName",
+        "wrMatchCount" as "matchCount",
+        "wrInningsCount" as "inningsCount",
+        "wrNotOut" as "notOut",
+        "wrTotalRuns" as "totalRuns",
+        "wrHighestScore" as "highestScore",
+        "wrAverage" as "average",
+        "wrBallsFacedCount" as "ballsFacedCount",
+        "wrStrikeRate" as "strikeRate",
+        "wr100Count" as "countOf100",
+        "wr50Count" as "countOf50",
+        "wr4Count" as "countOf4",
+        "wr6Count" as "countOf6",
+        "wrCatchCount" as "catchCount",
+        "wrStumpCount" as "stumpCount",
+        "wrCreatedBy" as "createdBy",
+        "wrCreatedAt" as "createdAt",
+        "wrOutCount" as "outCount",
+        "wrFastest50Balls" as "fastest50Balls",
+        "wrFastest100Balls" as "fastest100Balls"
+      FROM "insert_data";
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          data?.matchTypeId ?? null,
+          data?.matchTypeName ?? null,
+          data?.playerId ?? null,
+          data?.matchCount ?? null,
+          data?.inningsCount ?? null,
+          data?.notOut ?? null,
+          data?.totalRuns ?? null,
+          data?.highestScore ?? null,
+          data?.average ?? null,
+          data?.ballsFacedCount ?? null,
+          data?.strikeRate ?? null,
+          data?.countOf100 ?? null,
+          data?.countOf50 ?? null,
+          data?.countOf4 ?? null,
+          data?.countOf6 ?? null,
+          data?.catchCount ?? null,
+          data?.stumpCount ?? null,
+          request?.userTokenInfo?.WrUserId ?? -5,
+          new Date(),
+          data?.outCount ?? null,
+          data?.fastest50Balls ?? null,
+          data?.fastest100Balls ?? null
+        ]
+      }
+    );
+
+    return queryResult[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePlayerHistory.js/insertPlayerBattingHistoryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
+
+const updatePlayerBattingHistoryQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+            update "tblPlayerBattingHistory" set
+              "wrMatchTypeId" = $1, "wrMatchTypeName" = $2, "wrPlayerId" = $3, "wrMatchCount" = $4, "wrInningsCount" = $5, "wrNotOut" = $6,
+              "wrTotalRuns" = $7, "wrHighestScore" = $8, "wrAverage" = $9, "wrBallsFacedCount" = $10, "wrStrikeRate" = $11, "wr100Count" = $12,
+              "wr50Count" = $13, "wr4Count" = $14, "wr6Count" = $15, "wrCatchCount" = $16, "wrStumpCount" = $17,
+              "wrOutCount" = $18, "wrFastest50Balls" = $19, "wrFastest100Balls" = $20
+            where "wrBattingHistoryId" = $21
+            RETURNING *
+            `,
+      {
+        bind: [
+          data?.matchTypeId ?? null,
+          data?.matchTypeName ?? null,
+          data?.playerId ?? null,
+          data?.matchCount ?? null,
+          data?.inningsCount ?? null,
+          data?.notOut ?? null,
+          data?.totalRuns ?? null,
+          data?.highestScore ?? null,
+          data?.average ?? null,
+          data?.ballsFacedCount ?? null,
+          data?.strikeRate ?? null,
+          data?.countOf100 ?? null,
+          data?.countOf50 ?? null,
+          data?.countOf4 ?? null,
+          data?.countOf6 ?? null,
+          data?.catchCount ?? null,
+          data?.stumpCount ?? null,
+          data?.outCount ?? null,
+          data?.fastest50Balls ?? null,
+          data?.fastest100Balls ?? null,
+          data.battingHistoryId
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePlayerHistory.js/updatePlayerBattingHistoryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const insertPlayerBowlingHistoryQuery = async (data, fastify, request) => {
+  try {
+    const queryResult = await fastify.db.query(
+      `
+      WITH insert_data AS (
+        INSERT INTO "tblPlayerBowlingHistory"
+          ("wrMatchTypeId", "wrMatchTypeName", "wrPlayerId", "wrMatchCount", "wrInningsCount", "wrBallCount",
+          "wrTotalRuns", "wrWicketsCount", "wrAverage", "wrBestBowlingInInnings", "wrBestBowlingInMatch",
+          "wrEconomy", "wrStrikeRate", "wr4Wickets", "wr5Wickets", "wr10Wickets", "wrCreatedBy", "wrCreatedAt",
+          "wrOverCount", "wrHattrickCount", "wrExpensiveOverRuns")
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+          $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+        RETURNING *
+      )
+      SELECT 
+        "wrBowlingHistoryId" as "bowlingHistoryId",
+        "wrMatchTypeId" as "matchTypeId",
+        "wrPlayerId" as "playerId",
+        "wrMatchTypeName" as "matchTypeName",
+        "wrMatchCount" as "bowlerPlayedMatchCount",
+        "wrInningsCount" as "bowlerPlayedInningsCount",
+        "wrBallCount" as "ballCount",
+        "wrTotalRuns" as "runsFromBowler",
+        "wrWicketsCount" as "wicketsCount",
+        "wrAverage" as "bowlerAverage",
+        "wrBestBowlingInInnings" as "bestBowlingInInnings",
+        "wrBestBowlingInMatch" as "bestBowlingInMatch",
+        "wrEconomy" as "economy",
+        "wrStrikeRate" as "bowlerStrikeRate",
+        "wr4Wickets" as "wickets4",
+        "wr5Wickets" as "wickets5",
+        "wr10Wickets" as "wickets10",
+        "wrCreatedBy" as "createdBy",
+        "wrCreatedAt" as "createdAt",
+        "wrOverCount" as "overCount",
+        "wrHattrickCount" as "hattrickCount",
+        "wrExpensiveOverRuns" as "expensiveOverRuns"
+      FROM "insert_data";
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          data?.matchTypeId ?? null,
+          data?.matchTypeName ?? null,
+          data?.playerId ?? null,
+          data?.bowlerPlayedMatchCount ?? null,
+          data?.bowlerPlayedInningsCount ?? null,
+          data?.ballCount ?? null,
+          data?.runsFromBowler ?? null,
+          data?.wicketsCount ?? null,
+          data?.average ?? null,
+          data?.bestBowlingInInnings ?? null,
+          data?.bestBowlingInMatch ?? null,
+          data?.economy ?? null,
+          data?.strikeRate ?? null,
+          data?.wickets4 ?? null,
+          data?.wickets5 ?? null,
+          data?.wickets10 ?? null,
+          request?.userTokenInfo?.WrUserId ?? -5,
+          new Date(),
+          data?.overCount ?? null,
+          data?.hattrickCount ?? null,
+          data?.expensiveOverRuns ?? null
+        ]
+      }
+    );
+
+    return queryResult[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePlayerHistory.js/insertPlayerBowlingHistoryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
+
+const updatePlayerBowlingHistoryQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+            update "tblPlayerBowlingHistory" set
+              "wrMatchTypeId" = $1, "wrMatchTypeName" = $2, "wrPlayerId" = $3, "wrMatchCount" = $4, "wrInningsCount" = $5, "wrBallCount" = $6,
+              "wrTotalRuns" = $7, "wrWicketsCount" = $8, "wrAverage" = $9, "wrBestBowlingInInnings" = $10, "wrBestBowlingInMatch" = $11,
+              "wrEconomy" = $12, "wrStrikeRate" = $13, "wr4Wickets" = $14, "wr5Wickets" = $15, "wr10Wickets" = $16,
+              "wrOverCount" = $17, "wrHattrickCount" = $18, "wrExpensiveOverRuns" = $19
+            where "wrBowlingHistoryId" = $20
+            RETURNING *
+            `,
+      {
+        bind: [
+          data?.matchTypeId ?? null,
+          data?.matchTypeName ?? null,
+          data?.playerId ?? null,
+          data?.bowlerPlayedMatchCount ?? null,
+          data?.bowlerPlayedInningsCount ?? null,
+          data?.ballCount ?? null,
+          data?.runsFromBowler ?? null,
+          data?.wicketsCount ?? null,
+          data?.bowlerAverage ?? null,
+          data?.bestBowlingInInnings ?? null,
+          data?.bestBowlingInMatch ?? null,
+          data?.economy ?? null,
+          data?.bowlerStrikeRate ?? null,
+          data?.wickets4 ?? null,
+          data?.wickets5 ?? null,
+          data?.wickets10 ?? null,
+          data?.overCount ?? null,
+          data?.hattrickCount ?? null,
+          data?.expensiveOverRuns ?? null,
+          data.bowlingHistoryId
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePlayerHistory.js/updatePlayerBowlingHistoryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllPlayersBattingHistory,
   getAllPlayerBowlingHistory,
@@ -544,4 +804,8 @@ module.exports = {
   getBatterHistoryQuery,
   getBowlerHistorydQuery,
   getPlayersBattingHistoryByIdQuery,
+  insertPlayerBattingHistoryQuery,
+  updatePlayerBattingHistoryQuery,
+  insertPlayerBowlingHistoryQuery,
+  updatePlayerBowlingHistoryQuery
 };
