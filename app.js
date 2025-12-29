@@ -526,15 +526,24 @@ module.exports = async function (fastify, opts) {
         "http://localhost:8080"
       ],
       credentials: true,
-      pingInterval: 25000,
-      pingTimeout: 60000,
     },
+    // Improved timeout settings for better connection stability
+    pingInterval: 20000, // Ping every 20 seconds (more frequent than default 25s)
+    pingTimeout: 5000,  // Wait 5 seconds for pong before considering disconnected (reduced from 60s)
+    connectTimeout: 10000, // Connection timeout (10 seconds)
+    // Upgrade timeout for WebSocket upgrades
+    upgradeTimeout: 10000,
+    // Allow longer initial connection attempts
+    initialPacketTimeout: 5000,
     connectionStateRecovery: {
       // Enable connection state recovery to handle reconnections better
       maxDisconnectionDuration: 2 * 60 * 1000, // 2 minutes
       skipMiddlewares: true,
     },
     allowEIO3: true, // Allow Engine.IO v3 clients for better compatibility
+    // Additional stability settings
+    maxHttpBufferSize: 1e8, // 100MB max buffer size
+    httpCompression: true,   // Enable compression
   });
 
   instrument(io, {

@@ -60,7 +60,8 @@ module.exports = async (fastify) => {
       (request, reply) => authorize(request, reply, fastify),
       (request, reply) =>
         checkPermission(request, reply, fastify, {
-          tabName: "Menu Items",
+          // tabName: "Menu Items",
+          tabName: "Menu Types",
           mode: "view",
         }),
     ],
