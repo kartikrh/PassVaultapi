@@ -9157,7 +9157,7 @@ const getCommentaryStatisticsQuery = async (competitionId, request, fastify) => 
       JOIN "tblTeams" tt1 ON tcm."wrTeam1Id" = tt1."wrTeamId"
       JOIN "tblTeams" tt2 ON tcm."wrTeam2Id" = tt2."wrTeamId"
   
-      WHERE tcm."wrCompetitionId" = $1
+      WHERE tcm."wrCompetitionId" = $1 AND tcm."wrIsDelete" = FALSE AND tcm."wrIsTest" = FALSE
   
       GROUP BY 
           tcm."wrMatchTypeId",
