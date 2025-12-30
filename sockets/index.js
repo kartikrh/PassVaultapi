@@ -403,6 +403,230 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
     // console.error("Error connecting clients:", error);
   }
 };
+
+const connectClients2 = async (fastify, clientSocketId = undefined)=>{
+  try {
+    const clientUrls = global.tblClientSocket.filter(c => {
+      if (clientSocketId !== undefined) {
+        return (
+          c.clientSocketId == clientSocketId &&
+          c.isActive === true &&
+          c.actionType === clientSocketActionType.connect
+        );
+      }
+      return (
+        c.isActive === true &&
+        c.actionType === clientSocketActionType.connect
+      );
+    });
+
+    await Promise.all(
+      clientUrls.map(async (urlConfig) => {
+        // ---- cleanup old socket if exists ----
+        const old = global.clientSocketIo.find(c => c.url === urlConfig.url);
+        if (old?.client) {
+          try {
+            old.client.removeAllListeners();
+            old.client.disconnect(true);
+          } catch (_) {}
+          global.clientSocketIo = global.clientSocketIo.filter(c => c.url !== urlConfig.url);
+        }
+
+        // ---- create socket ----
+        const client = io(urlConfig.url, {
+          transports: ["websocket"],
+          query: { source: "admin-panel" },
+          reconnection: true,
+          reconnectionAttempts: Infinity,
+          reconnectionDelay: 2000,
+          reconnectionDelayMax: 8000,
+          timeout: 20000,
+          // transport-level ping
+          pingInterval: 25000,
+          pingTimeout: 60000,
+          forceNew: true,
+          autoConnect: true
+        });
+
+
+        let heartbeatTimer = null;
+        let lastPongAt = Date.now();
+
+        // ---- custom heartbeat ----
+        const startHeartbeat = () => {
+          stopHeartbeat();
+
+          heartbeatTimer = setInterval(() => {
+            if (!client.connected) return;
+
+            // send custom ping
+            client.emit("ping");
+
+            // if no pong for 2 intervals → force reconnect
+            if (Date.now() - lastPongAt > 60000) {
+              console.log(`Heartbeat timeout → reconnecting ${urlConfig.url}`);
+              client.disconnect();
+              client.connect();
+            }
+          }, 30000);
+        };
+
+        const stopHeartbeat = () => {
+          if (heartbeatTimer) {
+            clearInterval(heartbeatTimer);
+            heartbeatTimer = null;
+          }
+        };
+
+        // ---- socket events ----
+        client.on("connect", () => {
+          console.log(`Connected → ${urlConfig.url}`);
+
+          lastPongAt = Date.now();
+          startHeartbeat();
+
+          updateClientSocketStatusQuery(
+            { clientSocketId: [urlConfig.clientSocketId], status: clientSocketStatus.connected },
+            fastify
+          ).catch(() => {});
+
+          global.clientSocketIo.push({ ...urlConfig, client });
+
+          const index = global.tblClientSocket.findIndex(
+            c => c.clientSocketId === urlConfig.clientSocketId
+          );
+          if (index !== -1) {
+            global.tblClientSocket[index].status = clientSocketStatus.connected;
+          }
+          const socketObj = { ...urlConfig, client };
+          if (socketObj.cronJob) {
+            socketObj.cronJob.stop();
+          }
+          if (socketObj && socketObj?.isUpdateView == true) {
+            const intervalMinutes = Number(socketObj.updateInterval) || 5;
+            const cronExpression = `*/${intervalMinutes} * * * *`;
+
+            socketObj.cronJob = cron.schedule(cronExpression, async () => {
+              try {
+                if (!socketObj.client || !socketObj.client.connected) {
+                  return;
+                }
+                socketObj.client.emit("updateRoomUserCount", { message: "Send me user counts" });
+                socketObj.client.removeAllListeners("countData");
+                socketObj.client.once("countData", async (data) => {
+                  const updates = [];
+                  for (const elem of data) {
+                    const increment = Number(elem.count) || 0;
+                    if (!elem.commentaryId || increment <= 0) continue;
+
+                    const index = global.tblCommentaries.findIndex(
+                      i => i.commentaryId == elem.commentaryId
+                    );
+                    if (index === -1) continue;
+
+                    global.tblCommentaries[index].views =
+                      (Number(global.tblCommentaries[index].views) || 0) + increment;
+
+                    updates.push(
+                      updateCommentaryViewsQuery(
+                        { views: increment, commentaryId: elem.commentaryId },
+                        fastify
+                      )
+                    );
+                  }
+                  await Promise.all(updates);
+
+                  socketObj.client.emit("updateCommentaryCounts", data);
+                });
+              } catch (error) {
+                console.error(new Date(), "Error during scheduled task:", error);
+              }
+            });
+            const existing = global.clientSocketIo.find(
+              c => c.clientSocketId === urlConfig.clientSocketId
+            );
+            if (existing) {
+              existing.cronJob = socketObj.cronJob;
+            }
+          }
+        });
+
+        // ---- custom pong ----
+        client.on("pong", () => {
+          lastPongAt = Date.now();
+        });
+
+        // ---- example TP data event (KEEP YOUR REAL EVENTS HERE) ----
+        client.on("message", (data) => {
+          // process incoming TP data
+          // console.log("TP data:", data);
+        });
+
+        client.on("disconnect", (reason) => {
+          console.log(`Disconnected → ${urlConfig.url} | ${reason}`);
+
+          stopHeartbeat();
+
+          global.clientSocketIo = global.clientSocketIo.filter(
+            c => c.url !== urlConfig.url
+          );
+
+          updateClientSocketStatusQuery(
+            { clientSocketId: [urlConfig.clientSocketId], status: clientSocketStatus.disconnected },
+            fastify
+          ).catch(() => {});
+
+          const index = global.tblClientSocket.findIndex(
+            c => c.clientSocketId === urlConfig.clientSocketId
+          );
+          if (index !== -1) {
+            global.tblClientSocket[index].status = clientSocketStatus.disconnected;
+          }
+          const existing = global.clientSocketIo.find(
+            c => c.clientSocketId === urlConfig.clientSocketId
+          );
+
+          if (existing?.cronJob) {
+            existing.cronJob.stop();
+            existing.cronJob = null;
+          }
+        });
+
+        client.io.on("reconnect_attempt", (attempt) => {
+          console.log(`Reconnect attempt ${attempt} → ${urlConfig.url}`);
+
+          updateReconnectCountQuery(
+            { clientSocketId: urlConfig.clientSocketId, reconnectCount: attempt },
+            fastify
+          ).catch(() => {});
+        });
+
+        client.io.on("reconnect", () => {
+          console.log(`Reconnected → ${urlConfig.url}`);
+          lastPongAt = Date.now();
+          startHeartbeat();
+        });
+
+        client.io.on("reconnect_failed", () => {
+          console.log(`Reconnect failed → ${urlConfig.url}`);
+          stopHeartbeat();
+        });
+        client.io.on("reconnect_error", (error) => {
+          console.log(`Reconnect error ${urlConfig.url}: ${error.message || error} at ${new Date().toISOString()}`);
+        });
+      })
+    )
+  } catch (error) {
+    console.error("connectClients2 error:", err);
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> socketIo.js/connectClients2",
+      null
+    );
+
+  }
+}
 const disconnectClients = async (fastify, clientSocketId = undefined) => {
   try {
     // const disconnectClientUrls = global.tblClientSocket.filter(
@@ -476,5 +700,5 @@ const disconnectInactiveClients = async (fastify) => {
     );
   }
 }
-module.exports = { connectClients, disconnectClients, disconnectInactiveClients };
+module.exports = { connectClients, disconnectClients, disconnectInactiveClients ,connectClients2};
 
