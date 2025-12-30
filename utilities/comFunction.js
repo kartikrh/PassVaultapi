@@ -183,7 +183,11 @@ const generateRemainingRuns = (data) => {
     const totalBallsRemaining = (team.teamMaxOver * ballsPerOver) - totalBallsBowled;
     const totalRunRemaining = (team.teamTrialRuns || 0) - (team.teamScore || 0);
     // console.log("totalRunRemaining",totalRunRemaining)
-    return `${team.shortName} needs ${totalRunRemaining + 1} runs from ${totalBallsRemaining} balls.`;
+    let run = totalRunRemaining + 1;
+    if(run <= 0 || totalBallsRemaining <= 0){
+      return "";
+    }
+    return `${team.shortName} needs ${run} runs from ${totalBallsRemaining} balls.`;
 };
 
 const getBowlerOnlyRuns = (over) => {
