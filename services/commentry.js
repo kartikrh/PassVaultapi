@@ -6478,6 +6478,31 @@ const commentaryStatusService = async (request, fastify) => {
   global.clientSocketIo.forEach((socket) => {
     socket.client.emit("updateFullscore", sendDataForSocketUpdate);
   });
+  const cData = await getMatchDataByCId(
+    {
+      commentaryId: commentaryId,
+    },
+    request,
+    fastify
+  );
+
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.commentaryUpdate,
+      data: cData,
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("call client api console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/commentaryStatusService",
+      request
+    );
+  });
 
   commentaryDetails.callPredictions = [];
   return {

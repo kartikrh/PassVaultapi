@@ -126,7 +126,10 @@ const editWhitelabelService = async (request, fastify) => {
   );
 
   if (index != -1) {
-    global.tblWhitelabels[index] = modifiedData[0];
+    global.tblWhitelabels[index] = {
+      ...global.tblWhitelabels[index],
+      ...modifiedData[0],
+    };
   }
   
    callClientAPI(
