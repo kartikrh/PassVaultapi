@@ -35,7 +35,7 @@ const getAllICCRankingQuery = async (fastify, request) => {
         errorLogger(
             fastify,
             err.message,
-            "DB ERROR --> repository/tblICCRanking.js/getICCRankingByIdQuery",
+            "DB ERROR --> repository/TableICCRanking.js/getICCRankingByIdQuery",
             request
         );
         throw new Error(err.message);
@@ -80,7 +80,7 @@ const getICCRankingByIdQuery = async (data, fastify, request) => {
         errorLogger(
             fastify,
             err.message,
-            "DB ERROR --> repository/tblICCRanking.js/getICCRankingByIdQuery",
+            "DB ERROR --> repository/TableICCRanking.js/getICCRankingByIdQuery",
             request
         );
         throw new Error(err.message);
@@ -142,7 +142,7 @@ const insertICCRankingQuery = async (data, fastify, request) => {
         errorLogger(
             fastify,
             err.message,
-            "DB ERROR --> repository/tblICCRanking.js/insertICCRankingQuery",
+            "DB ERROR --> repository/TableICCRanking.js/insertICCRankingQuery",
             request
         );
         throw new Error(err.message);
@@ -205,7 +205,7 @@ const updateICCRankingQuery = async (data, fastify, request) => {
         errorLogger(
             fastify,
             err.message,
-            "DB ERROR --> repository/tblICCRanking.js/updateICCRankingQuery",
+            "DB ERROR --> repository/TableICCRanking.js/updateICCRankingQuery",
             request
         );
         throw new Error(err.message);
@@ -230,7 +230,7 @@ const deleteICCRankingByIdQuery = async (id, fastify, request) => {
         errorLogger(
             fastify,
             err.message,
-            "DB ERROR --> repository/tblICCRanking.js/deleteICCRankingByIdQuery",
+            "DB ERROR --> repository/TableICCRanking.js/deleteICCRankingByIdQuery",
             request
         );
         throw new Error(err.message);
@@ -253,7 +253,7 @@ const activeInactiveICCRankingByIdQuery = async (data, request, fastify) => {
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/tblICCRanking.js/activeInactiveICCRankingByIdQuery",
+      "DB ERROR --> repository/TableICCRanking.js/activeInactiveICCRankingByIdQuery",
       request
     );
     throw new Error(err.message);
@@ -283,7 +283,31 @@ const deleteAllICCRankingQuery = async (request, fastify) => {
         errorLogger(
             fastify,
             err.message,
-            "DB ERROR --> repository/tblICCRanking.js/deleteAllICCRankingQuery",
+            "DB ERROR --> repository/TableICCRanking.js/deleteAllICCRankingQuery",
+            request
+        );
+        throw new Error(err.message);
+    }
+};
+
+const removeDeletedICCRankingQuery = async (request, fastify) => {
+    try {
+        return await fastify.db.query(
+            `
+                DELETE FROM "tblICCRanking"
+                WHERE "wrIsDeleted" = $1
+                    AND "wrDeletedAt" < NOW() - INTERVAL '7 days';
+            `, {
+                bind: [
+                    true
+                ],
+            }
+        );
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableICCRanking.js/removeDeletedICCRankingQuery",
             request
         );
         throw new Error(err.message);
@@ -297,5 +321,6 @@ module.exports = {
     updateICCRankingQuery,
     deleteICCRankingByIdQuery,
     activeInactiveICCRankingByIdQuery,
-    deleteAllICCRankingQuery
+    deleteAllICCRankingQuery,
+    removeDeletedICCRankingQuery
 };
