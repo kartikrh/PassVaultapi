@@ -45,8 +45,9 @@ const { entitySportAutoUpdateCommentary } = require("./utilities/entitySportAuto
 const { entitySportAutoUpdateCommentaryTime } = require("./utilities/entityConst.js");
 const { autoUpdatePlayerStatisticsDataProcess } = require("./utilities/autoUpdatePlayerStatisticsData.js");
 const { ISPLAYERCALCULATIONON } = require("./utilities/configConstants.js");
-const { autoUpdateTournamentTeamPoints } = require("./utilities/autoUpdateTournamentTeamPoints.js");
 const { insertCompetitionstatisticsInAutoImportService } = require("./services/competitionStatistics.js");
+const { insertICCRankingInAutoImportService } = require("./services/iccRanking.js");
+const { insertTournamentTeamPointInAutoImportService } = require("./services/tournamentTeamPoints.js");
 // const { nodeProfilingIntegration } = require('@sentry/profiling-node');
 // const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 // Pass --options via CLI arguments in command to enable these options.
@@ -195,20 +196,12 @@ module.exports = async function (fastify, opts) {
     cron.schedule('30 19 * * *', async () => {
       try {
         if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
-          await autoUpdateTournamentTeamPoints(fastify);
-        }
-      } catch (error) {
-        console.error("Error during scheduled task - autoUpdateTournamentTeamPoints:", error);
-      }
-    });
-
-    cron.schedule('00 20 * * *', async () => {
-      try {
-        if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
+          await insertTournamentTeamPointInAutoImportService(fastify);
           await insertCompetitionstatisticsInAutoImportService(fastify);
+          await insertICCRankingInAutoImportService(fastify);
         }
       } catch (error) {
-        console.error("Error during scheduled task - insertCompetitionstatisticsInAutoImportService:", error);
+        console.error("Error during scheduled task:", error);
       }
     });
 

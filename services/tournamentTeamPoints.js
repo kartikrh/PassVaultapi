@@ -14,9 +14,10 @@ const {
   getTournamentPointsByGroupNameQuery,
   getTournamentTeamPointsQuery,
 } = require("../repository/TableTournmentTeamPoints");
-const { callClientAPI, ServiceType, APIEndpointModuleType, callEntitySportAPI, extractGroupDataFromArray, teamRemarkType, checkEntitySportAPIEndpointIsActive, compStatus } = require("../utilities");
+const { callClientAPI, ServiceType, APIEndpointModuleType, callEntitySportAPI, extractGroupDataFromArray, teamRemarkType, checkEntitySportAPIEndpointIsActive, compStatus, RefType } = require("../utilities");
 const { nullTeamtpIds } = require("../utilities/entityConst");
 const { errorLogger } = require("../utilities/logger");
+const { insertAutoImportDataService } = require("./autoImportData");
 const { saveCompetitionService } = require("./competition");
 
 const allTournamentTeamPointsService = async (request, fastify) => {
@@ -803,6 +804,39 @@ const importUpdateTournamentTeamPointFromEntitySportService = async (data, fasti
   return entitySportCompetitionInfoResponse;
 };
 
+const insertTournamentTeamPointInAutoImportService = async (fastify) => {
+  try {
+    const formatDate = (date) => date.toISOString().split("T")[0];
+    const yesterdayStr = formatDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
+    const competitionList = global.tblCompetitions.filter(cp => {
+      const startStr = formatDate(new Date(cp.startDate));
+      const endStr = formatDate(new Date(cp.endDate));
+
+      return yesterdayStr >= startStr && yesterdayStr <= endStr && cp.tpId !== null;
+    })
+
+    for (const competition of competitionList) {
+      await insertAutoImportDataService({
+        body: {
+          refId: competition?.tpId || competition?.competitionId,
+          refType: RefType.tournamentTeamPointUpdate,
+          sourceId: 3
+        },
+        userTokenInfo: {
+          WrUserId: -2
+        }
+      }, fastify);
+    }
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> services/tournamentTeamPoints.js/insertTournamentTeamPointInAutoImportService",
+      null
+    );
+  }
+}
+
 module.exports = {
   allTournamentTeamPointsService,
   saveTournamentTeamPointsService,
@@ -814,5 +848,6 @@ module.exports = {
   netRunRateRe_calculationService,
   getAllTournamentTeamPointsService,
   addEditTournamentTeamPointDataService,
-  importUpdateTournamentTeamPointFromEntitySportService
+  importUpdateTournamentTeamPointFromEntitySportService,
+  insertTournamentTeamPointInAutoImportService
 };

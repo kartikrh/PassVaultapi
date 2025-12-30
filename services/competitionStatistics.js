@@ -1,4 +1,4 @@
-const { insertCompetitionStatisticsQuery, updateCompetitionStatisticsByIdQuery, deleteCompetitionStatisticsByIdQuery, updateCompetitionStatisticsDisplayOrderQuery } = require("../repository/TableCompetitionStatistics");
+const { insertCompetitionStatisticsQuery, updateCompetitionStatisticsByIdQuery, deleteCompetitionStatisticsByIdQuery, updateCompetitionStatisticsDisplayOrderQuery, removeDeletedCompetitionStatisticsQuery } = require("../repository/TableCompetitionStatistics");
 const { CompetitionStatisticsType, getKeyAndValueKey, callEntitySportAPI, RefType, competitionMatchTypeEnum } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 const { insertAutoImportDataService } = require("./autoImportData");
@@ -249,6 +249,8 @@ const updateCompetitionStatisticsDisplayOrderService = async (request, fastify) 
 }
 
 const importCompetitionstatisticsService = async (data, fastify, request) => {
+    await removeDeletedCompetitionStatisticsQuery(request, fastify);
+
     const competitionTpId = data.cid;
     let getCompetition = global.tblCompetitions.find(item => item.tpId === competitionTpId);
     if (!getCompetition) {
@@ -433,31 +435,35 @@ const getCompetitionStatisticsByCompetitionIdService = async (request, fastify) 
 };
 
 const insertCompetitionstatisticsInAutoImportService = async (fastify) => {
-    const request = {
-        userTokenInfo: {
-            WrUserId: -2
+    try {
+        const formatDate = (date) => date.toISOString().split("T")[0];
+        const yesterdayStr = formatDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
+        const competitionList = global.tblCompetitions.filter(cp => {
+            const startStr = formatDate(new Date(cp.startDate));
+            const endStr = formatDate(new Date(cp.endDate));
+
+            return yesterdayStr >= startStr && yesterdayStr <= endStr && cp.tpId !== null;
+        })
+
+        for (const competition of competitionList) {
+            await insertAutoImportDataService({
+                body: {
+                    refId: competition?.tpId || competition?.competitionId,
+                    refType: RefType.CompetitionStatistics,
+                    sourceId: 3
+                },
+                userTokenInfo: {
+                    WrUserId: -2
+                }
+            }, fastify);
         }
-    }
-
-    const formatDate = (date) => date.toISOString().split("T")[0];
-
-    const yesterdayStr = formatDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
-    const competitionList = global.tblCompetitions.filter(cp => {
-        const startStr = formatDate(new Date(cp.startDate));
-        const endStr = formatDate(new Date(cp.endDate));
-
-        return yesterdayStr >= startStr && yesterdayStr <= endStr && cp.tpId !== null && cp.isCompetitionStatisticsCalculation;
-    })
-
-    for (const competition of competitionList) {
-        await insertAutoImportDataService({
-            ...request,
-            body: {
-                refId: competition?.tpId || competition?.competitionId,
-                refType: RefType.CompetitionStatistics,
-                sourceId: 3
-            }
-        }, fastify);
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "ERROR --> services/competitionStatistics.js/insertCompetitionstatisticsInAutoImportService",
+            null
+        );
     }
 }
 
