@@ -130,6 +130,11 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
     }
   
     await updateBannerQuery(body, request, fastify);
+    const whiteLabelData = global.tblWhitelabels.find(
+      (item) => item.id == body.whitelabelId
+    );
+    body.domain = whiteLabelData?.domain ?? null
+    body.encryptWhitelabelId = whiteLabelData?.whitelabelId ?? null
     callClientAPI(
       {
         serviceType : ServiceType.clientAPI,
