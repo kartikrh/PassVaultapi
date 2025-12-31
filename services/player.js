@@ -157,6 +157,7 @@ const playerByIdService = async (request, fastify) => {
 
     const data = {
       ...result,
+      birthDate: result.birthDate ? String(result.birthDate).split('T')[0] : result.birthDate,
       teams: playersInTeams,
       jerseyPlayerImage: playersInTeams?.find(pt => pt.homeTeam)?.jerseyPlayerImage
     };
