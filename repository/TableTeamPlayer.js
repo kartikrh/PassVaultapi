@@ -383,6 +383,40 @@ const AllTeamPlayersNullImageQuery = async (fastify, request) => {
   }
 };
 
+
+const getHomeTeamPlayerQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT 
+        "wrTeamPlayerId" as "teamPlayerId",
+        "wrTeamId" as "teamId",
+        "wrRefPlayerId" as "refPlayerId",
+        "wrJerseyPlayerImage" as "jerseyPlayerImage",
+        "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
+        "wrTpId" as "tpId",
+        "wrHomeTeam" as "homeTeam"
+      FROM "tblTeamPlayers"
+      WHERE "wrIsDeleted" = FALSE 
+      AND "wrRefPlayerId" = $1 
+      AND "wrTeamId" = $2
+      AND "wrHomeTeam" = TRUE`,
+      {
+        bind: [data.playerId, data.teamId],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/getHomeTeamPlayerQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   insertTeamPlayerQuery,
   getAllTeamPlayersByTeamIdAndPlayerIdQuery,
@@ -396,4 +430,5 @@ module.exports = {
   getHomeTeamPlayerByPlayerIdQuery,
   AllTeamPlayersQuery,
   AllTeamPlayersNullImageQuery,
+  getHomeTeamPlayerQuery,
 };

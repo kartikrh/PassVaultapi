@@ -1,10 +1,10 @@
-const { deleteICCRankingByIdQuery, insertICCRankingQuery, updateICCRankingQuery, activeInactiveICCRankingByIdQuery, deleteAllICCRankingQuery } = require("../repository/TableICCRanking");
-const { getTeamPlayerJerseyByPlayerIdQuery } = require("../repository/TablePlayer");
-const { ICCRankingType, callEntitySportAPI, ServiceType, APIEndpointModuleType, callClientAPI, ICCRankingPlayerType, checkEntitySportAPIEndpointIsActive, ICCMatchType } = require("../utilities");
+const { deleteICCRankingByIdQuery, insertICCRankingQuery, updateICCRankingQuery, activeInactiveICCRankingByIdQuery, deleteAllICCRankingQuery, removeDeletedICCRankingQuery } = require("../repository/TableICCRanking");
+const { ICCRankingType, callEntitySportAPI, ServiceType, APIEndpointModuleType, callClientAPI, ICCRankingPlayerType, checkEntitySportAPIEndpointIsActive, ICCMatchType, RefType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 const { playerImportService } = require("./player");
 const { teamImportService } = require("./teams");
 const { fieldNamesService } = require("./fieldNamesService");
+const { insertAutoImportDataService } = require("./autoImportData");
 
 const getAllICCRankingService = async (request) => {
     const { isActive, type, matchTypeId, sportId, playerTypeId, isMen } = request.body;
@@ -468,6 +468,8 @@ const extractEntries = async (json, isMen, request, fastify) => {
 };
 
 const importICCRankingFromEntitySportService = async (data = null, fastify, request) => {
+    await removeDeletedICCRankingQuery(request, fastify);
+
     const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getICCRankingData);
     if (!checkEntitySportAPIEndpoint.data) {
         throw new Error(checkEntitySportAPIEndpoint.message);
@@ -518,6 +520,28 @@ const importICCRankingFromEntitySportService = async (data = null, fastify, requ
     return `ICC Ranking data imported successfully`;
 };
 
+const insertICCRankingInAutoImportService = async (fastify) => {
+    try {
+        await insertAutoImportDataService({
+            body: {
+                refId: null,
+                refType: RefType.ICCRanking,
+                sourceId: 3
+            },
+            userTokenInfo: {
+                WrUserId: -2
+            }
+        }, fastify);
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "ERROR --> services/iccRanking.js/insertICCRankingInAutoImportService",
+            null
+        );
+    }
+}
+
 module.exports = {
     getAllICCRankingService,
     getICCRankingByIdService,
@@ -526,4 +550,5 @@ module.exports = {
     activeInactiveICCRankingByIdService,
     AllICCRankingService,
     importICCRankingFromEntitySportService,
+    insertICCRankingInAutoImportService
 }

@@ -157,6 +157,7 @@ const playerByIdService = async (request, fastify) => {
 
     const data = {
       ...result,
+      birthDate: result.birthDate ? String(result.birthDate).split('T')[0] : result.birthDate,
       teams: playersInTeams,
       jerseyPlayerImage: playersInTeams?.find(pt => pt.homeTeam)?.jerseyPlayerImage
     };
@@ -290,15 +291,28 @@ const insertPlayerService = async (request, fastify) => {
             );
             const teamData = global.tblTeams.find((item) => item.teamId == teamID);
             if(request.body.image && teamData.jersey) {
-              mergeAndSaveImage({
-                playerImage: request.body.image,
-                jersey: teamData.jersey,
-                playerName: request.body.playerName,
-                teamName: teamData.teamName,
-                teamPlayerId: teamPlayerData.teamPlayerId,
-                commentaryPlayerId: null,
-                commentaryId: null,
-              }, fastify);
+              request.body.jersey = teamData.jersey;
+              request.body.playerId = result?.playerId;
+              request.body.teamName = teamData.teamName;
+              request.body.teamPlayerId = teamPlayerData.teamPlayerId;
+              runMergePlayerImageJob(2, request, fastify)
+                .catch(err => {
+                  errorLogger(
+                    fastify,
+                    err.message,
+                    "services/player.js/insertPlayerService",
+                    null
+                  );
+                });
+              // mergeAndSaveImage({
+              //   playerImage: request.body.image,
+              //   jersey: teamData.jersey,
+              //   playerName: request.body.playerName,
+              //   teamName: teamData.teamName,
+              //   teamPlayerId: teamPlayerData.teamPlayerId,
+              //   commentaryPlayerId: null,
+              //   commentaryId: null,
+              // }, fastify);
             }
             }
           }
@@ -475,7 +489,7 @@ const updatePlayerService = async (request, fastify) => {
     body.imagePath = imagePath;
   }
 
-  await updatePlayerQuery(body, fastify, request);
+  const result = await updatePlayerQuery(body, fastify, request);
 
   delete body.userId;
 
@@ -483,7 +497,7 @@ const updatePlayerService = async (request, fastify) => {
     (item) => item.playerId === request.body.playerId
   );
 
-  global.tblPlayers[index] = body;
+  global.tblPlayers[index] = result[0];
 
   if (request.body.teamId) {
     const teamPlayersData = await getTeamPlayerByPlayerIdQuery(request.body.playerId, fastify, request);
@@ -522,16 +536,31 @@ const updatePlayerService = async (request, fastify) => {
                 request
               );
               const teamData = global.tblTeams.find((item) => item.teamId == teamID);
-              if(body.image && teamData.jersey) {
-                mergeAndSaveImage({
-                  playerImage: body.image,
-                  jersey: teamData.jersey,
-                  playerName: body.playerName,
-                  teamName: teamData.teamName,
-                  teamPlayerId: teamPlayerData.teamPlayerId,
-                  commentaryPlayerId: null,
-                  commentaryId: null,
-                }, fastify);
+              if (body.image && teamData.jersey) {
+                request.body.playerImage = body.image;
+                request.body.playerId = body?.playerId;
+                request.body.jersey = teamData.jersey;
+                request.body.playerName = body.playerName;
+                request.body.teamName = teamData.teamName;
+                request.body.teamPlayerId = teamPlayerData.teamPlayerId;
+                runMergePlayerImageJob(2, request, fastify)
+                  .catch(err => {
+                    errorLogger(
+                      fastify,
+                      err.message,
+                      "services/player.js/updatePlayerService",
+                      null
+                    );
+                  });
+                // mergeAndSaveImage({
+                //   playerImage: body.image,
+                //   jersey: teamData.jersey,
+                //   playerName: body.playerName,
+                //   teamName: teamData.teamName,
+                //   teamPlayerId: teamPlayerData.teamPlayerId,
+                //   commentaryPlayerId: null,
+                //   commentaryId: null,
+                // }, fastify);
               }
             }
           }
@@ -750,31 +779,15 @@ const updatePlayerStatsService = async (request, fastify) => {
 };
 
 const mergePlayerImageAndJerseyService = async (request, fastify) => {
-  for(const player of request.body.playerId){
-    const checkPlayerId = global.tblPlayers.find(
-      (item) => item.playerId === player
-    );
-    if (!checkPlayerId) {
-      continue;
-    }
-    const teamPlayersData = await getTeamPlayerByPlayerIdQuery(player, fastify, request);
-    if (teamPlayersData.length > 0) {
-      for (const playerData of teamPlayersData) {
-        const teamData = global.tblTeams.find((item) => item.teamId == playerData.teamId);
-        if(checkPlayerId?.image && teamData?.jersey) {
-          mergeAndSaveImage({
-            playerImage: checkPlayerId.image,
-            jersey: teamData.jersey,
-            playerName: checkPlayerId.playerName,
-            teamName: teamData.teamName,
-            teamPlayerId: playerData.teamPlayerId,
-            commentaryPlayerId: null,
-            commentaryId: null,
-          }, fastify);
-        }
-      }
-    }
-  }
+  runMergePlayerImageJob(1, request, fastify)
+    .catch(err => {
+      errorLogger(
+        fastify,
+        err.message,
+        "services/player.js/mergePlayerImageAndJerseyService",
+        request
+      );
+    });
   return "Player image(s) and Jersey image(s) merged successfully";
 };
 const setTeamPlayerImgService = async (request, fastify) => {
@@ -1143,6 +1156,7 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
       refPlayerId: playerId,
       teamId: playerTeams[0]?.teamId
     }, fastify, request);
+    await playerImageChangeOnClientAPIService(playerId, fastify);
   }
 
   await updatePlayerBatBowlHistory(playerId, entitySportPlayerResponse?.batting, entitySportPlayerResponse?.bowling, request, fastify);
@@ -1278,34 +1292,7 @@ const updatePlayerHomeTeamService = async (request, fastify) => {
     fastify,
     request
   );
-  const rankingData = global.tblICCRanking.filter(item => item.playerId == playerId && item.isActive == true);
-  const updatedData = await Promise.all(
-    rankingData
-      .map(async item => {
-        const fields = await fieldNamesService(item, fastify);
-        return { ...item, ...fields };
-      })
-  );
-  if (updatedData.length > 0) {
-    callClientAPI(
-      {
-        serviceType: ServiceType.clientAPI,
-        moduleType: APIEndpointModuleType.updateSeoModule,
-        data: {
-          module: 'iccRankings',
-          type: "update",
-          data: updatedData
-        }
-      }, request, fastify)
-      .catch((err) => {
-        errorLogger(
-          fastify,
-          err.message,
-          "services/iccRanking.js/updatePlayerHomeTeamService - callClientAPI",
-          request
-        );
-      });
-  }
+  await playerImageChangeOnClientAPIService(playerId, fastify);
   return "Player Home Team updated successfully";
 };
 
@@ -1351,6 +1338,94 @@ const getPlayerPlayInCommentaryListByIdService = async (request, fastify) => {
   return result ?? [];
 };
 
+const runMergePlayerImageJob = async (type, request, fastify) => {
+  const {
+    playerImage,
+    jersey,
+    playerName,
+    teamName,
+    teamPlayerId,
+    homeTeamId,
+    playerId,
+  } = request.body;
+  if (type === 1) {
+    for (const player of request.body.playerId) {
+      const checkPlayerId = global.tblPlayers.find(
+        (item) => item.playerId === player
+      );
+      if (!checkPlayerId) continue;
+
+      const teamPlayersData = await getTeamPlayerByPlayerIdQuery(player, fastify, request);
+
+      for (const playerData of teamPlayersData) {
+        const teamData = global.tblTeams.find(
+          (item) => item.teamId == playerData.teamId
+        );
+
+        if (checkPlayerId?.image && teamData?.jersey) {
+          await mergeAndSaveImage({
+            playerImage: checkPlayerId.image,
+            jersey: teamData.jersey,
+            playerName: checkPlayerId.playerName,
+            teamName: teamData.teamName,
+            teamPlayerId: playerData.teamPlayerId,
+            commentaryPlayerId: null,
+            commentaryId: null,
+          }, fastify);
+        }
+        if (playerData?.homeTeam == true) {
+          await playerImageChangeOnClientAPIService(player, fastify);
+        }
+      }
+    }
+  } else {
+    await mergeAndSaveImage({
+      playerImage,
+      jersey,
+      playerName,
+      teamName,
+      teamPlayerId,
+      commentaryPlayerId: null,
+      commentaryId: null,
+    }, fastify);
+
+    if(homeTeamId !== null && homeTeamId !== undefined) {
+      await playerImageChangeOnClientAPIService(playerId, fastify);
+    }
+  }
+};
+
+const playerImageChangeOnClientAPIService = async (playerId, fastify) => {
+  const rankingData = global.tblICCRanking.filter(item => item.playerId == playerId && item.isActive == true);
+  const updatedData = await Promise.all(
+    rankingData
+      .map(async item => {
+        const fields = await fieldNamesService(item, fastify);
+        return { ...item, ...fields };
+      })
+  );
+  if (updatedData.length > 0) {
+    callClientAPI(
+      {
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.updateSeoModule,
+        data: {
+          module: 'iccRankings',
+          type: "update",
+          data: updatedData
+        }
+      }, null, fastify)
+      .catch((err) => {
+        errorLogger(
+          fastify,
+          err.message,
+          "services/player.js/playerImageChangeOnClientAPIService - callClientAPI",
+          null
+        );
+      });
+  }
+}
+
 module.exports = {
   allPlayerService,
   playerByIdService,
@@ -1374,4 +1449,5 @@ module.exports = {
   getPlayerCompetitionListByIdService,
   getPlayerPlayInCommentaryListByIdService,
   getPlayerCreatedDetailsService,
+  playerImageChangeOnClientAPIService,
 };
