@@ -2237,17 +2237,33 @@ const checkWinner = async (data) => {
         ...data,
         isBatTeamWon,
       });
+
+    
   }
-  // db update
-  let updateBatTeam = {
-    ...batTeam,
-    isBattingComplete: true,
-    isWin: isBatTeamWon,
-  };
-  let updateBowlTeam = {
-    ...bowlTeam,
-    isWin: !isBatTeamWon,
-  };
+
+  let updateBatTeam,updateBowlTeam = {};
+  if(isMatchTie == true){
+    updateBatTeam = {
+      ...batTeam,
+      isBattingComplete: true,
+    };
+    updateBowlTeam = {
+      ...bowlTeam,
+    };
+  }else{
+    updateBatTeam = {
+      ...batTeam,
+      isBattingComplete: true,
+      isWin: isBatTeamWon,
+    };
+    updateBowlTeam = {
+      ...bowlTeam,
+      isWin: !isBatTeamWon,
+    };
+  }
+
+
+ 
   let upComDetails = {
     ...commentaryDetails,
     commentaryStatus: commentaryStatus.COMPLETED,
