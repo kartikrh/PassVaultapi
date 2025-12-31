@@ -27,7 +27,7 @@ const getAllPlayersQuery = async (fastify) => {
     tp."wrTpId" AS "tpId",
     tp."wrCountryId" AS "countryId",
     tp."wrIsMen" AS "isMen",
-    tp."wrBirthDate" AS "birthDate",
+    TO_CHAR(tp."wrBirthDate", 'YYYY-MM-DD') AS "birthDate",
     tcc."wrCountryName" AS "countryName",
     tp."wrBirthPlace" AS "birthPlace"
 FROM 
@@ -107,7 +107,7 @@ const getPlyByIdQuery = async (data ,request ,fastify) => {
         tp."wrTpId" AS "tpId",
         tp."wrCountryId" AS "countryId",
         tp."wrIsMen" AS "isMen",
-        tp."wrBirthDate" AS "birthDate",
+        TO_CHAR(tp."wrBirthDate", 'YYYY-MM-DD') AS "birthDate",
         tcc."wrCountryName" AS "countryName",
         tp."wrBirthPlace" AS "birthPlace"
     FROM 
@@ -174,7 +174,7 @@ const insertPlayerQuery = async (data, fastify, request) => {
         tp."wrTpId" AS "tpId",
         tp."wrCountryId" AS "countryId",
         tp."wrIsMen" AS "isMen",
-        tp."wrBirthDate" AS "birthDate",
+        TO_CHAR(tp."wrBirthDate", 'YYYY-MM-DD') AS "birthDate",
         tcc."wrCountryName" AS "countryName",
         tp."wrBirthPlace" AS "birthPlace"
      from "insert_data" tp 
@@ -261,7 +261,7 @@ const updatePlayerQuery = async (data, fastify, request) => {
         tp."wrTpId" AS "tpId",
         tp."wrCountryId" AS "countryId",
         tp."wrIsMen" AS "isMen",
-        tp."wrBirthDate" AS "birthDate",
+        TO_CHAR(tp."wrBirthDate", 'YYYY-MM-DD') AS "birthDate",
         tcc."wrCountryName" AS "countryName",
         tp."wrBirthPlace" AS "birthPlace"
       from "update_data" tp 
@@ -593,7 +593,7 @@ const getAllPlayersByIdsQuery = async (whereCondition = undefined, fastify) => {
           tp."wrTpId" AS "tpId",
           tp."wrCountryId" AS "countryId",
           tp."wrIsMen" AS "isMen",
-          tp."wrBirthDate" AS "birthDate",
+          TO_CHAR(tp."wrBirthDate", 'YYYY-MM-DD') AS "birthDate",
           tcc."wrCountryName" AS "countryName",
           tp."wrBirthPlace" AS "birthPlace"
       FROM "tblPlayers" tp
@@ -664,7 +664,7 @@ const getPlayerByIdQuery = async (whereCondition = undefined, request, fastify) 
     tp."wrImagePath" AS "imagePath",
     tp."wrTpId" AS "tpId",
     tp."wrIsMen" AS "isMen",
-    tp."wrBirthDate" AS "birthDate",
+    TO_CHAR(tp."wrBirthDate", 'YYYY-MM-DD') AS "birthDate",
     tcc."wrCountryName" AS "countryName",
     tp."wrBirthPlace" AS "birthPlace"
   FROM 
@@ -728,7 +728,7 @@ const updateExchangePlayerQuery = async (data, fastify, request) => {
     tp."wrImagePath" AS "imagePath",
     tp."wrTpId" AS "tpId",
     tp."wrIsMen" AS "isMen",
-    tp."wrBirthDate" AS "birthDate",
+    TO_CHAR(tp."wrBirthDate", 'YYYY-MM-DD') AS "birthDate",
     tcc."wrCountryName" AS "countryName",
     tp."wrBirthPlace" AS "birthPlace"
   FROM update_data tp
