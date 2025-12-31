@@ -488,7 +488,7 @@ const updatePlayerService = async (request, fastify) => {
     body.imagePath = imagePath;
   }
 
-  await updatePlayerQuery(body, fastify, request);
+  const result = await updatePlayerQuery(body, fastify, request);
 
   delete body.userId;
 
@@ -496,7 +496,7 @@ const updatePlayerService = async (request, fastify) => {
     (item) => item.playerId === request.body.playerId
   );
 
-  global.tblPlayers[index] = body;
+  global.tblPlayers[index] = result[0];
 
   if (request.body.teamId) {
     const teamPlayersData = await getTeamPlayerByPlayerIdQuery(request.body.playerId, fastify, request);
