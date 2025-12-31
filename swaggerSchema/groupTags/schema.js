@@ -5761,7 +5761,7 @@ const EventMarket = {
               runner : {type : "string"},
               selectionId : {type : "integer"},
             },
-            required : []
+            // required : []
           }
         },
         required : [

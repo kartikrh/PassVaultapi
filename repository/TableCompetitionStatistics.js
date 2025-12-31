@@ -296,10 +296,35 @@ const updateCompetitionStatisticsDisplayOrderQuery = async (body, request, fasti
     }
 }
 
+const removeDeletedCompetitionStatisticsQuery = async (request, fastify) => {
+    try {
+        return await fastify.db.query(
+            `
+                DELETE FROM "tblCompetitionStatistics"
+                WHERE "wrIsDeleted" = $1
+                    AND "wrDeletedAt" < NOW() - INTERVAL '7 days';
+            `, {
+                bind: [
+                    true
+                ],
+            }
+        );
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableCompetitionStatistics.js/removeDeletedCompetitionStatisticsQuery",
+            request
+        );
+        throw new Error(err.message);
+    }
+};
+
 module.exports = {
     getAllCompetitionStatisticsQuery,
     insertCompetitionStatisticsQuery,
     updateCompetitionStatisticsByIdQuery,
     deleteCompetitionStatisticsByIdQuery,
-    updateCompetitionStatisticsDisplayOrderQuery
+    updateCompetitionStatisticsDisplayOrderQuery,
+    removeDeletedCompetitionStatisticsQuery
 };
