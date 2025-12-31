@@ -108,12 +108,14 @@ const getPlyByIdQuery = async (data ,request ,fastify) => {
         tp."wrCountryId" AS "countryId",
         tp."wrIsMen" AS "isMen",
         tp."wrBirthDate" AS "birthDate",
+        tcc."wrCountryName" AS "countryName",
         tp."wrBirthPlace" AS "birthPlace"
     FROM 
         "tblPlayers" tp
         LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
         LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
         LEFT JOIN "tblBowlingTypes" tbt ON tp."wrBowlingType" = tbt."wrBowlingTypeId"
+        LEFT JOIN "tblCountryCodes" tcc ON tp."wrCountryId" = tcc."wrId"
         WHERE tp."wrIsDeleted" = false
         AND tp."wrPlayerId" = ANY($1)
 
@@ -173,11 +175,13 @@ const insertPlayerQuery = async (data, fastify, request) => {
         tp."wrCountryId" AS "countryId",
         tp."wrIsMen" AS "isMen",
         tp."wrBirthDate" AS "birthDate",
+        tcc."wrCountryName" AS "countryName",
         tp."wrBirthPlace" AS "birthPlace"
      from "insert_data" tp 
      left join "tblEventTypes" tet on tp."wrEventTypeId" = tet."wrEventTypeId"
      left join "tblPlayerTypes" tpt on tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
       left join "tblBowlingTypes" tbt on tp."wrBowlingType" = tbt."wrBowlingTypeId"
+      LEFT JOIN "tblCountryCodes" tcc ON tp."wrCountryId" = tcc."wrId"
 
     `,
       {
@@ -258,11 +262,13 @@ const updatePlayerQuery = async (data, fastify, request) => {
         tp."wrCountryId" AS "countryId",
         tp."wrIsMen" AS "isMen",
         tp."wrBirthDate" AS "birthDate",
+        tcc."wrCountryName" AS "countryName",
         tp."wrBirthPlace" AS "birthPlace"
       from "update_data" tp 
       left join "tblEventTypes" tet on tp."wrEventTypeId" = tet."wrEventTypeId"
       left join "tblPlayerTypes" tpt on tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
       left join "tblBowlingTypes" tbt on tp."wrBowlingType" = tbt."wrBowlingTypeId"
+      LEFT JOIN "tblCountryCodes" tcc ON tp."wrCountryId" = tcc."wrId"
       `,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -588,11 +594,13 @@ const getAllPlayersByIdsQuery = async (whereCondition = undefined, fastify) => {
           tp."wrCountryId" AS "countryId",
           tp."wrIsMen" AS "isMen",
           tp."wrBirthDate" AS "birthDate",
+          tcc."wrCountryName" AS "countryName",
           tp."wrBirthPlace" AS "birthPlace"
       FROM "tblPlayers" tp
       LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
       LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
       LEFT JOIN "tblBowlingTypes" tbt ON tp."wrBowlingStyle" = tbt."wrBowlingTypeId"
+      LEFT JOIN "tblCountryCodes" tcc ON tp."wrCountryId" = tcc."wrId"
       ${whereCondition ? `WHERE ${whereCondition}` : 'WHERE tp."wrIsDeleted" = false'};`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -657,12 +665,14 @@ const getPlayerByIdQuery = async (whereCondition = undefined, request, fastify) 
     tp."wrTpId" AS "tpId",
     tp."wrIsMen" AS "isMen",
     tp."wrBirthDate" AS "birthDate",
+    tcc."wrCountryName" AS "countryName",
     tp."wrBirthPlace" AS "birthPlace"
   FROM 
     "tblPlayers" tp
     LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
     LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
     LEFT JOIN "tblBowlingTypes" tbt ON tp."wrBowlingType" = tbt."wrBowlingTypeId"
+    LEFT JOIN "tblCountryCodes" tcc ON tp."wrCountryId" = tcc."wrId"
     WHERE tp."wrIsDeleted" = false
    ${whereCondition ? `AND ${whereCondition}` : ""}`,
       {
@@ -719,11 +729,13 @@ const updateExchangePlayerQuery = async (data, fastify, request) => {
     tp."wrTpId" AS "tpId",
     tp."wrIsMen" AS "isMen",
     tp."wrBirthDate" AS "birthDate",
+    tcc."wrCountryName" AS "countryName",
     tp."wrBirthPlace" AS "birthPlace"
   FROM update_data tp
   LEFT JOIN "tblEventTypes" tet ON tp."wrEventTypeId" = tet."wrEventTypeId"
   LEFT JOIN "tblPlayerTypes" tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
   LEFT JOIN "tblBowlingTypes" tbt ON tp."wrBowlingStyle" = tbt."wrBowlingTypeId"
+  LEFT JOIN "tblCountryCodes" tcc ON tp."wrCountryId" = tcc."wrId"
   `,
   {
     type: fastify.db.QueryTypes.SELECT, // SELECT is correct here, since you're fetching updated + joined data
