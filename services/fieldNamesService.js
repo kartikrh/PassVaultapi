@@ -18,6 +18,12 @@ const fieldNamesService = async (data, fastify) => {
     }
     if (data.teamId) {
         teamName = global.tblTeams.find(e => e.teamId == data.teamId)?.teamName || null;
+        const originalTeamName = teamName?.trim() || '';
+        const cleanedTeamName = originalTeamName.replace(/\s*women\s*$/i, '').trim();
+        const displayTeamName = originalTeamName.toLowerCase().includes('women')
+            ? cleanedTeamName
+            : originalTeamName;
+        teamName = displayTeamName;
         teamLogo = global.tblTeams.find(e => e.teamId == data.teamId)?.imagePath || null;
     }
     if (data.playerId) {
