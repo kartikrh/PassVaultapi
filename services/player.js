@@ -540,7 +540,7 @@ const updatePlayerService = async (request, fastify) => {
                 request.body.playerImage = body.image;
                 request.body.playerId = body?.playerId;
                 request.body.jersey = teamData.jersey;
-                request.body.playerName = body.playerName,
+                request.body.playerName = body.playerName;
                 request.body.teamName = teamData.teamName;
                 request.body.teamPlayerId = teamPlayerData.teamPlayerId;
                 runMergePlayerImageJob(2, request, fastify)
@@ -1449,4 +1449,5 @@ module.exports = {
   getPlayerCompetitionListByIdService,
   getPlayerPlayInCommentaryListByIdService,
   getPlayerCreatedDetailsService,
+  playerImageChangeOnClientAPIService,
 };
