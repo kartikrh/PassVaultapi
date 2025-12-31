@@ -4,6 +4,7 @@ const {
   deleteTeamPlayerByTeamIdQuery,
   getTeamPlayerByTeamIdQuery,
   updateTeamPlayerHomeTeamQuery,
+  getHomeTeamPlayerQuery,
 } = require("../repository/TableTeamPlayer");
 const {
   insertTeamQuery,
@@ -32,6 +33,7 @@ const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { insertAutoImportDataService } = require("./autoImportData");
 const { errorLogger } = require("../utilities/logger");
 const { upTeamNameInComQuery } = require("../repository/TableCommentary");
+const { playerImageChangeOnClientAPIService } = require("../services/player");
 const allTeamsService = async () => {
   return global.tblTeams;
 };
@@ -224,15 +226,29 @@ const createTeamService = async (request, fastify) => {
 
             const playerData = global.tblPlayers.find((item) => item.playerId == playerID);
             if(request.body.jersey && playerData.image) {
-              mergeAndSaveImage({
-                jersey: request.body.jersey,
-                playerImage: playerData.image,
-                playerName: playerData.playerName,
-                teamName: request.body.teamName,
-                teamPlayerId: teamPlayerData.teamPlayerId,
-                commentaryPlayerId: null,
-                commentaryId: null,
-              }, fastify);
+              request.body.playerImage = playerData.image;
+              request.body.playerId = playerData?.playerId;
+              request.body.playerName = playerData.playerName;
+              request.body.teamPlayerId = teamPlayerData.teamPlayerId;
+              request.body.teamId = data.teamId;
+              runMergePlayerImageJob(2, request, fastify)
+                .catch(err => {
+                  errorLogger(
+                    fastify,
+                    err.message,
+                    "services/teams.js/createTeamService",
+                    null
+                  );
+                });
+              // mergeAndSaveImage({
+              //   jersey: request.body.jersey,
+              //   playerImage: playerData.image,
+              //   playerName: playerData.playerName,
+              //   teamName: request.body.teamName,
+              //   teamPlayerId: teamPlayerData.teamPlayerId,
+              //   commentaryPlayerId: null,
+              //   commentaryId: null,
+              // }, fastify);
             }
             }
           }
@@ -452,8 +468,12 @@ const updateTeamService = async (request, fastify) => {
   global.tblTeams[index] = body;
 
   if (request.body.playerId) {
+    let playerIds = []
     const teamPlayersData = await getTeamPlayerByTeamIdQuery(body.teamId, fastify, request);
       for (const teamData of teamPlayersData) {
+        if (teamData?.homeTeam == true) {
+          playerIds.push(teamData?.refPlayerId)
+        }
       if (teamData && teamData?.jerseyPlayerImage) {
         await removeImageFromServer({
           path: teamData.jerseyPlayerImage,
@@ -473,12 +493,14 @@ const updateTeamService = async (request, fastify) => {
           const playerID = hashArray[i].replace(/[\[\]"]/g, "");
           if (playerID !== "") {
             const playerTpId = global.tblPlayers.find(elem => elem.playerId == playerID);
+            const homeTeam = playerIds.includes(Number(playerID));
             const teamPlayerData = await insertTeamPlayerQuery(
               {
                 teamId: body.teamId,
                 refPlayerId: playerID,
                 tpId: playerTpId?.tpId ?? null,
                 userId: request.userTokenInfo.WrUserId,
+                homeTeam,
               },
               fastify,
               request
@@ -486,15 +508,31 @@ const updateTeamService = async (request, fastify) => {
 
             const playerData = global.tblPlayers.find((item) => item.playerId == playerID);
             if(body.jersey && playerData.image) {
-              mergeAndSaveImage({
-                jersey: body.jersey,
-                playerImage: playerData.image,
-                playerName: playerData.playerName,
-                teamName: body.teamName,
-                teamPlayerId: teamPlayerData.teamPlayerId,
-                commentaryPlayerId: null,
-                commentaryId: null,
-              }, fastify);
+              request.body.playerImage = playerData.image;
+              request.body.playerId = playerData?.playerId;
+              request.body.jersey = body.jersey;
+              request.body.playerName = playerData.playerName;
+              request.body.teamName = body.teamName;
+              request.body.teamPlayerId = teamPlayerData.teamPlayerId;
+              request.body.teamId = body.teamId;
+              runMergePlayerImageJob(2, request, fastify)
+                .catch(err => {
+                  errorLogger(
+                    fastify,
+                    err.message,
+                    "services/teams.js/createTeamService",
+                    null
+                  );
+                });
+              // mergeAndSaveImage({
+              //   jersey: body.jersey,
+              //   playerImage: playerData.image,
+              //   playerName: playerData.playerName,
+              //   teamName: body.teamName,
+              //   teamPlayerId: teamPlayerData.teamPlayerId,
+              //   commentaryPlayerId: null,
+              //   commentaryId: null,
+              // }, fastify);
             }
           }
         }
@@ -678,32 +716,15 @@ const getTeamPointService = async (request, fastify) => {
 
 
 const mergeTeamJerseyAndPlayerImageService = async (request, fastify) => {
-  for(const team of request.body.teamId){
-    const checkTeamId = global.tblTeams.find(
-      (item) => item.teamId === team
-    );
-  
-    if (!checkTeamId) {
-      continue;
-    }
-    const teamPlayersData = await getTeamPlayerByTeamIdQuery(team, fastify, request);
-    if (teamPlayersData.length > 0) {
-        for (const teamData of teamPlayersData) {
-          const playerData = global.tblPlayers.find((item) => item.playerId == teamData.refPlayerId);
-          if(checkTeamId?.jersey && playerData?.image) {
-            mergeAndSaveImage({
-              jersey: checkTeamId.jersey,
-              playerImage: playerData.image,
-              playerName: playerData.playerName,
-              teamName: checkTeamId.teamName,
-              teamPlayerId: teamData.teamPlayerId,
-              commentaryPlayerId: null,
-              commentaryId: null,
-            }, fastify);
-          }
-      }
-    }
-  }
+  runMergePlayerImageJob(1, request, fastify)
+    .catch(err => {
+      errorLogger(
+        fastify,
+        err.message,
+        "services/teamd.js/mergeTeamJerseyAndPlayerImageService",
+        request
+      );
+    });
   return "Player image(s) and Jersey image(s) merged successfully";
 };
 
@@ -878,6 +899,64 @@ const activeInactiveTeamService = async (request, fastify) => {
   global.tblTeams[index] = response[0][0];
 
   return `Team data updated successfully`;
+};
+
+const runMergePlayerImageJob = async (type, request, fastify) => {
+  const {
+    playerImage,
+    jersey,
+    playerName,
+    teamName,
+    teamPlayerId,
+    teamId,
+    playerId,
+  } = request.body;
+
+  if (type === 1) {
+    for(const team of request.body.teamId){
+    const checkTeamId = global.tblTeams.find(
+      (item) => item.teamId === team
+    );
+  
+    if (!checkTeamId) {
+      continue;
+    }
+    const teamPlayersData = await getTeamPlayerByTeamIdQuery(team, fastify, request);
+    if (teamPlayersData.length > 0) {
+        for (const teamData of teamPlayersData) {
+          const playerData = global.tblPlayers.find((item) => item.playerId == teamData.refPlayerId);
+          if(checkTeamId?.jersey && playerData?.image) {
+            await mergeAndSaveImage({
+              jersey: checkTeamId.jersey,
+              playerImage: playerData.image,
+              playerName: playerData.playerName,
+              teamName: checkTeamId.teamName,
+              teamPlayerId: teamData.teamPlayerId,
+              commentaryPlayerId: null,
+              commentaryId: null,
+            }, fastify);
+          }
+          if (teamData?.homeTeam == true) {
+            await playerImageChangeOnClientAPIService(teamData.refPlayerId, fastify);
+          }
+      }
+    }
+  }
+  } else {
+    await mergeAndSaveImage({
+      playerImage,
+      jersey,
+      playerName,
+      teamName,
+      teamPlayerId,
+      commentaryPlayerId: null,
+      commentaryId: null,
+    }, fastify);
+    const teamData = await getHomeTeamPlayerQuery({ playerId, teamId }, fastify, request);
+    if(teamData && teamData?.homeTeam == true) {
+      await playerImageChangeOnClientAPIService(playerId, fastify);
+    }
+  }
 };
 
 module.exports = {
