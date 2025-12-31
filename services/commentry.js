@@ -24158,20 +24158,22 @@ const matchImportService = async (data, fastify, request = null) => {
   }
 
   const commentaryId = checkCommentary?.commentaryId;
-  const getAutoUpdateCommentary = await getAllAutoUpdateCommentaryDataQuery(
-    `"wrCommentaryId" = '${commentaryId}'`,
-    fastify
-  );
-  const isExists = getAutoUpdateCommentary && getAutoUpdateCommentary.length > 0;
-  const insertDataInCommentaryUpdate = {
-    commentaryId: commentaryId,
-    offsetHour: null,
-    status: isExists ? autoUpdateCommentaryDataStatus.noupdate : autoUpdateCommentaryDataStatus.added,
-    message: `Commentary ${isExists ? "updated" : "added"}`,
-    responseData: entitySportMatchResponse,
-  };
+  if (commentaryId) {
+    const getAutoUpdateCommentary = await getAllAutoUpdateCommentaryDataQuery(
+      `"wrCommentaryId" = '${commentaryId}'`,
+      fastify
+    );
+    const isExists = getAutoUpdateCommentary && getAutoUpdateCommentary.length > 0;
+    const insertDataInCommentaryUpdate = {
+      commentaryId: commentaryId,
+      offsetHour: null,
+      status: isExists ? autoUpdateCommentaryDataStatus.noupdate : autoUpdateCommentaryDataStatus.added,
+      message: `Commentary ${isExists ? "updated" : "added"}`,
+      responseData: entitySportMatchResponse,
+    };
 
-  await insertAutoUpdateCommentaryDataQuery(insertDataInCommentaryUpdate, fastify);
+    await insertAutoUpdateCommentaryDataQuery(insertDataInCommentaryUpdate, fastify);
+  }
 
   return checkCommentary;
 }
