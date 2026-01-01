@@ -60,7 +60,13 @@ const createCompetitionStatisticsService = async (request, fastify) => {
 
     const getCompetitionStatisticsTypeData = global.tblCompetitionStatisticsType.find(tcst => tcst.entityEnum === competitionStatisticsTypeEnum);
     if (!getCompetitionStatisticsTypeData) {
-        throw new Error("Invalid Competition Statistics Type Enum");
+        errorLogger(
+            fastify,
+            `Invalid Competition Statistics Type Enum ${competitionStatisticsTypeEnum} of competition id ${competitionId}`,
+            "/services/competitionStatistics.js/createCompetitionStatisticsService - getCompetitionStatisticsTypeData",
+            request
+        );
+        throw new Error(`Invalid Competition Statistics Type Enum ${competitionStatisticsTypeEnum} of competition id ${competitionId}`);
     }
 
     let competitionStatisticsTypeData = null, categoryId = null;
@@ -71,12 +77,30 @@ const createCompetitionStatisticsService = async (request, fastify) => {
     }
 
     if (!competitionStatisticsTypeData) {
-        throw new Error("Competition Statistics Type Enum not found");
+        errorLogger(
+            fastify,
+            `Competition Statistics Type data of competition id ${competitionId} not found`,
+            "/services/competitionStatistics.js/createCompetitionStatisticsService - competitionStatisticsTypeData",
+            request
+        );
+        throw new Error(`Competition Statistics Type data of competition id ${competitionId} not found`);
     }
 
     if ((categoryId === "batting" || categoryId === "bowling") && !playerId) {
+        errorLogger(
+            fastify,
+            `Player Id is required for competition id ${competitionId}`,
+            "/services/competitionStatistics.js/createCompetitionStatisticsService - playerId",
+            request
+        );
         throw new Error("Player Id is required");
     } else if (categoryId === "team" && !teamId) {
+        errorLogger(
+            fastify,
+            `Team Id is required for competition id ${competitionId}`,
+            "/services/competitionStatistics.js/createCompetitionStatisticsService - teamId",
+            request
+        );
         throw new Error("Team Id is required");
     }
 
@@ -92,11 +116,23 @@ const createCompetitionStatisticsService = async (request, fastify) => {
 
         const getPlayer = global.tblPlayers.find(tp => tp.playerId === playerId);
         if (!getPlayer) {
+        errorLogger(
+            fastify,
+            `Player not found in competition id ${competitionId}`,
+            "/services/competitionStatistics.js/createCompetitionStatisticsService - getPlayer",
+            request
+        );
             throw new Error("Player not found");
         }
     } else if (categoryId === "team") {
         const getTeam = global.tblTeams.find(tp => tp.teamId === teamId);
         if (!getTeam) {
+        errorLogger(
+            fastify,
+            `Team not found in competition id ${competitionId}`,
+            "/services/competitionStatistics.js/createCompetitionStatisticsService - getTeam",
+            request
+        );
             throw new Error("Team not found");
         }
     }
@@ -152,7 +188,7 @@ const updateCompetitionStatisticsService = async (request, fastify) => {
 
     const getCompetitionStatisticsType = global.tblCompetitionStatisticsType.find(tcst => tcst.entityEnum === competitionStatisticsTypeEnum);
     if (!getCompetitionStatisticsType) {
-        throw new Error("Invalid Competition Statistics Type Enum");
+        throw new Error(`Invalid Competition Statistics Type Enum ${competitionStatisticsTypeEnum} of competition id ${competitionId}`);
     }
 
     const isChange = (
