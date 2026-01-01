@@ -2223,12 +2223,13 @@ const onPlayerChangeService = (data) => {
 const checkWinner = async (data) => {
   const { isWonByInnings, bowlTeam, batTeam, target, commentaryDetails } = data;
   let winMsg, winTeam, isBatTeamWon;
+  let isMatchTie;
   if (isWonByInnings) {
     isBatTeamWon = false;
     winTeam = bowlTeam;
     winMsg = `${bowlTeam.shortName} won by innings and ${isWonByInnings} runs.`;
   } else {
-    const isMatchTie = batTeam?.teamScore === target - 1;
+    isMatchTie = batTeam?.teamScore === target - 1;
     isBatTeamWon = batTeam?.teamScore >= target;
     winTeam = isBatTeamWon ? batTeam : bowlTeam;
     winMsg = isMatchTie
