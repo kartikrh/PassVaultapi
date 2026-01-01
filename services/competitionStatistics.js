@@ -313,20 +313,16 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
 
                         if (res?.team?.tid && !getTeam) {
                             getTeam = await teamImportService({
-                                tid: res.team.tid,
-                                fastify,
-                                request
-                            });
+                                tid: res.team.tid
+                            }, fastify, request);
                         }
 
                         if (res?.player?.pid) {
                             getPlayer = global.tblPlayers.find(tp => tp.tpId === res?.player?.pid);
                             if (!getPlayer) {
                                 getPlayer = await playerImportService({
-                                    pid: res.player.pid,
-                                    fastify,
-                                    request
-                                });
+                                    pid: res.player.pid
+                                }, fastify, request);
                             }
                         }
 
