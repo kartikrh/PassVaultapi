@@ -3100,6 +3100,50 @@ const cancelEventAPIService = async (request, fastify) => {
   await cancelComQuery({ commentaryId, status: commentaryStatus.CANCELLED }, fastify, request);
   global.tblCommentaries[index].commentaryStatus = commentaryStatus.CANCELLED;
 
+  callDataProvider(
+    {
+      commentaryId: commentaryId,
+      serviceType: ServiceType.dataProviderAPI,
+      moduleType: APIEndpointModuleType.commentaryUpdate,
+      type: "close",
+    },
+    fastify
+  ).catch((err) => {
+    console.log("call data provider console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/closeEventMarketByCIdQuery",
+      request
+    );
+  });
+  const cData = await getMatchDataByCId(
+    {
+      commentaryId: commentaryId,
+    },
+    request,
+    fastify
+  );
+
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.commentaryUpdate,
+      data: cData,
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("call client api console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/closeEventMarketByCIdQuery",
+      request
+    );
+  });
+
+
   // if (
   //    global.tblCommentaries[index]?.isPredictMarket == true
   //  ) {

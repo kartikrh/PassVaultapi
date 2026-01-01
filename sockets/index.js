@@ -616,11 +616,11 @@ const connectClients2 = async (fastify, clientSocketId = undefined)=>{
         });
       })
     )
-  } catch (error) {
+  } catch (err) {
     console.error("connectClients2 error:", err);
     errorLogger(
       fastify,
-      error.message,
+      err.message,
       "ERROR --> socketIo.js/connectClients2",
       null
     );
