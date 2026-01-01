@@ -2,6 +2,8 @@ const { insertCompetitionStatisticsQuery, updateCompetitionStatisticsByIdQuery, 
 const { CompetitionStatisticsType, getKeyAndValueKey, callEntitySportAPI, RefType, competitionMatchTypeEnum } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 const { insertAutoImportDataService } = require("./autoImportData");
+const { playerImportService } = require("./player");
+const { teamImportService } = require("./teams");
 
 const getAllCompetitionStatisticsService = async (request, fastify) => {
     const { isActive, eventTypeId, competitionId, matchTypeId, competitionStatisticsTypeEnum } = request.body;
@@ -60,7 +62,7 @@ const createCompetitionStatisticsService = async (request, fastify) => {
 
     const getCompetitionStatisticsTypeData = global.tblCompetitionStatisticsType.find(tcst => tcst.entityEnum === competitionStatisticsTypeEnum);
     if (!getCompetitionStatisticsTypeData) {
-        throw new Error("Invalid Competition Statistics Type Enum");
+        throw new Error(`Invalid Competition Statistics Type Enum ${competitionStatisticsTypeEnum} of competition id ${competitionId}`);
     }
 
     let competitionStatisticsTypeData = null, categoryId = null;
@@ -71,19 +73,19 @@ const createCompetitionStatisticsService = async (request, fastify) => {
     }
 
     if (!competitionStatisticsTypeData) {
-        throw new Error("Competition Statistics Type Enum not found");
+        throw new Error(`Competition Statistics Type data of competition id ${competitionId} not found`);
     }
 
     if ((categoryId === "batting" || categoryId === "bowling") && !playerId) {
-        throw new Error("Player Id is required");
+        throw new Error(`Player Id is required for competition id ${competitionId}`);
     } else if (categoryId === "team" && !teamId) {
-        throw new Error("Team Id is required");
+        throw new Error(`Team Id is required for competition id ${competitionId}`);
     }
 
     if ((categoryId === "batting" || categoryId === "bowling")) {
         const getTeam = global.tblTeams.find(tt => tt.teamId === teamId);
         if (!getTeam) {
-            throw new Error(`Team ${teamId} not found for player ${playerId}`);
+            throw new Error(`Team not found for player ${playerId}`);
         }
         request.body = {
             ...request.body,
@@ -92,12 +94,12 @@ const createCompetitionStatisticsService = async (request, fastify) => {
 
         const getPlayer = global.tblPlayers.find(tp => tp.playerId === playerId);
         if (!getPlayer) {
-            throw new Error("Player not found");
+            throw new Error(`Player not found in competition id ${competitionId}`);
         }
     } else if (categoryId === "team") {
         const getTeam = global.tblTeams.find(tp => tp.teamId === teamId);
         if (!getTeam) {
-            throw new Error("Team not found");
+            throw new Error(`Team not found in competition id ${competitionId}`);
         }
     }
 
@@ -152,7 +154,7 @@ const updateCompetitionStatisticsService = async (request, fastify) => {
 
     const getCompetitionStatisticsType = global.tblCompetitionStatisticsType.find(tcst => tcst.entityEnum === competitionStatisticsTypeEnum);
     if (!getCompetitionStatisticsType) {
-        throw new Error("Invalid Competition Statistics Type Enum");
+        throw new Error(`Invalid Competition Statistics Type Enum ${competitionStatisticsTypeEnum} of competition id ${competitionId}`);
     }
 
     const isChange = (
@@ -306,15 +308,28 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
                         const res = response[index];
                         const displayOrder = index + 1;
 
-                        const getTeam = global.tblTeams.find(tt => tt.tpId === res?.team?.tid);
-                        const getPlayer = global.tblPlayers.find(tp => tp.tpId === res?.player?.pid);
+                        let getTeam = global.tblTeams.find(tt => tt.tpId === res?.team?.tid);
+                        let getPlayer = global.tblPlayers.find(tp => tp.tpId === res?.player?.pid);
 
-                        let categoryId = null;
+                        if (res?.team?.tid && !getTeam) {
+                            getTeam = await teamImportService({
+                                tid: res.team.tid
+                            }, fastify, request);
+                        }
+
+                        if (res?.player?.pid) {
+                            getPlayer = global.tblPlayers.find(tp => tp.tpId === res?.player?.pid);
+                            if (!getPlayer) {
+                                getPlayer = await playerImportService({
+                                    pid: res.player.pid
+                                }, fastify, request);
+                            }
+                        }
+
                         let competitionStatisticsTypeData = null;
                         for (let category of ["batting", "bowling", "team"]) {
                             competitionStatisticsTypeData = Object.values(CompetitionStatisticsType[category]).find(stat => stat.enum === statType.entityEnum);
                             if (competitionStatisticsTypeData) {
-                                categoryId = category;
                                 break;
                             }
                         }
@@ -338,7 +353,7 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
                                 fastify,
                                 error.message,
                                 "/services/competitionStatistics.js/importCompetitionstatisticsService - createCompetitionStatisticsService",
-                                request
+                                { ...request, body }
                             );
                         }
                     }
