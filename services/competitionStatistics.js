@@ -60,12 +60,6 @@ const createCompetitionStatisticsService = async (request, fastify) => {
 
     const getCompetitionStatisticsTypeData = global.tblCompetitionStatisticsType.find(tcst => tcst.entityEnum === competitionStatisticsTypeEnum);
     if (!getCompetitionStatisticsTypeData) {
-        errorLogger(
-            fastify,
-            `Invalid Competition Statistics Type Enum ${competitionStatisticsTypeEnum} of competition id ${competitionId}`,
-            "/services/competitionStatistics.js/createCompetitionStatisticsService - getCompetitionStatisticsTypeData",
-            request
-        );
         throw new Error(`Invalid Competition Statistics Type Enum ${competitionStatisticsTypeEnum} of competition id ${competitionId}`);
     }
 
@@ -77,42 +71,18 @@ const createCompetitionStatisticsService = async (request, fastify) => {
     }
 
     if (!competitionStatisticsTypeData) {
-        errorLogger(
-            fastify,
-            `Competition Statistics Type data of competition id ${competitionId} not found`,
-            "/services/competitionStatistics.js/createCompetitionStatisticsService - competitionStatisticsTypeData",
-            request
-        );
         throw new Error(`Competition Statistics Type data of competition id ${competitionId} not found`);
     }
 
     if ((categoryId === "batting" || categoryId === "bowling") && !playerId) {
-        errorLogger(
-            fastify,
-            `Player Id is required for competition id ${competitionId}`,
-            "/services/competitionStatistics.js/createCompetitionStatisticsService - playerId",
-            request
-        );
         throw new Error(`Player Id is required for competition id ${competitionId}`);
     } else if (categoryId === "team" && !teamId) {
-        errorLogger(
-            fastify,
-            `Team Id is required for competition id ${competitionId}`,
-            "/services/competitionStatistics.js/createCompetitionStatisticsService - teamId",
-            request
-        );
         throw new Error(`Team Id is required for competition id ${competitionId}`);
     }
 
     if ((categoryId === "batting" || categoryId === "bowling")) {
         const getTeam = global.tblTeams.find(tt => tt.teamId === teamId);
         if (!getTeam) {
-            errorLogger(
-                fastify,
-                `Team not found for player id ${playerId}`,
-                "/services/competitionStatistics.js/createCompetitionStatisticsService - getTeam",
-                request
-            );
             throw new Error(`Team not found for player ${playerId}`);
         }
         request.body = {
@@ -122,23 +92,11 @@ const createCompetitionStatisticsService = async (request, fastify) => {
 
         const getPlayer = global.tblPlayers.find(tp => tp.playerId === playerId);
         if (!getPlayer) {
-            errorLogger(
-                fastify,
-                `Player not found in competition id ${competitionId}`,
-                "/services/competitionStatistics.js/createCompetitionStatisticsService - getPlayer",
-                request
-            );
             throw new Error(`Player not found in competition id ${competitionId}`);
         }
     } else if (categoryId === "team") {
         const getTeam = global.tblTeams.find(tp => tp.teamId === teamId);
         if (!getTeam) {
-            errorLogger(
-                fastify,
-                `Team not found in competition id ${competitionId}`,
-                "/services/competitionStatistics.js/createCompetitionStatisticsService - getTeam",
-                request
-            );
             throw new Error(`Team not found in competition id ${competitionId}`);
         }
     }
@@ -380,7 +338,7 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
                                 fastify,
                                 error.message,
                                 "/services/competitionStatistics.js/importCompetitionstatisticsService - createCompetitionStatisticsService",
-                                request
+                                { ...request, body }
                             );
                         }
                     }
