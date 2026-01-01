@@ -165,7 +165,14 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
 
           client.on("disconnect", (reason) => {
             isConnected = false;
-            global.socketIo.emit("clientdisconnect", `Client socket disconnected from ${urlConfig.url}, reason: ${reason} at ${new Date().toISOString()}`);
+            const message = `Client socket disconnected from ${urlConfig.url}, reason: ${reason} at ${new Date().toISOString()}`;
+            global.socketIo.emit("clientdisconnect", message);
+            errorLogger(
+              fastify,
+              message,
+              "Client Socket --> sockets/index.js/connectClients - disconnected",
+              null
+            );
 
             // Log disconnect reason for debugging
             if (reason === "transport close") {
