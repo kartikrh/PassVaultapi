@@ -2,6 +2,8 @@ const { insertCompetitionStatisticsQuery, updateCompetitionStatisticsByIdQuery, 
 const { CompetitionStatisticsType, getKeyAndValueKey, callEntitySportAPI, RefType, competitionMatchTypeEnum } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 const { insertAutoImportDataService } = require("./autoImportData");
+const { playerImportService } = require("./player");
+const { teamImportService } = require("./teams");
 
 const getAllCompetitionStatisticsService = async (request, fastify) => {
     const { isActive, eventTypeId, competitionId, matchTypeId, competitionStatisticsTypeEnum } = request.body;
@@ -306,15 +308,32 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
                         const res = response[index];
                         const displayOrder = index + 1;
 
-                        const getTeam = global.tblTeams.find(tt => tt.tpId === res?.team?.tid);
-                        const getPlayer = global.tblPlayers.find(tp => tp.tpId === res?.player?.pid);
+                        let getTeam = global.tblTeams.find(tt => tt.tpId === res?.team?.tid);
+                        let getPlayer = global.tblPlayers.find(tp => tp.tpId === res?.player?.pid);
 
-                        let categoryId = null;
+                        if (res?.team?.tid && !getTeam) {
+                            getTeam = await teamImportService({
+                                tid: res.team.tid,
+                                fastify,
+                                request
+                            });
+                        }
+
+                        if (res?.player?.pid) {
+                            getPlayer = global.tblPlayers.find(tp => tp.tpId === res?.player?.pid);
+                            if (!getPlayer) {
+                                getPlayer = await playerImportService({
+                                    pid: res.player.pid,
+                                    fastify,
+                                    request
+                                });
+                            }
+                        }
+
                         let competitionStatisticsTypeData = null;
                         for (let category of ["batting", "bowling", "team"]) {
                             competitionStatisticsTypeData = Object.values(CompetitionStatisticsType[category]).find(stat => stat.enum === statType.entityEnum);
                             if (competitionStatisticsTypeData) {
-                                categoryId = category;
                                 break;
                             }
                         }
