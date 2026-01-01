@@ -248,7 +248,7 @@ const generateWicket = (data) => {
     batterId: currentWicket.batterId,
     batterName: currentWicket.batterName,
     fieldPlayerId: currentWicket.fieldPlayerId,
-    fieldPlayerName: currentWicket.fieldPlayerId,
+    fieldPlayerName: currentWicket.fieldPlayerName,
     overId: currentOver.overId,
     overCount: currentOver.over,
     commentaryBallByBallId: currentBall.commentaryBallByBallId || 0,
