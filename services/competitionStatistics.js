@@ -93,7 +93,7 @@ const createCompetitionStatisticsService = async (request, fastify) => {
             "/services/competitionStatistics.js/createCompetitionStatisticsService - playerId",
             request
         );
-        throw new Error("Player Id is required");
+        throw new Error(`Player Id is required for competition id ${competitionId}`);
     } else if (categoryId === "team" && !teamId) {
         errorLogger(
             fastify,
@@ -101,13 +101,19 @@ const createCompetitionStatisticsService = async (request, fastify) => {
             "/services/competitionStatistics.js/createCompetitionStatisticsService - teamId",
             request
         );
-        throw new Error("Team Id is required");
+        throw new Error(`Team Id is required for competition id ${competitionId}`);
     }
 
     if ((categoryId === "batting" || categoryId === "bowling")) {
         const getTeam = global.tblTeams.find(tt => tt.teamId === teamId);
         if (!getTeam) {
-            throw new Error(`Team ${teamId} not found for player ${playerId}`);
+            errorLogger(
+                fastify,
+                `Team not found for player id ${playerId}`,
+                "/services/competitionStatistics.js/createCompetitionStatisticsService - getTeam",
+                request
+            );
+            throw new Error(`Team not found for player ${playerId}`);
         }
         request.body = {
             ...request.body,
@@ -116,24 +122,24 @@ const createCompetitionStatisticsService = async (request, fastify) => {
 
         const getPlayer = global.tblPlayers.find(tp => tp.playerId === playerId);
         if (!getPlayer) {
-        errorLogger(
-            fastify,
-            `Player not found in competition id ${competitionId}`,
-            "/services/competitionStatistics.js/createCompetitionStatisticsService - getPlayer",
-            request
-        );
-            throw new Error("Player not found");
+            errorLogger(
+                fastify,
+                `Player not found in competition id ${competitionId}`,
+                "/services/competitionStatistics.js/createCompetitionStatisticsService - getPlayer",
+                request
+            );
+            throw new Error(`Player not found in competition id ${competitionId}`);
         }
     } else if (categoryId === "team") {
         const getTeam = global.tblTeams.find(tp => tp.teamId === teamId);
         if (!getTeam) {
-        errorLogger(
-            fastify,
-            `Team not found in competition id ${competitionId}`,
-            "/services/competitionStatistics.js/createCompetitionStatisticsService - getTeam",
-            request
-        );
-            throw new Error("Team not found");
+            errorLogger(
+                fastify,
+                `Team not found in competition id ${competitionId}`,
+                "/services/competitionStatistics.js/createCompetitionStatisticsService - getTeam",
+                request
+            );
+            throw new Error(`Team not found in competition id ${competitionId}`);
         }
     }
 
