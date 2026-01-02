@@ -208,8 +208,25 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       client.on("connect_error", (error) => {
         console.log(`Entity Connection error ${urlConfig.url}: ${error.message || error} at ${new Date().toISOString()}`);
       });
+      client.on("entitywebsocketdisconnect", (message) => {
+        const newMessage = `Entity web socket disconnected, code: ${message.code} ${message?.reason !== "" ? `reason: ${message.reason}`: ""} at ${new Date().toISOString()}`;
+        global.socketIo.emit("entitywebsocketdisconnect", newMessage);
+        errorLogger(
+          fastify,
+          newMessage,
+          "Entity Web Socket --> socketIo.js/entitySports/connectEntitySport - entitywebsocketdisconnect",
+          null
+        );
+      })
       client.on("disconnect", (reason) => {
-        console.log(`Entity Disconnected from ${urlConfig.url}, reason: ${reason} at ${new Date().toISOString()}`);
+        const message = `Entity socket disconnected from ${urlConfig.url}, reason: ${reason} at ${new Date().toISOString()}`;
+        global.socketIo.emit("entitydisconnect", message);
+        errorLogger(
+          fastify,
+          message,
+          "Entity Socket --> socketIo.js/entitySports/connectEntitySport - disconnect",
+          null
+        );
         
         // Log disconnect reason for debugging
         if (reason === "transport close") {

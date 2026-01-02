@@ -2187,31 +2187,50 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             continue;
           }
           // update wicketType and batsman_id
-          let wtEnum = etWicketObj[c.dismissal.toLowerCase()] || wicketTypeObj.BOLD;
+          let wtEnum = etWicketObj[c.dismissal.toLowerCase().replace("runout", "run out").trim()] || wicketTypeObj.BOLD;
+          const extractedNames = c?.how_out?.match(/\b[A-Z]{1,3}\s[A-Z][a-z]+/g) || [];
+          const fielders = response?.players?.filter(
+            item => extractedNames.includes(item.short_name)
+          ) || [];
+          const fielder1 = fielders.find(
+            pl => pl?.pid && pl.pid != c?.bowler_id
+          );
+          const commFielder = fielder1?.pid ?? c?.bowler_id;
+
           w.wicketType = wtEnum;
+          w.fieldPlayerId = playerTpIdObj[commFielder]?.commentaryPlayerId;
+          w.fieldPlayerName = playerTpIdObj[commFielder]?.playerName;
+          w.fieldPlayer2Id = playerTpIdObj[c?.bowler_id]?.commentaryPlayerId;
+          w.fieldPlayer2Name = playerTpIdObj[c?.bowler_id]?.playerName;
+
+          let batsmanId = playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId;
           let upBall ={
             ...ball,
-            ballWicketType : wtEnum
+            ballWicketType: wtEnum,
+            batStrikeId: batsmanId,
+            ballPlayerId: batsmanId,
+            ballFielderId1: w.fieldPlayerId,
+            ballFielderId2: w.fieldPlayer2Id,
           }
-          let batsmanId = playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId;
-          if(w.batterId != batsmanId){
+          // if(w.batterId != batsmanId){
            
             playersMap[c.wicket_batsman_id] = {
-              ...playersMap[c.wicket_batsman_id],
+              ...playerTpIdObj[c.wicket_batsman_id],
               isBatterOut: true,
               isBatterRetir: false,
               wicketType: wtEnum,
               bowlerId: playerTpIdObj[c.bowler_id]?.commentaryPlayerId,
-              fielderId1: w.fielder1,
-              fielderId2: w.fielder2,
+              fielderId1: w.fieldPlayerId,
+              fielderId2: w.fieldPlayer2Id,
               isPlay: null,
               onStrike: null,
               // batBall: (playersMap[c.batsman_id]?.batBall || 0) + 1,
               batDotBall: (playersMap[c.wicket_batsman_id]?.batDotBall || 0) + 1,
             }
             // change old player
-            let oldBatsman = global.tblCommentaryPlayers.find((i)=> i.commentaryPlayerId == w.batterId && i.commentaryId == comDetails.commentaryId)
-            if(!playersMap[oldBatsman.tpId]){
+          if (c.wicket_batsman_id != c.batsman_id) {
+            let oldBatsman = global.tblCommentaryPlayers.find((i) => i.commentaryPlayerId == w.batterId && i.commentaryId == comDetails.commentaryId)
+            if (!playersMap[oldBatsman.tpId]) {
               playersMap[oldBatsman.tpId] = {
                 ...playerTpIdObj[oldBatsman.tpId],
               }
@@ -2221,15 +2240,18 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               isBatterOut: false,
               isBatterRetir: null,
               wicketType: null,
-              bowlerId: null, 
-              batDotBall : playersMap[oldBatsman.tpId]?.batDotBall - 1,
+              bowlerId: null,
+              bowlerId: null,
+              fielderId1: null,
+              fielderId2: null,
+              batDotBall: playersMap[oldBatsman.tpId]?.batDotBall - 1,
             }
             w.batterId = playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId;
             w.batterName = playerTpIdObj[c.wicket_batsman_id]?.playerName;
-            upBall.batStrikeId = batsmanId;
-            upBall.ballPlayerId = batsmanId;
           }
-          ballByBall.push(upBall)
+            
+          // }
+          ballbyball.push(upBall)
           wickets.push(w);
         }
       }
