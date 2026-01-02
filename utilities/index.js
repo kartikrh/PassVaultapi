@@ -525,10 +525,18 @@ const callDataProvider = async (data, fastify) => {
             dataTosend = {
               commentaryId: data.commentaryId,
             };
-          } else {
+          } else if(data.type == "close"){
+            dataTosend = await getCommentaryDetailByIdQuery(data, fastify);
+            if(dataTosend){
+              dataTosend = {
+                ...dataTosend,
+                status : commentaryStatus.COMPLETED
+              }
+            }
+           
+          } else{
             dataTosend = await getCommentaryDetailByIdQuery(data, fastify);
           }
-
           dataTosend = {
             ...dataTosend,
             type: data.type,
