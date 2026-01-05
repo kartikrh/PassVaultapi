@@ -2337,7 +2337,17 @@ const inningChangeStateService = async (fastify, comDetails) => {
     commentaryStatus: commentaryStatus.INNINGCHANGE,
     displayStatus: "Innings Break",
   };
+  const teams = global.tblCommentaryTeams.filter((i) =>i.commentaryId == comDetails.commentaryId &&
+  i.currentInnings == comDetails.currentInnings)
+  let matchType = global.tblMatchTypes.find((i)=> i.matchTypeId == comDetails.matchTypeId)
+  let bowlTeam = teams.find((i)=> i.teamStatus == 2)
+  // check if currentInning need to change if test match
+  let isLastInning = comDetails.currentInnings >= matchType.noOfIningsPerSide;
 
+  if(bowlTeam.isBattingComplete == true && !isLastInning){
+    commentaryUpdates.currentInnings = comDetails.currentInnings + 1;
+    commentaryUpdates.isEndInnings = true;
+  }
   await syncEntitySportCommentaryService({
     commentaryId: comDetails.commentaryId,
     commentaryDetails: {
@@ -2354,21 +2364,29 @@ const onInningChangeService = async (data, fastify, comDetails) => {
   const {response} = data;
   const teams = global.tblCommentaryTeams.filter((i) =>i.commentaryId == comDetails.commentaryId &&
   i.currentInnings == comDetails.currentInnings)  
+  let matchType = global.tblMatchTypes.find((i)=> i.matchTypeId == comDetails.matchTypeId)
   // chekc if one of the team bat is completed
-  let oneTeamWon = teams.find((i)=>i.isBattingComplete == true);
-  if(oneTeamWon){
-    errorLogger(
-      fastify,          
-      "Inning already Changed again got inning break status",
-      "services/entitySport.js/onInningChangeService",
-      null,
-      data
-    )
-    return true;
-  } 
+  if(matchType.noOfIningsPerSide == 1){
+    let oneTeamWon = teams.find((i)=>i.isBattingComplete == true);
+    if(oneTeamWon){
+      errorLogger(
+        fastify,          
+        "Inning already Changed again got inning break status",
+        "services/entitySport.js/onInningChangeService",
+        null,
+        data
+      )
+      return true;
+    } 
+  }
   let batTeam = teams.find((i) => i.teamStatus ==1)
   let bowlTeam = teams.find((i)=> i.teamStatus == 2)
-  let matchType = global.tblMatchTypes.find((i)=> i.matchTypeId == comDetails.matchTypeId)
+
+  if((!batTeam || !bowlTeam) && matchType.noOfIningsPerSide > 1){
+    await multiInningChangeService(data,fastify, comDetails)
+    return true;
+  }
+
   const runDifference =
     (batTeam?.teamScore || 0) +
     (batTeam?.teamLeadRuns || 0) -
@@ -2389,7 +2407,7 @@ const onInningChangeService = async (data, fastify, comDetails) => {
       { ...batTeam, isBattingComplete: true, teamStatus: 2, subInning: 2 },
       {
         ...bowlTeam,
-        isBattingComplete: false,
+        // isBattingComplete: false,
         teamStatus: 1,
         teamLeadRuns: leadRuns,
         teamTrialRuns: trialRuns,
@@ -2492,6 +2510,122 @@ const matchCompleteService = async (data , fastify,comDetails) =>{
   return true
 
 }
+const multiInningChangeService = async (data, fastify, comDetails) => {
+  const {response} = data;
+  const liveBattingTeamId = response?.live?.live_inning?.batting_team_id ?? null;
+  let batTeam = global.tblCommentaryTeams.find((i) =>i.commentaryId == comDetails.commentaryId &&
+    i.tpId == liveBattingTeamId &&
+    i.currentInnings == comDetails.currentInnings);
+  let previousInning = comDetails.currentInnings - 1;
+  let bowlTeam = global.tblCommentaryTeams.find((i) =>i.commentaryId == comDetails.commentaryId &&
+    i.teamId != batTeam.teamId &&
+    i.currentInnings == comDetails.currentInnings);
+  let PbatTeam = global.tblCommentaryTeams.find((i) =>i.commentaryId == comDetails.commentaryId &&
+    i.teamStatus == 1 &&
+    i.currentInnings == previousInning);
+  let PbowlTeam = global.tblCommentaryTeams.find((i) =>i.commentaryId == comDetails.commentaryId &&
+    i.teamStatus == 2 &&
+    i.currentInnings == previousInning);
+  const runDifference =
+      (PbatTeam?.teamScore || 0) +
+      (PbatTeam?.teamLeadRuns || 0) -
+      (PbatTeam?.teamTrialRuns || 0);
+
+  if(runDifference > 0){
+    if(PbatTeam.teamId == batTeam.teamId){
+      batTeam.teamLeadRuns = runDifference;
+    }
+    else if(PbowlTeam.teamId == batTeam.teamId){
+      batTeam.teamTrialRuns = runDifference;
+    }
+  }
+  else {
+    if(PbatTeam.teamId == batTeam.teamId){
+      batTeam.teamTrialRuns = runDifference * -1;
+    }
+    else if(PbowlTeam.teamId == batTeam.teamId){
+      batTeam.teamLeadRuns = runDifference * -1;
+    }
+  }
+  let teamUpdates = [
+    {
+      ...batTeam,
+      teamStatus : 1,
+      teamBattingOrder : 1 + (previousInning * 2),
+      subInning :  1 + (previousInning * 2),
+    },
+    {
+      ...PbatTeam,
+      isBattingComplete : true,
+    },
+    {
+      ...bowlTeam,
+      teamStatus : 2, 
+      teamBattingOrder : 2 + (previousInning * 2),
+      subInning : 2 + (previousInning * 2),
+    }
+  ]
+
+
+   let playerToUpdate = global.tblCommentaryPlayers.filter(
+    (item) =>
+      item.commentaryId == comDetails.commentaryId &&
+      item.currentInnings == previousInning &&
+      (item.onStrike == true || item.isPlay == true)
+  );
+   playerToUpdate = playerToUpdate.map((item) => {
+    return {
+      ...item,
+      isPlay: null,
+      onStrike: null,
+    };
+  });
+
+  let partnership = global.tblCommentaryPartnership
+    .filter(
+      (item) =>
+        item?.commentaryId === comDetails.commentaryId &&
+        item.currentInnings == previousInning
+    )
+    .sort(
+      (a, b) => b.commentaryPartnershipId - a.commentaryPartnershipId
+    )[0];
+
+    if(partnership && partnership.isActive == true){
+      partnership = {
+        ...partnership,
+        isActive: false,
+      };
+      await upActivePartQuery(part, fastify);
+      let partIndex = global.tblCommentaryPartnership.findIndex(
+        (item) => item.commentaryPartnershipId == part.commentaryPartnershipId
+      );
+      if(partIndex != -1){
+        global.tblCommentaryPartnership[partIndex].isActive = part.isActive
+      }
+    }
+
+  let commentaryUpdates = {
+    commentaryStatus : commentaryStatus.INNINGCHANGE,
+    displayStatus : "Innings"
+  }
+
+  await syncEntitySportCommentaryService({
+    commentaryId: comDetails.commentaryId,
+    commentaryDetails: {
+      ...comDetails,
+      ...commentaryUpdates
+    },
+    commentaryTeams: teamUpdates,
+    commentaryPlayers: playerToUpdate,
+    isCallPredict: false,
+    commentaryPartnership : partnership ? [partnership] : []
+  },fastify)
+
+
+  return true;
+}
+
 // const handleStoreBall = async (data, fastify, comDetails, request) => {
 //   const { response, battingTeam } = data;
 //   let com = response.live.commentaries;
