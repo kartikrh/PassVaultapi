@@ -36,6 +36,7 @@ const getAllCommentaryBattingHistory = async (fastify, whereCondition = null) =>
                 tcpbh."wrFastest100Balls" as "fastest100Balls",
                 tc."wrEventDate" as "eventDate",
                 tc."wrEventNo" as "eventNo",
+                ticr."wrRank" as "rank",
                 CASE 
                   WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tc."wrTeam2Id"
                   WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tc."wrTeam1Id"
@@ -58,6 +59,7 @@ const getAllCommentaryBattingHistory = async (fastify, whereCondition = null) =>
             LEFT JOIN "tblCommentaryPlayers" AS tcp ON tcp."wrCommentaryPlayerId" = tcpbh."wrCommentaryPlayerId" AND tcp."wrIsDelete" = false
             LEFT JOIN "tblTeams" AS tvs1 ON tvs1."wrTeamId" = tc."wrTeam1Id" AND tvs1."wrIsDeleted" = false
             LEFT JOIN "tblTeams" AS tvs2 ON tvs2."wrTeamId" = tc."wrTeam2Id" AND tvs2."wrIsDeleted" = false
+            LEFT JOIN "tblICCRanking" AS ticr ON ticr."wrMatchTypeId" = tcpbh."wrMatchTypeId" AND ticr."wrPlayerId" = tcpbh."wrPlayerId"
             ${whereCondition ? `WHERE ${whereCondition}` : ""};`,
       { type: fastify.db.QueryTypes.SELECT }
     );
@@ -107,6 +109,7 @@ const getAllCommentaryBowlingHistory = async (fastify, whereCondition = null) =>
             tcpbh."wrExpensiveOverRuns" as "expensiveOverRuns",
             tc."wrEventDate" as "eventDate",
             tc."wrEventNo" as "eventNo",
+            ticr."wrRank" as "rank",
             CASE 
               WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tc."wrTeam2Id"
               WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tc."wrTeam1Id"
@@ -129,6 +132,7 @@ const getAllCommentaryBowlingHistory = async (fastify, whereCondition = null) =>
             LEFT JOIN "tblCommentaryPlayers" AS tcp ON tcp."wrCommentaryPlayerId" = tcpbh."wrCommentaryPlayerId" AND tcp."wrIsDelete" = false
             LEFT JOIN "tblTeams" AS tvs1 ON tvs1."wrTeamId" = tc."wrTeam1Id" AND tvs1."wrIsDeleted" = false
             LEFT JOIN "tblTeams" AS tvs2 ON tvs2."wrTeamId" = tc."wrTeam2Id" AND tvs2."wrIsDeleted" = false
+            LEFT JOIN "tblICCRanking" AS ticr ON ticr."wrMatchTypeId" = tcpbh."wrMatchTypeId" AND ticr."wrPlayerId" = tcpbh."wrPlayerId"
             ${whereCondition ? `WHERE ${whereCondition}` : ""};`,
       { type: fastify.db.QueryTypes.SELECT }
     );

@@ -107,10 +107,12 @@ const getAllPlayersBattingHistory = async (playerId, fastify) => {
                   tpbh."wrCreatedAt" as "createdAt",
                   tpbh."wrOutCount" as "outCount",
                   tpbh."wrFastest50Balls" as "fastest50Balls",
-                  tpbh."wrFastest100Balls" as "fastest100Balls"
+                  tpbh."wrFastest100Balls" as "fastest100Balls",
+                  ticr."wrRank" as "rank"
               FROM "tblMatchTypes" AS tmt
               LEFT JOIN 
               "tblPlayerBattingHistory" AS tpbh ON tpbh."wrMatchTypeId" = tmt."wrMatchTypeId"
+              LEFT JOIN "tblICCRanking" AS ticr ON ticr."wrMatchTypeId" = tmt."wrMatchTypeId" AND ticr."wrPlayerId" = tpbh."wrPlayerId"
 	          AND tpbh."wrPlayerId" = $1
             WHERE tmt."wrIsHistory" = true AND tmt."wrIsDeleted" = false;`,
       {
@@ -154,10 +156,12 @@ const getAllPlayerBowlingHistory = async (playerId, fastify) => {
               tpbh."wrCreatedAt" as "createdAt",
               tpbh."wrOverCount" as "overCount",
               tpbh."wrHattrickCount" as "hattrickCount",
-              tpbh."wrExpensiveOverRuns" as "expensiveOverRuns"
+              tpbh."wrExpensiveOverRuns" as "expensiveOverRuns",
+              ticr."wrRank" as "rank"
               FROM "tblMatchTypes" AS tmt
               LEFT JOIN 
               "tblPlayerBowlingHistory" AS tpbh ON tpbh."wrMatchTypeId" = tmt."wrMatchTypeId"
+              LEFT JOIN "tblICCRanking" AS ticr ON ticr."wrMatchTypeId" = tmt."wrMatchTypeId" AND ticr."wrPlayerId" = tpbh."wrPlayerId"
 	          AND tpbh."wrPlayerId" = $1
             WHERE tmt."wrIsHistory" = true AND tmt."wrIsDeleted" = false;`,
       {
