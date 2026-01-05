@@ -63,6 +63,8 @@ const allteamByEventTypeIdService = async (request, fastify) => {
           }
         }
       }
+    } else {
+      throw new Error(`Competition with id ${competitionId} not found`);
     }
   }
 
