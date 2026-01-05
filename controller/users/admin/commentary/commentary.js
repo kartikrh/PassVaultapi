@@ -385,7 +385,7 @@ const getScheduleMatchList = async (request, reply, fastify) => {
 const getCompleteMatchList = async (request, reply, fastify) => {
   try {
     let commentaryData = global.tblCommentaries.filter(
-      (item) => item.commentaryStatus == 4 && item.isActive == true && item.isTest == false
+      (item) => [4, 10].includes(item.commentaryStatus) && item.isActive == true && item.isTest == false
     );
     const body = {
       commentaryData,

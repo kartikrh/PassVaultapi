@@ -8708,9 +8708,9 @@ const getMatchDataByCId = async (data, request, fastify) => {
   let rno = 0;
   let type = null;
   let status = com.commentaryStatus;
-  if (status != 4 && status != 1) {
+  if (status != 4 && status != 1 && status != 10) {
     type = "live";
-  } else if (status == 4) {
+  } else if (status == 4 || status == 10) {
     type = "completed";
   } else if (status == 1) {
     type = "scheduled";
@@ -13747,7 +13747,7 @@ const notiConfigContentReplaceService = async (
       global?.clientSocketIo.length > 0
     ) {
       global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("notificationSend", { ...data, title, content ,eventId : commentary.eventRefId ?? null});
+        socket.client.emit("notificationSend", { ...data, title, content ,eventId : commentary.eventRefId ?? null, commentaryId: commentary?.commentaryId ?? null});
       });
       let notificationData = {
         title: commentary.eventName,
@@ -14080,30 +14080,30 @@ const saveComVirtual = async (request, fastify) => {
       //   });
       // }
       // if (previousCommentaryStatus != statusToUpdate) {
-      //   const cData = await getMatchDataByCId({
-      //     commentaryId: commentaryId,
-      //   },
-      //     request,
-      //     fastify
-      //   );
+        const cData = await getMatchDataByCId({
+          commentaryId: commentaryId,
+        },
+          request,
+          fastify
+        );
 
-      //   callClientAPI(
-      //     {
-      //       serviceType: ServiceType.clientAPI,
-      //       moduleType: APIEndpointModuleType.commentaryUpdate,
-      //       data: cData
-      //     },
-      //     request,
-      //     fastify
-      //   ).catch((err) => {
-      //     console.log("call client api console", err);
-      //     errorLogger(
-      //       fastify,
-      //       err.message,
-      //       "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-      //       request
-      //     );
-      //   });
+        callClientAPI(
+          {
+            serviceType: ServiceType.clientAPI,
+            moduleType: APIEndpointModuleType.commentaryUpdate,
+            data: cData
+          },
+          request,
+          fastify
+        ).catch((err) => {
+          console.log("call client api console in saveCommVirtual", err);
+          errorLogger(
+            fastify,
+            err.message,
+            "ERROR --> services/commentary.js/saveComVirtual",
+            request
+          );
+        });
       // }
       // if (previousCommentaryStatus != statusToUpdate && statusToUpdate == 4) {
       //   // await notiConfigContentReplaceService(EventName.EVENTCOMPLETED, commentaryData.commentaryId, request, fastify)

@@ -46,14 +46,24 @@ const allteamByEventTypeIdService = async (request, fastify) => {
     result = result.filter((item) => item.eventTypeId === eventTypeId);
   } 
 
-  if(competitionId != undefined && competitionId != 0) {
-    const competitionResult = global.tblTeamCompetition.filter(
-      (item) => item.refCompetitionId === competitionId
-    );
-    const competitionTeamIds = new Set(competitionResult.map(item => item.teamId));
-    result = result.filter(
-      (item) => competitionTeamIds.has(item.teamId)
-    );
+  if (competitionId != undefined && competitionId != 0) {
+    const competition = global.tblCompetitions.find(cp => cp.competitionId === competitionId);
+    if (competition) {
+      const commentary = global.tblCommentaries.filter(cm => cm.competitionId === competitionId);
+      if (commentary && commentary.length > 0) {
+        const commentaryIds = commentary.map(cid => cid.commentaryId);
+        if (commentaryIds && commentaryIds.length > 0) {
+          const commentaryTeams = global.tblCommentaryTeams.filter(cmt => commentaryIds.includes(cmt.commentaryId));
+          if (commentaryTeams && commentaryTeams.length > 0) {
+            const commentaryTeamIds = commentaryTeams.map(ctid => ctid.teamId);
+            if (commentaryTeamIds && commentaryTeamIds.length > 0) {
+              const uniqueCommentaryIds = [...new Set(commentaryTeamIds)];
+              result = result.filter(item => uniqueCommentaryIds.includes(item.teamId))
+            }
+          }
+        }
+      }
+    }
   }
 
   const updatedTeams = result.map((item) => {
