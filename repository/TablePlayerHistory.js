@@ -110,10 +110,8 @@ const getAllPlayersBattingHistory = async (playerId, fastify) => {
                   tpbh."wrFastest100Balls" as "fastest100Balls",
                   ticr."wrRank" as "rank"
               FROM "tblMatchTypes" AS tmt
-              LEFT JOIN 
-              "tblPlayerBattingHistory" AS tpbh ON tpbh."wrMatchTypeId" = tmt."wrMatchTypeId"
-              LEFT JOIN "tblICCRanking" AS ticr ON ticr."wrMatchTypeId" = tmt."wrMatchTypeId" AND ticr."wrPlayerId" = tpbh."wrPlayerId"
-	          AND tpbh."wrPlayerId" = $1
+              LEFT JOIN "tblPlayerBattingHistory" AS tpbh ON tpbh."wrMatchTypeId" = tmt."wrMatchTypeId" AND tpbh."wrPlayerId" = $1
+              LEFT JOIN "tblICCRanking" AS ticr ON ticr."wrMatchTypeId" = tmt."wrMatchTypeId" AND ticr."wrPlayerId" = $1 AND ticr."wrIsDeleted" = FALSE
             WHERE tmt."wrIsHistory" = true AND tmt."wrIsDeleted" = false;`,
       {
         type: fastify.db.QueryTypes.SELECT,
@@ -159,10 +157,8 @@ const getAllPlayerBowlingHistory = async (playerId, fastify) => {
               tpbh."wrExpensiveOverRuns" as "expensiveOverRuns",
               ticr."wrRank" as "rank"
               FROM "tblMatchTypes" AS tmt
-              LEFT JOIN 
-              "tblPlayerBowlingHistory" AS tpbh ON tpbh."wrMatchTypeId" = tmt."wrMatchTypeId"
-              LEFT JOIN "tblICCRanking" AS ticr ON ticr."wrMatchTypeId" = tmt."wrMatchTypeId" AND ticr."wrPlayerId" = tpbh."wrPlayerId"
-	          AND tpbh."wrPlayerId" = $1
+              LEFT JOIN "tblPlayerBowlingHistory" AS tpbh ON tpbh."wrMatchTypeId" = tmt."wrMatchTypeId" AND tpbh."wrPlayerId" = $1
+              LEFT JOIN "tblICCRanking" AS ticr ON ticr."wrMatchTypeId" = tmt."wrMatchTypeId" AND ticr."wrPlayerId" = $1 AND ticr."wrIsDeleted" = FALSE
             WHERE tmt."wrIsHistory" = true AND tmt."wrIsDeleted" = false;`,
       {
         type: fastify.db.QueryTypes.SELECT,

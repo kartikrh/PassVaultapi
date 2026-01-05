@@ -1316,9 +1316,8 @@ const getPlayerCommentaryHistoryByPlayerIdService = async (request, fastify) => 
 
   const playerTeamData = await playerByIdService(request, fastify);
 
-  const whereCondition = `tcpbh."wrPlayerId" = ${request.body.playerId} AND tcpbh."wrIsDeleted" = false`
-  const playerBatHistory = await getAllCommentaryBattingHistory(fastify, whereCondition);
-  const playerBallHistory = await getAllCommentaryBowlingHistory(fastify, whereCondition);
+  const playerBatHistory = await getAllCommentaryBattingHistory(fastify, playerId);
+  const playerBallHistory = await getAllCommentaryBowlingHistory(fastify, playerId);
 
   return { player: playerTeamData, playerBatHistory, playerBallHistory };
 }
