@@ -59,9 +59,17 @@ const allteamByEventTypeIdService = async (request, fastify) => {
             if (commentaryTeamIds && commentaryTeamIds.length > 0) {
               const uniqueCommentaryIds = [...new Set(commentaryTeamIds)];
               result = result.filter(item => uniqueCommentaryIds.includes(item.teamId))
+            } else {
+              result = [];
             }
+          } else {
+            result = [];
           }
+        } else {
+          result = [];
         }
+      } else {
+        result = [];
       }
     } else {
       throw new Error(`Competition with id ${competitionId} not found`);
