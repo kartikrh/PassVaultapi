@@ -2187,11 +2187,26 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             continue;
           }
           // update wicketType and batsman_id
-          let wtEnum = etWicketObj[c.dismissal.toLowerCase().replace("runout", "run out").trim()] || wicketTypeObj.BOLD;
-          const extractedNames = c?.how_out?.match(/\b[A-Z]{1,3}\s[A-Z][a-z]+/g) || [];
-          const fielders = response?.players?.filter(
-            item => extractedNames.includes(item.short_name)
-          ) || [];
+          let dismissal = c.dismissal.toLowerCase().trim();
+          let wtEnum = etWicketObj[dismissal] || wicketTypeObj.BOLD;
+          const normalizeText = str =>
+            str
+              ?.toLowerCase()
+              .replace(/\s+/g, ' ')
+              .trim();
+
+          const howOut = normalizeText(c?.how_out || '');
+
+          const fielders = response?.players?.filter(player => {
+            const shortName = normalizeText(player.short_name);
+            return (
+              howOut.includes(shortName)
+            );
+          }) || [];
+          // const extractedNames = c?.how_out?.match(/\b[A-Z]{1,3}\s[A-Z][a-z]+/g) || [];
+          // const fielders = response?.players?.filter(
+          //   item => extractedNames.includes(item.short_name)
+          // ) || [];
           const fielder1 = fielders.find(
             pl => pl?.pid && pl.pid != c?.bowler_id
           );
