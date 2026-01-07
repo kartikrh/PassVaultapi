@@ -7,7 +7,10 @@ const {
   updateCommPlayerBowlingHistoryQuery,
   getAllCommentaryBattingHistory,
   getAllCommentaryBowlingHistory,
+  getAllCommentaryBattingHistoryQueryForClient,
+  getAllCommentaryBowlingHistoryQueryForClient,
 } = require("../repository/TableCommPlayerHistory");
+const { playerByIdService } = require("./player");
 
 const getAllCommentaryPlayerHistoryService = async (request, fastify) => {
   const playerId = request.body.playerId;
@@ -135,6 +138,21 @@ const deleteCommentaryBowlingHistoryService = async (request, fastify) => {
   return `Commentary Player Bowling History data deleted successfully`;
 };
 
+const getCommentaryPlayerHistoryByPlayerIdForClientService = async (request, fastify) => {
+  const playerId = request.body.playerId;
+  const player = global.tblPlayers.find(tp => tp.playerId === playerId);
+  if (!player) {
+    return `Player with id ${playerId} not found`;
+  }
+
+  const playerTeamData = await playerByIdService(request, fastify);
+
+  const playerBatHistory = await getAllCommentaryBattingHistoryQueryForClient(fastify, playerId);
+  const playerBallHistory = await getAllCommentaryBowlingHistoryQueryForClient(fastify, playerId);
+
+  return { player: playerTeamData, playerBatHistory, playerBallHistory };
+}
+
 module.exports = {
     getAllCommentaryPlayerHistoryService,
     getCommentaryPlayerHistoryService,
@@ -142,4 +160,5 @@ module.exports = {
     updateCommPlayerBowlHistoryService,
     deleteCommentaryBattingHistoryService,
     deleteCommentaryBowlingHistoryService,
+    getCommentaryPlayerHistoryByPlayerIdForClientService
 };
