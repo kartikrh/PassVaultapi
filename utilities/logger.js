@@ -5,7 +5,7 @@ const { getCurrentDateTime } = require('./datetime');
 
 const errorLogger = async (fastify, errMessage, errStack, request , data = null) => {
   try {
-    return true;
+    
     return await fastify.db.query(
       `INSERT INTO "tblErrorLogs" ("wrErrMessage", "wrErrStack", "wrDomain","wrUserId","wrUserIp", "wrCreatedDate" ,"wrApi", "wrRequestBody", "wrData") VALUES ($1, $2, $3, $4, $5, $6 ,$7,$8 ,$9)`,
       {
