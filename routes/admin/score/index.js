@@ -80,8 +80,9 @@ const { clientApiWhitelabels, getHideEvent } = require("../../../controller/user
 const { deleteClient, deleteClientByEncrypt } = require("../../../controller/users/admin/client");
 const { AllICCRankings } = require("../../../controller/users/admin/iccRanking/index");
 const { getPlayerById } = require("../../../controller/users/admin/teamsAndPlayer/players");
-const { getPlayerHistoryByPlayerId, getPlayerCommentaryHistoryByPlayerId } = require("../../../controller/users/admin/playerHistory");
 const { getCompetitionStatisticsByCompetitionId } = require("../../../controller/users/admin/competitionStatistics");
+const { getPlayerHistoryByPlayerIdForClient } = require("../../../controller/users/admin/playerHistory");
+const { getCommentaryPlayerHistoryByPlayerIdForClient } = require("../../../controller/users/admin/commPlayerHistory");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/getscore", {
@@ -439,11 +440,11 @@ module.exports = async (fastify, opts) => {
   });
   fastify.post("/getPlayerHistoryByPlayerId", {
     schema: Score.getPlayerByPlayerId.schema,
-    handler: (request, reply) => getPlayerHistoryByPlayerId(request, reply, fastify),
+    handler: (request, reply) => getPlayerHistoryByPlayerIdForClient(request, reply, fastify),
   });
   fastify.post("/getPlayerCommentaryHistoryByPlayerId", {
     schema: Score.getPlayerByPlayerId.schema,
-    handler: (request, reply) => getPlayerCommentaryHistoryByPlayerId(request, reply, fastify),
+    handler: (request, reply) => getCommentaryPlayerHistoryByPlayerIdForClient(request, reply, fastify),
   });
   fastify.post("/getCompetitionStatisticsById", {
     schema: Score.getByCompetitionId.schema,
