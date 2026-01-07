@@ -2087,7 +2087,7 @@ const etWicketObj = {
   "bowled" : wicketTypeObj.BOLD,
   "lbw" : wicketTypeObj.LBW,
   "stumped" : wicketTypeObj.STUMP,
-  "run out" : wicketTypeObj.RUN_OUT,
+  "runout" : wicketTypeObj.RUN_OUT,
   "hit wicket" : wicketTypeObj.HIT_WICKET,
   "retired hurt" : wicketTypeObj.RETIRED_OUT,
   "timed out" : wicketTypeObj.TIMED_OUT,
