@@ -2522,6 +2522,41 @@ const matchCompleteService = async (data , fastify,comDetails) =>{
     isCallPredict: false,
   },fastify)
 
+
+   if (comDetails && comDetails?.isTest === false) {
+    try {
+      const result = await fastify.db.query(
+        `SELECT * FROM fn_insert_auto_update_player_statistics_by_commentary(:commentaryId, :createdBy)`,
+        {
+          replacements: {
+            commentaryId: comDetails.commentaryId,
+            createdBy: -4
+          },
+          type: fastify.db.QueryTypes.SELECT
+        }
+      );
+
+      if (result && result.length > 0) {
+        const notInsertedCPIds = result.filter(r => r.status === "skipped")?.map(r => r.player_id);
+        if (notInsertedCPIds.length > 0) {
+          errorLogger(
+            fastify,
+            `CommentaryId: ${comDetails.commentaryId} and PlayerId: ${notInsertedCPIds.join(", ")} skipped`,
+            "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - fn_insert_auto_update_player_statistics_by_commentary",
+            null
+          );
+        }
+      }
+    } catch (error) {
+      errorLogger(
+        fastify,
+        `Error in fn_insert_auto_update_player_statistics_by_commentary for CommentaryId: ${comDetails.commentaryId} => ${error.message}`,
+        "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket - fn_insert_auto_update_player_statistics_by_commentary",
+        null
+      );
+    }
+  
+  }
   return true
 
 }
