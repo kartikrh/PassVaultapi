@@ -235,7 +235,7 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
 
           client.io.on("reconnect", (attemptNumber) => {
             console.log(`Reconnected to ${urlConfig.url} after ${attemptNumber} attempts at ${new Date().toISOString()}`);
-            global.socketIo.emit("clientsocketreconnected", `Reconnected to ${urlConfig.url} after ${attemptNumber} attempts at ${new Date().toISOString()}`);
+            global.socketIo.emit("clientsocketreconnect", `Reconnected to ${urlConfig.url} after ${attemptNumber} attempts at ${new Date().toISOString()}`);
             isConnected = true;
             reconnectAttempts = 0;
 
