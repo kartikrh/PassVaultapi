@@ -1536,7 +1536,7 @@ const ICCMatchType = {
   men: {
     odis: matchTypesEntity.ODI,
     tests: matchTypesEntity.TEST,
-    t20s: matchTypesEntity.T20,
+    t20s: matchTypesEntity.T20I,
     odi: matchTypesEntity.ODI,
     t20i: matchTypesEntity.T20I,
     t20: matchTypesEntity.T20,
