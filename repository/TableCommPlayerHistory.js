@@ -953,7 +953,7 @@ const getAllCommentaryBattingHistoryQueryForClient = async (fastify, playerId = 
       LEFT JOIN "tblCommentaryPlayers" AS tcp ON tcp."wrCommentaryPlayerId" = tcpbh."wrCommentaryPlayerId" AND tcp."wrIsDelete" = false
       LEFT JOIN "tblTeams" AS tvs1 ON tvs1."wrTeamId" = tc."wrTeam1Id" AND tvs1."wrIsDeleted" = false
       LEFT JOIN "tblTeams" AS tvs2 ON tvs2."wrTeamId" = tc."wrTeam2Id" AND tvs2."wrIsDeleted" = false
-      ${playerId ? `LEFT JOIN "tblICCRanking" AS ticr ON ticr."wrMatchTypeId" = tcpbh."wrMatchTypeId" AND ticr."wrIsDeleted" = FALSE AND ticr."wrPlayerId" = $1 AND ticr."wrPlayerTypeId" = 1` : ''}
+      ${playerId ? `LEFT JOIN "tblICCRanking" AS ticr ON ticr."wrMatchTypeId" = tcpbh."wrMatchTypeId" AND ticr."wrIsDeleted" = FALSE AND ticr."wrPlayerId" = $1 AND ticr."wrPlayerTypeId" = 1 AND ticr."wrTeamId" = tcp."wrTeamId"` : ''}
       WHERE tcpbh."wrIsDeleted" = FALSE ${playerId ? `AND tcpbh."wrPlayerId" = $1` : ''}
     `;
 
@@ -1030,7 +1030,7 @@ const getAllCommentaryBowlingHistoryQueryForClient = async (fastify, playerId = 
       LEFT JOIN "tblCommentaryPlayers" AS tcp ON tcp."wrCommentaryPlayerId" = tcpbh."wrCommentaryPlayerId" AND tcp."wrIsDelete" = false
       LEFT JOIN "tblTeams" AS tvs1 ON tvs1."wrTeamId" = tc."wrTeam1Id" AND tvs1."wrIsDeleted" = false
       LEFT JOIN "tblTeams" AS tvs2 ON tvs2."wrTeamId" = tc."wrTeam2Id" AND tvs2."wrIsDeleted" = false
-      ${playerId ? `LEFT JOIN "tblICCRanking" AS ticr ON ticr."wrMatchTypeId" = tcpbh."wrMatchTypeId" AND ticr."wrIsDeleted" = FALSE AND ticr."wrPlayerId" = $1 AND ticr."wrPlayerTypeId" = 2` : ''}
+      ${playerId ? `LEFT JOIN "tblICCRanking" AS ticr ON ticr."wrMatchTypeId" = tcpbh."wrMatchTypeId" AND ticr."wrIsDeleted" = FALSE AND ticr."wrPlayerId" = $1 AND ticr."wrPlayerTypeId" = 2 AND ticr."wrTeamId" = tcp."wrTeamId"` : ''}
         WHERE tcpbh."wrIsDeleted" = FALSE ${playerId ? `AND tcpbh."wrPlayerId" = $1` : ''}
       `;
 
