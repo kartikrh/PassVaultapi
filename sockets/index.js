@@ -95,7 +95,7 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
 
             isConnected = true;
             reconnectAttempts = 0;
-            global.socketIo.emit("clientsocketconnected", `Connected to ${urlConfig.url} at ${new Date().toISOString()}`);
+            global.socketIo.emit("clientsocketconnect", `Connected to ${urlConfig.url} at ${new Date().toISOString()}`);
             console.log(`Connected to ${urlConfig.url} at ${new Date().toISOString()}`);
 
             updateClientSocketStatusQuery({
@@ -167,7 +167,7 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
           client.on("disconnect", (reason) => {
             isConnected = false;
             const message = `Client socket disconnected from ${urlConfig.url}, reason: ${reason} at ${new Date().toISOString()}`;
-            global.socketIo.emit("clientdisconnect", message);
+            global.socketIo.emit("clientsocketdisconnect", message);
             errorLogger(
               fastify,
               message,
