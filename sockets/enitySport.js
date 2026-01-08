@@ -136,6 +136,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
 
       // Attach event listeners for connection events
       client.on("connect", () => {
+        global.socketIo.emit("entitysocketconnected", `Connected to entitySport - ${urlConfig.url}`);
         console.log(`Connected to entitySport - ${urlConfig.url}`);
         updateEntitySocketStatusQuery(
           {
