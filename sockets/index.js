@@ -89,7 +89,15 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
 
           client.on("connect", () => {
             if (isConnected) {
-              console.log(`Already connected to ${urlConfig.url}, ignoring duplicate connect event`);
+              const emitMessage = `Already connected to ${urlConfig.url}, ignoring duplicate connect event`;
+              global.socketIo.emit("clientsocketconnect", emitMessage);
+              errorLogger(
+                fastify,
+                emitMessage,
+                "Client Socket --> sockets/index.js/connectClients - clientsocketconnect",
+                null
+              );
+              console.log(emitMessage);
               return;
             }
 
