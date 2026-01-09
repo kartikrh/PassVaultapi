@@ -15105,7 +15105,7 @@ const saveComVirtual = async (request, fastify) => {
           request
         );
       });
-      let timeOut = global.tblConfigs.find((i)=>i.key == configConstants.CARDDELAY) || 0;
+      let timeOut = global.tblConfigs.find((i)=>i.key == configConstants.CARDDELAY)?.value || 0;
       if (isOverComplete == true) {
         setTimeout(() => {
           global.clientSocketIo.forEach((socket) => {
