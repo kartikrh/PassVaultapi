@@ -141,7 +141,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
         errorLogger(
           fastify,
           emitMessage,
-          "Client Socket --> sockets/index.js/connectClients - clientsocketconnect",
+          "Entity Socket --> sockets/entitySport.js/connectEntitySport - entitysocketconnect",
           null
         );
         console.log(emitMessage);
