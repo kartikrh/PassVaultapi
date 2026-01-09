@@ -86,9 +86,11 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
           // Attach event listeners for connection events
           let isConnected = false;
           let reconnectAttempts = 0;
+          let isReconnecting = false; // Track if we're in a reconnection flow
 
           client.on("connect", () => {
-            if (isConnected) {
+            // If already connected and not in reconnection flow, it's a duplicate
+            if (isConnected && !isReconnecting) {
               const emitMessage = `Already connected to ${urlConfig.url}, ignoring duplicate connect event`;
               global.socketIo.emit("clientsocketconnect", emitMessage);
               errorLogger(
@@ -101,9 +103,17 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
               return;
             }
 
+            // Determine if this is a reconnection or initial connection
+            const wasReconnecting = isReconnecting;
             isConnected = true;
+            isReconnecting = false; // Reset reconnection flag
             reconnectAttempts = 0;
-            const emitMessage = `Connected to ${urlConfig.url} at ${new Date().toISOString()}`;
+            
+            // Log connection message - distinguish between initial and reconnection
+            const emitMessage = wasReconnecting 
+              ? `Reconnected to ${urlConfig.url} at ${new Date().toISOString()}`
+              : `Connected to ${urlConfig.url} at ${new Date().toISOString()}`;
+            
             global.socketIo.emit("clientsocketconnect", emitMessage);
             errorLogger(
               fastify,
@@ -181,6 +191,10 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
 
           client.on("disconnect", (reason) => {
             isConnected = false;
+            // Set reconnection flag if it's not a manual disconnect
+            if (reason !== "io client disconnect" && reason !== "io server disconnect") {
+              isReconnecting = true;
+            }
             const message = `Client socket disconnected from ${urlConfig.url}, reason: ${reason} at ${new Date().toISOString()}`;
             global.socketIo.emit("clientsocketdisconnect", message);
             errorLogger(
@@ -233,8 +247,16 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
           });
 
           client.io.on("reconnect_attempt", (attemptNumber) => {
+            isReconnecting = true; // Mark that we're attempting to reconnect
             reconnectAttempts = attemptNumber;
-            console.log(`Reconnect attempt ${urlConfig.url}: ${attemptNumber} at ${new Date().toISOString()}`);
+            const message = `Reconnect attempt ${urlConfig.url}: ${attemptNumber} at ${new Date().toISOString()}`;
+            console.log(message);
+            errorLogger(
+              fastify,
+              message,
+              "Client Socket --> sockets/index.js/connectClients - reconnect_attempt",
+              null
+            );
             updateReconnectCountQuery({
               clientSocketId: urlConfig.clientSocketId,
               reconnectCount: attemptNumber
@@ -249,13 +271,14 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
           });
 
           client.io.on("reconnect", (attemptNumber) => {
+            isReconnecting = true; // Ensure flag is set before connect event
             const emitMessage = `Reconnected to ${urlConfig.url} after ${attemptNumber} attempts at ${new Date().toISOString()}`;
             console.log(emitMessage);
             global.socketIo.emit("clientsocketreconnect", emitMessage);
             errorLogger(
               fastify,
               emitMessage,
-              "Client Socket --> sockets/index.js/connectClients - clientsocketconnect",
+              "Client Socket --> sockets/index.js/connectClients - clientsocketreconnect",
               null
             );
             isConnected = true;
@@ -303,7 +326,15 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
           });
 
           client.io.on("reconnect_failed", () => {
-            console.log(`Reconnect failed for ${urlConfig.url} after all attempts at ${new Date().toISOString()}`);
+            isReconnecting = false; // Reset flag since reconnection failed
+            const message = `Reconnect failed for ${urlConfig.url} after all attempts at ${new Date().toISOString()}`;
+            console.log(message);
+            errorLogger(
+              fastify,
+              message,
+              "Client Socket --> sockets/index.js/connectClients - reconnect_failed",
+              null
+            );
             isConnected = false;
             // Clean up entry when all reconnection attempts are exhausted
             global.clientSocketIo = global.clientSocketIo.filter(
