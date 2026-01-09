@@ -1,5 +1,9 @@
 
 global.clientSocketIo = [];
+// Global variables for tracking missed messages when socket is disconnected
+global.clientMissedMessages = global.clientMissedMessages || {};
+global.knownClientSocketUrls = global.knownClientSocketUrls || [];
+
 const { io } = require("socket.io-client");
 const { clientSocketActionType, clientSocketStatus } = require("../utilities");
 const { updateClientSocketStatusQuery, updateReconnectCountQuery } = require("../repository/TableClientSocket");
@@ -105,6 +109,11 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
               return;
             }
 
+            // Track known client socket URLs
+            if (!global.knownClientSocketUrls.includes(urlConfig.url)) {
+              global.knownClientSocketUrls.push(urlConfig.url);
+            }
+
             // Determine if this is a reconnection or initial connection
             const wasReconnecting = isReconnecting;
             isConnected = true;
@@ -143,6 +152,21 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
             let index = global.tblClientSocket.findIndex((c) => c.clientSocketId === urlConfig.clientSocketId);
             if (index !== -1) {
               global.tblClientSocket[index].status = clientSocketStatus.connected;
+            }
+
+            // Flush missed messages for this URL when reconnected
+            if (global.clientMissedMessages[urlConfig.url] && global.clientMissedMessages[urlConfig.url].length > 0) {
+              console.log(`Flushing ${global.clientMissedMessages[urlConfig.url].length} missed messages for ${urlConfig.url}`);
+              for (const msg of global.clientMissedMessages[urlConfig.url]) {
+                try {
+                  if (client.connected) {
+                    client.emit(msg.eventName, msg.data);
+                  }
+                } catch (err) {
+                  console.error(`Error flushing missed message for ${urlConfig.url}:`, err);
+                }
+              }
+              global.clientMissedMessages[urlConfig.url] = [];
             }
             if (socketObj && socketObj?.isUpdateView == true) {
               const intervalMinutes = Number(socketObj.updateInterval) || 5;
@@ -320,6 +344,21 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
                 ...urlConfig,
                 client,
               };
+            }
+
+            // Flush missed messages for this URL when reconnected
+            if (global.clientMissedMessages[urlConfig.url] && global.clientMissedMessages[urlConfig.url].length > 0) {
+              console.log(`Flushing ${global.clientMissedMessages[urlConfig.url].length} missed messages for ${urlConfig.url} on reconnect`);
+              for (const msg of global.clientMissedMessages[urlConfig.url]) {
+                try {
+                  if (client.connected) {
+                    client.emit(msg.eventName, msg.data);
+                  }
+                } catch (err) {
+                  console.error(`Error flushing missed message for ${urlConfig.url} on reconnect:`, err);
+                }
+              }
+              global.clientMissedMessages[urlConfig.url] = [];
             }
           });
 

@@ -15,6 +15,7 @@ const {
 } = require("../repository/TableCommentary");
 const { sendNotification } = require("../WebPushHandler");
 const { entityConstant } = require("./entityConst");
+const { sendToClientSockets } = require("./clientSocketUtils");
 const {
   AllTeamPlayersQuery,
   AllTeamPlayersNullImageQuery,
@@ -756,16 +757,7 @@ const sendNotificationByType = async (data, request, fastify) => {
         break;
     }
     // saveNotificationLogsQuery(data,request, fastify);
-    if (
-      global?.clientSocketIo !== undefined &&
-      global?.clientSocketIo.length > 0
-    ) {
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit(eventName, data);
-      });
-    } else {
-      console.log("Client Socket Not Found");
-    }
+    sendToClientSockets(eventName, data);
 
     return true;
   } catch (error) {

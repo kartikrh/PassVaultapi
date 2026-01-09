@@ -25,6 +25,7 @@ const { playerMarketQuery } = require("../repository/TableEventMarkets")
 const { playerBattingHistSummarycalculationService } = require("./playerHistory")
 const commentary = require("../routes/admin/commentary")
 const { upActivePartQuery } = require("../repository/entitySportCom")
+const { sendToClientSockets } = require("../utilities/clientSocketUtils");
 
 
 const saveTeamsService = async (request , fastify)=>{
@@ -454,9 +455,7 @@ const setEntityCom2Service = async (request , fastify) =>{
                 })),
               });
           }
-          global.clientSocketIo.forEach((socket) => {
-            socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-          });
+          sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
       }
       if(comDetails.commentaryStatus == commentaryStatus.TOSSDONE){
         // check if getting same data from entity
