@@ -95,8 +95,15 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
 
             isConnected = true;
             reconnectAttempts = 0;
-            global.socketIo.emit("clientsocketconnect", `Connected to ${urlConfig.url} at ${new Date().toISOString()}`);
-            console.log(`Connected to ${urlConfig.url} at ${new Date().toISOString()}`);
+            const emitMessage = `Connected to ${urlConfig.url} at ${new Date().toISOString()}`;
+            global.socketIo.emit("clientsocketconnect", emitMessage);
+            errorLogger(
+              fastify,
+              emitMessage,
+              "Client Socket --> sockets/index.js/connectClients - clientsocketconnect",
+              null
+            );
+            console.log(emitMessage);
 
             updateClientSocketStatusQuery({
               clientSocketId: [urlConfig.clientSocketId],
@@ -234,8 +241,15 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
           });
 
           client.io.on("reconnect", (attemptNumber) => {
-            console.log(`Reconnected to ${urlConfig.url} after ${attemptNumber} attempts at ${new Date().toISOString()}`);
-            global.socketIo.emit("clientsocketreconnect", `Reconnected to ${urlConfig.url} after ${attemptNumber} attempts at ${new Date().toISOString()}`);
+            const emitMessage = `Reconnected to ${urlConfig.url} after ${attemptNumber} attempts at ${new Date().toISOString()}`;
+            console.log(emitMessage);
+            global.socketIo.emit("clientsocketreconnect", emitMessage);
+            errorLogger(
+              fastify,
+              emitMessage,
+              "Client Socket --> sockets/index.js/connectClients - clientsocketconnect",
+              null
+            );
             isConnected = true;
             reconnectAttempts = 0;
 
