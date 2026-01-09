@@ -136,7 +136,15 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
 
       // Attach event listeners for connection events
       client.on("connect", () => {
-        console.log(`Connected to entitySport - ${urlConfig.url}`);
+        const emitMessage = `Connected to entitySport - ${urlConfig.url} at ${new Date().toISOString()}`;
+        global.socketIo.emit("entitysocketconnect", emitMessage);
+        errorLogger(
+          fastify,
+          emitMessage,
+          "Entity Socket --> sockets/entitySport.js/connectEntitySport - entitysocketconnect",
+          null
+        );
+        console.log(emitMessage);
         updateEntitySocketStatusQuery(
           {
             entitySocketId: [urlConfig.entitySocketId],
@@ -208,6 +216,15 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       client.on("connect_error", (error) => {
         console.log(`Entity Connection error ${urlConfig.url}: ${error.message || error} at ${new Date().toISOString()}`);
       });
+      client.on("entitywebsocketconnect", (message) => {
+        global.socketIo.emit("entitywebsocketconnect", message);
+        errorLogger(
+          fastify,
+          message,
+          "Entity Web Socket --> socketIo.js/entitySports/connectEntitySport - entitywebsocketconnect",
+          null
+        );
+      })
       client.on("entitywebsocketdisconnect", (message) => {
         const newMessage = `Entity web socket disconnected, code: ${message.code} ${message?.reason !== "" ? `reason: ${message.reason}`: ""} at ${new Date().toISOString()}`;
         global.socketIo.emit("entitywebsocketdisconnect", newMessage);
