@@ -128,8 +128,10 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
         reconnectionDelayMax: urlConfig.reconnectMaxDelay || 5000,
         reconnectionAttempts: urlConfig.reconnectAttempts || Infinity,
         timeout: 20000,
-        pingInterval: 25000,
-        pingTimeout: 60000,
+        // Match server pingInterval (20s) to keep connection alive and prevent load balancer timeouts
+        // Use slightly less than server to ensure we send pings before server expects them
+        pingInterval: 18000, // 18 seconds (less than server's 20s to ensure timely pings)
+        pingTimeout: 10000,  // 10 seconds (should be less than pingInterval, and match server expectations)
         forceNew: true, // Force new connection to avoid reuse issues
         autoConnect: true,
       });
