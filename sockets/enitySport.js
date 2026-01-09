@@ -122,7 +122,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       }
       const client = io(urlConfig.url, {
         transport: ["websocket"],
-        query: { source: "admin-panel-entity" },
+        query: { source: `admin-panel-entity-${urlConfig.serverName}` },
         reconnection: true,
         reconnectionDelay: urlConfig.reconnectDelay || 1000,
         reconnectionDelayMax: urlConfig.reconnectMaxDelay || 5000,
