@@ -223,6 +223,7 @@ const cron = require('node-cron');
 const { insertAutoImportDataService } = require("./autoImportData");
 const { insertTournamentTeamPlayersQuery, deleteTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { insertAutoUpdateCommentaryDataQuery, getAllAutoUpdateCommentaryDataQuery } = require("../repository/TableAutoUpdateCommentaryData");
+const { sendToClientSockets } = require("../utilities/clientSocketUtils");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -1873,9 +1874,7 @@ const updateCommentaryService = async (request, fastify) => {
       isActive: updatedData?.isActive
     };
     
-    global.clientSocketIo.forEach((socket) => {
-      socket.client.emit("updateActionType", socketData);
-    });
+    sendToClientSockets("updateActionType", socketData);
   }
 
   return updatedData;
@@ -5279,9 +5278,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           request
         );
       });
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
 
     if (global.wss) {
@@ -7652,9 +7649,7 @@ const commentaryDetailsByEventIdService = async (
   // emit the data for update commentary
   if (functionName && functionName == "callFromSocket") {
     //console.log("callFromSocket",allDetails);
-    global.clientSocketIo.forEach((socket) => {
-      socket.client.emit("commentaryUpdate", allDetails);
-    });
+    sendToClientSockets("commentaryUpdate", allDetails);
   }
 
   // if (functionName && functionName == "runnersFromSocket") {
@@ -10083,9 +10078,7 @@ const changeShowClientService = async (request, fastify) => {
       isActive: global.tblCommentaries[commentary]?.isActive
     };
     
-    global.clientSocketIo.forEach((socket) => {
-      socket.client.emit("updateActionType", socketData);
-    });
+    sendToClientSockets("updateActionType", socketData);
   }
 
     // if (global.tblCommentaries[commentary].isClientShow) {
@@ -10827,9 +10820,7 @@ const activeInactiveCommentaryService = async (request, fastify) => {
       isActive: global.tblCommentaries[commentary].isActive
     };
     
-    global.clientSocketIo.forEach((socket) => {
-      socket.client.emit("updateActionType", socketData);
-    });
+    sendToClientSockets("updateActionType", socketData);
   }
   commActionLogger(
     {
@@ -15105,9 +15096,7 @@ const saveComVirtual = async (request, fastify) => {
           request
         );
       });
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
 
     if (global.wss) {
@@ -16512,9 +16501,7 @@ const commentaryScoreService = async (request, fastify) => {
         );
       });
 
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
     if (global.wss) {
       let res = {};
@@ -16842,9 +16829,7 @@ const commentaryOverStartService = async (request, fastify) => {
         );
       });
 
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
 
     if (global.wss) {
@@ -17148,9 +17133,7 @@ const commentarySwapPlayerService = async (request, fastify) => {
           request
         );
       });
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
 
     if (global.wss) {
@@ -17663,9 +17646,7 @@ const commentaryInningChangeService = async (request, fastify) => {
       //   });
       // }
 
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
 
     if (global.wss) {
@@ -18476,9 +18457,7 @@ const commentaryWicketService = async (request, fastify) => {
           request
         );
       });
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
     if (global.wss) {
       let res = {};
@@ -18888,9 +18867,7 @@ const commentarySetPlayerService = async (request, fastify) => {
           request
         );
       });
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
     if (global.wss) {
       let res = {};
@@ -19242,9 +19219,7 @@ const undoAPIService = async (request, fastify) => {
         );
       });
 
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
     if (global.wss) {
       let res = {};
@@ -20619,9 +20594,7 @@ const undoAPIService2 = async (request, fastify) => {
       //   });
       // }
 
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
 
     if (global.wss) {
@@ -21269,9 +21242,7 @@ const changeStrikerPlyService = async (request, fastify) => {
       //   });
       // }
 
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
 
     if (global.wss) {
@@ -21877,9 +21848,7 @@ const changePlayerService = async (request, fastify) => {
           request
         );
       });
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
 
     if (global.wss) {
@@ -22220,9 +22189,7 @@ const changeOverService = async (request, fastify) => {
         );
       });
 
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
 
     if (global.wss) {
@@ -25266,9 +25233,7 @@ const undoCommentaryService = async (request, fastify) => {
           request
         );
       });
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
 
     if (global.wss) {
