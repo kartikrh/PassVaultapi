@@ -2210,13 +2210,17 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           const fielder1 = fielders.find(
             pl => pl?.pid && pl.pid != c?.bowler_id
           );
-          const commFielder = fielder1?.pid ?? c?.bowler_id;
+          const fielder2 = fielders.find(
+            pl => pl?.pid && pl.pid != c?.bowler_id && pl.pid != fielder1?.pid
+          );
+          const commFielder = Number(fielder1?.pid || c?.bowler_id);
+          const commFielder2 = Number(fielder2?.pid || c?.bowler_id);
 
           w.wicketType = wtEnum;
           w.fieldPlayerId = playerTpIdObj[commFielder]?.commentaryPlayerId;
           w.fieldPlayerName = playerTpIdObj[commFielder]?.playerName;
-          w.fieldPlayer2Id = playerTpIdObj[c?.bowler_id]?.commentaryPlayerId;
-          w.fieldPlayer2Name = playerTpIdObj[c?.bowler_id]?.playerName;
+          w.fieldPlayer2Id = playerTpIdObj[commFielder2]?.commentaryPlayerId;
+          w.fieldPlayer2Name = playerTpIdObj[commFielder2]?.playerName;
 
           let batsmanId = playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId;
           let upBall ={
@@ -2243,16 +2247,19 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               batDotBall: (playersMap[c.wicket_batsman_id]?.batDotBall || 0) + 1,
             }
             // change old player
-          if (c.wicket_batsman_id != c.batsman_id) {
+          if (batsmanId != w.batterId) {
             let oldBatsman = global.tblCommentaryPlayers.find((i) => i.commentaryPlayerId == w.batterId && i.commentaryId == comDetails.commentaryId)
             if (!playersMap[oldBatsman.tpId]) {
               playersMap[oldBatsman.tpId] = {
                 ...playerTpIdObj[oldBatsman.tpId],
               }
             }
+            let onStrikeData = c.batsman_id == oldBatsman.tpId
             playersMap[oldBatsman.tpId] = {
               ...playersMap[oldBatsman.tpId],
               isBatterOut: false,
+              isPlay: true,
+              onStrike: onStrikeData,
               isBatterRetir: null,
               wicketType: null,
               bowlerId: null,
@@ -2499,7 +2506,8 @@ const matchCompleteService = async (data , fastify,comDetails) =>{
     winnerName : winTeam.teamName,
     displayStatus : "",
     result : response.match_info.status_note,
-    rmk : ""
+    rmk : "",
+    // winRmk: response?.match_info?.status_note,
   }
 
   let upBatTeam = {
