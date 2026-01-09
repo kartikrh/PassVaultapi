@@ -869,6 +869,30 @@ const virtualEventTossService = async (request, fastify) => {
     });
 
   }
+  let cData = await getMatchDataByCId(
+    {
+      commentaryId: commentaryId,
+    },
+    request,
+    fastify
+  );
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.commentaryUpdate,
+      data: cData,
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("call client api console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/cloneCommentaryService",
+      request
+    );
+  });
   return comData;
 };
 
@@ -2745,7 +2769,30 @@ const comResponseService = async (request, fastify, completeOver = false) => {
       overCount
     };
   }
+  const cData = await getMatchDataByCId({
+    commentaryId: commentaryId,
+  },
+    request,
+    fastify
+  );
 
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.commentaryUpdate,
+      data: cData
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("call client api console in saveCommVirtual", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/saveComVirtual",
+      request
+    );
+  });
   return {
     teams,
     commentaryDetails,

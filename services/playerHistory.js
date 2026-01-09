@@ -5,9 +5,6 @@ const {
   upPlayerBallHistQuery,
   savePlayerBatHistQuery,
   savePlayerBallHistQuery,
-  getCommPlayerBowlHistQuery,
-  getAllCommentaryBattingHistory,
-  getAllCommentaryBowlingHistory
 } = require("../repository/TableCommPlayerHistory");
 const { 
   getAllPlayerBowlingHistory, 
@@ -19,6 +16,8 @@ const {
   getBowlingHistoryByPlayerIdQuery,
   getBatterHistoryQuery,
   getBowlerHistorydQuery,
+  getAllPlayersBattingHistoryForClientQuery,
+  getAllPlayerBowlingHistoryForClientQuery,
  } = require("../repository/TablePlayerHistory");
 const { getLogByComIdQuery, createTeamPointLogQuery } = require("../repository/TableTeamPointLogs");
  const { exportExcelFile, importPlayersHistoryData } = require("../utilities/exportImportExcel");
@@ -1292,7 +1291,7 @@ const calculationOfCommPlayerBowlHistService = async(request, fastify) => {
   return "Player bowling history updated successfully";
 }
 
-const getPlayerHistoryByPlayerIdService = async (request, fastify) => {
+const getPlayerHistoryByPlayerIdForClientService = async (request, fastify) => {
   const playerId = request.body.playerId;
   const player = global.tblPlayers.find(tp => tp.playerId === playerId);
   if (!player) {
@@ -1301,24 +1300,8 @@ const getPlayerHistoryByPlayerIdService = async (request, fastify) => {
 
   const playerTeamData = await playerByIdService(request, fastify);
 
-  const battingHistory = await getAllPlayersBattingHistory(playerId, fastify)
-  const bowlingHistory = await getAllPlayerBowlingHistory(playerId, fastify)
-
-  return { player: playerTeamData, battingHistory, bowlingHistory };
-}
-
-const getPlayerCommentaryHistoryByPlayerIdService = async (request, fastify) => {
-  const playerId = request.body.playerId;
-  const player = global.tblPlayers.find(tp => tp.playerId === playerId);
-  if (!player) {
-    return `Player with id ${playerId} not found`;
-  }
-
-  const playerTeamData = await playerByIdService(request, fastify);
-
-  const whereCondition = `tcpbh."wrPlayerId" = ${request.body.playerId} AND tcpbh."wrIsDeleted" = false`
-  const playerBatHistory = await getAllCommentaryBattingHistory(fastify, whereCondition);
-  const playerBallHistory = await getAllCommentaryBowlingHistory(fastify, whereCondition);
+  const playerBatHistory = await getAllPlayersBattingHistoryForClientQuery(playerId, fastify);
+  const playerBallHistory = await getAllPlayerBowlingHistoryForClientQuery(playerId, fastify);
 
   return { player: playerTeamData, playerBatHistory, playerBallHistory };
 }
@@ -1340,6 +1323,5 @@ module.exports = {
   playerBowlHistSummaryCalculationService,
   calculationOfCommPlayerBatHistService,
   calculationOfCommPlayerBowlHistService,
-  getPlayerHistoryByPlayerIdService,
-  getPlayerCommentaryHistoryByPlayerIdService
+  getPlayerHistoryByPlayerIdForClientService
 };  

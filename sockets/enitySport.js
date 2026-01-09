@@ -122,7 +122,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       }
       const client = io(urlConfig.url, {
         transport: ["websocket"],
-        query: { source: "admin-panel-entity" },
+        query: { source: `admin-panel-entity-${urlConfig.serverName}` },
         reconnection: true,
         reconnectionDelay: urlConfig.reconnectDelay || 1000,
         reconnectionDelayMax: urlConfig.reconnectMaxDelay || 5000,
@@ -136,7 +136,15 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
 
       // Attach event listeners for connection events
       client.on("connect", () => {
-        console.log(`Connected to entitySport - ${urlConfig.url}`);
+        const emitMessage = `Connected to entitySport - ${urlConfig.url} at ${new Date().toISOString()}`;
+        global.socketIo.emit("entitysocketconnect", emitMessage);
+        errorLogger(
+          fastify,
+          emitMessage,
+          "Entity Socket --> sockets/entitySport.js/connectEntitySport - entitysocketconnect",
+          null
+        );
+        console.log(emitMessage);
         updateEntitySocketStatusQuery(
           {
             entitySocketId: [urlConfig.entitySocketId],
@@ -208,8 +216,34 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       client.on("connect_error", (error) => {
         console.log(`Entity Connection error ${urlConfig.url}: ${error.message || error} at ${new Date().toISOString()}`);
       });
+      client.on("entitywebsocketconnect", (message) => {
+        global.socketIo.emit("entitywebsocketconnect", message);
+        errorLogger(
+          fastify,
+          message,
+          "Entity Web Socket --> socketIo.js/entitySports/connectEntitySport - entitywebsocketconnect",
+          null
+        );
+      })
+      client.on("entitywebsocketdisconnect", (message) => {
+        const newMessage = `Entity web socket disconnected, code: ${message.code} ${message?.reason !== "" ? `reason: ${message.reason}`: ""} at ${new Date().toISOString()}`;
+        global.socketIo.emit("entitywebsocketdisconnect", newMessage);
+        errorLogger(
+          fastify,
+          newMessage,
+          "Entity Web Socket --> socketIo.js/entitySports/connectEntitySport - entitywebsocketdisconnect",
+          null
+        );
+      })
       client.on("disconnect", (reason) => {
-        console.log(`Entity Disconnected from ${urlConfig.url}, reason: ${reason} at ${new Date().toISOString()}`);
+        const message = `Entity socket disconnected from ${urlConfig.url}, reason: ${reason} at ${new Date().toISOString()}`;
+        global.socketIo.emit("entitydisconnect", message);
+        errorLogger(
+          fastify,
+          message,
+          "Entity Socket --> socketIo.js/entitySports/connectEntitySport - disconnect",
+          null
+        );
         
         // Log disconnect reason for debugging
         if (reason === "transport close") {
@@ -362,6 +396,11 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
         if (index !== -1) {
           global.tblEntitySockets[index].status = clientSocketStatus.disconnected;
         }
+
+        setTimeout(() => {
+          console.log(`Retrying connection to ${urlConfig.url} after final failure...`);
+          connectEntitySport(fastify, urlConfig.entitySocketId);
+        }, 60000); // retry in 60 seconds
       });
     });
 

@@ -6986,17 +6986,17 @@ const commentaryDetailsByEventIdService = async (
     t1n: "",
     t1sn: "",
     t1s: "",
-    t1im: "",
+    // t1im: "",
     t2n: "",
     t2sn: "",
     t2s: "",
-    t2im: "",
-    t1jr: "",
-    t2jr: "",
-    nt1im: "",
-    nt1jr: "",
-    nt2jr: "",
-    nt2im: "",
+    // t2im: "",
+    // t1jr: "",
+    // t2jr: "",
+    // nt1im: "",
+    // nt1jr: "",
+    // nt2jr: "",
+    // nt2im: "",
     par: "",
     lawkt: "",
     rer: "",
@@ -7042,18 +7042,18 @@ const commentaryDetailsByEventIdService = async (
   let t1nid = 0;
   let t1sn;
   let t1s;
-  let t1im;
-  let t1jr;
-  let t2jr;
-  let nt1im;
-  let nt1jr;
-  let nt2jr;
-  let nt2im;
+  // let t1im;
+  // let t1jr;
+  // let t2jr;
+  // let nt1im;
+  // let nt1jr;
+  // let nt2jr;
+  // let nt2im;
   let t2n;
   let t2nid = 0;
   let t2sn;
   let t2s;
-  let t2im;
+  // let t2im;
   let par;
   let lawkt;
   let rer;
@@ -7163,23 +7163,23 @@ const commentaryDetailsByEventIdService = async (
     t2s = teamScore2 + "/" + wicket1 + " (" + overs1 + ")";
     tpp2 = parseInt(commentaryTeamsTwo[0]?.teamPredictionPercentage) || 0;
   }
-  //teams Images are Ser
-  const _teamsC1 = await global.tblTeams.filter(
-    (item) => item.teamId === t1nid
-  );
+  // //teams Images are Ser
+  // const _teamsC1 = await global.tblTeams.filter(
+  //   (item) => item.teamId === t1nid
+  // );
   
-  t1im = _teamsC1[0]?.image;
-  t1jr = _teamsC1[0]?.jersey;
-  nt1im = _teamsC1[0]?.imagePath;
-  nt1jr = _teamsC1[0]?.jerseyPath;
-  const _teamsC2 = await global.tblTeams.filter(
-    (item) => item.teamId === t2nid
-  );
+  // t1im = _teamsC1[0]?.image;
+  // t1jr = _teamsC1[0]?.jersey;
+  // nt1im = _teamsC1[0]?.imagePath;
+  // nt1jr = _teamsC1[0]?.jerseyPath;
+  // const _teamsC2 = await global.tblTeams.filter(
+  //   (item) => item.teamId === t2nid
+  // );
 
-  t2im = _teamsC2[0]?.image;
-  t2jr = _teamsC2[0]?.jersey;
-  nt2im = _teamsC2[0]?.imagePath;
-  nt2jr = _teamsC2[0]?.jerseyPath;
+  // t2im = _teamsC2[0]?.image;
+  // t2jr = _teamsC2[0]?.jersey;
+  // nt2im = _teamsC2[0]?.imagePath;
+  // nt2jr = _teamsC2[0]?.jerseyPath;
   if (getstatus == 1) {
     // Assign values to the resultArr object
     resultArr.cid = parseInt(result.commentaryId);
@@ -7193,17 +7193,17 @@ const commentaryDetailsByEventIdService = async (
     resultArr.t1n = t1n;
     resultArr.t1sn = t1sn;
     resultArr.t1s = t1s;
-    resultArr.t1im = t1im;
-    resultArr.t1jr = t1jr;
-    resultArr.t2jr = t2jr;
-    resultArr.nt1im = nt1im;
-    resultArr.nt1jr = nt1jr;
-    resultArr.nt2jr = nt2jr;
-    resultArr.nt2im = nt2im;
+    // resultArr.t1im = t1im;
+    // resultArr.t1jr = t1jr;
+    // resultArr.t2jr = t2jr;
+    // resultArr.nt1im = nt1im;
+    // resultArr.nt1jr = nt1jr;
+    // resultArr.nt2jr = nt2jr;
+    // resultArr.nt2im = nt2im;
     resultArr.t2n = t2n;
     resultArr.t2sn = t2sn;
     resultArr.t2s = t2s;
-    resultArr.t2im = t2im;
+    // resultArr.t2im = t2im;
     resultArr.par = "";
     resultArr.lawkt = "";
     resultArr.rer = "";
@@ -7269,17 +7269,17 @@ const commentaryDetailsByEventIdService = async (
     resultArr.t1n = t1n;
     resultArr.t1sn = t1sn;
     resultArr.t1s = t1s;
-    resultArr.t1im = t1im;
-    resultArr.t1jr = t1jr;
-    resultArr.t2jr = t2jr;
-    resultArr.nt1im = nt1im;
-    resultArr.nt1jr = nt1jr;
-    resultArr.nt2jr = nt2jr;
-    resultArr.nt2im = nt2im;
+    // resultArr.t1im = t1im;
+    // resultArr.t1jr = t1jr;
+    // resultArr.t2jr = t2jr;
+    // resultArr.nt1im = nt1im;
+    // resultArr.nt1jr = nt1jr;
+    // resultArr.nt2jr = nt2jr;
+    // resultArr.nt2im = nt2im;
     resultArr.t2n = t2n;
     resultArr.t2sn = t2sn;
     resultArr.t2s = t2s;
-    resultArr.t2im = t2im;
+    // resultArr.t2im = t2im;
     resultArr.par = "";
     resultArr.lawkt = "";
     resultArr.rer = "";
@@ -7392,17 +7392,17 @@ const commentaryDetailsByEventIdService = async (
     resultArr.t1n = t1n;
     resultArr.t1sn = t1sn;
     resultArr.t1s = t1s;
-    resultArr.t1im = t1im;
-    resultArr.t1jr = t1jr;
-    resultArr.t2jr = t2jr;
-    resultArr.nt1im = nt1im;
-    resultArr.nt1jr = nt1jr;
-    resultArr.nt2jr = nt2jr;
-    resultArr.nt2im = nt2im;
+    // resultArr.t1im = t1im;
+    // resultArr.t1jr = t1jr;
+    // resultArr.t2jr = t2jr;
+    // resultArr.nt1im = nt1im;
+    // resultArr.nt1jr = nt1jr;
+    // resultArr.nt2jr = nt2jr;
+    // resultArr.nt2im = nt2im;
     resultArr.t2n = t2n;
     resultArr.t2sn = t2sn;
     resultArr.t2s = t2s;
-    resultArr.t2im = t2im;
+    // resultArr.t2im = t2im;
     resultArr.par = par;
     resultArr.lawkt = lawkt;
     resultArr.rer = "";
@@ -7515,7 +7515,7 @@ const commentaryDetailsByEventIdService = async (
     return {
       pid: player.playerId,
       batn: player.playerName,
-      bati: playerData?.image,
+      // bati: playerData?.image,
       trun: player.batRun || "0",
       tball: player.batBall || "0",
       t4: player.batFour || "0",
@@ -7524,8 +7524,8 @@ const commentaryDetailsByEventIdService = async (
       os: player.onStrike,
       str: parseFloat(player.batsmanStrikeRate) || "0",
       isp: playerData?.isSystemPlayer,
-      jrsyplyimg: player?.jerseyPlayerImage || "",
-      jrsyplyimgpath: player?.jerseyPlayerImagePath || "",
+      // jrsyplyimg: player?.jerseyPlayerImage || "",
+      // jrsyplyimgpath: player?.jerseyPlayerImagePath || "",
       batsn: playerData?.displayName || "",
     };
   });
@@ -7537,7 +7537,7 @@ const commentaryDetailsByEventIdService = async (
     return {
       pid: bowler.playerId,
       pn: bowler.playerName,
-      bli: playerData?.image,
+      // bli: playerData?.image,
       tov: bowler.bowlerOver || "0",
       cob: bowler.bowlerCurrentBall || "0",
       trun: bowler.bowlerRun || "0",
@@ -7558,8 +7558,8 @@ const commentaryDetailsByEventIdService = async (
         0 + bowler.bowlerLegByeBallRun ||
         0,
       isp: playerData?.isSystemPlayer,
-      jrsyplyimg: bowler?.jerseyPlayerImage || "",
-      jrsyplyimgpath: bowler?.jerseyPlayerImagePath || "",
+      // jrsyplyimg: bowler?.jerseyPlayerImage || "",
+      // jrsyplyimgpath: bowler?.jerseyPlayerImagePath || "",
       psn: playerData?.displayName || "",
     };
   });
@@ -8708,9 +8708,9 @@ const getMatchDataByCId = async (data, request, fastify) => {
   let rno = 0;
   let type = null;
   let status = com.commentaryStatus;
-  if (status != 4 && status != 1) {
+  if (status != 4 && status != 1 && status != 10) {
     type = "live";
-  } else if (status == 4) {
+  } else if (status == 4 || status == 10) {
     type = "completed";
   } else if (status == 1) {
     type = "scheduled";
@@ -13747,7 +13747,7 @@ const notiConfigContentReplaceService = async (
       global?.clientSocketIo.length > 0
     ) {
       global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("notificationSend", { ...data, title, content ,eventId : commentary.eventRefId ?? null});
+        socket.client.emit("notificationSend", { ...data, title, content ,eventId : commentary.eventRefId ?? null, commentaryId: commentary?.commentaryId ?? null});
       });
       let notificationData = {
         title: commentary.eventName,
@@ -14080,30 +14080,30 @@ const saveComVirtual = async (request, fastify) => {
       //   });
       // }
       // if (previousCommentaryStatus != statusToUpdate) {
-      //   const cData = await getMatchDataByCId({
-      //     commentaryId: commentaryId,
-      //   },
-      //     request,
-      //     fastify
-      //   );
+        const cData = await getMatchDataByCId({
+          commentaryId: commentaryId,
+        },
+          request,
+          fastify
+        );
 
-      //   callClientAPI(
-      //     {
-      //       serviceType: ServiceType.clientAPI,
-      //       moduleType: APIEndpointModuleType.commentaryUpdate,
-      //       data: cData
-      //     },
-      //     request,
-      //     fastify
-      //   ).catch((err) => {
-      //     console.log("call client api console", err);
-      //     errorLogger(
-      //       fastify,
-      //       err.message,
-      //       "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-      //       request
-      //     );
-      //   });
+        callClientAPI(
+          {
+            serviceType: ServiceType.clientAPI,
+            moduleType: APIEndpointModuleType.commentaryUpdate,
+            data: cData
+          },
+          request,
+          fastify
+        ).catch((err) => {
+          console.log("call client api console in saveCommVirtual", err);
+          errorLogger(
+            fastify,
+            err.message,
+            "ERROR --> services/commentary.js/saveComVirtual",
+            request
+          );
+        });
       // }
       // if (previousCommentaryStatus != statusToUpdate && statusToUpdate == 4) {
       //   // await notiConfigContentReplaceService(EventName.EVENTCOMPLETED, commentaryData.commentaryId, request, fastify)

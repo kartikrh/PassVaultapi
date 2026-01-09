@@ -157,6 +157,7 @@ const playerByIdService = async (request, fastify) => {
 
     const data = {
       ...result,
+      bowlingStyle: result.bowlingStyleId === 1 ? "Pace" : (result.bowlingStyleId === 2 ? "Spin" : null),
       birthDate: result.birthDate ? String(result.birthDate).split('T')[0] : result.birthDate,
       teams: playersInTeams,
       jerseyPlayerImage: playersInTeams?.find(pt => pt.homeTeam)?.jerseyPlayerImage
@@ -848,8 +849,7 @@ const updatePlayerBatBowlHistory = async (playerId, playerBattingData, playerBow
   const isMen = playerData?.isMen;
 
   // batting
-  const battingWhereCondition = `tcpbh."wrPlayerId" = ${playerId} AND tcpbh."wrIsDeleted" = false`
-  const commentaryPlayerBattingHistory = await getAllCommentaryBattingHistory(fastify, battingWhereCondition);
+  const commentaryPlayerBattingHistory = await getAllCommentaryBattingHistory(fastify, playerId);
 
   const playerBattingHistory = await getAllPlayersBattingHistory(playerId, fastify);
 
@@ -915,8 +915,7 @@ const updatePlayerBatBowlHistory = async (playerId, playerBattingData, playerBow
   }
 
   // bowling
-  const bowlingWhereCondition = `tcpbh."wrPlayerId" = ${playerId} AND tcpbh."wrIsDeleted" = false`
-  const commentaryPlayerBowlingHistory = await getAllCommentaryBowlingHistory(fastify, bowlingWhereCondition);
+  const commentaryPlayerBowlingHistory = await getAllCommentaryBowlingHistory(fastify, playerId);
 
   const playerBowlingHistory = await getAllPlayerBowlingHistory(playerId, fastify);
 
