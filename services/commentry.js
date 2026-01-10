@@ -25414,6 +25414,16 @@ const updateCommentaryPlayersFromEntityService = async (request, fastify) => {
   const entitySportMatch = await callEntitySportAPI(url, request, fastify);
 
   let entitySportMatchResponse = entitySportMatch?.data?.result;
+
+  const insertDataInCommentaryUpdate = {
+    commentaryId: commentaryId,
+    offsetHour: null,
+    status: autoUpdateCommentaryDataStatus.success,
+    message: `Commentary updated`,
+    responseData: entitySportMatchResponse,
+  };
+
+  await insertAutoUpdateCommentaryDataQuery(insertDataInCommentaryUpdate, fastify);
   if (!entitySportMatchResponse) {
     errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/commentary.js/matchImportService - entitySportMatchResponse", {
       ...request,
@@ -25626,7 +25636,8 @@ const processTeamSquadInsertAndUpdate = async ({
         item =>
           item.commentaryId == commentaryId &&
           item.playerId == checkPlayer.playerId &&
-          item.teamId == teamObj.teamId
+          item.teamId == teamObj.teamId &&
+          item.currentInnings == currentInnings
       );
       if (commIndex === -1) {
         const newComm = await insertCommentaryPlayers(
