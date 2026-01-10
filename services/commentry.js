@@ -25496,7 +25496,8 @@ const processTeamSquadInsertAndUpdate = async ({
       );
       return;
     }
-
+    const addCommPlayer = []
+    const updateCommPlayer = []
     const currentInnings = matchInfoResponse?.latest_inning_number
 
     const compTpId = matchInfoResponse?.competition?.cid;
@@ -25658,6 +25659,7 @@ const processTeamSquadInsertAndUpdate = async ({
         );
  
         global.tblCommentaryPlayers.push(newComm[0]);
+        addCommPlayer.push(newComm[0])
       } else {
         await playingElevenChangeOnCommPlayersQuery(
           {
@@ -25671,6 +25673,7 @@ const processTeamSquadInsertAndUpdate = async ({
         );
 
         global.tblCommentaryPlayers[commIndex].isInPlayingEleven = isPlaying11;
+        updateCommPlayer.push(global.tblCommentaryPlayers[commIndex])
       }
 
       //TOURNAMENT TEAM PLAYER
@@ -25703,16 +25706,27 @@ const processTeamSquadInsertAndUpdate = async ({
     sendDataForSocketUpdate.eventRefId = commentaryDetails?.eventRefId;
     sendDataForSocketUpdate.dataToUpdate = [];
 
-    let condi = `tcp."wrIsDelete" = false AND tcp."wrCommentaryId" = ${commentaryId}`;
-    const commPlayers = await getAllCommentaryPlayerDataQuery(condi, fastify);
-    sendDataForSocketUpdate.dataToUpdate.push({
-      module: "commentaryPlayers",
-      type: "update",
-      data: commPlayers,
-    });
-    global.clientSocketIo.forEach((socket) => {
-      socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-    });
+    if (addCommPlayer.length > 0) {
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module: "commentaryPlayers",
+        type: "create",
+        data: addCommPlayer,
+      });
+      global.clientSocketIo.forEach((socket) => {
+        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      });
+    }
+    if (updateCommPlayer.length > 0) {
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module: "commentaryPlayers",
+        type: "update",
+        data: updateCommPlayer,
+      });
+      global.clientSocketIo.forEach((socket) => {
+        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      });
+    }
+
     return true;
   } catch (err) {
     console.log("processTeamSquadInsertAndUpdate ERROR:", err);
