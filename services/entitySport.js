@@ -4670,12 +4670,16 @@ const upsertCommPartnershipService = async (data, fastify, request) => {
     let pI = global.tblCommentaryPartnership.findIndex((i) => i.commentaryPartnershipId == partnership.commentaryPartnershipId)
     global.tblCommentaryPartnership[pI] = par[0];
     const validate = prtship.findIndex(item => item.commentaryPartnershipId == par[0]?.commentaryPartnershipId);
-    if (validate == -1) {
-      par[0].type = "create";
-      prtship.push(par[0])
-    } else {
-      prtship[validate].type = "update";
-    }
+    // if (validate == -1) {
+    //   par[0].type = "create";
+    //   prtship.push(par[0])
+    // } else {
+    //   prtship[validate].type = "update";
+    // }
+    prtship.push({
+      ...par[0],
+      type: "update"
+    })
   }
   else {
     let cp1 = playerTpIdObj[part.batsmen[0].batsman_id]
