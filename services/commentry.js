@@ -25687,7 +25687,21 @@ const processTeamSquadInsertAndUpdate = async ({
         global.tblTournamentTeamPlayers.push(tournamentInsert[0]);
       }
     }
+    const sendDataForSocketUpdate = {};
+    sendDataForSocketUpdate.commentaryId = commentaryDetails?.commentaryId;
+    sendDataForSocketUpdate.eventRefId = commentaryDetails?.eventRefId;
+    sendDataForSocketUpdate.dataToUpdate = [];
 
+    let condi = `tcp."wrIsDelete" = false AND tcp."wrCommentaryId" = ${commentaryId} AND tcp."wrIsInPlayingEleven" = true`;
+    const commPlayers = await getAllCommentaryPlayerDataQuery(condi, fastify);
+    sendDataForSocketUpdate.dataToUpdate.push({
+      module: "commentaryPlayers",
+      type: "update",
+      data: commPlayers,
+    });
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+    });
     return true;
   } catch (err) {
     console.log("processTeamSquadInsertAndUpdate ERROR:", err);

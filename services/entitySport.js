@@ -456,6 +456,31 @@ const setEntityCom2Service = async (request , fastify) =>{
               });
           }
           sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
+        const cData = await getMatchDataByCId(
+          {
+            commentaryId: comDetails?.commentaryId,
+          },
+          request,
+          fastify
+        );
+
+        callClientAPI(
+          {
+            serviceType: ServiceType.clientAPI,
+            moduleType: APIEndpointModuleType.commentaryUpdate,
+            data: cData,
+          },
+          request,
+          fastify
+        ).catch((err) => {
+          console.log("call client api console in setEntityCom2Service", err);
+          errorLogger(
+            fastify,
+            err.message,
+            "ERROR --> services/entitysport.js/setEntityCom2Service",
+            request
+          );
+        });
       }
       if(comDetails.commentaryStatus == commentaryStatus.TOSSDONE){
         // check if getting same data from entity
