@@ -193,7 +193,7 @@ module.exports = async function (fastify, opts) {
       }
     });
 
-    cron.schedule('30 19 * * *', async () => {
+    cron.schedule('0 1 * * *', async () => {
       try {
         if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
           await insertTournamentTeamPointInAutoImportService(fastify);
@@ -203,6 +203,8 @@ module.exports = async function (fastify, opts) {
       } catch (error) {
         console.error("Error during scheduled task:", error);
       }
+    }, {
+      timezone: "Asia/Kolkata"
     });
 
     // .after(async () => {
