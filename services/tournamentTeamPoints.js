@@ -806,8 +806,11 @@ const importUpdateTournamentTeamPointFromEntitySportService = async (data, fasti
 
 const insertTournamentTeamPointInAutoImportService = async (fastify) => {
   try {
-    const formatDate = (date) => date.toISOString().split("T")[0];
-    const yesterdayStr = formatDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
+    const formatDate = (date) => date.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    const now = new Date();
+    const istToday = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    istToday.setDate(istToday.getDate() - 1);
+    const yesterdayStr = formatDate(istToday);
     const competitionList = global.tblCompetitions.filter(cp => {
       const startStr = formatDate(new Date(cp.startDate));
       const endStr = formatDate(new Date(cp.endDate));
