@@ -25703,7 +25703,7 @@ const processTeamSquadInsertAndUpdate = async ({
     sendDataForSocketUpdate.eventRefId = commentaryDetails?.eventRefId;
     sendDataForSocketUpdate.dataToUpdate = [];
 
-    let condi = `tcp."wrIsDelete" = false AND tcp."wrCommentaryId" = ${commentaryId} AND tcp."wrIsInPlayingEleven" = true`;
+    let condi = `tcp."wrIsDelete" = false AND tcp."wrCommentaryId" = ${commentaryId}`;
     const commPlayers = await getAllCommentaryPlayerDataQuery(condi, fastify);
     sendDataForSocketUpdate.dataToUpdate.push({
       module: "commentaryPlayers",
