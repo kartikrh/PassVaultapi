@@ -2203,7 +2203,8 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           if(!w){
             continue;
           }
-          if(w.wicketType != null){
+          let batsmanId = playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId;
+          if(w.wicketType != null && batsmanId == w.batterId){
             continue;
           }
 
@@ -2246,7 +2247,6 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           w.fieldPlayer2Id = playerTpIdObj[commFielder2]?.commentaryPlayerId;
           w.fieldPlayer2Name = playerTpIdObj[commFielder2]?.playerName;
 
-          let batsmanId = playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId;
           let upBall ={
             ...ball,
             ballWicketType: wtEnum,
