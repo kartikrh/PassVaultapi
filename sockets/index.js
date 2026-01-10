@@ -269,6 +269,74 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
               if (index !== -1) {
                 global.tblClientSocket[index].status = clientSocketStatus.disconnected;
               }
+
+              // Forcefully reconnect when ScoreClientAPI disconnects (server-initiated or network issues)
+              // Clean up the old client connection completely
+              try {
+                if (client && client.io) {
+                  // Disable the built-in reconnection to prevent duplicate reconnect_attempt logs
+                  client.io.opts.reconnection = false;
+                  // Also disconnect the old client completely to prevent it from trying to reconnect
+                  client.removeAllListeners();
+                  client.disconnect(true);
+                }
+              } catch (err) {
+                console.log(`Error disabling reconnection on old client: ${err.message}`);
+              }
+
+              // Forcefully reconnect after a short delay
+              const reconnectDelay = urlConfig.reconnectDelay || 1000;
+              console.log(`Forcefully reconnecting to ${urlConfig.url} in ${reconnectDelay}ms...`);
+              
+              setTimeout(() => {
+                // Check if socket is still supposed to be active before reconnecting
+                const socketConfig = global.tblClientSocket.find(
+                  (c) => c.clientSocketId === urlConfig.clientSocketId
+                );
+                
+                if (socketConfig && socketConfig.isActive === true && socketConfig.actionType === clientSocketActionType.connect) {
+                  // Check if there's already a connection attempt in progress
+                  const existingConnection = global.clientSocketIo.find(c => c.url === urlConfig.url);
+                  const isAlreadyConnected = existingConnection && existingConnection.client && 
+                    (existingConnection.client.connected === true || 
+                     (existingConnection.client.io && existingConnection.client.io.connected === true));
+                  
+                  if (!isAlreadyConnected) {
+                    console.log(`Initiating forceful reconnection to ${urlConfig.url}...`);
+                    // Clean up any stale connection first
+                    if (existingConnection && existingConnection.client) {
+                      try {
+                        // Disable reconnection on stale connection too
+                        if (existingConnection.client.io) {
+                          existingConnection.client.io.opts.reconnection = false;
+                        }
+                        existingConnection.client.removeAllListeners();
+                        existingConnection.client.disconnect(true);
+                      } catch (err) {
+                        console.log(`Error cleaning up stale connection: ${err.message}`);
+                      }
+                    }
+                    
+                    // Remove from global array before reconnecting
+                    global.clientSocketIo = global.clientSocketIo.filter(c => c.url !== urlConfig.url);
+                    
+                    // Forcefully reconnect
+                    connectClients(fastify, urlConfig.clientSocketId).catch((err) => {
+                      console.error(`Error during forceful reconnection to ${urlConfig.url}:`, err);
+                      errorLogger(
+                        fastify,
+                        err.message,
+                        "ERROR --> socketIo.js/connectClients - forceful reconnect",
+                        null
+                      );
+                    });
+                  } else {
+                    console.log(`Skipping forceful reconnection to ${urlConfig.url} - already connected or connecting`);
+                  }
+                } else {
+                  console.log(`Skipping reconnection to ${urlConfig.url} - socket is inactive or should be disconnected`);
+                }
+              }, reconnectDelay);
             }
           });
 
