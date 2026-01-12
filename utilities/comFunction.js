@@ -188,6 +188,7 @@ const generateRemainingRuns = (data) => {
       return "";
     }
     return `${team.shortName} needs ${run} runs from ${totalBallsRemaining} balls.`;
+    // return `${team.shortName} needs ${totalRunRemaining + 1} runs from ${totalBallsRemaining} balls.`;
 };
 
 const getBowlerOnlyRuns = (over) => {

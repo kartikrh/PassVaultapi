@@ -15096,7 +15096,17 @@ const saveComVirtual = async (request, fastify) => {
           request
         );
       });
-      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
+      let timeOut = global.tblConfigs.find((i)=>i.key == configConstants.CARDDELAY)?.value || 0;
+      if (isOverComplete == true) {
+        setTimeout(() => {
+          global.clientSocketIo.forEach((socket) => {
+            socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+          });
+        }, timeOut); // 5 seconds
+      }
+      global.clientSocketIo.forEach((socket) => {
+        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      })
     }
 
     if (global.wss) {

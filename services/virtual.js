@@ -851,6 +851,24 @@ const virtualEventTossService = async (request, fastify) => {
       request,
       pythonURI
     );
+    callDataProvider(
+        {
+          commentaryId: commentary?.commentaryId,
+          serviceType: ServiceType.dataProviderAPI,
+          moduleType: APIEndpointModuleType.commentaryUpdate,
+          type: "update",
+        },
+        fastify
+    ).catch((err) => {
+      console.log("call Data Provider console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/virtualEventTossService",
+        request
+      );
+    });
+
   }
   let cData = await getMatchDataByCId(
     {
@@ -2246,12 +2264,13 @@ const onPlayerChangeService = (data) => {
 const checkWinner = async (data) => {
   const { isWonByInnings, bowlTeam, batTeam, target, commentaryDetails } = data;
   let winMsg, winTeam, isBatTeamWon;
+  let isMatchTie;
   if (isWonByInnings) {
     isBatTeamWon = false;
     winTeam = bowlTeam;
     winMsg = `${bowlTeam.shortName} won by innings and ${isWonByInnings} runs.`;
   } else {
-    const isMatchTie = batTeam?.teamScore === target - 1;
+    isMatchTie = batTeam?.teamScore === target - 1;
     isBatTeamWon = batTeam?.teamScore >= target;
     winTeam = isBatTeamWon ? batTeam : bowlTeam;
     winMsg = isMatchTie
@@ -2260,17 +2279,33 @@ const checkWinner = async (data) => {
         ...data,
         isBatTeamWon,
       });
+
+    
   }
-  // db update
-  let updateBatTeam = {
-    ...batTeam,
-    isBattingComplete: true,
-    isWin: isBatTeamWon,
-  };
-  let updateBowlTeam = {
-    ...bowlTeam,
-    isWin: !isBatTeamWon,
-  };
+
+  let updateBatTeam,updateBowlTeam = {};
+  if(isMatchTie == true){
+    updateBatTeam = {
+      ...batTeam,
+      isBattingComplete: true,
+    };
+    updateBowlTeam = {
+      ...bowlTeam,
+    };
+  }else{
+    updateBatTeam = {
+      ...batTeam,
+      isBattingComplete: true,
+      isWin: isBatTeamWon,
+    };
+    updateBowlTeam = {
+      ...bowlTeam,
+      isWin: !isBatTeamWon,
+    };
+  }
+
+
+ 
   let upComDetails = {
     ...commentaryDetails,
     commentaryStatus: commentaryStatus.COMPLETED,
@@ -3128,6 +3163,53 @@ const cancelEventAPIService = async (request, fastify) => {
 
   await cancelComQuery({ commentaryId, status: commentaryStatus.CANCELLED }, fastify, request);
   global.tblCommentaries[index].commentaryStatus = commentaryStatus.CANCELLED;
+
+  if(global.tblCommentaries[index].isPredictMarket == true){
+    callDataProvider(
+    {
+      commentaryId: commentaryId,
+      serviceType: ServiceType.dataProviderAPI,
+      moduleType: APIEndpointModuleType.commentaryUpdate,
+      type: "close",
+      },
+      fastify
+    ).catch((err) => {
+      console.log("call data provider console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/commentary.js/closeEventMarketByCIdQuery",
+        request
+      );
+    });
+  }
+
+  const cData = await getMatchDataByCId(
+    {
+      commentaryId: commentaryId,
+    },
+    request,
+    fastify
+  );
+
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.commentaryUpdate,
+      data: cData,
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("call client api console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/commentary.js/closeEventMarketByCIdQuery",
+      request
+    );
+  });
+
 
   // if (
   //    global.tblCommentaries[index]?.isPredictMarket == true
