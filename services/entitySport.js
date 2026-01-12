@@ -13,6 +13,7 @@ const {
     wicketTypeObj,
     GAME_STATUS,
     etWicketObj,
+    EntityMatchStatus,
 } = require("../utilities/index");
 const { getCountryByIds } = require("../repository/TableCountryCodes")
 const { getVenueByIds } = require("../repository/TableVenue")
@@ -322,7 +323,7 @@ const setEntityCom2Service = async (request , fastify) =>{
         // throw new Error("This commentary not associated with any tpId.")
         return true;
     }
-    const gameState = response?.match_info?.game_state
+    const gameState = response?.match_info?.game_state || response?.live?.game_state
 
     const scoreResponse = {};
     const sendDataForSocketUpdate = {};
@@ -741,7 +742,8 @@ const setEntityCom2Service = async (request , fastify) =>{
                       batter1Runs : cp1.runs,
                       batter2Runs :cp2.runs,
                       batter1Balls : cp1.balls,
-                      batter2Balls : cp2.balls
+                      batter2Balls : cp2.balls,
+                      type: "update"
                       // totalFour,
                       // totalSix
                   }
@@ -768,6 +770,7 @@ const setEntityCom2Service = async (request , fastify) =>{
                       commentaryDetails : comDetails,
                       updateBattingTeam : batTeam
                   })
+                  partnership.type = "create"
               }    
             }
             // generate over
@@ -809,6 +812,10 @@ const setEntityCom2Service = async (request , fastify) =>{
             let over = await virtualOverQuery(commentaryOvers, request, fastify);
             // add over to global variable
             global.tblOvers.push(over);
+            sendDataForSocketUpdate.dataToUpdate.push({
+              module: "entityOvers",
+              data: [{ ...over, type: "create" }],
+            });
             const commentaryBallByBall = {
                 commentaryBallByBallId: 0,
                 commentaryId: comDetails?.commentaryId,
@@ -847,6 +854,10 @@ const setEntityCom2Service = async (request , fastify) =>{
             );
             // add ball to global variable
             global.tblCommentaryBallByBall.push(ball);
+            sendDataForSocketUpdate.dataToUpdate.push({
+              module: "entityBallByBalls",
+              data: [{ ...ball, type: "create" }],
+            });
             let result1 =  {
                 over,
                 ball,
@@ -864,6 +875,7 @@ const setEntityCom2Service = async (request , fastify) =>{
                 commentaryPlayers : comPlayerUpdate,
                 commentaryPartnership: [partnership]
             },fastify)
+            sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
             // return res;
             // handle commentaries arr
             // if(response.live.commentaries.length > 0){
@@ -904,8 +916,10 @@ const setEntityCom2Service = async (request , fastify) =>{
         return true;
       // }
     }
-    if(gameState == EntityCommentaryStatus.DEFAULT && comDetails.commentaryStatus != commentaryStatus.COMPLETED){
-      await matchCompleteService(request.body , fastify , comDetails)
+    const entityStatus = response?.match_info?.status
+    if (gameState == EntityCommentaryStatus.DEFAULT && entityStatus != EntityMatchStatus.SCHEDULED &&
+      comDetails.commentaryStatus != commentaryStatus.COMPLETED) {
+      await matchCompleteService(request.body, fastify, comDetails)
     }
 
     const ALLOWED_GAME_STATES = [

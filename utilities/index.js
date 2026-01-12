@@ -2137,6 +2137,15 @@ const competitionMatchTypeEnum = {
   }
 }
 
+const EntityMatchStatus = {
+  SCHEDULED: 1,
+  COMPLETED: 2,
+  LIVE: 3,
+  ABANDONED: 4,
+  CANCELLED: 4,
+  NO_RESULT: 4
+};
+
 module.exports = {    
   ERROR_CODES,
   error,
@@ -2255,5 +2264,6 @@ module.exports = {
   CompetitionStatisticsType,
   etWicketObj,
   getKeyAndValueKey,
-  competitionMatchTypeEnum
+  competitionMatchTypeEnum,
+  EntityMatchStatus,
 };

@@ -25508,7 +25508,7 @@ const processTeamSquadInsertAndUpdate = async ({
     }
     const addCommPlayer = []
     const updateCommPlayer = []
-    const currentInnings = matchInfoResponse?.latest_inning_number
+    const currentInnings = commentaryDetails?.currentInnings
 
     const compTpId = matchInfoResponse?.competition?.cid;
     const compData = global.tblCompetitions.find(c => c.tpId == compTpId);

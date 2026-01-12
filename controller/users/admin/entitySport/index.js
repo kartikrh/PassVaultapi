@@ -11,6 +11,7 @@ const {
   setEntityCom2Service,
   saveTournamentTeamPlayerService
 } = require("../../../../services/entitySport");
+const { updateCommentaryPlayersFromEntityService } = require("../../../../services/commentry")
 
 let path = "controller/users/admin/entitySport/index";
 
@@ -104,6 +105,15 @@ const saveTournamentTeamPlayer = async (request, reply, fastify) => {
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 }
+const updateCommentaryPlayersPlaying11 = async (request, reply, fastify) => {
+    try {
+        const result = await updateCommentaryPlayersFromEntityService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, path + "/updateCommentaryPlayersPlaying11", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+}
 
 module.exports = {
     saveTeams,
@@ -114,5 +124,6 @@ module.exports = {
     saveVenues,
     setEntityCom,
     setEntityCom2,
-    saveTournamentTeamPlayer
+    saveTournamentTeamPlayer,
+    updateCommentaryPlayersPlaying11,
 }
