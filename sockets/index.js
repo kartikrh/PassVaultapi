@@ -34,9 +34,9 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
 
         // Check if existing connection is still active and connected
         // Check both client.connected and io.connected for more accurate state
-        const isConnected = existing && existing.client && 
-          (existing.client.connected === true || 
-           (existing.client.io && existing.client.io.connected === true));
+        const isConnected = existing && existing.client &&
+          (existing.client.connected === true ||
+            (existing.client.io && existing.client.io.connected === true));
 
         if (isConnected) {
           console.log(`Connection to ${urlConfig.url} already exists and is connected, skipping reconnection`);
@@ -47,12 +47,12 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
         // If existing but disconnected, clean it up properly
         if (existing) {
           // Check connection state for better logging
-          const connectionState = existing.client ? 
+          const connectionState = existing.client ?
             (existing.client.io ? existing.client.io.readyState : 'unknown') : 'no-client';
           const wasConnected = existing.client && existing.client.connected;
-          
+
           console.log(`Cleaning up existing disconnected connection to ${urlConfig.url} (state: ${connectionState}, wasConnected: ${wasConnected})`);
-          
+
           try {
             if (existing.client) {
               // Only disconnect if not already disconnected to avoid unnecessary operations
@@ -68,6 +68,9 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
             console.log(`Error cleaning up existing connection: ${err.message}`);
           }
           // Remove from array regardless of cleanup success
+          if (existing.cronJob) {
+            existing.cronJob.stop();
+          }
           global.clientSocketIo = global.clientSocketIo.filter(c => c.url !== urlConfig.url);
         }
 
@@ -119,12 +122,12 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
             isConnected = true;
             isReconnecting = false; // Reset reconnection flag
             reconnectAttempts = 0;
-            
+
             // Log connection message - distinguish between initial and reconnection
-            const emitMessage = wasReconnecting 
+            const emitMessage = wasReconnecting
               ? `Reconnected to ${urlConfig.url} at ${new Date().toISOString()}`
               : `Connected to ${urlConfig.url} at ${new Date().toISOString()}`;
-            
+
             global.socketIo.emit("clientsocketconnect", emitMessage);
             errorLogger(
               fastify,
@@ -142,6 +145,10 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
             });
 
             // Remove any old socket just in case
+            const existingInArray = global.clientSocketIo.find(c => c.url === urlConfig.url);
+            if (existingInArray && existingInArray.cronJob) {
+              existingInArray.cronJob.stop();
+            }
             global.clientSocketIo = global.clientSocketIo.filter(c => c.url !== urlConfig.url);
             global.clientSocketIo.push({
               ...urlConfig,
@@ -245,99 +252,102 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
 
             // Always remove from global array to prevent stale entries
             // This ensures cleanup happens regardless of disconnect reason
+            const clientObj = global.clientSocketIo.find(c => c.client === client || c.url === urlConfig.url);
+            if (clientObj?.cronJob) {
+              clientObj.cronJob.stop();
+            }
+
             global.clientSocketIo = global.clientSocketIo.filter(
               (c) => c.client !== client && c.url !== urlConfig.url
             );
 
             // Only update status if it's not a manual disconnect or server restart
-            if (reason !== "io client disconnect" && reason !== "io server disconnect") {
-              updateClientSocketStatusQuery({
-                clientSocketId: [urlConfig.clientSocketId],
-                status: clientSocketStatus.disconnected
-              }, fastify)
-                .catch((error) => {
-                  errorLogger(
-                    fastify,
-                    error.message,
-                    "DB Error --> socketIo.js/connectClients",
-                    null
-                  );
-                });
-
-              // update status in global.tblClientSocket
-              let index = global.tblClientSocket.findIndex((c) => c.clientSocketId === urlConfig.clientSocketId);
-              if (index !== -1) {
-                global.tblClientSocket[index].status = clientSocketStatus.disconnected;
-              }
-
-              // Forcefully reconnect when ScoreClientAPI disconnects (server-initiated or network issues)
-              // Clean up the old client connection completely
-              try {
-                if (client && client.io) {
-                  // Disable the built-in reconnection to prevent duplicate reconnect_attempt logs
-                  client.io.opts.reconnection = false;
-                  // Also disconnect the old client completely to prevent it from trying to reconnect
-                  client.removeAllListeners();
-                  client.disconnect(true);
-                }
-              } catch (err) {
-                console.log(`Error disabling reconnection on old client: ${err.message}`);
-              }
-
-              // Forcefully reconnect after a short delay
-              const reconnectDelay = urlConfig.reconnectDelay || 1000;
-              console.log(`Forcefully reconnecting to ${urlConfig.url} in ${reconnectDelay}ms...`);
-              
-              setTimeout(() => {
-                // Check if socket is still supposed to be active before reconnecting
-                const socketConfig = global.tblClientSocket.find(
-                  (c) => c.clientSocketId === urlConfig.clientSocketId
+            updateClientSocketStatusQuery({
+              clientSocketId: [urlConfig.clientSocketId],
+              status: clientSocketStatus.disconnected
+            }, fastify)
+              .catch((error) => {
+                errorLogger(
+                  fastify,
+                  error.message,
+                  "DB Error --> socketIo.js/connectClients",
+                  null
                 );
-                
-                if (socketConfig && socketConfig.isActive === true && socketConfig.actionType === clientSocketActionType.connect) {
-                  // Check if there's already a connection attempt in progress
-                  const existingConnection = global.clientSocketIo.find(c => c.url === urlConfig.url);
-                  const isAlreadyConnected = existingConnection && existingConnection.client && 
-                    (existingConnection.client.connected === true || 
-                     (existingConnection.client.io && existingConnection.client.io.connected === true));
-                  
-                  if (!isAlreadyConnected) {
-                    console.log(`Initiating forceful reconnection to ${urlConfig.url}...`);
-                    // Clean up any stale connection first
-                    if (existingConnection && existingConnection.client) {
-                      try {
-                        // Disable reconnection on stale connection too
-                        if (existingConnection.client.io) {
-                          existingConnection.client.io.opts.reconnection = false;
-                        }
-                        existingConnection.client.removeAllListeners();
-                        existingConnection.client.disconnect(true);
-                      } catch (err) {
-                        console.log(`Error cleaning up stale connection: ${err.message}`);
-                      }
-                    }
-                    
-                    // Remove from global array before reconnecting
-                    global.clientSocketIo = global.clientSocketIo.filter(c => c.url !== urlConfig.url);
-                    
-                    // Forcefully reconnect
-                    connectClients(fastify, urlConfig.clientSocketId).catch((err) => {
-                      console.error(`Error during forceful reconnection to ${urlConfig.url}:`, err);
-                      errorLogger(
-                        fastify,
-                        err.message,
-                        "ERROR --> socketIo.js/connectClients - forceful reconnect",
-                        null
-                      );
-                    });
-                  } else {
-                    console.log(`Skipping forceful reconnection to ${urlConfig.url} - already connected or connecting`);
-                  }
-                } else {
-                  console.log(`Skipping reconnection to ${urlConfig.url} - socket is inactive or should be disconnected`);
-                }
-              }, reconnectDelay);
+              });
+
+            // update status in global.tblClientSocket
+            let index = global.tblClientSocket.findIndex((c) => c.clientSocketId === urlConfig.clientSocketId);
+            if (index !== -1) {
+              global.tblClientSocket[index].status = clientSocketStatus.disconnected;
             }
+
+            // Forcefully reconnect when ScoreClientAPI disconnects (server-initiated or network issues)
+            // Clean up the old client connection completely
+            try {
+              if (client && client.io) {
+                // Disable the built-in reconnection to prevent duplicate reconnect_attempt logs
+                client.io.opts.reconnection = false;
+                // Also disconnect the old client completely to prevent it from trying to reconnect
+                client.removeAllListeners();
+                client.disconnect(true);
+              }
+            } catch (err) {
+              console.log(`Error disabling reconnection on old client: ${err.message}`);
+            }
+
+            // Forcefully reconnect after a short delay
+            const reconnectDelay = urlConfig.reconnectDelay || 1000;
+            console.log(`Forcefully reconnecting to ${urlConfig.url} in ${reconnectDelay}ms...`);
+
+            setTimeout(() => {
+              // Check if socket is still supposed to be active before reconnecting
+              const socketConfig = global.tblClientSocket.find(
+                (c) => c.clientSocketId === urlConfig.clientSocketId
+              );
+
+              if (socketConfig && socketConfig.isActive === true && socketConfig.actionType === clientSocketActionType.connect) {
+                // Check if there's already a connection attempt in progress
+                const existingConnection = global.clientSocketIo.find(c => c.url === urlConfig.url);
+                const isAlreadyConnected = existingConnection && existingConnection.client &&
+                  (existingConnection.client.connected === true ||
+                    (existingConnection.client.io && existingConnection.client.io.connected === true));
+
+                if (!isAlreadyConnected) {
+                  console.log(`Initiating forceful reconnection to ${urlConfig.url}...`);
+                  // Clean up any stale connection first
+                  if (existingConnection && existingConnection.client) {
+                    try {
+                      // Disable reconnection on stale connection too
+                      if (existingConnection.client.io) {
+                        existingConnection.client.io.opts.reconnection = false;
+                      }
+                      existingConnection.client.removeAllListeners();
+                      existingConnection.client.disconnect(true);
+                    } catch (err) {
+                      console.log(`Error cleaning up stale connection: ${err.message}`);
+                    }
+                  }
+
+                  // Remove from global array before reconnecting
+                  global.clientSocketIo = global.clientSocketIo.filter(c => c.url !== urlConfig.url);
+
+                  // Forcefully reconnect
+                  connectClients(fastify, urlConfig.clientSocketId).catch((err) => {
+                    console.error(`Error during forceful reconnection to ${urlConfig.url}:`, err);
+                    errorLogger(
+                      fastify,
+                      err.message,
+                      "ERROR --> socketIo.js/connectClients - forceful reconnect",
+                      null
+                    );
+                  });
+                } else {
+                  console.log(`Skipping forceful reconnection to ${urlConfig.url} - already connected or connecting`);
+                }
+              } else {
+                console.log(`Skipping reconnection to ${urlConfig.url} - socket is inactive or should be disconnected`);
+              }
+            }, reconnectDelay);
           });
 
           client.io.on("reconnect_attempt", (attemptNumber) => {
@@ -446,6 +456,10 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
             );
             isConnected = false;
             // Clean up entry when all reconnection attempts are exhausted
+            const clientObj = global.clientSocketIo.find(c => c.client === client || c.url === urlConfig.url);
+            if (clientObj?.cronJob) {
+              clientObj.cronJob.stop();
+            }
             global.clientSocketIo = global.clientSocketIo.filter(
               (c) => c.client !== client && c.url !== urlConfig.url
             );
@@ -593,6 +607,9 @@ const disconnectClients = async (fastify, clientSocketId = undefined) => {
     const promises = disconnectClientUrls?.map((client) => {
       const clientInstance = global.clientSocketIo.find((c) => c.clientSocketId === client.clientSocketId);
       clientInstance?.client.disconnect();
+      if (clientInstance?.cronJob) { // Stop cron job if exists
+        clientInstance.cronJob.stop();
+      }
     });
     await Promise.all(promises);
     const clientIds = disconnectClientUrls.map((c) => c.clientSocketId);
