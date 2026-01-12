@@ -322,6 +322,7 @@ const setEntityCom2Service = async (request , fastify) =>{
         // throw new Error("This commentary not associated with any tpId.")
         return true;
     }
+    const gameState = response?.match_info?.game_state
 
     const scoreResponse = {};
     const sendDataForSocketUpdate = {};
@@ -329,7 +330,7 @@ const setEntityCom2Service = async (request , fastify) =>{
     sendDataForSocketUpdate.eventRefId = comDetails?.eventRefId;
     sendDataForSocketUpdate.dataToUpdate = [];
     // check the status
-    if(response.live.game_state == commentaryStatus.TOSSDONE){
+    if(gameState == commentaryStatus.TOSSDONE){
       if(comDetails.commentaryStatus == commentaryStatus.OPEN){
       // set the toss
       const tossInfo = response.match_info.toss;
@@ -506,7 +507,7 @@ const setEntityCom2Service = async (request , fastify) =>{
       return true;
     }
     // set the players
-    if(response.live.game_state == EntityCommentaryStatus.INPROGRESS){
+    if(gameState == EntityCommentaryStatus.INPROGRESS){
         if(comDetails.commentaryStatus == commentaryStatus.OPEN){
             // set the toss
             const tossInfo = response.match_info.toss;
@@ -885,7 +886,7 @@ const setEntityCom2Service = async (request , fastify) =>{
         }
     }
 
-    // if(response.live.game_state == EntityCommentaryStatus.INNINGCHANGE){
+    // if(gameState == EntityCommentaryStatus.INNINGCHANGE){
     //   if(comDetails.commentaryStatus != commentaryStatus.INNINGCHANGE){
     //     await onInningChangeService(request.body, fastify, comDetails);
 
@@ -895,7 +896,7 @@ const setEntityCom2Service = async (request , fastify) =>{
     //   }
     // }
     
-    if (response.live.game_state == EntityCommentaryStatus.INNINGCHANGE) {
+    if (gameState == EntityCommentaryStatus.INNINGCHANGE) {
       // if (comDetails.commentaryStatus != commentaryStatus.INNINGCHANGE) {
         comDetails.isClientShow = false;
         await handleComArr(request.body, request, fastify, comDetails)
@@ -903,7 +904,7 @@ const setEntityCom2Service = async (request , fastify) =>{
         return true;
       // }
     }
-    if(response.live.game_state == EntityCommentaryStatus.DEFAULT && comDetails.commentaryStatus != commentaryStatus.COMPLETED){
+    if(gameState == EntityCommentaryStatus.DEFAULT && comDetails.commentaryStatus != commentaryStatus.COMPLETED){
       await matchCompleteService(request.body , fastify , comDetails)
     }
 
@@ -913,7 +914,7 @@ const setEntityCom2Service = async (request , fastify) =>{
       GAME_STATUS["Play Ongoing"]
     ];
     let currentState
-    const currentGameState = response?.live?.game_state;
+    const currentGameState = gameState;
     if (typeof currentGameState === "number") {
       currentState = Number(currentGameState);
     }
@@ -2218,32 +2219,34 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           // update wicketType and batsman_id
           let dismissal = c.dismissal.toLowerCase().trim();
           let wtEnum = etWicketObj[dismissal] || wicketTypeObj.BOLD;
-          const normalizeText = str =>
-            str
-              ?.toLowerCase()
-              .replace(/\s+/g, ' ')
-              .trim();
+          // const normalizeText = str =>
+          //   str
+          //     ?.toLowerCase()
+          //     .replace(/\s+/g, ' ')
+          //     .trim();
 
-          const howOut = normalizeText(c?.how_out || '');
+          // const howOut = normalizeText(c?.how_out || '');
 
-          const fielders = response?.players?.filter(player => {
-            const shortName = normalizeText(player.short_name);
-            return (
-              howOut.includes(shortName)
-            );
-          }) || [];
+          // const fielders = response?.players?.filter(player => {
+          //   const shortName = normalizeText(player.short_name);
+          //   return (
+          //     howOut.includes(shortName)
+          //   );
+          // }) || [];
           // const extractedNames = c?.how_out?.match(/\b[A-Z]{1,3}\s[A-Z][a-z]+/g) || [];
           // const fielders = response?.players?.filter(
           //   item => extractedNames.includes(item.short_name)
           // ) || [];
-          const fielder1 = fielders.find(
-            pl => pl?.pid && pl.pid != c?.bowler_id
-          );
-          const fielder2 = fielders.find(
-            pl => pl?.pid && pl.pid != c?.bowler_id && pl.pid != fielder1?.pid
-          );
-          const commFielder = Number(fielder1?.pid || c?.bowler_id);
-          const commFielder2 = Number(fielder2?.pid || c?.bowler_id);
+          // const fielder1 = fielders.find(
+          //   pl => pl.pid != c?.bowler_id
+          // );
+          // const fielder2 = fielders.find(
+          //   pl => pl?.pid && pl.pid != c?.bowler_id && pl.pid != fielder1?.pid
+          // );
+          const fielders = response.scorecard.innings.find((i) => i.number == response.live.live_inning_number)?.batsmen
+                .find((i1) => i1.batsman_id == c.wicket_batsman_id)
+          const commFielder = Number(fielders?.first_fielder_id || c?.bowler_id);
+          const commFielder2 = Number(fielders?.second_fielder_id || c?.bowler_id);
 
           w.wicketType = wtEnum;
           w.fieldPlayerId = playerTpIdObj[commFielder]?.commentaryPlayerId;
@@ -2521,40 +2524,84 @@ const matchCompleteService = async (data , fastify,comDetails) =>{
   let bowlTeam = teams.find((i)=> i.teamStatus == 2)
   let winTeam = teams.find((i) => i.tpId == response.match_info.winning_team_id)
   let isBatTeamWon= false;
-  if(winTeam){
-    isBatTeamWon = winTeam.commentaryTeamId == batTeam.commentaryTeamId ? true : false;
-  }
-  else {
-    return true;
-  }
-  let upComDetails = {
-    ...comDetails,
-    commentaryStatus : commentaryStatus.COMPLETED,
-    winnerId : winTeam.teamId,
-    winnerName : winTeam.teamName,
-    displayStatus : "",
-    result : response.match_info.status_note,
-    rmk : "",
-    // winRmk: response?.match_info?.status_note,
-  }
+  let upComDetails = {}
+  let upBatTeam = {}
+  let upBowlTeam = {}
 
-  let upBatTeam = {
-    ...batTeam,
-    isBattingComplete : true,
-    isWin : isBatTeamWon  
+  const statusNote = response?.match_info?.status_note;
+  const matchResult = statusNote
+    ? statusNote.match(/by\s.+$/i)?.[0] || statusNote
+    : null;
+  const statusString = response?.match_info?.status_str?.toLowerCase().includes("cancelled")
+    ? commentaryStatus.CANCELLED
+    : commentaryStatus.COMPLETED;
+
+  if (winTeam) {
+    isBatTeamWon = winTeam.commentaryTeamId == batTeam.commentaryTeamId ? true : false;
+    upComDetails = {
+      ...comDetails,
+      commentaryStatus: statusString,
+      winnerId: winTeam.teamId,
+      winnerName: winTeam.teamName,
+      displayStatus: "",
+      result: statusNote,
+      rmk: "",
+      winRmk: matchResult,
+    }
+
+    upBatTeam = {
+      ...batTeam,
+      isBattingComplete: true,
+      isWin: isBatTeamWon
+    }
+    upBowlTeam = {
+      ...bowlTeam,
+      isWin: !isBatTeamWon
+    }
+  } else {
+    upComDetails = {
+      ...comDetails,
+      commentaryStatus: statusString,
+      displayStatus: "",
+      result: statusNote,
+      rmk: "",
+      winRmk: matchResult,
+    }
+    upBatTeam = batTeam ?? null;
+    upBowlTeam = bowlTeam ?? null;
   }
-  let upBowlTeam = {
-    ...bowlTeam,
-    isWin : !isBatTeamWon
-  }
+  // let upComDetails = {
+  //   ...comDetails,
+  //   // commentaryStatus : commentaryStatus.COMPLETED,
+  //   commentaryStatus : statusString,
+  //   winnerId : winTeam.teamId,
+  //   winnerName : winTeam.teamName,
+  //   displayStatus : "",
+  //   result : statusNote,
+  //   rmk : "",
+  //   winRmk: matchResult,
+  // }
+
+  // let upBatTeam = {
+  //   ...batTeam,
+  //   isBattingComplete : true,
+  //   isWin : isBatTeamWon  
+  // }
+  // let upBowlTeam = {
+  //   ...bowlTeam,
+  //   isWin : !isBatTeamWon
+  // }
+
+  const commentaryTeams = [upBatTeam, upBowlTeam].filter(Boolean);
 
   await syncEntitySportCommentaryService({
     commentaryId: comDetails.commentaryId,
     commentaryDetails:upComDetails,
-    commentaryTeams: [
-      upBatTeam,
-      upBowlTeam
-    ],
+    // commentaryTeams: [
+    //   upBatTeam,
+    //   upBowlTeam
+    // ],
+    commentaryTeams,
     isCallPredict: false,
   },fastify)
 
