@@ -28,16 +28,16 @@ const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 const bcrypt = require("bcrypt");
 const Tracing = require("@sentry/tracing");
 const { connectClients, disconnectClients } = require("./sockets");
-const { connectEntitySport, disconnectEntitySports } = require("./sockets/enitySport.js");
+const { connectEntitySport, disconnectEntitySports } = require("./sockets/entitySport.js");
 const {
   disConnectClientSocketQuery,
 } = require("./repository/TableClientSocket");
 const { disConnectEntitySocketQuery } = require("./repository/TableEntitySockets.js");
-const {startSignalR} = require("./signalrHandler/MockSignalR.js")
+const { startSignalR } = require("./signalrHandler/MockSignalR.js")
 const WebSocket = require("ws");
 const WebsocketConnection = require("./websocket");
 const webPush = require("web-push");
-const {webPushset} = require("./WebPushHandler/index.js");
+const { webPushset } = require("./WebPushHandler/index.js");
 const { updateMarket } = require("./utilities/marketUpdate.js");
 const cron = require('node-cron');
 const { entitySportAutoImportProcess } = require("./utilities/entitySportAutoImport.js");
@@ -59,7 +59,7 @@ if (process.env.ENABLE_SENTRY === "TRUE") {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
     tracesSampleRate: 0.1,
-    integrations : [
+    integrations: [
       nodeProfilingIntegration(),
       Sentry.postgresIntegration(),
       Sentry.childProcessIntegration()
@@ -111,18 +111,18 @@ module.exports = async function (fastify, opts) {
       const models = [
         "userModel", "userLoginInfoModel", "tabsModel", "roleModel", "encryptionData",
         "permissionModel", "blockModel", "menuTypeModel", "menuItemModel", "menuItemTypeModel",
-        "pageModel", "pageAliasModel", "pageFormateModel", "eventTypeModel", "teamModel", 
-        "teamPlayersModel", "paneltyRunsModel", "playerModel", "matchTypeModel", "errorLogModel", 
-        "playerTypeModel", "bowlingTypeModel", "configModel", "CommentaryModel", "commentaryTeamModel", 
-        "commentaryPlayerModel", "compititionModel", "eventModel", "commentaryBallByBallModel", 
-        "commentaryPartnershipModel", "commentaryWicketModel", "overModel", "displayStatusModel", 
-        "newsModel", "subScribesDomainModel", "subScribesSubDomainModel", "matchTypePredictorModel", 
-        "marketTemplateModel", "eventMarketsModel", "marketRunnerModel", "marketTemplateRunnerModel", 
-        "vendorsModel", "vendorIpModel", "clientSocketModel", "activityLogModel", "mailSettingsModel", 
-        "thirdPartyApisModel", "commentaryScoringLogsModel", "clientVideoModel", "awardModel", "commentaryAwardModel","cardTypeModel",
+        "pageModel", "pageAliasModel", "pageFormateModel", "eventTypeModel", "teamModel",
+        "teamPlayersModel", "paneltyRunsModel", "playerModel", "matchTypeModel", "errorLogModel",
+        "playerTypeModel", "bowlingTypeModel", "configModel", "CommentaryModel", "commentaryTeamModel",
+        "commentaryPlayerModel", "compititionModel", "eventModel", "commentaryBallByBallModel",
+        "commentaryPartnershipModel", "commentaryWicketModel", "overModel", "displayStatusModel",
+        "newsModel", "subScribesDomainModel", "subScribesSubDomainModel", "matchTypePredictorModel",
+        "marketTemplateModel", "eventMarketsModel", "marketRunnerModel", "marketTemplateRunnerModel",
+        "vendorsModel", "vendorIpModel", "clientSocketModel", "activityLogModel", "mailSettingsModel",
+        "thirdPartyApisModel", "commentaryScoringLogsModel", "clientVideoModel", "awardModel", "commentaryAwardModel", "cardTypeModel",
         "iccRankingModel", "competitionStatisticsTypeModel", "competitionStatisticsModel"
       ];
-      
+
       models.forEach((model) => require(`./sequelize/tables/${model}`)(fastify.db));
       setImmediate(async () => {
         try {
@@ -137,137 +137,139 @@ module.exports = async function (fastify, opts) {
           disconnectEntitySports(fastify);
           webPushset(webPush);
           updateMarket(fastify)
-          
+
         } catch (error) {
           console.error(new Date(), "Error during post-sync operations:", error);
         }
       });
     });
-    cron.schedule('0 0 * * *', async () => {
-      try {
-        // Fetching data from db every 24 hrs once(at midnight)
-        await FetchingCommentariesDataFromCron(fastify);
-      } catch (error) {
-        console.error(new Date(), "Error during scheduled task:", error);
-      }
-    });
+  cron.schedule('0 0 * * *', async () => {
+    try {
+      // Fetching data from db every 24 hrs once(at midnight)
+      await FetchingCommentariesDataFromCron(fastify);
+    } catch (error) {
+      console.error(new Date(), "Error during scheduled task:", error);
+    }
+  });
 
-    cron.schedule('* * * * *', async () => {
-      try {
-        await upcomingCommentaries(fastify);
-      } catch (error) {
-        console.error(new Date(), "Error during scheduled task:", error);
-      }
-    });
+  cron.schedule('* * * * *', async () => {
+    try {
+      await upcomingCommentaries(fastify);
+    } catch (error) {
+      console.error(new Date(), "Error during scheduled task:", error);
+    }
+  });
 
-    let isAutoImportProcessEnded = true;
-    cron.schedule('0,30 * * * * *', async () => {
-      try {
-        if (isAutoImportProcessEnded && global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
-          isAutoImportProcessEnded = false;
-          await entitySportAutoImportProcess(fastify);
-          isAutoImportProcessEnded = true;
-        }
-      } catch (error) {
-        console.error("Error during scheduled task - entitySportAutoImportProcess:", error);
+  let isAutoImportProcessEnded = true;
+  cron.schedule('0,30 * * * * *', async () => {
+    try {
+      if (isAutoImportProcessEnded && global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
+        isAutoImportProcessEnded = false;
+        await entitySportAutoImportProcess(fastify);
+        isAutoImportProcessEnded = true;
       }
-    });
+    } catch (error) {
+      console.error("Error during scheduled task - entitySportAutoImportProcess:", error);
+    }
+  });
 
-    cron.schedule(`*/${entitySportAutoUpdateCommentaryTime} * * * *`, async () => {
-      try {
-        if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive && global.tblEntitySockets?.[0]?.isAutoUpdateCommentary) {
-          await entitySportAutoUpdateCommentary(fastify);
-        }
-      } catch (error) {
-        console.error("Error during scheduled task - entitySportAutoUpdateCommentary:", error);
+  cron.schedule(`*/${entitySportAutoUpdateCommentaryTime} * * * *`, async () => {
+    try {
+      if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive && global.tblEntitySockets?.[0]?.isAutoUpdateCommentary) {
+        await entitySportAutoUpdateCommentary(fastify);
       }
-    });
+    } catch (error) {
+      console.error("Error during scheduled task - entitySportAutoUpdateCommentary:", error);
+    }
+  });
 
-    cron.schedule(`*/30 * * * * *`, async () => {
-      try {
-        if (global.isAllDataLoadedInGlobal && global.tblConfigs.find((item) => item.key === ISPLAYERCALCULATIONON).value === "true") {
-          await autoUpdatePlayerStatisticsDataProcess(fastify);
-        }
-      } catch (error) {
-        console.error("Error during scheduled task - autoUpdatePlayerStatisticsDataProcess:", error);
+  cron.schedule(`*/30 * * * * *`, async () => {
+    try {
+      if (global.isAllDataLoadedInGlobal && global.tblConfigs.find((item) => item.key === ISPLAYERCALCULATIONON).value === "true") {
+        await autoUpdatePlayerStatisticsDataProcess(fastify);
       }
-    });
+    } catch (error) {
+      console.error("Error during scheduled task - autoUpdatePlayerStatisticsDataProcess:", error);
+    }
+  });
 
-    cron.schedule('30 19 * * *', async () => {
-      try {
-        if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
-          await insertTournamentTeamPointInAutoImportService(fastify);
-          await insertCompetitionstatisticsInAutoImportService(fastify);
-          await insertICCRankingInAutoImportService(fastify);
-        }
-      } catch (error) {
-        console.error("Error during scheduled task:", error);
+  cron.schedule('0 1 * * *', async () => {
+    try {
+      if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
+        await insertTournamentTeamPointInAutoImportService(fastify);
+        await insertCompetitionstatisticsInAutoImportService(fastify);
+        await insertICCRankingInAutoImportService(fastify);
       }
-    });
+    } catch (error) {
+      console.error("Error during scheduled task:", error);
+    }
+  }, {
+    timezone: "Asia/Kolkata"
+  });
 
-    // .after(async () => {
-    //   require("./sequelize/tables/userModel")(fastify.db);
-    //   require("./sequelize/tables/userLoginInfoModel")(fastify.db);
-    //   require("./sequelize/tables/tabsModel")(fastify.db);
-    //   require("./sequelize/tables/roleModel")(fastify.db);
-    //   require("./sequelize/tables/encryptionData")(fastify.db);
-    //   require("./sequelize/tables/permissionModel")(fastify.db);
-    //   require("./sequelize/tables/blockModel")(fastify.db);
-    //   require("./sequelize/tables/menuTypeModel")(fastify.db);
-    //   require("./sequelize/tables/menuItemModel")(fastify.db);
-    //   require("./sequelize/tables/menuItemTypeModel")(fastify.db);
-    //   require("./sequelize/tables/pageModel")(fastify.db);
-    //   require("./sequelize/tables/pageAliasModel")(fastify.db);
-    //   require("./sequelize/tables/pageFormateModel")(fastify.db);
-    //   require("./sequelize/tables/eventTypeModel")(fastify.db);
-    //   require("./sequelize/tables/teamModel")(fastify.db);
-    //   require("./sequelize/tables/teamPlayersModel")(fastify.db);
-    //   require("./sequelize/tables/paneltyRunsModel")(fastify.db);
-    //   require("./sequelize/tables/playerModel")(fastify.db);
-    //   require("./sequelize/tables/matchTypeModel")(fastify.db);
-    //   require("./sequelize/tables/errorLogModel")(fastify.db);
-    //   require("./sequelize/tables/playerTypeModel")(fastify.db);
-    //   require("./sequelize/tables/bowlingTypeModel")(fastify.db);
-    //   require("./sequelize/tables/configModel")(fastify.db);
-    //   require("./sequelize/tables/CommentaryModel")(fastify.db);
-    //   require("./sequelize/tables/commentaryTeamModel")(fastify.db);
-    //   require("./sequelize/tables/commentaryPlayerModel")(fastify.db);
-    //   require("./sequelize/tables/compititionModel")(fastify.db);
-    //   require("./sequelize/tables/eventModel")(fastify.db);
-    //   require("./sequelize/tables/commentaryBallByBallModel")(fastify.db);
-    //   require("./sequelize/tables/commentaryPartnershipModel")(fastify.db);
-    //   require("./sequelize/tables/commentaryWicketModel")(fastify.db);
-    //   require("./sequelize/tables/overModel")(fastify.db);
-    //   require("./sequelize/tables/displayStatusModel")(fastify.db);
-    //   require("./sequelize/tables/newsModel")(fastify.db);
-    //   require("./sequelize/tables/subScribesDomainModel")(fastify.db);
-    //   require("./sequelize/tables/subScribesSubDomainModel")(fastify.db);
-    //   require("./sequelize/tables/matchTypePredictorModel")(fastify.db);
-    //   require("./sequelize/tables/marketTemplateModel")(fastify.db);
-    //   require("./sequelize/tables/eventMarketsModel")(fastify.db);
-    //   require("./sequelize/tables/marketRunnerModel")(fastify.db);
-    //   require("./sequelize/tables/marketTemplateRunnerModel")(fastify.db);
-    //   require("./sequelize/tables/vendorsModel")(fastify.db);
-    //   require("./sequelize/tables/vendorIpModel")(fastify.db);
-    //   require("./sequelize/tables/clientSocketModel")(fastify.db);
-    //   require("./sequelize/tables/activityLogModel")(fastify.db);
-    //   require("./sequelize/tables/mailSettingsModel")(fastify.db);
-    //   require("./sequelize/tables/thirdPartyApisModel")(fastify.db);
-    //   require("./sequelize/tables/commentaryScoringLogsModel")(fastify.db);
-    //   require("./sequelize/tables/clientVideoModel.js")(fastify.db);
-    //   try {
-    //     await fastify.db.sync();
-    //     await featchData(fastify);
-    //     await disConnectClientSocketQuery(fastify);
-    //     await startSignalR(fastify);
-    //     connectClients(fastify);
-    //     //WebsocketConnection(fastify);
-    //     disconnectClients(fastify);
-    //     webPushset(webPush);
-    //   } catch (error) {
-    //     console.log("error sync with db", error);
-    //   }
-    // });
+  // .after(async () => {
+  //   require("./sequelize/tables/userModel")(fastify.db);
+  //   require("./sequelize/tables/userLoginInfoModel")(fastify.db);
+  //   require("./sequelize/tables/tabsModel")(fastify.db);
+  //   require("./sequelize/tables/roleModel")(fastify.db);
+  //   require("./sequelize/tables/encryptionData")(fastify.db);
+  //   require("./sequelize/tables/permissionModel")(fastify.db);
+  //   require("./sequelize/tables/blockModel")(fastify.db);
+  //   require("./sequelize/tables/menuTypeModel")(fastify.db);
+  //   require("./sequelize/tables/menuItemModel")(fastify.db);
+  //   require("./sequelize/tables/menuItemTypeModel")(fastify.db);
+  //   require("./sequelize/tables/pageModel")(fastify.db);
+  //   require("./sequelize/tables/pageAliasModel")(fastify.db);
+  //   require("./sequelize/tables/pageFormateModel")(fastify.db);
+  //   require("./sequelize/tables/eventTypeModel")(fastify.db);
+  //   require("./sequelize/tables/teamModel")(fastify.db);
+  //   require("./sequelize/tables/teamPlayersModel")(fastify.db);
+  //   require("./sequelize/tables/paneltyRunsModel")(fastify.db);
+  //   require("./sequelize/tables/playerModel")(fastify.db);
+  //   require("./sequelize/tables/matchTypeModel")(fastify.db);
+  //   require("./sequelize/tables/errorLogModel")(fastify.db);
+  //   require("./sequelize/tables/playerTypeModel")(fastify.db);
+  //   require("./sequelize/tables/bowlingTypeModel")(fastify.db);
+  //   require("./sequelize/tables/configModel")(fastify.db);
+  //   require("./sequelize/tables/CommentaryModel")(fastify.db);
+  //   require("./sequelize/tables/commentaryTeamModel")(fastify.db);
+  //   require("./sequelize/tables/commentaryPlayerModel")(fastify.db);
+  //   require("./sequelize/tables/compititionModel")(fastify.db);
+  //   require("./sequelize/tables/eventModel")(fastify.db);
+  //   require("./sequelize/tables/commentaryBallByBallModel")(fastify.db);
+  //   require("./sequelize/tables/commentaryPartnershipModel")(fastify.db);
+  //   require("./sequelize/tables/commentaryWicketModel")(fastify.db);
+  //   require("./sequelize/tables/overModel")(fastify.db);
+  //   require("./sequelize/tables/displayStatusModel")(fastify.db);
+  //   require("./sequelize/tables/newsModel")(fastify.db);
+  //   require("./sequelize/tables/subScribesDomainModel")(fastify.db);
+  //   require("./sequelize/tables/subScribesSubDomainModel")(fastify.db);
+  //   require("./sequelize/tables/matchTypePredictorModel")(fastify.db);
+  //   require("./sequelize/tables/marketTemplateModel")(fastify.db);
+  //   require("./sequelize/tables/eventMarketsModel")(fastify.db);
+  //   require("./sequelize/tables/marketRunnerModel")(fastify.db);
+  //   require("./sequelize/tables/marketTemplateRunnerModel")(fastify.db);
+  //   require("./sequelize/tables/vendorsModel")(fastify.db);
+  //   require("./sequelize/tables/vendorIpModel")(fastify.db);
+  //   require("./sequelize/tables/clientSocketModel")(fastify.db);
+  //   require("./sequelize/tables/activityLogModel")(fastify.db);
+  //   require("./sequelize/tables/mailSettingsModel")(fastify.db);
+  //   require("./sequelize/tables/thirdPartyApisModel")(fastify.db);
+  //   require("./sequelize/tables/commentaryScoringLogsModel")(fastify.db);
+  //   require("./sequelize/tables/clientVideoModel.js")(fastify.db);
+  //   try {
+  //     await fastify.db.sync();
+  //     await featchData(fastify);
+  //     await disConnectClientSocketQuery(fastify);
+  //     await startSignalR(fastify);
+  //     connectClients(fastify);
+  //     //WebsocketConnection(fastify);
+  //     disconnectClients(fastify);
+  //     webPushset(webPush);
+  //   } catch (error) {
+  //     console.log("error sync with db", error);
+  //   }
+  // });
 
   // Configure fastify to use `multipart/form-data` requests
   fastify.register(fastifyMultipart, {
@@ -302,7 +304,7 @@ module.exports = async function (fastify, opts) {
   //   prefix: "/images/",
   //   serve: true,
   // });
-  
+
   // // Serve static files from the "public" folder
   // fastify.register(fastifyStatic, {
   //   root: path.join(__dirname, "public"),
@@ -369,7 +371,7 @@ module.exports = async function (fastify, opts) {
     const urlLastParameter = [...urlDestructor].pop().split(".");
     const urlExceptions = ["/documentation/json", "/documentation", "/admin/virtual/createEvent",
       "/admin/virtual/eventToss", "/admin/virtual/eventBallStart", "/admin/virtual/eventScoring",
-      "/admin/virtual/eventSuffle", "/admin/virtual/cancelEvent","/admin/virtual/serverTime"
+      "/admin/virtual/eventSuffle", "/admin/virtual/cancelEvent", "/admin/virtual/serverTime"
     ];
 
     if (
@@ -491,7 +493,7 @@ module.exports = async function (fastify, opts) {
         origin: true,
         methods: ["GET", "POST", "OPTIONS"], // Allow necessary methods
         preflightContinue: false, // Automatically handle preflight requests,
-        maxAge :300,
+        maxAge: 300,
         preflight: true,
         optionsSuccessStatus: 204, // Ensures proper handling of preflight requests
 

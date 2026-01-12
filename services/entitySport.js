@@ -25,6 +25,7 @@ const { playerMarketQuery } = require("../repository/TableEventMarkets")
 const { playerBattingHistSummarycalculationService } = require("./playerHistory")
 const commentary = require("../routes/admin/commentary")
 const { upActivePartQuery } = require("../repository/entitySportCom")
+const { sendToClientSockets } = require("../utilities/clientSocketUtils");
 
 
 const saveTeamsService = async (request , fastify)=>{
@@ -454,9 +455,32 @@ const setEntityCom2Service = async (request , fastify) =>{
                 })),
               });
           }
-          global.clientSocketIo.forEach((socket) => {
-            socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-          });
+          sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
+        const cData = await getMatchDataByCId(
+          {
+            commentaryId: comDetails?.commentaryId,
+          },
+          request,
+          fastify
+        );
+
+        callClientAPI(
+          {
+            serviceType: ServiceType.clientAPI,
+            moduleType: APIEndpointModuleType.commentaryUpdate,
+            data: cData,
+          },
+          request,
+          fastify
+        ).catch((err) => {
+          console.log("call client api console in setEntityCom2Service", err);
+          errorLogger(
+            fastify,
+            err.message,
+            "ERROR --> services/entitysport.js/setEntityCom2Service",
+            request
+          );
+        });
       }
       if(comDetails.commentaryStatus == commentaryStatus.TOSSDONE){
         // check if getting same data from entity
@@ -1511,6 +1535,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
               over.totalWideBall += 1;
               over.totalWideRun += Number(c?.wide_run) ?? 0;
+              over.bowlerId = playerTpIdObj[c.bowler_id].commentaryPlayerId;
               updateBall.overCount = battingTeam.teamOver;
               updateBall.currentOverBalls = over.ballCount;
               if(!playersMap[c.bowler_id]){
@@ -1615,6 +1640,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
               over.totalNoball += 1;
               over.totalNoBallRun += Number(c?.noball_run) ?? 0;
+              over.bowlerId = playerTpIdObj[c.bowler_id].commentaryPlayerId;
               updateBall.overCount = battingTeam.teamOver;
               updateBall.currentOverBalls = c.ball;
               if(!playersMap[c.bowler_id]){
@@ -1727,6 +1753,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
 
               over.ballCount = c.ball;
               over.totalRun += c.run;
+              over.bowlerId = playerTpIdObj[c.bowler_id].commentaryPlayerId;
               // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
               over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
               if (ball_Type == BALL_TYPE.LEG_BYE) {
@@ -2040,6 +2067,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           }
           over.totalWicket = (over.totalWicket || 0) + 1;
           over.totalRun += c?.run ?? 0;
+          over.bowlerId = playerTpIdObj[c.bowler_id].commentaryPlayerId;
           // over.ballCount += 1;
           over.ballCount = c.ball;
           over.dotBall += 1;
@@ -2179,7 +2207,8 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           if(!w){
             continue;
           }
-          if(w.wicketType != null){
+          let batsmanId = playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId;
+          if(w.wicketType != null && batsmanId == w.batterId){
             continue;
           }
 
@@ -2222,7 +2251,6 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           w.fieldPlayer2Id = playerTpIdObj[commFielder2]?.commentaryPlayerId;
           w.fieldPlayer2Name = playerTpIdObj[commFielder2]?.playerName;
 
-          let batsmanId = playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId;
           let upBall ={
             ...ball,
             ballWicketType: wtEnum,
@@ -4646,12 +4674,16 @@ const upsertCommPartnershipService = async (data, fastify, request) => {
     let pI = global.tblCommentaryPartnership.findIndex((i) => i.commentaryPartnershipId == partnership.commentaryPartnershipId)
     global.tblCommentaryPartnership[pI] = par[0];
     const validate = prtship.findIndex(item => item.commentaryPartnershipId == par[0]?.commentaryPartnershipId);
-    if (validate == -1) {
-      par[0].type = "create";
-      prtship.push(par[0])
-    } else {
-      prtship[validate].type = "update";
-    }
+    // if (validate == -1) {
+    //   par[0].type = "create";
+    //   prtship.push(par[0])
+    // } else {
+    //   prtship[validate].type = "update";
+    // }
+    prtship.push({
+      ...par[0],
+      type: "update"
+    })
   }
   else {
     let cp1 = playerTpIdObj[part.batsmen[0].batsman_id]

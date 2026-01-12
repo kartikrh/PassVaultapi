@@ -223,6 +223,7 @@ const cron = require('node-cron');
 const { insertAutoImportDataService } = require("./autoImportData");
 const { insertTournamentTeamPlayersQuery, deleteTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { insertAutoUpdateCommentaryDataQuery, getAllAutoUpdateCommentaryDataQuery } = require("../repository/TableAutoUpdateCommentaryData");
+const { sendToClientSockets } = require("../utilities/clientSocketUtils");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -1873,9 +1874,7 @@ const updateCommentaryService = async (request, fastify) => {
       isActive: updatedData?.isActive
     };
     
-    global.clientSocketIo.forEach((socket) => {
-      socket.client.emit("updateActionType", socketData);
-    });
+    sendToClientSockets("updateActionType", socketData);
   }
 
   return updatedData;
@@ -5279,9 +5278,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           request
         );
       });
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
 
     if (global.wss) {
@@ -7652,9 +7649,7 @@ const commentaryDetailsByEventIdService = async (
   // emit the data for update commentary
   if (functionName && functionName == "callFromSocket") {
     //console.log("callFromSocket",allDetails);
-    global.clientSocketIo.forEach((socket) => {
-      socket.client.emit("commentaryUpdate", allDetails);
-    });
+    sendToClientSockets("commentaryUpdate", allDetails);
   }
 
   // if (functionName && functionName == "runnersFromSocket") {
@@ -10083,9 +10078,7 @@ const changeShowClientService = async (request, fastify) => {
       isActive: global.tblCommentaries[commentary]?.isActive
     };
     
-    global.clientSocketIo.forEach((socket) => {
-      socket.client.emit("updateActionType", socketData);
-    });
+    sendToClientSockets("updateActionType", socketData);
   }
 
     // if (global.tblCommentaries[commentary].isClientShow) {
@@ -10827,9 +10820,7 @@ const activeInactiveCommentaryService = async (request, fastify) => {
       isActive: global.tblCommentaries[commentary].isActive
     };
     
-    global.clientSocketIo.forEach((socket) => {
-      socket.client.emit("updateActionType", socketData);
-    });
+    sendToClientSockets("updateActionType", socketData);
   }
   commActionLogger(
     {
@@ -15105,9 +15096,7 @@ const saveComVirtual = async (request, fastify) => {
           request
         );
       });
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
 
     if (global.wss) {
@@ -16512,9 +16501,7 @@ const commentaryScoreService = async (request, fastify) => {
         );
       });
 
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
     if (global.wss) {
       let res = {};
@@ -16842,9 +16829,7 @@ const commentaryOverStartService = async (request, fastify) => {
         );
       });
 
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
 
     if (global.wss) {
@@ -17148,9 +17133,7 @@ const commentarySwapPlayerService = async (request, fastify) => {
           request
         );
       });
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
 
     if (global.wss) {
@@ -17663,9 +17646,7 @@ const commentaryInningChangeService = async (request, fastify) => {
       //   });
       // }
 
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
 
     if (global.wss) {
@@ -18476,9 +18457,7 @@ const commentaryWicketService = async (request, fastify) => {
           request
         );
       });
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
     if (global.wss) {
       let res = {};
@@ -18888,9 +18867,7 @@ const commentarySetPlayerService = async (request, fastify) => {
           request
         );
       });
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
     if (global.wss) {
       let res = {};
@@ -19242,9 +19219,7 @@ const undoAPIService = async (request, fastify) => {
         );
       });
 
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
     if (global.wss) {
       let res = {};
@@ -20619,9 +20594,7 @@ const undoAPIService2 = async (request, fastify) => {
       //   });
       // }
 
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
 
     if (global.wss) {
@@ -21269,9 +21242,7 @@ const changeStrikerPlyService = async (request, fastify) => {
       //   });
       // }
 
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
 
     if (global.wss) {
@@ -21877,9 +21848,7 @@ const changePlayerService = async (request, fastify) => {
           request
         );
       });
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
 
     if (global.wss) {
@@ -22220,9 +22189,7 @@ const changeOverService = async (request, fastify) => {
         );
       });
 
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
 
     if (global.wss) {
@@ -25266,9 +25233,7 @@ const undoCommentaryService = async (request, fastify) => {
           request
         );
       });
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
     }
 
     if (global.wss) {
@@ -25449,6 +25414,16 @@ const updateCommentaryPlayersFromEntityService = async (request, fastify) => {
   const entitySportMatch = await callEntitySportAPI(url, request, fastify);
 
   let entitySportMatchResponse = entitySportMatch?.data?.result;
+
+  const insertDataInCommentaryUpdate = {
+    commentaryId: commentaryId,
+    offsetHour: null,
+    status: autoUpdateCommentaryDataStatus.success,
+    message: `Commentary updated`,
+    responseData: entitySportMatchResponse,
+  };
+
+  await insertAutoUpdateCommentaryDataQuery(insertDataInCommentaryUpdate, fastify);
   if (!entitySportMatchResponse) {
     errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/commentary.js/matchImportService - entitySportMatchResponse", {
       ...request,
@@ -25521,7 +25496,8 @@ const processTeamSquadInsertAndUpdate = async ({
       );
       return;
     }
-
+    const addCommPlayer = []
+    const updateCommPlayer = []
     const currentInnings = matchInfoResponse?.latest_inning_number
 
     const compTpId = matchInfoResponse?.competition?.cid;
@@ -25661,7 +25637,8 @@ const processTeamSquadInsertAndUpdate = async ({
         item =>
           item.commentaryId == commentaryId &&
           item.playerId == checkPlayer.playerId &&
-          item.teamId == teamObj.teamId
+          item.teamId == teamObj.teamId &&
+          item.currentInnings == currentInnings
       );
       if (commIndex === -1) {
         const newComm = await insertCommentaryPlayers(
@@ -25682,6 +25659,7 @@ const processTeamSquadInsertAndUpdate = async ({
         );
  
         global.tblCommentaryPlayers.push(newComm[0]);
+        addCommPlayer.push(newComm[0])
       } else {
         await playingElevenChangeOnCommPlayersQuery(
           {
@@ -25695,6 +25673,7 @@ const processTeamSquadInsertAndUpdate = async ({
         );
 
         global.tblCommentaryPlayers[commIndex].isInPlayingEleven = isPlaying11;
+        updateCommPlayer.push(global.tblCommentaryPlayers[commIndex])
       }
 
       //TOURNAMENT TEAM PLAYER
@@ -25721,6 +25700,31 @@ const processTeamSquadInsertAndUpdate = async ({
 
         global.tblTournamentTeamPlayers.push(tournamentInsert[0]);
       }
+    }
+    const sendDataForSocketUpdate = {};
+    sendDataForSocketUpdate.commentaryId = commentaryDetails?.commentaryId;
+    sendDataForSocketUpdate.eventRefId = commentaryDetails?.eventRefId;
+    sendDataForSocketUpdate.dataToUpdate = [];
+
+    if (addCommPlayer.length > 0) {
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module: "commentaryPlayers",
+        type: "create",
+        data: addCommPlayer,
+      });
+      global.clientSocketIo.forEach((socket) => {
+        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      });
+    }
+    if (updateCommPlayer.length > 0) {
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module: "commentaryPlayers",
+        type: "update",
+        data: updateCommPlayer,
+      });
+      global.clientSocketIo.forEach((socket) => {
+        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      });
     }
 
     return true;

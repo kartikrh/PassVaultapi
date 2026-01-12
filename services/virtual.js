@@ -76,6 +76,7 @@ const { processPredictScoreMarket } = require("../markets/index")
 const { cancelEventMarketsQuery, closeEventMarketByCIdQuery, cancelMarketVirtualQuery } = require("../repository/TableEventMarkets");
 const { ISPREDICATIONONCRICKETCARD, DEFAULTBALLFACED, DEFAULTPLAYERRUNS, DEFAULTPLAYERBOUNDARIES } = require("../utilities/configConstants");
 const configConstants = require("../utilities/configConstants");
+const { sendToClientSockets } = require("../utilities/clientSocketUtils");
 // const ballbyball ={
 //   commentaryBallByBallId: 0,
 //   commentaryId: commentary?.commentaryId,
@@ -965,9 +966,7 @@ const updateVirtualEventStatusService = async (request, fastify) => {
     data: response.commentaryDetails,
   });
 
-  global.clientSocketIo.forEach((socket) => {
-    socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-  });
+  sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
 
   commentaryDetails.callPredictions = [];
   const comData = await commentaryResponseSerivce(commentaryId);

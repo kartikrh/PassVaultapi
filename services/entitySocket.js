@@ -10,12 +10,12 @@ const {
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { storeImageOnServer, removeImageFromServer, generateImageName } = require("../utilities/Images");
-const { 
+const {
     connectEntitySport,
-    disconnectEntitySports, 
+    disconnectEntitySports,
     disconnectInactiveEntityClients,
     disconnectIsAutoScoreUpdateFalseEntityClients,
-} = require("../sockets/enitySport");
+} = require("../sockets/entitySport");
 const { clientSocketActionType } = require("../utilities");
 
 const getAllEntitySocketService = async (request, fastify) => {
@@ -227,27 +227,27 @@ const deleteEntitySocketService = async (request, fastify) => {
     const { entitySocketId } = request.body;
 
     for (const id of entitySocketId) {
-      const validateId = global.tblEntitySockets.find((item) => item.entitySocketId === id);
-      if (validateId) {
-        if (validateId.defaultPlayerImage) {
-          await removeImageFromServer({ path: validateId.defaultPlayerImage });
+        const validateId = global.tblEntitySockets.find((item) => item.entitySocketId === id);
+        if (validateId) {
+            if (validateId.defaultPlayerImage) {
+                await removeImageFromServer({ path: validateId.defaultPlayerImage });
+            }
+
+            if (validateId.defaultTeamImage) {
+                await removeImageFromServer({ path: validateId.defaultTeamImage });
+            }
+
+            if (validateId.defaultJerseyImage) {
+                await removeImageFromServer({ path: validateId.defaultJerseyImage });
+            }
+
+            if (validateId.defaultPlayerJerseyImage) {
+                await removeImageFromServer({ path: validateId.defaultPlayerJerseyImage });
+            }
         }
 
-        if (validateId.defaultTeamImage) {
-          await removeImageFromServer({ path: validateId.defaultTeamImage });
-        }
-
-        if (validateId.defaultJerseyImage) {
-          await removeImageFromServer({ path: validateId.defaultJerseyImage });
-        }
-
-        if (validateId.defaultPlayerJerseyImage) {
-          await removeImageFromServer({ path: validateId.defaultPlayerJerseyImage });
-        }
-      }
-      
     }
-  
+
     await deleteEntitySocketQuery(
         entitySocketId,
         request,
@@ -321,7 +321,7 @@ const isAutoScoreUpdateEntitySocketService = async (request, fastify) => {
         throw new Error(`Entity with this id not found`);
     }
     await isAutoScoreUpdateEntitySocketQuery(request, fastify);
-    
+
     global.tblEntitySockets[index].isAutoScoreUpdate = isAutoScoreUpdate;
 
     if (isAutoScoreUpdate == true) {

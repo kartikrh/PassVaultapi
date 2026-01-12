@@ -12,9 +12,10 @@ const configConstants = require("../utilities/configConstants");
 const { createDataQuery } = require("../repository/TableEntityDataLog");
 const commentaryQueue = new Map();
 let isProcessingQueue = false;
+let processTimeout;
 
 function addToQueue(payload, fastify) {
-  if (!payload?.response?.match_id) return;let resul
+  if (!payload?.response?.match_id) return;
   const matchId = payload.response.match_id;
 
   // Replace existing queued item if same matchId (avoid duplicates)
@@ -67,14 +68,14 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
     if (entitySocketId !== undefined) {
       entitySports = global.tblEntitySockets.filter(
         (c) => c.isActive === true && c.entitySocketId == entitySocketId
-          && c.actionType == clientSocketActionType.connect 
+          && c.actionType == clientSocketActionType.connect
           && c.status !== clientSocketStatus.connected
           && c.isAutoScoreUpdate == true
       );
     } else {
       entitySports = global.tblEntitySockets.filter(
-        (c) => c.isActive === true 
-          && c.actionType == clientSocketActionType.connect 
+        (c) => c.isActive === true
+          && c.actionType == clientSocketActionType.connect
           && c.status !== clientSocketStatus.connected
           && c.isAutoScoreUpdate == true
       );
@@ -83,11 +84,11 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       const existing = global.entitySportSocketIo.find(
         (c) => c.url === urlConfig.url
       );
-      
+
       // Check if existing connection is still active and connected
-      const isConnected = existing && existing.client && 
-        (existing.client.connected === true || 
-         (existing.client.io && existing.client.io.connected === true));
+      const isConnected = existing && existing.client &&
+        (existing.client.connected === true ||
+          (existing.client.io && existing.client.io.connected === true));
 
       if (isConnected) {
         console.log(`Entity connection to ${urlConfig.url} already exists and is connected, skipping reconnection`);
@@ -96,12 +97,12 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
 
       // If existing but disconnected, clean it up properly
       if (existing) {
-        const connectionState = existing.client ? 
+        const connectionState = existing.client ?
           (existing.client.io ? existing.client.io.readyState : 'unknown') : 'no-client';
         const wasConnected = existing.client && existing.client.connected;
-        
+
         console.log(`Cleaning up existing disconnected entity connection to ${urlConfig.url} (state: ${connectionState}, wasConnected: ${wasConnected})`);
-        
+
         try {
           if (existing.client) {
             // Only disconnect if not already disconnected to avoid unnecessary operations
@@ -186,8 +187,8 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
             const request = { body: payload };
             if (payload.api_type && payload.api_type == "match_push_obj") {
               let isLog = global.tblConfigs.find((c) => c.key == configConstants.ISENTITYDATALOG)?.value || "false";
-              if(isLog == "false") { return true; }
-              await createDataQuery({data : payload, matchId : payload.response.match_id}, fastify);
+              if (isLog == "false") { return true; }
+              await createDataQuery({ data: payload, matchId: payload.response.match_id }, fastify);
               // await setEntityCom2Service(request, fastify);
               console.log("entityScoreData.....")
               addToQueue(payload, fastify);
@@ -198,8 +199,8 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
               const request = { body: payload };
               await updateCommentaryPlayersFromEntityService(request, fastify);
               let isLog = global.tblConfigs.find((c) => c.key == configConstants.ISENTITYDATALOG)?.value || "false";
-              if(isLog == "false") { return true; }
-              await createDataQuery({data : payload, matchId : payload.response.match_id}, fastify);
+              if (isLog == "false") { return true; }
+              await createDataQuery({ data: payload, matchId: payload.response.match_id }, fastify);
             } else {
               return true;
             }
@@ -228,7 +229,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
         );
       })
       client.on("entitywebsocketdisconnect", (message) => {
-        const newMessage = `Entity web socket disconnected, code: ${message.code} ${message?.reason !== "" ? `reason: ${message.reason}`: ""} at ${new Date().toISOString()}`;
+        const newMessage = `Entity web socket disconnected, code: ${message.code} ${message?.reason !== "" ? `reason: ${message.reason}` : ""} at ${new Date().toISOString()}`;
         global.socketIo.emit("entitywebsocketdisconnect", newMessage);
         errorLogger(
           fastify,
@@ -246,7 +247,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
           "Entity Socket --> socketIo.js/entitySports/connectEntitySport - disconnect",
           null
         );
-        
+
         // Log disconnect reason for debugging
         if (reason === "transport close") {
           console.log(`  → Transport closed (network issue or server closed connection)`);
@@ -259,7 +260,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
         } else if (reason === "io client disconnect") {
           console.log(`  → Client initiated disconnect`);
         }
-        
+
         global.entitySportSocketIo = global.entitySportSocketIo.filter(
           (c) => c.client !== client && c.url !== urlConfig.url
         );
@@ -373,7 +374,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
         global.entitySportSocketIo = global.entitySportSocketIo.filter(
           (c) => c.client !== client && c.url !== urlConfig.url
         );
-        
+
         // Persist status change to DB and reset reconnect count
         updateEntitySocketStatusQuery(
           {
@@ -531,7 +532,7 @@ const disconnectIsAutoScoreUpdateFalseEntityClients = async (fastify) => {
     );
   }
 }
-module.exports = { 
+module.exports = {
   connectEntitySport,
   disconnectEntitySports,
   disconnectInactiveEntityClients,
