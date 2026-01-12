@@ -2532,7 +2532,11 @@ const matchCompleteService = async (data , fastify,comDetails) =>{
   const matchResult = statusNote
     ? statusNote.match(/by\s.+$/i)?.[0] || statusNote
     : null;
-  const statusString = response?.match_info?.status_str?.toLowerCase().includes("cancelled")
+
+  const cancelledKeys = ["cancelled", "abandoned", "no result"];
+  const statusString = cancelledKeys.some(val =>
+    response?.match_info?.status_str?.toLowerCase().includes(val)
+  )
     ? commentaryStatus.CANCELLED
     : commentaryStatus.COMPLETED;
 
