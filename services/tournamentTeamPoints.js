@@ -792,11 +792,10 @@ const importUpdateTournamentTeamPointFromEntitySportService = async (data, fasti
   await addEditTournamentTeamPointDataService(entitySportCompetitionInfoResponse, checkCompetition?.competitionId, fastify, request);
   const entityCompetitionStatus = compStatus[entitySportCompetitionInfoResponse?.status]
   if (entityCompetitionStatus !== checkCompetition?.commStatus) {
-    const { image, ...competitionBody } = checkCompetition;
     await saveCompetitionService({
       ...request,
       body: {
-        ...competitionBody,
+        competitionId: checkCompetition?.competitionId,
         commStatus: entityCompetitionStatus
       }
     }, fastify);
