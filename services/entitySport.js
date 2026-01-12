@@ -1535,6 +1535,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
               over.totalWideBall += 1;
               over.totalWideRun += Number(c?.wide_run) ?? 0;
+              over.bowlerId = playerTpIdObj[c.bowler_id].commentaryPlayerId;
               updateBall.overCount = battingTeam.teamOver;
               updateBall.currentOverBalls = over.ballCount;
               if(!playersMap[c.bowler_id]){
@@ -1639,6 +1640,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
               over.totalNoball += 1;
               over.totalNoBallRun += Number(c?.noball_run) ?? 0;
+              over.bowlerId = playerTpIdObj[c.bowler_id].commentaryPlayerId;
               updateBall.overCount = battingTeam.teamOver;
               updateBall.currentOverBalls = c.ball;
               if(!playersMap[c.bowler_id]){
@@ -1751,6 +1753,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
 
               over.ballCount = c.ball;
               over.totalRun += c.run;
+              over.bowlerId = playerTpIdObj[c.bowler_id].commentaryPlayerId;
               // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
               over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
               if (ball_Type == BALL_TYPE.LEG_BYE) {
@@ -2064,6 +2067,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           }
           over.totalWicket = (over.totalWicket || 0) + 1;
           over.totalRun += c?.run ?? 0;
+          over.bowlerId = playerTpIdObj[c.bowler_id].commentaryPlayerId;
           // over.ballCount += 1;
           over.ballCount = c.ball;
           over.dotBall += 1;
