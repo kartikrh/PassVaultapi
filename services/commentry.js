@@ -25414,6 +25414,11 @@ const checkSUpdatePasswordService = async(request,fastify) =>{
 
 const updateCommentaryPlayersFromEntityService = async (request, fastify) => {
   const { response } = request.body;
+  let checkCommentary = global.tblCommentaries.find(item => item.tpId == response?.match_id);
+  if (!checkCommentary) {
+    return;
+  }
+
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getMatchDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
     errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/commentary.js/matchImportService - checkEntitySportAPIEndpoint", request);
@@ -25426,7 +25431,7 @@ const updateCommentaryPlayersFromEntityService = async (request, fastify) => {
   let entitySportMatchResponse = entitySportMatch?.data?.result;
 
   const insertDataInCommentaryUpdate = {
-    commentaryId: commentaryId,
+    commentaryId: checkCommentary?.commentaryId,
     offsetHour: null,
     status: autoUpdateCommentaryDataStatus.success,
     message: `Commentary updated`,
@@ -25440,11 +25445,6 @@ const updateCommentaryPlayersFromEntityService = async (request, fastify) => {
       originalUrl: url
     }, entitySportMatch?.data);
     return false;
-  }
-
-  let checkCommentary = global.tblCommentaries.find(item => item.tpId == response?.match_id);
-  if (!checkCommentary) {
-    return;
   }
   const commentaryId = checkCommentary?.commentaryId
   const matchInfoResponse = entitySportMatchResponse?.match_info;
