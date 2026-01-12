@@ -9,6 +9,7 @@ const {
   setEntityCom,
   setEntityCom2,
   saveTournamentTeamPlayer,
+  updateCommentaryPlayersPlaying11,
 } = require("../../../controller/users/admin/entitySport");
 
 module.exports = async (fastify, opts) => {
@@ -47,5 +48,8 @@ module.exports = async (fastify, opts) => {
   fastify.post("/saveTournamentTeamPlayer", {
     schema: EntitySport.SaveTournamentTeamPlayer.schema,
     handler: (request, reply) => saveTournamentTeamPlayer(request, reply, fastify),
+  });
+  fastify.post("/playing11", {
+    handler: (request, reply) => updateCommentaryPlayersPlaying11(request, reply, fastify),
   });
 };
