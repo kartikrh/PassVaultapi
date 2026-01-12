@@ -27,10 +27,8 @@ const { instrument } = require("@socket.io/admin-ui");
 const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 const bcrypt = require("bcrypt");
 const Tracing = require("@sentry/tracing");
-const { connectClients, disconnectClients } = require("./sockets");
 const { connectEntitySport, disconnectEntitySports } = require("./sockets/entitySport.js");
 const { connectClients, disconnectClients ,connectClients2} = require("./sockets");
-const { connectEntitySport, disconnectEntitySports } = require("./sockets/enitySport.js");
 const {
   disConnectClientSocketQuery,
 } = require("./repository/TableClientSocket");
