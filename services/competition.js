@@ -1236,6 +1236,24 @@ const competitionImportService = async (data, fastify, request) => {
   }
 
   if (entitySportCompetitionResponse?.status === "result") {
+    const checkCompetitionResult = global.tblCompetitions.find(item => item.tpId === data.cid);
+    if (checkCompetitionResult) {
+      const competitionStatus = checkCompetitionResult?.commStatus
+        ? checkCompetitionResult?.commStatus
+        : null;
+
+      const esCompetitionStatus = compStatus[entitySportCompetitionResponse?.status];
+      if (esCompetitionStatus && (!competitionStatus || esCompetitionStatus !== competitionStatus)) {
+        await insertAutoImportDataService({
+          ...request,
+          body: {
+            refId: checkCompetitionResult?.tpId || data.cid,
+            refType: RefType.tournamentTeamPointUpdate,
+            sourceId: 3
+          }
+        }, fastify);
+      }
+    }
     return true;
   }
 
