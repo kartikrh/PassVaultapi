@@ -6,7 +6,7 @@ const {
     updateActiveInactiveClientSocketQuery,
     changeIsUpdateViewClientSocketQuery,
 } = require("../repository/TableClientSocket");
-const { connectClients, disconnectClients, disconnectInactiveClients } = require("../sockets");
+const { connectClients2, disconnectClients, disconnectInactiveClients,connectClients } = require("../sockets");
 const { 
     clientSocketActionType, 
     callSocketCountClientAPI,
@@ -154,7 +154,7 @@ const changeActionTypeService = async (request, fastify) => {
         global.tblClientSocket[index].actionType = request.body.actionType;
         const clientSocketId = global.tblClientSocket[index]?.clientSocketId
         if(request.body.actionType === clientSocketActionType.connect) {
-            connectClients(fastify, clientSocketId);
+            connectClients2(fastify, clientSocketId);
         } else if(request.body.actionType === clientSocketActionType.disconnect){
             disconnectClients(fastify, clientSocketId);
         }
@@ -182,7 +182,7 @@ const activeInactiveClientSocketService = async (request, fastify) => {
         fastify
     )
     if(isActive === true){
-        connectClients(fastify);
+        connectClients2(fastify);
         disconnectClients(fastify);
     }else{
         disconnectInactiveClients(fastify);

@@ -15096,7 +15096,17 @@ const saveComVirtual = async (request, fastify) => {
           request
         );
       });
-      sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
+      let timeOut = global.tblConfigs.find((i)=>i.key == configConstants.CARDDELAY)?.value || 0;
+      if (isOverComplete == true) {
+        setTimeout(() => {
+          global.clientSocketIo.forEach((socket) => {
+            socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+          });
+        }, timeOut); // 5 seconds
+      }
+      global.clientSocketIo.forEach((socket) => {
+        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      })
     }
 
     if (global.wss) {
@@ -25404,6 +25414,11 @@ const checkSUpdatePasswordService = async(request,fastify) =>{
 
 const updateCommentaryPlayersFromEntityService = async (request, fastify) => {
   const { response } = request.body;
+  let checkCommentary = global.tblCommentaries.find(item => item.tpId == response?.match_id);
+  if (!checkCommentary) {
+    return;
+  }
+
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getMatchDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
     errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/commentary.js/matchImportService - checkEntitySportAPIEndpoint", request);
@@ -25416,7 +25431,7 @@ const updateCommentaryPlayersFromEntityService = async (request, fastify) => {
   let entitySportMatchResponse = entitySportMatch?.data?.result;
 
   const insertDataInCommentaryUpdate = {
-    commentaryId: commentaryId,
+    commentaryId: checkCommentary?.commentaryId,
     offsetHour: null,
     status: autoUpdateCommentaryDataStatus.success,
     message: `Commentary updated`,
@@ -25430,11 +25445,6 @@ const updateCommentaryPlayersFromEntityService = async (request, fastify) => {
       originalUrl: url
     }, entitySportMatch?.data);
     return false;
-  }
-
-  let checkCommentary = global.tblCommentaries.find(item => item.tpId == response?.match_id);
-  if (!checkCommentary) {
-    return;
   }
   const commentaryId = checkCommentary?.commentaryId
   const matchInfoResponse = entitySportMatchResponse?.match_info;
@@ -25498,7 +25508,7 @@ const processTeamSquadInsertAndUpdate = async ({
     }
     const addCommPlayer = []
     const updateCommPlayer = []
-    const currentInnings = matchInfoResponse?.latest_inning_number
+    const currentInnings = commentaryDetails?.currentInnings
 
     const compTpId = matchInfoResponse?.competition?.cid;
     const compData = global.tblCompetitions.find(c => c.tpId == compTpId);
