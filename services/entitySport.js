@@ -26,7 +26,6 @@ const { playerMarketQuery } = require("../repository/TableEventMarkets")
 const { playerBattingHistSummarycalculationService } = require("./playerHistory")
 const commentary = require("../routes/admin/commentary")
 const { upActivePartQuery } = require("../repository/entitySportCom")
-const { sendToClientSockets } = require("../utilities/clientSocketUtils");
 
 
 const saveTeamsService = async (request , fastify)=>{
@@ -457,7 +456,9 @@ const setEntityCom2Service = async (request , fastify) =>{
                 })),
               });
           }
-          sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
+          global.clientSocketIo.forEach((socket) => {
+            socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+          });
         const cData = await getMatchDataByCId(
           {
             commentaryId: comDetails?.commentaryId,
@@ -875,7 +876,9 @@ const setEntityCom2Service = async (request , fastify) =>{
                 commentaryPlayers : comPlayerUpdate,
                 commentaryPartnership: [partnership]
             },fastify)
-            sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
+            global.clientSocketIo.forEach((socket) => {
+              socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+            });
             // return res;
             // handle commentaries arr
             // if(response.live.commentaries.length > 0){
@@ -2557,7 +2560,7 @@ const matchCompleteService = async (data , fastify,comDetails) =>{
   if (winTeam) {
     isBatTeamWon = winTeam.commentaryTeamId == batTeam.commentaryTeamId ? true : false;
     upComDetails = {
-      ...comDetails,
+    ...comDetails,
       commentaryStatus: statusString,
       winnerId: winTeam.teamId,
       winnerName: winTeam.teamName,
@@ -2565,15 +2568,15 @@ const matchCompleteService = async (data , fastify,comDetails) =>{
       result: statusNote,
       rmk: "",
       winRmk: matchResult,
-    }
+  }
 
     upBatTeam = {
-      ...batTeam,
+    ...batTeam,
       isBattingComplete: true,
       isWin: isBatTeamWon
-    }
+  }
     upBowlTeam = {
-      ...bowlTeam,
+    ...bowlTeam,
       isWin: !isBatTeamWon
     }
   } else {
@@ -4708,6 +4711,7 @@ const upsertCommPartnershipService = async (data, fastify, request) => {
     battingTeam
   } = data;
   let prtship = [];
+  let partnership;
   let [b1, b2] = batters;
   let partExist = global.tblCommentaryPartnership.find((i) =>
     i.commentaryId == comDetails.commentaryId &&
@@ -4774,14 +4778,14 @@ const upsertCommPartnershipService = async (data, fastify, request) => {
       commentaryDetails: comDetails,
       updateBattingTeam: battingTeam
     })
-    partnership = await virtualPartnershipQuery(
+    const createPart = await virtualPartnershipQuery(
       partnership,
       request,
       fastify
     );
-    global.tblCommentaryPartnership.push(partnership);
-    partnership.type = "create";
-    prtship.push(partnership)
+    global.tblCommentaryPartnership.push(createPart);
+    createPart.type = "create";
+    prtship.push(createPart)
   }
   return prtship;
 }
