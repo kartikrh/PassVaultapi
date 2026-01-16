@@ -627,6 +627,12 @@ const connectClients2 = async (fastify, clientSocketId = undefined)=>{
         // ---- socket events ----
         client.on("connect", () => {
           console.log(`Connected → ${urlConfig.url}`);
+          errorLogger(
+            fastify,
+            `Connected to ${urlConfig.url}`,
+            "Client Socket --> sockets/index.js/connectClients2",
+            null
+          );
 
           lastPongAt = Date.now();
           startHeartbeat();
@@ -730,6 +736,15 @@ const connectClients2 = async (fastify, clientSocketId = undefined)=>{
           }
           const existing = global.clientSocketIo.find(
             c => c.clientSocketId === urlConfig.clientSocketId
+          );
+
+          const message = `Client socket disconnected from ${urlConfig.url}, reason: ${reason} at ${new Date().toISOString()}`;
+          // global.socketIo.emit("clientsocketdisconnect", message);
+          errorLogger(
+            fastify,
+            message,
+            "Client Socket --> sockets/index.js/connectClients2 - disconnected",
+            null
           );
 
           if (existing?.cronJob) {
