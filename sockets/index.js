@@ -1,9 +1,5 @@
 
 global.clientSocketIo = [];
-// Global variables for tracking missed messages when socket is disconnected
-global.clientMissedMessages = global.clientMissedMessages || {};
-global.knownClientSocketUrls = global.knownClientSocketUrls || [];
-
 const { io } = require("socket.io-client");
 const { clientSocketActionType, clientSocketStatus } = require("../utilities");
 const { updateClientSocketStatusQuery, updateReconnectCountQuery } = require("../repository/TableClientSocket");
@@ -34,9 +30,9 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
 
         // Check if existing connection is still active and connected
         // Check both client.connected and io.connected for more accurate state
-        const isConnected = existing && existing.client &&
-          (existing.client.connected === true ||
-            (existing.client.io && existing.client.io.connected === true));
+        const isConnected = existing && existing.client && 
+          (existing.client.connected === true || 
+           (existing.client.io && existing.client.io.connected === true));
 
         if (isConnected) {
           console.log(`Connection to ${urlConfig.url} already exists and is connected, skipping reconnection`);
@@ -47,12 +43,12 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
         // If existing but disconnected, clean it up properly
         if (existing) {
           // Check connection state for better logging
-          const connectionState = existing.client ?
+          const connectionState = existing.client ? 
             (existing.client.io ? existing.client.io.readyState : 'unknown') : 'no-client';
           const wasConnected = existing.client && existing.client.connected;
-
+          
           console.log(`Cleaning up existing disconnected connection to ${urlConfig.url} (state: ${connectionState}, wasConnected: ${wasConnected})`);
-
+          
           try {
             if (existing.client) {
               // Only disconnect if not already disconnected to avoid unnecessary operations
@@ -112,22 +108,17 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
               return;
             }
 
-            // Track known client socket URLs
-            if (!global.knownClientSocketUrls.includes(urlConfig.url)) {
-              global.knownClientSocketUrls.push(urlConfig.url);
-            }
-
             // Determine if this is a reconnection or initial connection
             const wasReconnecting = isReconnecting;
             isConnected = true;
             isReconnecting = false; // Reset reconnection flag
             reconnectAttempts = 0;
-
+            
             // Log connection message - distinguish between initial and reconnection
-            const emitMessage = wasReconnecting
+            const emitMessage = wasReconnecting 
               ? `Reconnected to ${urlConfig.url} at ${new Date().toISOString()}`
               : `Connected to ${urlConfig.url} at ${new Date().toISOString()}`;
-
+            
             global.socketIo.emit("clientsocketconnect", emitMessage);
             errorLogger(
               fastify,
@@ -159,21 +150,6 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
             let index = global.tblClientSocket.findIndex((c) => c.clientSocketId === urlConfig.clientSocketId);
             if (index !== -1) {
               global.tblClientSocket[index].status = clientSocketStatus.connected;
-            }
-
-            // Flush missed messages for this URL when reconnected
-            if (global.clientMissedMessages[urlConfig.url] && global.clientMissedMessages[urlConfig.url].length > 0) {
-              console.log(`Flushing ${global.clientMissedMessages[urlConfig.url].length} missed messages for ${urlConfig.url}`);
-              for (const msg of global.clientMissedMessages[urlConfig.url]) {
-                try {
-                  if (client.connected) {
-                    client.emit(msg.eventName, msg.data);
-                  }
-                } catch (err) {
-                  console.error(`Error flushing missed message for ${urlConfig.url}:`, err);
-                }
-              }
-              global.clientMissedMessages[urlConfig.url] = [];
             }
             if (socketObj && socketObj?.isUpdateView == true) {
               const intervalMinutes = Number(socketObj.updateInterval) || 5;
@@ -262,24 +238,24 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
             );
 
             // Only update status if it's not a manual disconnect or server restart
-            updateClientSocketStatusQuery({
-              clientSocketId: [urlConfig.clientSocketId],
-              status: clientSocketStatus.disconnected
-            }, fastify)
-              .catch((error) => {
-                errorLogger(
-                  fastify,
-                  error.message,
-                  "DB Error --> socketIo.js/connectClients",
-                  null
-                );
-              });
+              updateClientSocketStatusQuery({
+                clientSocketId: [urlConfig.clientSocketId],
+                status: clientSocketStatus.disconnected
+              }, fastify)
+                .catch((error) => {
+                  errorLogger(
+                    fastify,
+                    error.message,
+                    "DB Error --> socketIo.js/connectClients",
+                    null
+                  );
+                });
 
-            // update status in global.tblClientSocket
-            let index = global.tblClientSocket.findIndex((c) => c.clientSocketId === urlConfig.clientSocketId);
-            if (index !== -1) {
-              global.tblClientSocket[index].status = clientSocketStatus.disconnected;
-            }
+              // update status in global.tblClientSocket
+              let index = global.tblClientSocket.findIndex((c) => c.clientSocketId === urlConfig.clientSocketId);
+              if (index !== -1) {
+                global.tblClientSocket[index].status = clientSocketStatus.disconnected;
+              }
 
             // Forcefully reconnect when ScoreClientAPI disconnects (server-initiated or network issues)
             // Clean up the old client connection completely
@@ -422,21 +398,6 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
                 ...urlConfig,
                 client,
               };
-            }
-
-            // Flush missed messages for this URL when reconnected
-            if (global.clientMissedMessages[urlConfig.url] && global.clientMissedMessages[urlConfig.url].length > 0) {
-              console.log(`Flushing ${global.clientMissedMessages[urlConfig.url].length} missed messages for ${urlConfig.url} on reconnect`);
-              for (const msg of global.clientMissedMessages[urlConfig.url]) {
-                try {
-                  if (client.connected) {
-                    client.emit(msg.eventName, msg.data);
-                  }
-                } catch (err) {
-                  console.error(`Error flushing missed message for ${urlConfig.url} on reconnect:`, err);
-                }
-              }
-              global.clientMissedMessages[urlConfig.url] = [];
             }
           });
 

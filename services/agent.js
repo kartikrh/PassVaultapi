@@ -10,7 +10,6 @@ const { getMatchDataByCId } = require("./commentry.js");
 const { getPlayersBattingHistoryByIdQuery } = require("../repository/TablePlayerHistory.js");
 const { getAllPlayersByTeamIdAndMatchTypeIdQuery } = require("../repository/TableTeams.js");
 const { errorLogger, commActionLogger } = require("../utilities/logger.js");
-const { sendToClientSockets } = require("../utilities/clientSocketUtils");
 
 const signInAgentServices = async (request, fastify) => {
     const decryptedPassword = encrypt(request.body.password);
@@ -297,7 +296,9 @@ const changeShowClientService = async (request, fastify) => {
       isActive: global.tblCommentaries[commentary]?.isActive
     };
     
-    sendToClientSockets("updateActionType", socketData);
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateActionType", socketData);
+    });
   }
   commActionLogger(
     {
@@ -373,7 +374,9 @@ const activeInactiveCommentaryService = async (request, fastify) => {
       isActive: global.tblCommentaries[commentary].isActive
     };
     
-    sendToClientSockets("updateActionType", socketData);
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateActionType", socketData);
+    });
   }
   commActionLogger(
     {
