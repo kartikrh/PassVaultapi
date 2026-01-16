@@ -6,7 +6,6 @@ const {createMarketOddsBallByBallBYIDFromSocketIo,createMarketOddsBallInSaveDeta
 const configConstants = require('./utilities/configConstants');
 const { getAllEventMarketsV2ByIdQuery } = require("./repository/TableEventMarkets");
 const { getAllMarketRunnersV2ByIdQuery } = require("./repository/TableMarketRunner");
-const { sendToClientSockets } = require("./utilities/clientSocketUtils");
 
 global.sessionData = []
 const connection = (socket , fastify) => {
@@ -242,7 +241,9 @@ const connection = (socket , fastify) => {
       //   ];
       // }
       if (marketOdd.length > 0) {
-        sendToClientSockets("updateFullscore", sendDataForSocketUpdate);
+        global.clientSocketIo.forEach((socket) => {
+          socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+        });
       }
       // await updateTimeLogs(timeLogs.wrId, fastify);
       // console.log("Event Market Updated successfully");
