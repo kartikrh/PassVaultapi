@@ -223,6 +223,7 @@ const cron = require('node-cron');
 const { insertAutoImportDataService } = require("./autoImportData");
 const { insertTournamentTeamPlayersQuery, deleteTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { insertAutoUpdateCommentaryDataQuery, getAllAutoUpdateCommentaryDataQuery } = require("../repository/TableAutoUpdateCommentaryData");
+const { createDataQuery } = require("../repository/TableEntityDataLog")
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -25538,6 +25539,10 @@ const processTeamSquadInsertAndUpdate = async ({
         request
       );
       return;
+    }
+    let isLog = global.tblConfigs.find((c) => c.key == configConstants.ISENTITYDATALOG)?.value || "false";
+    if (isLog == "true") {
+      await createDataQuery({ data: entitySportMatchResponse, matchId: matchInfoResponse?.match_id }, fastify);
     }
     const addCommPlayer = []
     const updateCommPlayer = []

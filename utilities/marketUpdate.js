@@ -212,12 +212,13 @@ const updateMarket = async (fastify) => {
             }
             else {
                 // console.log('No market found to update');
-                errorLogger(
-                    fastify,
-                    "No market found to update",
-                    "utilities/marketUpdate.js",
-                    null
-                )
+                // errorLogger(
+                //     fastify,
+                //     "No market found to update",
+                //     "utilities/marketUpdate.js",
+                //     null
+                // )
+                // return;
             }
         } catch (error) {
             /// console.log('Error in market update', error);
