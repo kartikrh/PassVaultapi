@@ -210,22 +210,23 @@ const updateMarket = async (fastify) => {
                     market = market.filter((m) => !marketToSuspend.map((m) => m.eventMarketId).includes(m.eventMarketId) && !marketToClose.map((m) => m.eventMarketId).includes(m.eventMarketId));
                 },intervalForCheck * 60 * 1000);
             }
-            else {
-                // console.log('No market found to update');
-                // errorLogger(
-                //     fastify,
-                //     "No market found to update",
-                //     "utilities/marketUpdate.js",
-                //     null
-                // )
-                // return;
-            }
+            return;
+            // else {
+            //     // console.log('No market found to update');
+            //     // errorLogger(
+            //     //     fastify,
+            //     //     "No market found to update",
+            //     //     "utilities/marketUpdate.js",
+            //     //     null
+            //     // )
+            //     // return;
+            // }
         } catch (error) {
             /// console.log('Error in market update', error);
             errorLogger(
                 fastify,
                 error.message,
-                "utilities/marketUpdate.js",
+                "utilities/marketUpdate.js - catch",
                 error
             )
         }
