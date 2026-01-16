@@ -4711,6 +4711,7 @@ const upsertCommPartnershipService = async (data, fastify, request) => {
     battingTeam
   } = data;
   let prtship = [];
+  let partnership;
   let [b1, b2] = batters;
   let partExist = global.tblCommentaryPartnership.find((i) =>
     i.commentaryId == comDetails.commentaryId &&
@@ -4777,14 +4778,14 @@ const upsertCommPartnershipService = async (data, fastify, request) => {
       commentaryDetails: comDetails,
       updateBattingTeam: battingTeam
     })
-    partnership = await virtualPartnershipQuery(
+    const createPart = await virtualPartnershipQuery(
       partnership,
       request,
       fastify
     );
-    global.tblCommentaryPartnership.push(partnership);
-    partnership.type = "create";
-    prtship.push(partnership)
+    global.tblCommentaryPartnership.push(createPart);
+    createPart.type = "create";
+    prtship.push(createPart)
   }
   return prtship;
 }
