@@ -1091,6 +1091,8 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
   const playersInTeamsSet = new Set(commentaryPlayers.map(player => player.tpId));
   const filteredPlayerIds = [...new Set(teamPlaying11Squad?.filter(pid => !playersInTeamsSet.has(Number(pid.player_id)))?.map(item => Number(item.player_id)))];
 
+  const addCommPlayer = []
+  const updateCommPlayer = []
   const entitySocketData = global.tblEntitySockets[0];
   const playersInTeams = await getAllPlayersByTeamIdQuery(
     teamId,
@@ -1159,6 +1161,7 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
         isInPlaying11: isAllPlaying11 ? teamPlaying11Squad?.find(item => Number(item.player_id) === teamPlayerData?.tpId)?.playing11 === "true" : true
       }, i, fastify, request);
       global.tblCommentaryPlayers.push(insertCommentaryPlayerData[0]);
+      // addCommPlayer.push(insertCommentaryPlayerData[0])
     }
   }
 
@@ -1187,6 +1190,7 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
       const index = global.tblCommentaryPlayers.findIndex(item => item.commentaryId === commentaryId && item.teamId === teamId && item.currentInnings === i && item.tpId === player.tpId);
       if (index !== -1) {
         global.tblCommentaryPlayers[index] = updatedData;
+        updateCommPlayer.push(global.tblCommentaryPlayers[index]);
       }
     }
   }
@@ -1203,8 +1207,35 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
       const index = global.tblCommentaryPlayers.findIndex(item => item.commentaryId === commentaryId && item.teamId === teamId && item.currentInnings === i && item.tpId === pid);
       if (index !== -1) {
         global.tblCommentaryPlayers[index] = updatedData;
+        updateCommPlayer.push(global.tblCommentaryPlayers[index]);
       }
     }
+  }
+  const comm = global.tblCommentaries.find(item => item.commentaryId == commentaryId)
+  const sendDataForSocketUpdate = {};
+  sendDataForSocketUpdate.commentaryId = commentaryId;
+  sendDataForSocketUpdate.eventRefId = comm?.eventRefId;
+  sendDataForSocketUpdate.dataToUpdate = [];
+
+  if (addCommPlayer.length > 0) {
+    sendDataForSocketUpdate.dataToUpdate.push({
+      module: "commentaryPlayers",
+      type: "create",
+      data: addCommPlayer,
+    });
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+    });
+  }
+  if (updateCommPlayer.length > 0) {
+    sendDataForSocketUpdate.dataToUpdate.push({
+      module: "commentaryPlayers",
+      type: "update",
+      data: updateCommPlayer,
+    });
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+    });
   }
 
   return isAllPlaying11;
