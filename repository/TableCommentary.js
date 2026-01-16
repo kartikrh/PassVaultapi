@@ -93,6 +93,7 @@ const getAllCommentaryQuery = async (fastify) => {
 	  LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
     LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
     WHERE tc."wrIsDelete" = FALSE
+    AND tc."wrCommentaryStatus" != 10
     AND (
       tc."wrCommentaryStatus" != 4
       OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
@@ -1848,6 +1849,7 @@ const getAllCommentaryTeamsQuery = async (fastify) => {
         FROM "tblCommentaries" AS tc
         WHERE 
             tc."wrIsDelete" = FALSE
+        AND tc."wrCommentaryStatus" != 10
         AND (
           tc."wrCommentaryStatus" != 4
           OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
@@ -2018,6 +2020,7 @@ const getAllCommentaryPlayerQuery = async (fastify) => {
         FROM "tblCommentaries" AS tc
         WHERE 
             tc."wrIsDelete" = FALSE
+        AND tc."wrCommentaryStatus" != 10
         AND (
           tc."wrCommentaryStatus" != 4
           OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
@@ -2238,6 +2241,7 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
         FROM "tblCommentaries" AS tc
         WHERE 
             tc."wrIsDelete" = FALSE
+        AND tc."wrCommentaryStatus" != 10
         AND (
           tc."wrCommentaryStatus" != 4
           OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
@@ -2405,6 +2409,7 @@ const getAllOversQuery = async (fastify) => {
         FROM "tblCommentaries" AS tc
         WHERE 
             tc."wrIsDelete" = FALSE
+            AND tc."wrCommentaryStatus" != 10
         AND (
           tc."wrCommentaryStatus" != 4
           OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
@@ -2559,6 +2564,7 @@ const getAllCommentaryWicketQuery = async (fastify) => {
         FROM "tblCommentaries" AS tc
         WHERE 
             tc."wrIsDelete" = FALSE
+        AND tc."wrCommentaryStatus" != 10
         AND (
           tc."wrCommentaryStatus" != 4
           OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
@@ -2694,6 +2700,7 @@ const getAllCommentaryPartnershipQuery = async (fastify) => {
         FROM "tblCommentaries" AS tc
         WHERE 
             tc."wrIsDelete" = FALSE
+        AND tc."wrCommentaryStatus" != 10
         AND (
           tc."wrCommentaryStatus" != 4
           OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
