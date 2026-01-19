@@ -722,7 +722,7 @@ const setEntityCom2Service = async (request , fastify) =>{
             }
             // let batters = part?.batsmen?.map((i)=>i.batsman_id)
             let batters = part?.batsmen?.map(i => i.batsman_id) || [];
-            let partnership = {}
+            let partnership
             if (batters?.length > 0) {
               let [b1, b2] = batters;
               let partExist = global.tblCommentaryPartnership.find((i)=>
@@ -827,8 +827,8 @@ const setEntityCom2Service = async (request , fastify) =>{
                 overCount: 0,
                 currentOverBalls: 0,
                 bowlerId: bowler?.commentaryPlayerId ?? 0,
-                batStrikeId: strikePlayer?.commentaryPlayerId,
-                batNonStrikeId: nonStrikePlayer?.commentaryPlayerId,
+                batStrikeId: strikePlayer?.commentaryPlayerId ?? 0,
+                batNonStrikeId: nonStrikePlayer?.commentaryPlayerId ?? 0,
                 ballIsCount: true,
                 ballType: 0,
                 ballIsDot: false,
@@ -876,7 +876,7 @@ const setEntityCom2Service = async (request , fastify) =>{
                 commentaryId : comDetails.commentaryId,
                 commentaryDetails : upCom,
                 commentaryPlayers : comPlayerUpdate,
-                commentaryPartnership: [partnership]
+                commentaryPartnership: partnership ? [partnership] : []
             },fastify)
             global.clientSocketIo.forEach((socket) => {
               socket.client.emit("updateFullscore", sendDataForSocketUpdate);
@@ -1289,7 +1289,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
       //     prtship.push(partnership)
       // }
     // }
-    
+
     let ballbyball = [];
     let upPlayers =[];
     let upOvers = [];
@@ -1857,55 +1857,70 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                 updateBall.nextBatNonStrikeId = strikePId;
             }
             const ballByBallUp = generateBallET(
-                {
-                    updateBall,
-                    commentaryBallByBallId: 0,
-                    updateBattingTeam : battingTeam,
-                    updateOver : over,
-                    updateBatter : playerTpIdObj[c.batsman_id],
-                    updateBowler : playerTpIdObj[c.bowler_id],
-                    nonStrikeBatter : null,
-                    updatePartnership : partnership,
-                    commentaryDetails:comDetails,
-                },
-                request
+              {
+                updateBall,
+                commentaryBallByBallId: 0,
+                updateBattingTeam: battingTeam,
+                updateOver: over,
+                updateBatter: playerTpIdObj[c.batsman_id],
+                updateBowler: playerTpIdObj[c.bowler_id],
+                nonStrikeBatter: null,
+                updatePartnership: partnership,
+                commentaryDetails: comDetails,
+              },
+              request
             );
-            const oball = await virtualBallByBallQuery(
-                ballByBallUp,
-                request,
-                fastify
-            );
-            global.tblCommentaryBallByBall.push(oball)
-            oball.type = "create";
-            ballbyball.push(oball)
-            
-            if(batters.length > 0){
-              const partRequestData = {
-                batters,
-                comDetails,
-                playerTpIdObj,
-                part,
-                commBall: oball,
-                response,
-                battingTeam,
-              }
-              const partnershipData = await upsertCommPartnershipService(partRequestData, fastify, request);
-              if (partnershipData && partnershipData.length > 0) {
-                prtship.push(...partnershipData);
+            if(batters.length > 0) {
+              let [b1, b2] = batters;
+              let partExist = global.tblCommentaryPartnership.find((i) =>
+                i.commentaryId == comDetails.commentaryId &&
+                i.currentInnings == comDetails.currentInnings &&
+                (
+                  (i.batter1Id == playerTpIdObj[b1].commentaryPlayerId && i.batter2Id == playerTpIdObj[b2].commentaryPlayerId) ||
+                  (i.batter1Id == playerTpIdObj[b2].commentaryPlayerId && i.batter2Id == playerTpIdObj[b1].commentaryPlayerId) // order doesn’t matter
+                )
+              );
+              if (partExist) {
+                const partRequestData = {
+                  batters,
+                  comDetails,
+                  playerTpIdObj,
+                  part,
+                  response,
+                  battingTeam,
+                  partExist,
+                  prtType: 2
+                }
+                const partnershipData = await upsertCommPartnershipService(partRequestData, fastify, request);
+                if (partnershipData && partnershipData.length > 0) {
+                  prtship.push(...partnershipData);
+                }
+                ballbyball.push(ballByBallUp)
+              } else {
+                const oball = await virtualBallByBallQuery(
+                  ballByBallUp,
+                  request,
+                  fastify
+                );
+                global.tblCommentaryBallByBall.push(oball)
+                oball.type = "create";
+                ballbyball.push(oball)
+                const partRequestData = {
+                  batters,
+                  comDetails,
+                  playerTpIdObj,
+                  part,
+                  commBall: oball,
+                  response,
+                  battingTeam,
+                  prtType: 1
+                }
+                const partnershipData = await upsertCommPartnershipService(partRequestData, fastify, request);
+                if (partnershipData && partnershipData.length > 0) {
+                  prtship.push(...partnershipData);
+                }
               }
             }
-            // ballbyball.push(ballByBallUp)
-            // upOver = over;
-            // update partnership
-            // const newPart = genEtPartnership(
-            //     {
-            //         updateBattingTeam : battingTeam,
-            //         currentPartnership: partnership,
-            //         commentaryDetails : comDetails,
-            //     },
-            //     request
-            // );
-            // db call
           } 
         }
         if(event =="overend"){
@@ -2028,6 +2043,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
 
           const wicket_type = etWicketObj[dismissalKey] ?? null;
           // console.log("wicket_type", wicket_type)
+          const entityWicketCount = live_score_data?.wickets || 0
 
           let wicketData = {
             wicketType: wicket_type,
@@ -2042,6 +2058,10 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             fielder2: playerTpIdObj[c.bowler_id]?.commentaryPlayerId,
             bowlerId: playerTpIdObj[c.bowler_id]?.commentaryPlayerId,
             bowlerName : playerTpIdObj[c.bowler_id]?.playerName,
+            playerRun: playerTpIdObj[wicketBatsId]?.batRun,
+            playerBalls: playerTpIdObj[wicketBatsId]?.batBall,
+            ballCount: c?.ball || 0,
+            wicketCount: entityWicketCount,
           };
           battingTeam.teamOver = `${c.over}.${c.ball}`;
           // battingTeam["teamScore"] = (battingTeam.teamScore || 0) + c?.run ?? 0;
@@ -2200,19 +2220,46 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           oball.type = "create";
           ballbyball.push(oball);
 
-          if(batters.length > 0){
-            const partRequestData = {
-              batters,
-              comDetails,
-              playerTpIdObj,
-              part,
-              commBall: oball,
-              response,
-              battingTeam,
-            }
-            const partnershipData = await upsertCommPartnershipService(partRequestData, fastify, request);
-            if (partnershipData && partnershipData.length > 0) {
-              prtship.push(...partnershipData);
+          if(batters.length > 0) {
+            let [b1, b2] = batters;
+            let partExist = global.tblCommentaryPartnership.find((i) =>
+              i.commentaryId == comDetails.commentaryId &&
+              i.currentInnings == comDetails.currentInnings &&
+              (
+                (i.batter1Id == playerTpIdObj[b1].commentaryPlayerId && i.batter2Id == playerTpIdObj[b2].commentaryPlayerId) ||
+                (i.batter1Id == playerTpIdObj[b2].commentaryPlayerId && i.batter2Id == playerTpIdObj[b1].commentaryPlayerId) // order doesn’t matter
+              )
+            );
+            if (partExist) { 
+              const partRequestData = {
+                batters,
+                comDetails,
+                playerTpIdObj,
+                part,
+                response,
+                battingTeam,
+                partExist,
+                prtType: 2
+              }
+              const partnershipData = await upsertCommPartnershipService(partRequestData, fastify, request);
+              if (partnershipData && partnershipData.length > 0) {
+                prtship.push(...partnershipData);
+              }
+            } else {
+              const partRequestData = {
+                batters,
+                comDetails,
+                playerTpIdObj,
+                part,
+                commBall: oball,
+                response,
+                battingTeam,
+                prtType: 1
+              }
+              const partnershipData = await upsertCommPartnershipService(partRequestData, fastify, request);
+              if (partnershipData && partnershipData.length > 0) {
+                prtship.push(...partnershipData);
+              }
             }
           }
           const generateWicket1 = generateWicket({
@@ -2300,12 +2347,16 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                 .find((i1) => i1.batsman_id == c.wicket_batsman_id)
           const commFielder = Number(fielders?.first_fielder_id || c?.bowler_id);
           const commFielder2 = Number(fielders?.second_fielder_id || c?.bowler_id);
+          const entityWicketCount = live_score_data?.wickets || 0
 
           w.wicketType = wtEnum;
           w.fieldPlayerId = playerTpIdObj[commFielder]?.commentaryPlayerId;
           w.fieldPlayerName = playerTpIdObj[commFielder]?.playerName;
           w.fieldPlayer2Id = playerTpIdObj[commFielder2]?.commentaryPlayerId;
           w.fieldPlayer2Name = playerTpIdObj[commFielder2]?.playerName;
+          w.wicketCount = entityWicketCount;
+          w.ballCount = c?.ball || 0;
+
 
           let upBall ={
             ...ball,
@@ -2354,6 +2405,8 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             }
             w.batterId = playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId;
             w.batterName = playerTpIdObj[c.wicket_batsman_id]?.playerName;
+            w.playerRun = playerTpIdObj[c.wicket_batsman_id]?.batRun;
+            w.playerBalls = playerTpIdObj[c.wicket_batsman_id]?.batBall;
           }
             
           // }
@@ -4744,20 +4797,22 @@ const upsertCommPartnershipService = async (data, fastify, request) => {
     part,
     commBall,
     response,
-    battingTeam
+    battingTeam,
+    partExist,
+    prtType
   } = data;
   let prtship = [];
   let partnership;
-  let [b1, b2] = batters;
-  let partExist = global.tblCommentaryPartnership.find((i) =>
-    i.commentaryId == comDetails.commentaryId &&
-    i.currentInnings == comDetails.currentInnings &&
-    (
-      (i.batter1Id == playerTpIdObj[b1].commentaryPlayerId && i.batter2Id == playerTpIdObj[b2].commentaryPlayerId) ||
-      (i.batter1Id == playerTpIdObj[b2].commentaryPlayerId && i.batter2Id == playerTpIdObj[b1].commentaryPlayerId) // order doesn’t matter
-    )
-  );
-  if (partExist) {
+  // let [b1, b2] = batters;
+  // let partExist = global.tblCommentaryPartnership.find((i) =>
+  //   i.commentaryId == comDetails.commentaryId &&
+  //   i.currentInnings == comDetails.currentInnings &&
+  //   (
+  //     (i.batter1Id == playerTpIdObj[b1].commentaryPlayerId && i.batter2Id == playerTpIdObj[b2].commentaryPlayerId) ||
+  //     (i.batter1Id == playerTpIdObj[b2].commentaryPlayerId && i.batter2Id == playerTpIdObj[b1].commentaryPlayerId) // order doesn’t matter
+  //   )
+  // );
+  if (prtType == 2) {
     let comPlayerId1 = global.tblCommentaryPlayers.find((i) => i.commentaryPlayerId == partExist.batter1Id)
     let comPlayerId2 = global.tblCommentaryPlayers.find((i) => i.commentaryPlayerId == partExist.batter2Id)
     let cp1 = part.batsmen.find((i) => i.batsman_id == comPlayerId1.tpId)
@@ -4770,21 +4825,11 @@ const upsertCommPartnershipService = async (data, fastify, request) => {
       batter2Runs: cp2.runs,
       batter1Balls: cp1.balls,
       batter2Balls: cp2.balls,
-      // isActive: true,
-      // totalFour,
-      // totalSix
     }
-    let par = await updateVirtualPartnershipQuery(partnership, fastify, null)
     //update partnersip in db
+    let par = await updateVirtualPartnershipQuery(partnership, fastify, null)
     let pI = global.tblCommentaryPartnership.findIndex((i) => i.commentaryPartnershipId == partnership.commentaryPartnershipId)
     global.tblCommentaryPartnership[pI] = par[0];
-    const validate = prtship.findIndex(item => item.commentaryPartnershipId == par[0]?.commentaryPartnershipId);
-    // if (validate == -1) {
-    //   par[0].type = "create";
-    //   prtship.push(par[0])
-    // } else {
-    //   prtship[validate].type = "update";
-    // }
     prtship.push({
       ...par[0],
       type: "update"

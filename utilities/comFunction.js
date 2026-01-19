@@ -255,10 +255,10 @@ const generateWicket = (data) => {
     commentaryBallByBallId: currentBall.commentaryBallByBallId || 0,
     teamId: battingTeam.teamId,
     teamScore: battingTeam.teamScore,
-    playerRun: currentWicket.batterRuns || 0,
-    playerBalls: currentWicket.batterBalls || 0,
+    playerRun: currentWicket.playerRun || 0,
+    playerBalls: currentWicket.playerBalls || 0,
     wicketCount: (currentWicket.wicketCount || 0),
-    ballCount: 0, //Change in future
+    ballCount: Number(currentWicket.ballCount ?? 0),
     currentInnings: commentaryDetails.currentInnings,
   }
 }
