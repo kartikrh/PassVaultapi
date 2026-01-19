@@ -185,7 +185,10 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     const updateCommentaryData = await updateCommentaryQuery({
                                         body: {
                                             ...commentary,
-                                            ...changedValues
+                                            ...changedValues,
+                                            ...(changedValues.eventDate !== eventDate ? {
+                                                eventDate: matchInfoData.date_start
+                                            } : {}),
                                         }
                                     }, fastify);
 
