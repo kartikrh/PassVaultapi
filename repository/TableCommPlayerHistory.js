@@ -945,7 +945,12 @@ const getAllCommentaryBattingHistoryQueryForClient = async (fastify, playerId = 
           WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tvs2."wrTeamShortName"
           WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tvs1."wrTeamShortName"
           ELSE NULL
-        END as "vsTeamShortName"
+        END as "vsTeamShortName",
+      tcp."wrCompetitionId" as "competitionId",
+      tcp."wrCompetition" as "competitionName",
+      tcp."wrImage" as "competitionImage",
+      tcp."wrStartDate" as "competitionStartDate",
+      tcp."wrEndDate" as "competitionEndDate"
       FROM "tblCommPlayerBatHist" AS tcpbh
       LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" AND tc."wrIsDelete" = false
       LEFT JOIN "tblEvents" AS te ON te."wrEventId" = tc."wrEventId" AND te."wrIsDeleted" = false
@@ -954,6 +959,7 @@ const getAllCommentaryBattingHistoryQueryForClient = async (fastify, playerId = 
       LEFT JOIN "tblTeams" AS tvs1 ON tvs1."wrTeamId" = tc."wrTeam1Id" AND tvs1."wrIsDeleted" = false
       LEFT JOIN "tblTeams" AS tvs2 ON tvs2."wrTeamId" = tc."wrTeam2Id" AND tvs2."wrIsDeleted" = false
       ${playerId ? `LEFT JOIN "tblICCRanking" AS ticr ON ticr."wrMatchTypeId" = tcpbh."wrMatchTypeId" AND ticr."wrIsDeleted" = FALSE AND ticr."wrPlayerId" = $1 AND ticr."wrPlayerTypeId" = 1 AND ticr."wrTeamId" = tcp."wrTeamId"` : ''}
+      LEFT JOIN "tblCompetitions" AS tc ON tcp."wrCompetitionId" = tc."wrCompetitionId" AND tc."wrIsDelete" = false
       WHERE tcpbh."wrIsDeleted" = FALSE ${playerId ? `AND tcpbh."wrPlayerId" = $1` : ''}
     `;
 
@@ -1022,7 +1028,12 @@ const getAllCommentaryBowlingHistoryQueryForClient = async (fastify, playerId = 
           WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tvs2."wrTeamShortName"
           WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tvs1."wrTeamShortName"
           ELSE NULL
-        END as "vsTeamShortName"
+        END as "vsTeamShortName",
+      tcp."wrCompetitionId" as "competitionId",
+      tcp."wrCompetition" as "competitionName",
+      tcp."wrImage" as "competitionImage",
+      tcp."wrStartDate" as "competitionStartDate",
+      tcp."wrEndDate" as "competitionEndDate"
       FROM "tblCommPlayerBowlHist" AS tcpbh
       LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" AND tc."wrIsDelete" = false
       LEFT JOIN "tblEvents" AS te ON te."wrEventId" = tc."wrEventId" AND te."wrIsDeleted" = false
@@ -1031,7 +1042,8 @@ const getAllCommentaryBowlingHistoryQueryForClient = async (fastify, playerId = 
       LEFT JOIN "tblTeams" AS tvs1 ON tvs1."wrTeamId" = tc."wrTeam1Id" AND tvs1."wrIsDeleted" = false
       LEFT JOIN "tblTeams" AS tvs2 ON tvs2."wrTeamId" = tc."wrTeam2Id" AND tvs2."wrIsDeleted" = false
       ${playerId ? `LEFT JOIN "tblICCRanking" AS ticr ON ticr."wrMatchTypeId" = tcpbh."wrMatchTypeId" AND ticr."wrIsDeleted" = FALSE AND ticr."wrPlayerId" = $1 AND ticr."wrPlayerTypeId" = 2 AND ticr."wrTeamId" = tcp."wrTeamId"` : ''}
-        WHERE tcpbh."wrIsDeleted" = FALSE ${playerId ? `AND tcpbh."wrPlayerId" = $1` : ''}
+      LEFT JOIN "tblCompetitions" AS tc ON tcp."wrCompetitionId" = tc."wrCompetitionId" AND tc."wrIsDelete" = false
+      WHERE tcpbh."wrIsDeleted" = FALSE ${playerId ? `AND tcpbh."wrPlayerId" = $1` : ''}
       `;
 
     return await fastify.db.query(query,
