@@ -522,8 +522,8 @@ module.exports = async function (fastify, opts) {
       credentials: true,
     },
     // Improved timeout settings for better connection stability
-    pingInterval: 20000, // Ping every 20 seconds (more frequent than default 25s)
-    pingTimeout: 5000,  // Wait 5 seconds for pong before considering disconnected (reduced from 60s)
+    pingInterval: 25000, // Ping every 25 seconds (Standard default)
+    pingTimeout: 30000,  // Wait 30 seconds for pong before considering disconnected
     connectTimeout: 10000, // Connection timeout (10 seconds)
     // Upgrade timeout for WebSocket upgrades
     upgradeTimeout: 10000,

@@ -987,6 +987,19 @@ const setEntityCom2Service = async (request , fastify) =>{
           }
         }, fastify);
       }
+    } else {
+      errorLogger(
+        fastify,
+        `Failed to update player of the match for commentary id: ${comDetails.commentaryId}`,
+        "Error --> services/entitySport.js/setEntityCom2servie - playerOfTheMatch",
+        null,
+        request.body,
+        {
+          commentary: comDetails,
+          entityCommentaryStatus: entityStatus,
+          response
+        }
+      )
     }
     return true;
   } catch (error) {
