@@ -2154,6 +2154,10 @@ const EntityMatchStatus = {
   NO_RESULT: 4
 };
 
+const awardTypes = {
+  MAN_OF_THE_MATCH: 6
+};
+
 module.exports = {    
   ERROR_CODES,
   error,
@@ -2274,4 +2278,5 @@ module.exports = {
   getKeyAndValueKey,
   competitionMatchTypeEnum,
   EntityMatchStatus,
+  awardTypes
 };

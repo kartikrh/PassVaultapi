@@ -14,6 +14,7 @@ const {
     GAME_STATUS,
     etWicketObj,
     EntityMatchStatus,
+    awardTypes,
 } = require("../utilities/index");
 const { getCountryByIds } = require("../repository/TableCountryCodes")
 const { getVenueByIds } = require("../repository/TableVenue")
@@ -26,6 +27,7 @@ const { playerMarketQuery } = require("../repository/TableEventMarkets")
 const { playerBattingHistSummarycalculationService } = require("./playerHistory")
 const commentary = require("../routes/admin/commentary")
 const { upActivePartQuery } = require("../repository/entitySportCom")
+const { assignAwardService } = require("./commentaryAward")
 
 
 const saveTeamsService = async (request , fastify)=>{
@@ -964,6 +966,40 @@ const setEntityCom2Service = async (request , fastify) =>{
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       });
+    }
+
+    if (comDetails.commentaryStatus == commentaryStatus.COMPLETED && entityStatus == EntityCommentaryStatus.COMPLETED && response?.man_of_the_match?.pid) {
+      const awardData = global.tblAwards.find(aw => aw.id === awardTypes.MAN_OF_THE_MATCH);
+      const playerData = global.tblPlayers.find(p => p.tpId === response?.man_of_the_match?.pid);
+      if (awardData && playerData) {
+        await assignAwardService({
+          ...request,
+          body: {
+            comAwards: [
+              {
+                awardId: awardData.id,
+                awardName: awardData.name,
+                commentaryId: comDetails.commentaryId,
+                playerId: playerData.playerId,
+                playerName: playerData.playerName
+              }
+            ]
+          }
+        }, fastify);
+      }
+    } else {
+      errorLogger(
+        fastify,
+        `Failed to update player of the match for commentary id: ${comDetails.commentaryId}`,
+        "Error --> services/entitySport.js/setEntityCom2servie - playerOfTheMatch",
+        null,
+        request.body,
+        {
+          commentary: comDetails,
+          entityCommentaryStatus: entityStatus,
+          response
+        }
+      )
     }
     return true;
   } catch (error) {
