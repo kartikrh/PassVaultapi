@@ -1895,6 +1895,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                 if (partnershipData && partnershipData.length > 0) {
                   prtship.push(...partnershipData);
                 }
+                ballByBallUp.type = "create";
                 ballbyball.push(ballByBallUp)
               } else {
                 const oball = await virtualBallByBallQuery(
