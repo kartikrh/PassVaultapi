@@ -77,7 +77,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                 const { commentaryId, eventDate, eventName, team1Id, team2Id, onfieldUmpires, thirdUmpire: cThirdUmpire, matchReferee, venueId, location, countryId, eventTypeId } = commentary;
                                 let changedValues = {
                                     id: commentaryId,
-                                    eventDate: eventDate,
+                                    eventDate: new Date(eventDate),
                                     eventName: eventName,
                                     onfieldUmpires: onfieldUmpires,
                                     thirdUmpire: cThirdUmpire,
@@ -87,9 +87,12 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     location: location
                                 };
 
-                                const matchStartUtc = matchInfoData.date_start ? new Date(`${matchInfoData.date_start}Z`) : null;
-                                if (!eventDate || (new Date(eventDate).getTime() !== matchStartUtc?.getTime())) {
-                                    changedValues.eventDate = matchStartUtc;
+                                const esEventStartDate = matchInfoData.date_start
+                                    ? new Date(matchInfoData.date_start)
+                                    : null;
+
+                                if (!eventDate || (eventDate.getTime() !== esEventStartDate?.getTime())) {
+                                    changedValues.eventDate = matchInfoData.date_start;
                                 }
 
                                 if (!eventName || (eventName !== matchInfoData.title)) {
@@ -171,8 +174,13 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     }
                                 }
 
+                                const formatEventDate = changedValues.eventDate ? new Date(changedValues.eventDate) : null;
+                                const formatESEventDate = esEventStartDate ? new Date(esEventStartDate) : null;
+
+                                const isValidDate = (date) => date instanceof Date && !isNaN(date);
+
                                 let isChanged = (
-                                    changedValues.eventDate !== eventDate ||
+                                    (isValidDate(formatEventDate) && isValidDate(formatESEventDate) && formatEventDate.getTime() !== formatESEventDate.getTime()) ||
                                     changedValues.eventName !== eventName ||
                                     changedValues.onfieldUmpires !== onfieldUmpires ||
                                     changedValues.thirdUmpire !== cThirdUmpire ||
