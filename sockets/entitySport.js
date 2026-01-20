@@ -10,63 +10,99 @@ const { setEntityCom2Service } = require("../services/entitySport");
 const { updateCommentaryPlayersFromEntityService } = require("../services/commentry");
 const configConstants = require("../utilities/configConstants");
 const { createDataQuery } = require("../repository/TableEntityDataLog");
-const commentaryQueue = new Map();
-let isProcessingQueue = false;
-let processTimeout;
-const processingMatches = new Set();
+const commentaryQueue = new Map(); // {matchId: {payload, fastify}}
+const matchIdLocks = new Map(); // {matchId: Promise} - ensures serial processing per matchId
+let processTimeout = null;
 
+/**
+ * Per-matchId lock mechanism
+ * Allows multiple matchIds to process in parallel
+ * But ensures serial processing within each matchId (no duplicates)
+ */
+function getOrCreateLock(matchId) {
+  if (!matchIdLocks.has(matchId)) {
+    matchIdLocks.set(matchId, Promise.resolve()); // Start with resolved promise
+  }
+  return matchIdLocks.get(matchId);
+}
 
+function setLock(matchId, promise) {
+  matchIdLocks.set(matchId, promise);
+}
+
+/**
+ * Add payload to queue - only latest data per matchId is kept
+ * Debounced processing with per-matchId locks
+ */
 function addToQueue(payload, fastify) {
   if (!payload?.response?.match_id) return;
   const matchId = payload.response.match_id;
 
-  // Replace existing queued item if same matchId (avoid duplicates)
+  // Replace existing queued item with latest data (avoid duplicates)
   commentaryQueue.set(matchId, { payload, fastify });
-  clearTimeout(processTimeout);
-  processTimeout = setTimeout(() => {
-    // console.log("addToQueue----")
-    if (!isProcessingQueue) processQueue();
-  }, 300);
-
-}
-async function processQueue() {
-  if (isProcessingQueue) return; // Prevent multiple loops
-  isProcessingQueue = true;
-
-  while (commentaryQueue.size > 0) {
-    const [matchId, { payload, fastify }] = commentaryQueue.entries().next().value;
-    // commentaryQueue.delete(matchId);
-    // If this match is already processing, skip for now
-    if (processingMatches.has(matchId)) {
-      commentaryQueue.delete(matchId); // drop old duplicate
-      continue;
-    }
-
-    commentaryQueue.delete(matchId);
-    processingMatches.add(matchId);
-
-    try {
-      // console.log("processQueue,,,,,")
-      const request = { body: payload };
-      await setEntityCom2Service(request, fastify);
-    } catch (err) {
-      errorLogger(
-        fastify,
-        err.message,
-        "Sockets/entitySports.js/processQueue",
-        null,
-        payload
-      )
-      console.error(`Error processing matchId ${matchId}:`, err);
-    }
-    finally {
-      processingMatches.delete(matchId);
-    }
-    // Optional small delay to ease DB load
-    await new Promise((r) => setTimeout(r, 50));
+  
+  // Schedule processing if not already scheduled
+  if (!processTimeout) {
+    processTimeout = setTimeout(() => {
+      processTimeout = null;
+      processQueue();
+    }, 500); // 300ms debounce to batch updates
   }
+}
 
-  isProcessingQueue = false;
+/**
+ * Process queue - multiple matchIds in parallel, but serialized per matchId
+ * Each matchId processes one at a time via locks
+ */
+async function processQueue() {
+  if (commentaryQueue.size === 0) return;
+
+  const processPromises = Array.from(commentaryQueue.entries()).map(
+    ([matchId, { payload, fastify }]) => {
+      // Remove from queue immediately
+      commentaryQueue.delete(matchId);
+
+      // Get existing lock for this matchId (creates new if doesn't exist)
+      const currentLock = getOrCreateLock(matchId);
+
+      // Chain new processing to the lock
+      const newLock = currentLock.then(async () => {
+        try {
+          const request = { body: payload };
+          await setEntityCom2Service(request, fastify);
+          // console.log(`✓ Processed matchId ${matchId}`);
+        } catch (err) {
+          errorLogger(
+            fastify,
+            err.message,
+            "Sockets/entitySports.js/processQueue",
+            null,
+            payload
+          );
+          // console.error(`✗ Error processing matchId ${matchId}:`, err.message);
+        }
+        // Small delay to ease DB load
+        await new Promise((r) => setTimeout(r, 50));
+      });
+
+      // Update lock for this matchId
+      setLock(matchId, newLock);
+
+      // Cleanup: Delete lock after processing completes (prevents memory leak)
+      newLock.finally(() => {
+        // Only delete if no newer lock replaced it
+        if (matchIdLocks.get(matchId) === newLock) {
+          matchIdLocks.delete(matchId);
+          // console.log(`🗑 Cleaned up lock for matchId ${matchId}`);
+        }
+      });
+
+      return newLock;
+    }
+  );
+
+  // Wait for all matchIds to complete their processing
+  await Promise.all(processPromises);
 }
 
 const connectEntitySport = async (fastify, entitySocketId = undefined) => {
