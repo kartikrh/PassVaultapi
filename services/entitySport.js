@@ -995,7 +995,7 @@ const setEntityCom2Service = async (request , fastify) =>{
         {
           commentary: comDetails,
           entityCommentaryStatus: entityStatus,
-          response
+          response: request?.body
         }
       )
     }
