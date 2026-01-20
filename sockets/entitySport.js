@@ -13,6 +13,8 @@ const { createDataQuery } = require("../repository/TableEntityDataLog");
 const commentaryQueue = new Map();
 let isProcessingQueue = false;
 let processTimeout;
+const processingMatches = new Set();
+
 
 function addToQueue(payload, fastify) {
   if (!payload?.response?.match_id) return;
@@ -20,10 +22,11 @@ function addToQueue(payload, fastify) {
 
   // Replace existing queued item if same matchId (avoid duplicates)
   commentaryQueue.set(matchId, { payload, fastify });
+  clearTimeout(processTimeout);
   processTimeout = setTimeout(() => {
     // console.log("addToQueue----")
     if (!isProcessingQueue) processQueue();
-  }, 1000);
+  }, 300);
 
 }
 async function processQueue() {
@@ -32,7 +35,15 @@ async function processQueue() {
 
   while (commentaryQueue.size > 0) {
     const [matchId, { payload, fastify }] = commentaryQueue.entries().next().value;
+    // commentaryQueue.delete(matchId);
+    // If this match is already processing, skip for now
+    if (processingMatches.has(matchId)) {
+      commentaryQueue.delete(matchId); // drop old duplicate
+      continue;
+    }
+
     commentaryQueue.delete(matchId);
+    processingMatches.add(matchId);
 
     try {
       // console.log("processQueue,,,,,")
@@ -48,7 +59,9 @@ async function processQueue() {
       )
       console.error(`Error processing matchId ${matchId}:`, err);
     }
-
+    finally {
+      processingMatches.delete(matchId);
+    }
     // Optional small delay to ease DB load
     await new Promise((r) => setTimeout(r, 50));
   }
