@@ -324,8 +324,7 @@ const setEntityCom2Service = async (request , fastify) =>{
         // throw new Error("This commentary not associated with any tpId.")
         return true;
     }
-    const gameState = response?.match_info?.game_state || response?.live?.game_state
-
+    const gameState = response?.match_info?.game_state ?? response?.live?.game_state
     const scoreResponse = {};
     const sendDataForSocketUpdate = {};
     sendDataForSocketUpdate.commentaryId = comDetails?.commentaryId;
