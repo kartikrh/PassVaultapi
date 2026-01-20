@@ -83,6 +83,7 @@ const { getPlayerById } = require("../../../controller/users/admin/teamsAndPlaye
 const { getCompetitionStatisticsByCompetitionId } = require("../../../controller/users/admin/competitionStatistics");
 const { getPlayerHistoryByPlayerIdForClient } = require("../../../controller/users/admin/playerHistory");
 const { getCommentaryPlayerHistoryByPlayerIdForClient } = require("../../../controller/users/admin/commPlayerHistory");
+const { getTournamentTeamPlayersByCompetitionIdForClient } = require("../../../controller/users/admin/tournamentTeamPlayers");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/getscore", {
@@ -457,6 +458,10 @@ module.exports = async (fastify, opts) => {
   fastify.post("/getCommentaryStatistics", {
     schema: Score.getCommentaryStatistics.schema,
     handler: (request , reply) => getCommentaryStatistics(request, reply, fastify)
+  });
+  fastify.post("/getCompetitionSquads", {
+    schema: Score.getCompetitionSquads.schema,
+    handler: (request , reply) => getTournamentTeamPlayersByCompetitionIdForClient(request, reply, fastify)
   });
 };
 

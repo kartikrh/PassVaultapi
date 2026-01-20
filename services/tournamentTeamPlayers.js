@@ -266,10 +266,28 @@ const addAndRemovePlayersFromTournamentTeams = async (request, fastify) => {
   }
 };
 
+const getTournamentTeamPlayersByCompetitionIdForClientService = async (request, fastify) => {
+  const { competitionId } = request.body;
+  const result = global.tblTournamentTeamPlayers.filter(
+    (item) => item.competitionId === competitionId
+  );
+  const teams = [...new Set(result.map(item => item.teamId))];
+  const data = [];
+  for (const t of teams) {
+    const teamData = global.tblTeams.find(team => team.teamId === t);
+    data.push({
+      teamData,
+      teamPlayers: result.filter(item => item.teamId === t)
+    });
+  }
+  return data;
+}
+
 module.exports = {
   allTournamentTeamPlayersService,
   addTournamentTeamPlayersService,
   getPlayersByTeamIdService,
   deleteTournamentTeamPlayersService,
   addDeleteTournamentTeamPlayersService,
+  getTournamentTeamPlayersByCompetitionIdForClientService
 };

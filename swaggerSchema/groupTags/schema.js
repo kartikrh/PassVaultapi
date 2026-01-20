@@ -5387,6 +5387,20 @@ const Score = {
         required: ["competitionId"]
       }
     }
+  },
+  getCompetitionSquads: {
+    schema: {
+      tags: ["Score"],
+      description: "get competition squad by competition id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" }
+        },
+        required: ["competitionId"]
+      }
+    }
   }
 };
 
