@@ -23,7 +23,7 @@ function addToQueue(payload, fastify) {
   processTimeout = setTimeout(() => {
     // console.log("addToQueue----")
     if (!isProcessingQueue) processQueue();
-  }, 500);
+  }, 1000);
 
 }
 async function processQueue() {
