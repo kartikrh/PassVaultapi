@@ -87,8 +87,9 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     location: location
                                 };
 
-                                if (!eventDate || (new Date(eventDate).getTime() !== new Date(matchInfoData.date_start).getTime())) {
-                                    changedValues.eventDate = new Date(matchInfoData.date_start);
+                                const matchStartUtc = matchInfoData.date_start ? new Date(`${matchInfoData.date_start}Z`) : null;
+                                if (!eventDate || (new Date(eventDate).getTime() !== matchStartUtc?.getTime())) {
+                                    changedValues.eventDate = matchStartUtc;
                                 }
 
                                 if (!eventName || (eventName !== matchInfoData.title)) {
@@ -186,9 +187,6 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                         body: {
                                             ...commentary,
                                             ...changedValues,
-                                            ...(changedValues.eventDate !== eventDate ? {
-                                                eventDate: matchInfoData.date_start
-                                            } : {}),
                                         }
                                     }, fastify);
 
