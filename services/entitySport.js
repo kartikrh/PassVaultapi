@@ -967,39 +967,52 @@ const setEntityCom2Service = async (request , fastify) =>{
       });
     }
 
-    if (comDetails.commentaryStatus == commentaryStatus.COMPLETED && entityStatus == EntityMatchStatus.COMPLETED && response?.man_of_the_match?.pid) {
-      const awardData = global.tblAwards.find(aw => aw.id === awardTypes.MAN_OF_THE_MATCH);
-      const playerData = global.tblPlayers.find(p => p.tpId === response?.man_of_the_match?.pid);
-      if (awardData && playerData) {
-        await assignAwardService({
-          ...request,
-          body: {
-            comAwards: [
-              {
-                awardId: awardData.id,
-                awardName: awardData.name,
-                commentaryId: comDetails.commentaryId,
-                playerId: playerData.playerId,
-                playerName: playerData.playerName
-              }
-            ]
-          },
-          userTokenInfo: { WrUserId: -2 }
-        }, fastify);
-      }
-    } else {
-      errorLogger(
-        fastify,
-        `Failed to update player of the match for commentary id: ${comDetails.commentaryId}`,
-        "Error --> services/entitySport.js/setEntityCom2servie - playerOfTheMatch",
-        null,
-        {
-          commentary: comDetails,
-          entityCommentaryStatus: entityStatus,
-          response: request?.body
+    if (comDetails.commentaryStatus == commentaryStatus.COMPLETED && entityStatus == EntityMatchStatus.COMPLETED) {
+      if (response?.man_of_the_match?.pid) {
+        const awardData = global.tblAwards.find(aw => aw.id === awardTypes.MAN_OF_THE_MATCH);
+        const playerData = global.tblPlayers.find(p => p.tpId === response?.man_of_the_match?.pid);
+        if (awardData && playerData) {
+          await assignAwardService({
+            ...request,
+            body: {
+              comAwards: [
+                {
+                  awardId: awardData.id,
+                  awardName: awardData.name,
+                  commentaryId: comDetails.commentaryId,
+                  playerId: playerData.playerId,
+                  playerName: playerData.playerName
+                }
+              ]
+            },
+            userTokenInfo: { WrUserId: -2 }
+          }, fastify);
+        } else {
+          errorLogger(
+            fastify,
+            `Failed to update player of the match for commentary id: ${comDetails.commentaryId}`,
+            "Error --> services/entitySport.js/setEntityCom2servie - playerOfTheMatch",
+            null,
+            {
+              commentary: comDetails,
+              entityCommentaryStatus: entityStatus,
+              response: request?.body,
+              awardType: awardTypes.MAN_OF_THE_MATCH,
+              playerId: response?.man_of_the_match?.pid
+            }
+          )
         }
-      )
+      } else {
+        errorLogger(
+          fastify,
+          `Man of the match not found for commentary id: ${comDetails.commentaryId}`,
+          "Error --> services/entitySport.js/setEntityCom2servie - playerOfTheMatch",
+          null,
+          request?.body
+        )
+      }
     }
+
     return true;
   } catch (error) {
     console.log("error", error);
