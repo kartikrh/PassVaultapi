@@ -983,7 +983,8 @@ const setEntityCom2Service = async (request , fastify) =>{
                 playerName: playerData.playerName
               }
             ]
-          }
+          },
+          userTokenInfo: { WrUserId: -2 }
         }, fastify);
       }
     } else {
