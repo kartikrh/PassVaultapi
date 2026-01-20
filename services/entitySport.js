@@ -843,7 +843,7 @@ const setEntityCom2Service = async (request , fastify) =>{
               let cp2 = playerTpIdObj[part.batsmen[1].batsman_id]
               partnership = genEtPartnership({
                 currentPartnership: {
-                  commentaryPartnershipId: ball?.commentaryBallByBallId,
+                  commentaryBallByBallId: ball?.commentaryBallByBallId,
                   batter1Id: cp1.commentaryPlayerId,
                   batter1Name: cp1.playerName,
                   batter2Id: cp2.commentaryPlayerId,
