@@ -967,7 +967,7 @@ const setEntityCom2Service = async (request , fastify) =>{
       });
     }
 
-    if (comDetails.commentaryStatus == commentaryStatus.COMPLETED && entityStatus == EntityCommentaryStatus.COMPLETED && response?.man_of_the_match?.pid) {
+    if (comDetails.commentaryStatus == commentaryStatus.COMPLETED && entityStatus == EntityMatchStatus.COMPLETED && response?.man_of_the_match?.pid) {
       const awardData = global.tblAwards.find(aw => aw.id === awardTypes.MAN_OF_THE_MATCH);
       const playerData = global.tblPlayers.find(p => p.tpId === response?.man_of_the_match?.pid);
       if (awardData && playerData) {
@@ -992,11 +992,10 @@ const setEntityCom2Service = async (request , fastify) =>{
         `Failed to update player of the match for commentary id: ${comDetails.commentaryId}`,
         "Error --> services/entitySport.js/setEntityCom2servie - playerOfTheMatch",
         null,
-        request.body,
         {
           commentary: comDetails,
           entityCommentaryStatus: entityStatus,
-          response
+          response: request?.body
         }
       )
     }
