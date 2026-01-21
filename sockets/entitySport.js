@@ -13,6 +13,7 @@ const { createDataQuery } = require("../repository/TableEntityDataLog");
 const commentaryQueue = new Map(); // {matchId: {payload, fastify}}
 const matchIdLocks = new Map(); // {matchId: Promise} - ensures serial processing per matchId
 let processTimeout = null;
+global.connectedEntitySocketClients = global.connectedEntitySocketClients || new Set();
 
 /**
  * Per-matchId lock mechanism
@@ -188,6 +189,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
 
       // Attach event listeners for connection events
       client.on("connect", () => {
+        global.connectedEntitySocketClients.add(client);
         const emitMessage = `Connected to entitySport - ${urlConfig.url} at ${new Date().toISOString()}`;
         global.socketIo.emit("entitysocketconnect", emitMessage);
         errorLogger(
@@ -287,6 +289,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
         );
       })
       client.on("disconnect", (reason) => {
+        global.connectedEntitySocketClients.delete(client);
         const message = `Entity socket disconnected from ${urlConfig.url}, reason: ${reason} at ${new Date().toISOString()}`;
         global.socketIo.emit("entitydisconnect", message);
         errorLogger(
@@ -366,6 +369,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       });
 
       client.io.on("reconnect", (attemptNumber) => {
+        global.connectedEntitySocketClients.add(client);
         console.log(`Entity Reconnected to ${urlConfig.url} after ${attemptNumber} attempts at ${new Date().toISOString()}`);
 
         // Update database status on reconnect

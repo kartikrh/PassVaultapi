@@ -8,6 +8,7 @@ const {
   changeEntityActionType,
   isAutoScoreUpdateEntitySocket,
   isAutoUpdateCommentaryEntitySocket,
+  getEntitySocketResponse,
 } = require("../../../controller/users/admin/entitySocket");
 const { EntitySocket } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -114,5 +115,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => isAutoUpdateCommentaryEntitySocket(request, reply, fastify),
+  });
+
+  fastify.get("/getEntitySocketResponse", {
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "EntitySocket",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => getEntitySocketResponse(request, reply, fastify),
   });
 };
