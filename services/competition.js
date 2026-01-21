@@ -1161,7 +1161,7 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
         isInPlaying11: isAllPlaying11 ? teamPlaying11Squad?.find(item => Number(item.player_id) === teamPlayerData?.tpId)?.playing11 === "true" : true
       }, i, fastify, request);
       global.tblCommentaryPlayers.push(insertCommentaryPlayerData[0]);
-      // addCommPlayer.push(insertCommentaryPlayerData[0])
+      addCommPlayer.push(insertCommentaryPlayerData[0])
     }
   }
 

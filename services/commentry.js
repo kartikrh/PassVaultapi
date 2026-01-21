@@ -5892,7 +5892,7 @@ const addTeamPlayerService = async (request, fastify) => {
   sendDataForSocketUpdate.dataToUpdate = [{
     module: "commentaryPlayers",
     type: "create",
-    data: commPlayerData,
+    data: [commPlayerData],
   }];
   
   if (
@@ -25546,6 +25546,7 @@ const processTeamSquadInsertAndUpdate = async ({
     }
     const addCommPlayer = []
     const updateCommPlayer = []
+    const plying11Players = []
     const currentInnings = commentaryDetails?.currentInnings
 
     const compTpId = matchInfoResponse?.competition?.cid;
@@ -25708,6 +25709,9 @@ const processTeamSquadInsertAndUpdate = async ({
  
         global.tblCommentaryPlayers.push(newComm[0]);
         addCommPlayer.push(newComm[0])
+        if (isPlaying11) {
+          plying11Players.push(checkPlayer.playerId);
+        }
       } else {
         await playingElevenChangeOnCommPlayersQuery(
           {
@@ -25722,6 +25726,9 @@ const processTeamSquadInsertAndUpdate = async ({
 
         global.tblCommentaryPlayers[commIndex].isInPlayingEleven = isPlaying11;
         updateCommPlayer.push(global.tblCommentaryPlayers[commIndex])
+        if (isPlaying11) {
+          plying11Players.push(checkPlayer.playerId);
+        }
       }
 
       //TOURNAMENT TEAM PLAYER
@@ -25749,31 +25756,46 @@ const processTeamSquadInsertAndUpdate = async ({
         global.tblTournamentTeamPlayers.push(tournamentInsert[0]);
       }
     }
+    const removedCommentaryPlayers = global.tblCommentaryPlayers.filter(item => item.commentaryId === commentaryId &&
+      item.teamId === teamObj.teamId && item.currentInnings === currentInnings && !plying11Players.includes(item.playerId)
+    );
+    for (const player of removedCommentaryPlayers) {
+      const nonPlaying11 = global.tblCommentaryPlayers.find(item => item.tpId === player.tpId);
+      if (nonPlaying11) {
+        const updatedData = {
+          ...nonPlaying11,
+          isInPlayingEleven: false
+        };
+        await updateCommentaryPlayerById(updatedData, request, fastify);
+
+        const index = global.tblCommentaryPlayers.findIndex(item =>
+          item.commentaryPlayerId === updatedData?.commentaryPlayerId
+        );
+        if (index !== -1) {
+          global.tblCommentaryPlayers[index] = updatedData;
+          updateCommPlayer.push(updatedData);
+        }
+      }
+    }
+
     const sendDataForSocketUpdate = {};
     sendDataForSocketUpdate.commentaryId = commentaryDetails?.commentaryId;
     sendDataForSocketUpdate.eventRefId = commentaryDetails?.eventRefId;
     sendDataForSocketUpdate.dataToUpdate = [];
 
-    if (addCommPlayer.length > 0) {
-      sendDataForSocketUpdate.dataToUpdate.push({
-        module: "commentaryPlayers",
-        type: "create",
-        data: addCommPlayer,
-      });
+    const emitSocketUpdate = (type, data) => {
+      const sendDataForSocketUpdate = {
+        commentaryId: commentaryDetails?.commentaryId,
+        eventRefId: commentaryDetails?.eventRefId,
+        dataToUpdate: [{ module: "commentaryPlayers", type, data }],
+      };
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       });
-    }
-    if (updateCommPlayer.length > 0) {
-      sendDataForSocketUpdate.dataToUpdate.push({
-        module: "commentaryPlayers",
-        type: "update",
-        data: updateCommPlayer,
-      });
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
-    }
+    };
+
+    if (addCommPlayer.length > 0) emitSocketUpdate("create", addCommPlayer);
+    if (updateCommPlayer.length > 0) emitSocketUpdate("update", updateCommPlayer);
 
     return true;
   } catch (err) {
