@@ -229,8 +229,8 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
         } else {
           console.log(`Warning: Entity socket ${urlConfig.entitySocketId} not found in global.tblEntitySockets`);
         }
-
-        client.on("entityScoreData", async (payload) => {
+      });
+      client.on("entityScoreData", async (payload) => {
           try {
             // console.log("Received entity data from Backend A:", payload);
             const request = { body: payload };
@@ -263,7 +263,6 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
               payload
             );
           }
-        });
       });
       client.on("connect_error", (error) => {
         console.log(`Entity Connection error ${urlConfig.url}: ${error.message || error} at ${new Date().toISOString()}`);
@@ -309,6 +308,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
         } else if (reason === "io client disconnect") {
           console.log(`  → Client initiated disconnect`);
         }
+        client.removeAllListeners()
 
         global.entitySportSocketIo = global.entitySportSocketIo.filter(
           (c) => c.client !== client && c.url !== urlConfig.url
@@ -449,10 +449,10 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
           global.tblEntitySockets[index].status = clientSocketStatus.disconnected;
         }
 
-        setTimeout(() => {
-          console.log(`Retrying connection to ${urlConfig.url} after final failure...`);
-          connectEntitySport(fastify, urlConfig.entitySocketId);
-        }, 60000); // retry in 60 seconds
+        // setTimeout(() => {
+        //   console.log(`Retrying connection to ${urlConfig.url} after final failure...`);
+        //   connectEntitySport(fastify, urlConfig.entitySocketId);
+        // }, 60000); // retry in 60 seconds
       });
     });
 
