@@ -13600,7 +13600,6 @@ const notiConfigContentReplaceService = async (
   fastify,
   cId
 ) => {
-    return;
   let data = global.tblNotificationConfig.find(
     (elem) => elem.isActive === true && elem.eventName === eventName
   );
