@@ -1212,31 +1212,20 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
     }
   }
   const comm = global.tblCommentaries.find(item => item.commentaryId == commentaryId)
-  const sendDataForSocketUpdate = {};
-  sendDataForSocketUpdate.commentaryId = commentaryId;
-  sendDataForSocketUpdate.eventRefId = comm?.eventRefId;
-  sendDataForSocketUpdate.dataToUpdate = [];
 
-  if (addCommPlayer.length > 0) {
-    sendDataForSocketUpdate.dataToUpdate.push({
-      module: "commentaryPlayers",
-      type: "create",
-      data: addCommPlayer,
-    });
+  const emitSocketUpdate = (type, data) => {
+    const sendDataForSocketUpdate = {
+      commentaryId: commentaryId,
+      eventRefId: comm?.eventRefId,
+      dataToUpdate: [{ module: "commentaryPlayers", type, data }],
+    };
     global.clientSocketIo.forEach((socket) => {
       socket.client.emit("updateFullscore", sendDataForSocketUpdate);
     });
-  }
-  if (updateCommPlayer.length > 0) {
-    sendDataForSocketUpdate.dataToUpdate.push({
-      module: "commentaryPlayers",
-      type: "update",
-      data: updateCommPlayer,
-    });
-    global.clientSocketIo.forEach((socket) => {
-      socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-    });
-  }
+  };
+
+  if (addCommPlayer.length > 0) emitSocketUpdate("create", addCommPlayer);
+  if (updateCommPlayer.length > 0) emitSocketUpdate("update", updateCommPlayer);
 
   return isAllPlaying11;
 }
