@@ -5892,7 +5892,7 @@ const addTeamPlayerService = async (request, fastify) => {
   sendDataForSocketUpdate.dataToUpdate = [{
     module: "commentaryPlayers",
     type: "create",
-    data: commPlayerData,
+    data: [commPlayerData],
   }];
   
   if (
@@ -25546,6 +25546,7 @@ const processTeamSquadInsertAndUpdate = async ({
     }
     const addCommPlayer = []
     const updateCommPlayer = []
+    const plying11Players = []
     const currentInnings = commentaryDetails?.currentInnings
 
     const compTpId = matchInfoResponse?.competition?.cid;
