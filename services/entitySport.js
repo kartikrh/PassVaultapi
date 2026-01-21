@@ -843,7 +843,7 @@ const setEntityCom2Service = async (request , fastify) =>{
               let cp2 = playerTpIdObj[part.batsmen[1].batsman_id]
               partnership = genEtPartnership({
                 currentPartnership: {
-                  commentaryPartnershipId: ball?.commentaryBallByBallId,
+                  commentaryBallByBallId: ball?.commentaryBallByBallId,
                   batter1Id: cp1.commentaryPlayerId,
                   batter1Name: cp1.playerName,
                   batter2Id: cp2.commentaryPlayerId,
@@ -2283,7 +2283,17 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             continue;
           }
           let batsmanId = playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId;
-          if(w.wicketType != null && batsmanId == w.batterId){
+          const fielders = response?.scorecard?.innings?.find((i) => i.number == response?.live?.live_inning_number)?.batsmen
+            .find((i1) => i1.batsman_id == c?.wicket_batsman_id)
+          const commFielder = Number(fielders?.first_fielder_id) || Number(c?.bowler_id);
+          const commFielder2 = Number(fielders?.second_fielder_id) || Number(c?.bowler_id);
+
+          const commFielder1Id = playerTpIdObj[commFielder]?.commentaryPlayerId;
+          const commFielder2Id = playerTpIdObj[commFielder2]?.commentaryPlayerId;
+          if(
+            w.wicketType != null && batsmanId == w.batterId && 
+            w.fieldPlayerId == commFielder1Id && w.fieldPlayer2Id == commFielder2Id
+          ) {
             continue;
           }
 
@@ -2293,46 +2303,17 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           // update wicketType and batsman_id
           let dismissal = c.dismissal.toLowerCase().trim();
           let wtEnum = etWicketObj[dismissal] || wicketTypeObj.BOLD;
-          // const normalizeText = str =>
-          //   str
-          //     ?.toLowerCase()
-          //     .replace(/\s+/g, ' ')
-          //     .trim();
-
-          // const howOut = normalizeText(c?.how_out || '');
-
-          // const fielders = response?.players?.filter(player => {
-          //   const shortName = normalizeText(player.short_name);
-          //   return (
-          //     howOut.includes(shortName)
-          //   );
-          // }) || [];
-          // const extractedNames = c?.how_out?.match(/\b[A-Z]{1,3}\s[A-Z][a-z]+/g) || [];
-          // const fielders = response?.players?.filter(
-          //   item => extractedNames.includes(item.short_name)
-          // ) || [];
-          // const fielder1 = fielders.find(
-          //   pl => pl.pid != c?.bowler_id
-          // );
-          // const fielder2 = fielders.find(
-          //   pl => pl?.pid && pl.pid != c?.bowler_id && pl.pid != fielder1?.pid
-          // );
-          const fielders = response?.scorecard?.innings?.find((i) => i.number == response?.live?.live_inning_number)?.batsmen
-                .find((i1) => i1.batsman_id == c?.wicket_batsman_id)
-          const commFielder =
-            Number(fielders?.first_fielder_id) || Number(c?.bowler_id);
-
-          const commFielder2 =
-            Number(fielders?.second_fielder_id) || Number(c?.bowler_id);
           const entityWicketCount = live_score_data?.wickets || 0
 
           w.wicketType = wtEnum;
-          w.fieldPlayerId = playerTpIdObj[commFielder]?.commentaryPlayerId;
+          w.fieldPlayerId = commFielder1Id;
           w.fieldPlayerName = playerTpIdObj[commFielder]?.playerName;
-          w.fieldPlayer2Id = playerTpIdObj[commFielder2]?.commentaryPlayerId;
+          w.fieldPlayer2Id = commFielder2Id;
           w.fieldPlayer2Name = playerTpIdObj[commFielder2]?.playerName;
           w.wicketCount = entityWicketCount;
           w.ballCount = c?.ball || 0;
+          w.playerBalls =  Number(fielders?.balls_faced);
+          w.playerRun = Number(fielders?.runs);
 
 
           let upBall ={
@@ -2382,8 +2363,8 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             }
             w.batterId = playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId;
             w.batterName = playerTpIdObj[c.wicket_batsman_id]?.playerName;
-            w.playerRun = playerTpIdObj[c.wicket_batsman_id]?.batRun;
-            w.playerBalls = playerTpIdObj[c.wicket_batsman_id]?.batBall;
+            // w.playerRun = playerTpIdObj[c.wicket_batsman_id]?.batRun;
+            // w.playerBalls = playerTpIdObj[c.wicket_batsman_id]?.batBall;
           }
             
           // }
@@ -4293,6 +4274,7 @@ const wicketUndoService = async (data, fastify, request) => {
   if (over) {
     let ball_Type = commBall?.ballType;
     over.totalWicket = Math.max(0, (over.totalWicket || 0) - 1);
+    over.isComplete = false;
     if (![2, 5].includes(ball_Type)) {
       over.ballCount = Math.max(0, (over.ballCount || 0) - 1);
       if (commBall?.batRun == 0) {
@@ -4440,6 +4422,7 @@ const regularBallUndoService = async (data, fastify, request) => {
   // battingTeam.teamByRuns = battingTeam.teamByRuns > 0 ? (battingTeam.teamByRuns || 0) - parseInt(commBall.teamByRuns) : 0;
   over.ballCount = over.ballCount > 0 ? over.ballCount - 1 : 0;
   over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
+  over.isComplete = false;
   // over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
   over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
   if (!playersMap[tpBall.bowler_id]) {
@@ -4510,6 +4493,7 @@ const wideBallUndoService = async (data, fastify, request) => {
   over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
   over.totalWideBall = over.totalWideBall > 0 ? over.totalWideBall - 1 : 0;
   over.totalWideRun = over.totalWideRun > 0 ? over.totalWideRun - run : 0;
+  over.isComplete = false;
   if (!playersMap[tpBall.bowler_id]) {
     playersMap[tpBall.bowler_id] = {
       ...commPlayers[tpBall.bowler_id]
@@ -4562,6 +4546,7 @@ const noballUndoService = async (data, fastify, request) => {
   over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
   over.totalNoball = over.totalNoball > 0 ? over.totalNoball - 1 : 0;
   over.totalNoBallRun = over.totalNoBallRun > 0 ? over.totalNoBallRun - run : 0;
+  over.isComplete = false;
   if (!playersMap[tpBall.bowler_id]) {
     playersMap[tpBall.bowler_id] = {
       ...commPlayers[tpBall.bowler_id]
@@ -4613,6 +4598,7 @@ const legByeRunUndoService = async (data, fastify, request) => {
   over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
   over.totalLegByesRun = over.totalLegByesRun > 0 ? over.totalLegByesRun - run : 0;
   over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
+  over.isComplete = false;
   if (!playersMap[tpBall.bowler_id]) {
     playersMap[tpBall.bowler_id] = {
       ...commPlayers[tpBall.bowler_id]
@@ -4683,6 +4669,7 @@ const byeRunUndoService = async (data, fastify, request) => {
   over.totalRun = over.totalRun > 0 ? over.totalRun - run : 0;
   over.totalByesRun = over.totalByesRun > 0 ? over.totalByesRun - run : 0;
   over.teamScore = `${liveTeamScore}/${battingTeam?.teamWicket || 0}`;
+  over.isComplete = false;
   if (!playersMap[tpBall.bowler_id]) {
     playersMap[tpBall.bowler_id] = {
       ...commPlayers[tpBall.bowler_id]
