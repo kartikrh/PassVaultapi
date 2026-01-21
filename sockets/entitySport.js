@@ -308,6 +308,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
         } else if (reason === "io client disconnect") {
           console.log(`  → Client initiated disconnect`);
         }
+        client.removeAllListeners()
 
         global.entitySportSocketIo = global.entitySportSocketIo.filter(
           (c) => c.client !== client && c.url !== urlConfig.url
