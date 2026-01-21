@@ -346,6 +346,20 @@ const isAutoUpdateCommentaryEntitySocketService = async (request, fastify) => {
     return `Entity Socket updated successfully`;
 }
 
+const getEntitySocketResponseService = async (request, fastify) => {
+    const sockets = [...global.connectedEntitySocketClients].map(socket => ({
+        socketId: socket.id,
+        source: socket.handshake?.query?.source,
+        admin: socket.data?._admin,
+        ip: socket.handshake?.address,
+        connectedAt: socket.handshake?.time,
+    }));
+    return {
+        count: sockets.length,
+        panels: sockets
+    };
+}
+
 module.exports = {
     getAllEntitySocketService,
     getEntitySocketByIdService,
@@ -355,4 +369,5 @@ module.exports = {
     activeInactiveEntitySocketService,
     isAutoScoreUpdateEntitySocketService,
     isAutoUpdateCommentaryEntitySocketService,
+    getEntitySocketResponseService
 }
