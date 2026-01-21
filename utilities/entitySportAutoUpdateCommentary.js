@@ -2,7 +2,7 @@ const { checkEntitySportAPIEndpointIsActive, APIEndpointModuleType, callEntitySp
 const { errorLogger } = require("./logger");
 const { autoUpdateCommentaryDataStatus, intervalTimesForUpdateCommentary } = require('./entityConst');
 const { getAllAutoUpdateCommentaryDataQuery, insertAutoUpdateCommentaryDataQuery, updateAutoUpdateCommentaryDataQuery } = require('../repository/TableAutoUpdateCommentaryData');
-const { updateCommentaryQuery, insertCommentaryTeams, getCommentaryTeamsQuery, deleteCommentaryPlayersByPlayerId } = require('../repository/TableCommentary');
+const { updateCommentaryQuery, insertCommentaryTeams, getCommentaryTeamsQuery, deleteCommentaryPlayersByPlayerId, updateCommentaryDateByCommentaryIdQuery } = require('../repository/TableCommentary');
 const { insertCommentaryPlayersByTeam, insertTeamPlayersByTeamId } = require('../services/competition');
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { updateWeatherQuery, insertWeatherQuery } = require("../repository/TableWeather");
@@ -87,14 +87,6 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     location: location
                                 };
 
-                                const esEventStartDate = matchInfoData.date_start
-                                    ? new Date(matchInfoData.date_start)
-                                    : null;
-
-                                if (!eventDate || (eventDate.getTime() !== esEventStartDate?.getTime())) {
-                                    changedValues.eventDate = matchInfoData.date_start;
-                                }
-
                                 if (!eventName || (eventName !== matchInfoData.title)) {
                                     changedValues.eventName = matchInfoData.title;
                                 }
@@ -174,13 +166,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     }
                                 }
 
-                                const formatEventDate = changedValues.eventDate ? new Date(changedValues.eventDate) : null;
-                                const formatESEventDate = esEventStartDate ? new Date(esEventStartDate) : null;
-
-                                const isValidDate = (date) => date instanceof Date && !isNaN(date);
-
                                 let isChanged = (
-                                    (isValidDate(formatEventDate) && isValidDate(formatESEventDate) && formatEventDate.getTime() !== formatESEventDate.getTime()) ||
                                     changedValues.eventName !== eventName ||
                                     changedValues.onfieldUmpires !== onfieldUmpires ||
                                     changedValues.thirdUmpire !== cThirdUmpire ||
@@ -201,6 +187,28 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     let index = global.tblCommentaries.findIndex((i) => i.commentaryId == commentary?.commentaryId);
                                     if (index !== -1) {
                                         global.tblCommentaries[index] = updateCommentaryData[0][0];
+                                    }
+                                }
+
+                                const esEventStartDate = matchInfoData.date_start
+                                    ? new Date(matchInfoData.date_start)
+                                    : null;
+
+                                if (esEventStartDate && (!eventDate || (eventDate.getTime() !== esEventStartDate?.getTime()))) {
+                                    isChanged = true;
+                                    const updated = await updateCommentaryDateByCommentaryIdQuery({
+                                        ...request,
+                                        body: {
+                                            eventDate: esEventStartDate,
+                                            commentaryId
+                                        }
+                                    }, fastify);
+                                    const index = global.tblCommentaries.findIndex(tc => tc.commentaryId === commentaryId);
+                                    if (index !== -1) {
+                                        global.tblCommentaries[index] = {
+                                            ...global.tblCommentaries[index],
+                                            ...updated
+                                        };
                                     }
                                 }
 
