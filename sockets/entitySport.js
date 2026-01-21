@@ -449,10 +449,10 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
           global.tblEntitySockets[index].status = clientSocketStatus.disconnected;
         }
 
-        setTimeout(() => {
-          console.log(`Retrying connection to ${urlConfig.url} after final failure...`);
-          connectEntitySport(fastify, urlConfig.entitySocketId);
-        }, 60000); // retry in 60 seconds
+        // setTimeout(() => {
+        //   console.log(`Retrying connection to ${urlConfig.url} after final failure...`);
+        //   connectEntitySport(fastify, urlConfig.entitySocketId);
+        // }, 60000); // retry in 60 seconds
       });
     });
 
