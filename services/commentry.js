@@ -25544,13 +25544,7 @@ const processTeamSquadInsertAndUpdate = async ({
     if (isLog == "true") {
       await createDataQuery({ data: entitySportMatchResponse, matchId: matchInfoResponse?.match_id }, fastify);
     }
-    const addCommPlayer = []
-    const updateCommPlayer = []
-    const plying11Players = []
-    const currentInnings = commentaryDetails?.currentInnings
-
-    const compTpId = matchInfoResponse?.competition?.cid;
-    const compData = global.tblCompetitions.find(c => c.tpId == compTpId);
+    const currentInnings = commentaryDetails?.currentInnings;
 
     await insertCommentaryPlayersByTeam(
       currentInnings,
