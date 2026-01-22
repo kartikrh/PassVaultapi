@@ -7,6 +7,7 @@ const {
 } = require("../repository/TableTournamentsTeamPlayers");
 const { insertCommentaryPlayers, deleteCommentaryPlayersQuery } = require("../repository/TableCommentary");
 const { getAllTeamPlayersByTeamIdAndPlayerIdQuery } = require("../repository/TableTeamPlayer");
+const { getAllPlayersByTeamIdQuery: newGetAllPlayersByTeamIdQuery} = require("../repository/TableTeams");
 
 const allTournamentTeamPlayersService = async (request) => {
   const { competitionId, teamId } = request.body || {};
@@ -275,9 +276,18 @@ const getTournamentTeamPlayersByCompetitionIdForClientService = async (request, 
   const data = [];
   for (const t of teams) {
     const teamData = global.tblTeams.find(team => team.teamId === t);
+    const teamPlayerByTeamId = await newGetAllPlayersByTeamIdQuery(t, fastify, request);
+    const players = result.filter(item => item.teamId === t);
+    const teamPlayers = [];
+    for (const p of players) {
+      teamPlayers.push({
+        ...teamPlayerByTeamId.find(tp => tp.playerId === p.playerId),
+        ...p
+      });
+    }
     data.push({
       teamData,
-      teamPlayers: result.filter(item => item.teamId === t)
+      teamPlayers
     });
   }
   return data;
