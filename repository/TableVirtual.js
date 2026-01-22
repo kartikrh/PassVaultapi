@@ -406,10 +406,127 @@ const saveComCardQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+const createCommWicketQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      with insert_data as (
+        insert into "tblCommentaryWickets" (
+          "wrCommentaryId",
+          "wrBowlerId",
+          "wrBowlerName",
+          "wrWicketType",
+          "wrBatterId",
+          "wrBatterName",
+          "wrFieldPlayerId",
+          "wrFieldPlayerName",
+          "wrOverId",
+          "wrOverCount",
+          "wrCommentaryBallByBallId",
+          "wrTeamId",
+          "wrTeamScore",
+          "wrPlayerRun",
+          "wrPlayerBalls",
+          "wrIsDelete",
+          "wrWicketCount",
+          "wrBallCount",
+          "wrCurrentInnings",
+          "wrFieldPlayer2Id",
+          "wrFieldPlayer2Name"
+        ) values (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,
+          $6,
+          $7,
+          $8,
+          $9,
+          $10,
+          $11,
+          $12,
+          $13,
+          $14,
+          $15,
+          $16,
+          $17,
+          $18,
+          $19,
+          $20,
+          $21
+        )
+        returning *
+      )
+    select 
+    "wrCommentaryWicketId" as "commentaryWicketId",
+    "wrCommentaryId" as "commentaryId",
+    "wrBowlerId" as "bowlerId",
+    "wrBowlerName" as "bowlerName",
+    "wrWicketType" as "wicketType",
+    "wrBatterId" as "batterId",
+    "wrBatterName" as "batterName",
+    "wrFieldPlayerId" as "fieldPlayerId",
+    "wrFieldPlayerName" as "fieldPlayerName",
+    "wrOverId" as "overId",
+    "wrOverCount" as "overCount",
+    "wrCommentaryBallByBallId" as "commentaryBallByBallId",
+    "wrTeamId" as "teamId",
+    "wrTeamScore" as "teamScore",
+    "wrPlayerRun" as "playerRun",
+    "wrPlayerBalls" as "playerBalls",
+    "wrWicketCount" as "wicketCount",
+    "wrBallCount" as "ballCount",
+    "wrFieldPlayer2Id" as "fieldPlayer2Id",
+    "wrFieldPlayer2Name" as "fieldPlayer2Name",
+    "wrCurrentInnings" as "currentInnings"
+    from "insert_data"
+      `,
+      {
+        bind: [
+          data.commentaryId,
+          data.bowlerId,
+          data.bowlerName,
+          data.wicketType,
+          data.batterId,
+          data.batterName,
+          data.fieldPlayerId,
+          data.fieldPlayerName,
+          data.overId,
+          data.overCount,
+          data.commentaryBallByBallId,
+          data.teamId,
+          data.teamScore,
+          data.playerRun,
+          data.playerBalls,
+          data.isDelete || false,
+          data.wicketCount,
+          data.ballCount,
+          data.currentInnings,
+          data.fieldPlayer2Id || null,
+          data.fieldPlayer2Name || null,
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableVirtual.js/createCommWicketQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   virtualOverQuery,
   virtualBallByBallQuery,
   virtualPartnershipQuery,
   comStatusUpdateQuery,
-  saveComCardQuery
+  saveComCardQuery,
+  createCommWicketQuery,
 };
