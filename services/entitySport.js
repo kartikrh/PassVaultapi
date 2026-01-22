@@ -2543,16 +2543,19 @@ const onInningChangeService = async (data, fastify, comDetails) => {
         ballsPerOver: matchType.ballsPerOver || 6,
       })
     };
-  const part = {
-    ...partnership,
-    isActive: false,
-  };
-  await upActivePartQuery(part, fastify);
-  let partIndex = global.tblCommentaryPartnership.findIndex(
-    (item) => item.commentaryPartnershipId == part.commentaryPartnershipId
-  );
-  if(partIndex != -1){
-    global.tblCommentaryPartnership[partIndex].isActive = part.isActive
+  let part = null;
+  if (partnership && partnership?.commentaryPartnershipId) {
+    part = {
+      ...partnership,
+      isActive: false,
+    };
+    await upActivePartQuery(part, fastify);
+    let partIndex = global.tblCommentaryPartnership.findIndex(
+      (item) => item.commentaryPartnershipId == part.commentaryPartnershipId
+    );
+    if (partIndex != -1) {
+      global.tblCommentaryPartnership[partIndex].isActive = part.isActive
+    }
   }
   let playerToUpdate = global.tblCommentaryPlayers.filter(
     (item) =>
@@ -2576,7 +2579,7 @@ const onInningChangeService = async (data, fastify, comDetails) => {
     commentaryTeams: teamUpdates,
     commentaryPlayers: playerToUpdate,
     isCallPredict: false,
-    commentaryPartnership : [part]
+    commentaryPartnership: part ? [part] : []
   },fastify)
 
   return true;
