@@ -12826,23 +12826,25 @@ const cancelCommentaryService = async (request, fastify) => {
         .forEach((elem) => {
           elem.selectionStatus = EventMarketStatus.Close;
         });
-      let pythonURI = global.tblCommentaries[index].pythonURI || null;
-      _resFromPredictAPI = await callPredictorMarket(
-        {
-          commentary_id: commentaryId,
-        },
-        "/api/v1/endcommentary",
-        fastify,
-        request,
-        pythonURI
-      );
-      let callPrediction = {};
-      if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-        callPrediction.Cid = commentaryId;
-        callPrediction.predictioncallSuccess = false;
-        callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-        callPrediction.endPoint = "/api/v1/endcommentary";
-        callPredictions.push(callPrediction);
+      if(eventMarket.length > 0){
+        let pythonURI = global.tblCommentaries[index].pythonURI || null;
+        _resFromPredictAPI = await callPredictorMarket(
+          {
+            commentary_id: commentaryId,
+          },
+          "/api/v1/endcommentary",
+          fastify,
+          request,
+          pythonURI
+        );
+        let callPrediction = {};
+        if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+          callPrediction.Cid = commentaryId;
+          callPrediction.predictioncallSuccess = false;
+          callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+          callPrediction.endPoint = "/api/v1/endcommentary";
+          callPredictions.push(callPrediction);
+        }
       }
       _resFromPredictAPI = null;
       callDataProvider(
