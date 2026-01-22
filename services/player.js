@@ -1251,7 +1251,7 @@ const playerImportService = async (data, fastify, request) => {
       global.tblPlayers.push(insertPlayer);
       checkPlayer = insertPlayer;
     }
-    else if (checkPlayer?.tpId === null || !checkPlayer?.tpId) {
+    else if (checkPlayer?.tpId === null || !checkPlayer?.tpId || checkPlayer?.tpId !== entitySportPlayerResponse?.pid) {
       const data = {
         userId: -2,
         tpId: entitySportPlayerResponse?.pid || null,

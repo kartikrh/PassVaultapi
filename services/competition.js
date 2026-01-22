@@ -1018,7 +1018,7 @@ const upsertPlayers = async (entitySocketData, players, playerTpId, isMen, reque
         }
       }, fastify);
     }
-    else if (checkPlayer?.tpId === null || !checkPlayer?.tpId) {
+    else if (checkPlayer?.tpId === null || !checkPlayer?.tpId || checkPlayer?.tpId !== getPlayerFromEntity?.pid) {
       const data = {
         userId: -2,
         tpId: getPlayerFromEntity?.pid || null,

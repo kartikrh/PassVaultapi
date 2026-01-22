@@ -22578,7 +22578,7 @@ const updateMatchInfoService = async(request , fastify)=>{
         }
       }
     }
-    else if(checkPlayer?.tpId === null || !checkPlayer?.tpId){
+    else if(checkPlayer?.tpId === null || !checkPlayer?.tpId || checkPlayer?.tpId !== player?.pid) {
       const data = {
         userId: -5,
         tpId: player?.pid || null,
@@ -23715,7 +23715,7 @@ const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
           }
         }, fastify);
       }
-      else if (checkPlayer?.tpId === null || !checkPlayer?.tpId) {
+      else if (checkPlayer?.tpId === null || !checkPlayer?.tpId || checkPlayer?.tpId !== player?.pid) {
         const data = {
           userId: -2,
           tpId: player?.pid || null,
