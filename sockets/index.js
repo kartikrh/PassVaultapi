@@ -588,8 +588,8 @@ const connectClients2 = async (fastify, clientSocketId = undefined)=>{
           reconnectionDelayMax: 8000,
           timeout: 20000,
           // transport-level ping
-          pingInterval: 25000,
-          pingTimeout: 60000,
+          pingInterval: 12000,
+          pingTimeout: 4000,
           forceNew: true,
           autoConnect: true
         });
@@ -609,12 +609,12 @@ const connectClients2 = async (fastify, clientSocketId = undefined)=>{
             client.emit("ping");
 
             // if no pong for 2 intervals → force reconnect
-            if (Date.now() - lastPongAt > 60000) {
+            if (Date.now() - lastPongAt > 15000) {
               console.log(`Heartbeat timeout → reconnecting ${urlConfig.url}`);
               client.disconnect();
               client.connect();
             }
-          }, 30000);
+          }, 10000);
         };
 
         const stopHeartbeat = () => {
