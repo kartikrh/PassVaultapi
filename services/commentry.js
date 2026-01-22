@@ -23278,13 +23278,16 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
             )
             if (wickIndex === -1) {
                 global.tblCommentaryWicket.push(wicketDetails);
-                await notiConfigContentReplaceService(
-                    EventName.WICKET,
-                    commentaryData.commentaryId,
-                    request,
-                    fastify
-                );
             } else {
+              if (wicketDetails.wicketType !== null) {
+                await notiConfigContentReplaceService(
+                  EventName.WICKET,
+                  commentaryData.commentaryId,
+                  request,
+                  fastify,
+                  wicketDetails?.commentaryWicketId
+                );
+              }
               global.tblCommentaryWicket[wickIndex] = wicketDetails;
             }
           }
