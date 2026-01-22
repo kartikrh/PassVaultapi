@@ -1018,7 +1018,7 @@ const upsertPlayers = async (entitySocketData, players, playerTpId, isMen, reque
         }
       }, fastify);
     }
-    else if (checkPlayer?.tpId === null || !checkPlayer?.tpId) {
+    else if (checkPlayer?.tpId === null || !checkPlayer?.tpId || checkPlayer?.tpId !== getPlayerFromEntity?.pid) {
       const data = {
         userId: -2,
         tpId: getPlayerFromEntity?.pid || null,
@@ -1596,7 +1596,7 @@ const competitionImportService = async (data, fastify, request) => {
         global.tblTeams.push(insertTeam);
         checkTeam = insertTeam;
       }
-      else if (checkTeam?.tpId === null || !checkTeam?.tpId) {
+      else if (checkTeam?.tpId === null || !checkTeam?.tpId || checkTeam?.tpId !== entitySportTeamResponse?.tid) {
         const data = {
           userId: -2,
           tpId: entitySportTeamResponse?.tid || null,

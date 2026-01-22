@@ -22578,7 +22578,7 @@ const updateMatchInfoService = async(request , fastify)=>{
         }
       }
     }
-    else if(checkPlayer?.tpId === null || !checkPlayer?.tpId){
+    else if(checkPlayer?.tpId === null || !checkPlayer?.tpId || checkPlayer?.tpId !== player?.pid) {
       const data = {
         userId: -5,
         tpId: player?.pid || null,
@@ -23637,7 +23637,7 @@ const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
     const insertTeam = await insertTeamQuery(newTeamData, fastify, request);
     global.tblTeams.push(insertTeam);
     checkTeam = insertTeam;
-  } else if (checkTeam?.tpId === null || !checkTeam?.tpId) {
+  } else if (checkTeam?.tpId === null || !checkTeam?.tpId || checkTeam?.tpId !== teamData?.tid) {
     const data = {
       userId: -2,
       tpId: teamData?.tid || null,
@@ -23715,7 +23715,7 @@ const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
           }
         }, fastify);
       }
-      else if (checkPlayer?.tpId === null || !checkPlayer?.tpId) {
+      else if (checkPlayer?.tpId === null || !checkPlayer?.tpId || checkPlayer?.tpId !== player?.pid) {
         const data = {
           userId: -2,
           tpId: player?.pid || null,
