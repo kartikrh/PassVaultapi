@@ -20,7 +20,7 @@ const { getCountryByIds } = require("../repository/TableCountryCodes")
 const { getVenueByIds } = require("../repository/TableVenue")
 const { compStatus, commentaryStatus } = require("../utilities")
 const { buildOverData, buildPartnershipData, buildComPlayers, genEtPartnership, generateOverEt, generateBallET, generateDisplayStatus, getBowlerOnlyRuns, generateWicket, generateRemainingRuns } = require("../utilities/comFunction")
-const { virtualOverQuery, virtualBallByBallQuery, virtualPartnershipQuery } = require("../repository/TableVirtual")
+const { virtualOverQuery, virtualBallByBallQuery, virtualPartnershipQuery, createCommWicketQuery } = require("../repository/TableVirtual")
 const { default: fastify } = require("fastify")
 const { commentaryLogger, errorLogger } = require("../utilities/logger")
 const { playerMarketQuery } = require("../repository/TableEventMarkets")
@@ -2241,8 +2241,10 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             battingTeam: battingTeam,
             currentBall: oball,
           });
-          generateWicket1.type = "create";
-          wickets.push(generateWicket1);
+          const comWicketData = await createCommWicketQuery(generateWicket1, fastify, request);
+          global.tblCommentaryWicket.push(comWicketData)
+          comWicketData.type = "create";
+          wickets.push(comWicketData);
           // console.log("batters", batters.length)
           // if(batters.length == 2) {
           //   let [b1, b2] = batters;
