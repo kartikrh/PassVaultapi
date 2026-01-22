@@ -1596,7 +1596,7 @@ const competitionImportService = async (data, fastify, request) => {
         global.tblTeams.push(insertTeam);
         checkTeam = insertTeam;
       }
-      else if (checkTeam?.tpId === null || !checkTeam?.tpId) {
+      else if (checkTeam?.tpId === null || !checkTeam?.tpId || checkTeam?.tpId !== entitySportTeamResponse?.tid) {
         const data = {
           userId: -2,
           tpId: entitySportTeamResponse?.tid || null,

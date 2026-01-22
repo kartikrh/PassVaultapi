@@ -23637,7 +23637,7 @@ const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
     const insertTeam = await insertTeamQuery(newTeamData, fastify, request);
     global.tblTeams.push(insertTeam);
     checkTeam = insertTeam;
-  } else if (checkTeam?.tpId === null || !checkTeam?.tpId) {
+  } else if (checkTeam?.tpId === null || !checkTeam?.tpId || checkTeam?.tpId !== teamData?.tid) {
     const data = {
       userId: -2,
       tpId: teamData?.tid || null,
