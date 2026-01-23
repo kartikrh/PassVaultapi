@@ -373,7 +373,9 @@ const updateActiveInactiveEntitySocketQuery = async(request, fastify) =>{
         const query = `
             UPDATE "tblEntitySockets"
             SET
-                "wrIsActive" = $1
+                "wrIsActive" = $1,
+                "wrIsAutoUpdateCommentary" = CASE WHEN $1 = FALSE THEN FALSE ELSE "wrIsAutoUpdateCommentary" END,
+                "wrIsAutoScoreUpdate" = CASE WHEN $1 = FALSE THEN FALSE ELSE "wrIsAutoScoreUpdate" END
             WHERE "wrId" = $2
         `;
         const data = await fastify.db.query(query,
@@ -453,6 +455,29 @@ const isAutoUpdateCommentaryEntitySocketQuery = async(request, fastify) =>{
         throw new Error(err.message);
     }
 }
+const resetEntitySocketReconnectCountQuery = async (fastify) => {
+    try {
+      const result = await fastify.db.query(`
+        UPDATE "tblEntitySockets"
+        SET
+          "wrReconnectCount" = $1
+        WHERE "wrIsActive" = $2 AND "wrIsDeleted" = $3
+        RETURNING "wrId" as "entitySocketId";
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [0, true, false]
+      });
+      for(let entitySocket of result){
+        let index = global.tblEntitySockets.findIndex((c) => c.entitySocketId === entitySocket.entitySocketId);
+        global.tblEntitySockets[index].reconnectCount = 0;
+     }
+
+      return result;
+    } catch (error) {
+      throw error;
+    }
+};
 
 module.exports = {
     getAllEntitySocketsQuery,
@@ -466,4 +491,5 @@ module.exports = {
     updateActiveInactiveEntitySocketQuery,
     isAutoScoreUpdateEntitySocketQuery,
     isAutoUpdateCommentaryEntitySocketQuery,
+    resetEntitySocketReconnectCountQuery
 };
