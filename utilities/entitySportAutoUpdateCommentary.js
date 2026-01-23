@@ -447,7 +447,6 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     });
                                 }
 
-                                console.log("🚀 ~ entitySportAutoUpdateCommentary ~ insertAutoUpdateCommentaryData:", insertAutoUpdateCommentaryData)
                                 if (insertAutoUpdateCommentaryData?.id) {
                                     await updateAutoUpdateCommentaryDataQuery({
                                         status: isChanged ? autoUpdateCommentaryDataStatus.success : autoUpdateCommentaryDataStatus.noupdate,
