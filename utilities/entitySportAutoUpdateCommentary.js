@@ -417,34 +417,36 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     }
                                 }
 
-                                let cData = await getMatchDataByCId(
-                                    {
-                                        commentaryId,
-                                    },
-                                    null,
-                                    fastify
-                                );
-
-                                callClientAPI(
-                                    {
-                                        serviceType: ServiceType.clientAPI,
-                                        moduleType: APIEndpointModuleType.commentaryUpdate,
-                                        data: {
-                                            ...cData,
-                                            type: "update",
+                                if (isChanged) {
+                                    let cData = await getMatchDataByCId(
+                                        {
+                                            commentaryId,
                                         },
-                                    },
-                                    request,
-                                    fastify
-                                ).catch((err) => {
-                                    console.log("call client api console", err);
-                                    errorLogger(
-                                        fastify,
-                                        err.message,
-                                        "ERROR --> utilities/entitySportAutoUpdateCommentary.js/entitySportAutoUpdateCommentary",
-                                        request
+                                        null,
+                                        fastify
                                     );
-                                });
+
+                                    callClientAPI(
+                                        {
+                                            serviceType: ServiceType.clientAPI,
+                                            moduleType: APIEndpointModuleType.commentaryUpdate,
+                                            data: {
+                                                ...cData,
+                                                type: "update",
+                                            },
+                                        },
+                                        request,
+                                        fastify
+                                    ).catch((err) => {
+                                        console.log("call client api console", err);
+                                        errorLogger(
+                                            fastify,
+                                            err.message,
+                                            "ERROR --> utilities/entitySportAutoUpdateCommentary.js/entitySportAutoUpdateCommentary",
+                                            request
+                                        );
+                                    });
+                                }
 
                                 if (insertAutoUpdateCommentaryData?.id) {
                                     await updateAutoUpdateCommentaryDataQuery({
