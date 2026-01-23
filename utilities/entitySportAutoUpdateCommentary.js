@@ -198,7 +198,6 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                 if (esEventStartDate && (!eventDate || (eventDate.getTime() !== esEventStartDate?.getTime()))) {
                                     isChanged = true;
                                     const updated = await updateCommentaryDateByCommentaryIdQuery({
-                                        ...request,
                                         body: {
                                             eventDate: esEventStartDate,
                                             commentaryId
@@ -448,6 +447,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     });
                                 }
 
+                                console.log("🚀 ~ entitySportAutoUpdateCommentary ~ insertAutoUpdateCommentaryData:", insertAutoUpdateCommentaryData)
                                 if (insertAutoUpdateCommentaryData?.id) {
                                     await updateAutoUpdateCommentaryDataQuery({
                                         status: isChanged ? autoUpdateCommentaryDataStatus.success : autoUpdateCommentaryDataStatus.noupdate,
