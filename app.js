@@ -32,7 +32,7 @@ const { connectClients, disconnectClients ,connectClients2} = require("./sockets
 const {
   disConnectClientSocketQuery,
 } = require("./repository/TableClientSocket");
-const { disConnectEntitySocketQuery } = require("./repository/TableEntitySockets.js");
+const { disConnectEntitySocketQuery, resetEntitySocketReconnectCountQuery } = require("./repository/TableEntitySockets.js");
 const { startSignalR } = require("./signalrHandler/MockSignalR.js")
 const WebSocket = require("ws");
 const WebsocketConnection = require("./websocket");
@@ -55,6 +55,7 @@ module.exports.options = {};
 global.tblData = {};
 global.marketData = {};
 global.isAllDataLoadedInGlobal = false;
+global.connectedEntitySocketClients = global.connectedEntitySocketClients || [];
 if (process.env.ENABLE_SENTRY === "TRUE") {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
@@ -129,13 +130,14 @@ module.exports = async function (fastify, opts) {
           // await featchData(fastify);
           await fetchAllDataFromDb(fastify);
           await disConnectClientSocketQuery(fastify);
-          await disConnectEntitySocketQuery(fastify);
+          // await disConnectEntitySocketQuery(fastify);
           await startSignalR(fastify);
           // connectClients(fastify);
           connectClients2(fastify);
           disconnectClients(fastify);
-          connectEntitySport(fastify);
           disconnectEntitySports(fastify);
+          resetEntitySocketReconnectCountQuery(fastify);
+          connectEntitySport(fastify);
           webPushset(webPush);
           updateMarket(fastify)
 

@@ -302,13 +302,15 @@ const activeInactiveEntitySocketService = async (request, fastify) => {
         request,
         fastify
     );
-    global.tblEntitySockets[index].isActive = isActive;
+    global.tblEntitySockets[index] = {
+        ...global.tblEntitySockets[index],
+        isActive: isActive,
+        isAutoScoreUpdate: isActive ? global.tblEntitySockets[index].isAutoScoreUpdate : false,
+        isAutoUpdateCommentary: isActive ? global.tblEntitySockets[index].isAutoUpdateCommentary : false,
+    };
 
-    if (isActive === true) {
-        connectEntitySport(fastify);
-        disconnectEntitySports(fastify);
-    } else {
-        disconnectInactiveEntityClients(fastify);
+    if (isActive === false) {
+        disconnectEntitySports(fastify, entityId);
     }
 
     return `Entity Socket updated successfully`;
@@ -325,10 +327,9 @@ const isAutoScoreUpdateEntitySocketService = async (request, fastify) => {
     global.tblEntitySockets[index].isAutoScoreUpdate = isAutoScoreUpdate;
 
     if (isAutoScoreUpdate == true) {
-        connectEntitySport(fastify);
-        disconnectEntitySports(fastify);
+        connectEntitySport(fastify, entitySocketId);
     } else {
-        disconnectIsAutoScoreUpdateFalseEntityClients(fastify);
+        disconnectEntitySports(fastify, entitySocketId);
     }
 
     return `Entity Socket updated successfully`;
@@ -347,13 +348,17 @@ const isAutoUpdateCommentaryEntitySocketService = async (request, fastify) => {
 }
 
 const getEntitySocketResponseService = async (request, fastify) => {
-    const sockets = [...global.connectedEntitySocketClients].map(socket => ({
-        socketId: socket.id,
-        source: socket.handshake?.query?.source,
-        admin: socket.data?._admin,
-        ip: socket.handshake?.address,
-        connectedAt: socket.handshake?.time,
-    }));
+    const sockets = global.connectedEntitySocketClients.map(socket => {
+        const { client, connectedAt } = socket;
+        return ({
+            socketId: client.id,
+            source: client.handshake?.query?.source,
+            admin: client.data?._admin,
+            ip: client.handshake?.address,
+            url: client?.io?.uri,
+            connectedAt: connectedAt,
+        })
+    });
     return {
         count: sockets.length,
         panels: sockets
@@ -369,5 +374,6 @@ module.exports = {
     activeInactiveEntitySocketService,
     isAutoScoreUpdateEntitySocketService,
     isAutoUpdateCommentaryEntitySocketService,
-    getEntitySocketResponseService
+    getEntitySocketResponseService,
+    updateEntitySocketService
 }
