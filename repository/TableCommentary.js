@@ -9194,6 +9194,86 @@ const getCommentaryStatisticsQuery = async (competitionId, request, fastify) => 
   }
 };
 
+const getAllCommentaryByCompetitionIdForClientQuery = async (request, fastify) => {
+  try {
+    const { competitionId, page = 1, limit = 20 } = request.body;
+
+    const pageNum = Math.max(parseInt(page, 10), 1);
+    const limitNum = Math.min(parseInt(limit, 10), 50);
+    const offset = (pageNum - 1) * limitNum;
+
+    const rows = await fastify.db.query(
+      `
+      select 
+        tc."wrCommentaryId" as "commentaryId",
+        tc."wrMatchTypeId" as "matchTypeId",
+        mt."wrMatchType" as "matchType",
+        tc."wrEventTypeId" as "eventTypeId",
+        tet."wrEventType" as "eventType",
+        tc."wrTeam1Id" as "team1Id",
+        tc."wrTeam2Id" as "team2Id",
+        tt1."wrTeamName" as "team1Name",
+        tt2."wrTeamName" as "team2Name",
+        tt1."wrTeamShortName" as "team1ShortName",
+        tt2."wrTeamShortName" as "team2ShortName",
+        tt1."wrImage" as "team1Logo",
+        tt2."wrImage" as "team2Logo",
+        tct1."wrTeamScore" as "team1Score",
+        tct2."wrTeamScore" as "team2Score",
+        tct1."wrTeamOver" as "team1Over",
+        tct2."wrTeamOver" as "team2Over",
+        tct1."wrTeamWicket" as "team1Wicket",
+        tct2."wrTeamWicket" as "team2Wicket",
+        tc."wrCompetitionId" as "competitionId",
+        co."wrCompetition" as "competition",
+        tc."wrEventId" as "eventId",
+        "wrEventDate" as "eventDate",
+        "wrEventName" as "eventName",
+        "wrCommentaryResult" as "commentaryResult",
+        tu."WrName" as "createdBy"
+      from "tblCommentaries" tc
+      left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
+      left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
+      left join "tblMatchTypes" mt on tc."wrMatchTypeId" = mt."wrMatchTypeId"
+      left join "tblEventTypes" tet on tc."wrEventTypeId" = tet."wrEventTypeId"
+      left join "tblCompetitions" co on tc."wrCompetitionId" = co."wrCompetitionId"
+      left join "tblUsers" tu on tc."wrCreatedBy" = tu."WrUserId"
+      left join "tblCommentaryTeams" tct1 on tct1."wrTeamId" = tc."wrTeam1Id" and tct1."wrCommentaryId" = tc."wrCommentaryId"
+      left join "tblCommentaryTeams" tct2 on tct2."wrTeamId" = tc."wrTeam2Id" and tct2."wrCommentaryId" = tc."wrCommentaryId"
+      where tc."wrIsDelete" = false
+        and co."wrIsDeleted" = false
+        and tc."wrIsActive" = true
+        and tc."wrIsTest" = false
+        and tc."wrCompetitionId" = $1
+      order by tc."wrUpdateTime" desc
+      limit $2 offset $3;
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [competitionId, limitNum + 1, offset],
+      }
+    );
+
+    const hasMore = rows.length > limitNum;
+    const data = hasMore ? rows.slice(0, limitNum) : rows;
+
+    return {
+      data,
+      page: pageNum,
+      limit: limitNum,
+      hasMore,
+    };
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/getAllCommentaryByCompetitionIdForClientQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -9346,5 +9426,6 @@ module.exports = {
   deleteCommentaryPlayersQuery,
   getHeadToHeadCommentaryQuery,
   getCommentaryPlayerByIdsQuery,
-  getCommentaryStatisticsQuery
+  getCommentaryStatisticsQuery,
+  getAllCommentaryByCompetitionIdForClientQuery
 };
