@@ -434,7 +434,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                                 type: "update",
                                             },
                                         },
-                                        request,
+                                        null,
                                         fastify
                                     ).catch((err) => {
                                         console.log("call client api console", err);
@@ -442,7 +442,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                             fastify,
                                             err.message,
                                             "ERROR --> utilities/entitySportAutoUpdateCommentary.js/entitySportAutoUpdateCommentary",
-                                            request
+                                            null
                                         );
                                     });
                                 }
