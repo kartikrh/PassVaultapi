@@ -149,6 +149,12 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
         });
         const emitMessage = `Connected to entitySport - ${urlConfig.url} at ${new Date().toISOString()}`;
         global.socketIo.emit("entitysocketconnect", emitMessage);
+        errorLogger(
+          fastify,
+          emitMessage,
+          "Entity Web Socket --> socketIo.js/entitySports/connectEntitySport/connect",
+          null
+        );
 
         try {
           await updateEntitySocketStatusQuery(
@@ -172,6 +178,12 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
         global.connectedEntitySocketClients = global.connectedEntitySocketClients.filter(item => item.urlConfig.entitySocketId !== urlConfig.entitySocketId);
         const emitMessage = `Entity socket disconnected from ${urlConfig.url}, reason: ${reason} at ${new Date().toISOString()}`;
         global.socketIo.emit("entitysocketdisconnect", emitMessage);
+        errorLogger(
+          fastify,
+          emitMessage,
+          "Entity Web Socket --> socketIo.js/entitySports/connectEntitySport/disconnect",
+          null
+        );
 
         try {
           await updateEntitySocketStatusQuery(
@@ -213,7 +225,12 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       });
 
       client.io.on("reconnect_attempt", (attemptNumber) => {
-        console.log(`Entity Reconnect attempt: ${attemptNumber} for ${urlConfig.url} at ${new Date().toISOString()}`);
+        errorLogger(
+          fastify,
+          `Entity Reconnect attempt: ${attemptNumber} for ${urlConfig.url} at ${new Date().toISOString()}`,
+          "Entity Web Socket --> socketIo.js/entitySports/connectEntitySport/reconnect",
+          null
+        );
         updateReconnectCountQuery(
           {
             entitySocketId: urlConfig.entitySocketId,
@@ -231,8 +248,12 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       });
 
       client.io.on("reconnect", async (attempt) => {
-        const emitMessage = `Entity socket Reconnected to ${urlConfig.url} after ${attempt} attempts at ${new Date().toISOString()}`;
-        console.log(emitMessage)
+        errorLogger(
+          fastify,
+          `Entity socket Reconnected to ${urlConfig.url} after ${attempt} attempts at ${new Date().toISOString()}`,
+          "Entity Web Socket --> socketIo.js/entitySports/connectEntitySport/reconnect",
+          null
+        );
       });
 
       client.io.on("reconnect_error", (error) => {
