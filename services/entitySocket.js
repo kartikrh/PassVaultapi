@@ -283,9 +283,9 @@ const changeEntityActionTypeService = async (request, fastify) => {
         global.tblEntitySockets[index].actionType = request.body.actionType;
         const entityId = global.tblEntitySockets[index]?.entitySocketId
         if (request.body.actionType === clientSocketActionType.connect) {
-            connectEntitySport(fastify, entityId);
+            await connectEntitySport(fastify, entityId);
         } else if (request.body.actionType === clientSocketActionType.disconnect) {
-            disconnectEntitySports(fastify, entityId);
+            await disconnectEntitySports(fastify, entityId);
         }
     }
 
@@ -310,7 +310,7 @@ const activeInactiveEntitySocketService = async (request, fastify) => {
     };
 
     if (isActive === false) {
-        disconnectEntitySports(fastify, entityId);
+        await disconnectEntitySports(fastify, entityId);
     }
 
     return `Entity Socket updated successfully`;
@@ -327,9 +327,9 @@ const isAutoScoreUpdateEntitySocketService = async (request, fastify) => {
     global.tblEntitySockets[index].isAutoScoreUpdate = isAutoScoreUpdate;
 
     if (isAutoScoreUpdate == true) {
-        connectEntitySport(fastify, entitySocketId);
+        await connectEntitySport(fastify, entitySocketId);
     } else {
-        disconnectEntitySports(fastify, entitySocketId);
+        await disconnectEntitySports(fastify, entitySocketId);
     }
 
     return `Entity Socket updated successfully`;
