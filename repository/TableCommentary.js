@@ -9204,49 +9204,157 @@ const getAllCommentaryByCompetitionIdForClientQuery = async (request, fastify) =
 
     const rows = await fastify.db.query(
       `
-      select 
-        tc."wrCommentaryId" as "commentaryId",
-        tc."wrMatchTypeId" as "matchTypeId",
-        mt."wrMatchType" as "matchType",
-        tc."wrEventTypeId" as "eventTypeId",
-        tet."wrEventType" as "eventType",
-        tc."wrTeam1Id" as "team1Id",
-        tc."wrTeam2Id" as "team2Id",
-        tt1."wrTeamName" as "team1Name",
-        tt2."wrTeamName" as "team2Name",
-        tt1."wrTeamShortName" as "team1ShortName",
-        tt2."wrTeamShortName" as "team2ShortName",
-        tt1."wrImage" as "team1Logo",
-        tt2."wrImage" as "team2Logo",
-        tct1."wrTeamScore" as "team1Score",
-        tct2."wrTeamScore" as "team2Score",
-        tct1."wrTeamOver" as "team1Over",
-        tct2."wrTeamOver" as "team2Over",
-        tct1."wrTeamWicket" as "team1Wicket",
-        tct2."wrTeamWicket" as "team2Wicket",
-        tc."wrCompetitionId" as "competitionId",
-        co."wrCompetition" as "competition",
-        tc."wrEventId" as "eventId",
-        "wrEventDate" as "eventDate",
-        "wrEventName" as "eventName",
-        "wrCommentaryResult" as "commentaryResult",
-        tu."WrName" as "createdBy"
-      from "tblCommentaries" tc
-      left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
-      left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
-      left join "tblMatchTypes" mt on tc."wrMatchTypeId" = mt."wrMatchTypeId"
-      left join "tblEventTypes" tet on tc."wrEventTypeId" = tet."wrEventTypeId"
-      left join "tblCompetitions" co on tc."wrCompetitionId" = co."wrCompetitionId"
-      left join "tblUsers" tu on tc."wrCreatedBy" = tu."WrUserId"
-      left join "tblCommentaryTeams" tct1 on tct1."wrTeamId" = tc."wrTeam1Id" and tct1."wrCommentaryId" = tc."wrCommentaryId"
-      left join "tblCommentaryTeams" tct2 on tct2."wrTeamId" = tc."wrTeam2Id" and tct2."wrCommentaryId" = tc."wrCommentaryId"
-      where tc."wrIsDelete" = false
-        and co."wrIsDeleted" = false
-        and tc."wrIsActive" = true
-        and tc."wrIsTest" = false
-        and tc."wrCompetitionId" = $1
-      order by tc."wrUpdateTime" desc
-      limit $2 offset $3;
+      SELECT 
+        CAST(ROW_NUMBER() OVER () AS INT) AS rno,
+        tc."wrCommentaryId" AS "cid",
+        tc."wrEventRefId" AS "eid",
+        tet."wrEventType" AS "ety",
+        mt."wrMatchType" AS "mtyp",
+        mt2."wrMatchType" AS "hmtyp",
+        COALESCE(co."wrCompetition", '') AS "com",
+        tc."wrCompetitionId" AS "compId",
+        tc."wrCurrentInnings" AS "ci",
+        tc."wrEventName" AS "en",
+        TO_CHAR(TIMEZONE('Asia/Kolkata', tc."wrEventDate"), 'DD/MM/YYYY') AS "ed",
+        TO_CHAR(TIMEZONE('Asia/Kolkata', tc."wrEventDate"), 'HH12:MI:SS') AS "et",
+        TO_CHAR(tc."wrEventDate" AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MSZ') AS "utc",
+        tct3."wrTeamName" AS "twonby",
+        CASE
+          WHEN tc."wrChoseTo" IS NULL THEN NULL
+          WHEN tc."wrChoseTo" = 1 THEN 'BAT'
+          ELSE 'BOWL'
+        END AS "choseto",
+        tt1."wrTeamName" AS "te1n",
+        tt2."wrTeamName" AS "te2n",
+        tct1."wrShortName" AS "s1n",
+        tct2."wrShortName" AS "s2n",
+        COALESCE(tt1."wrImage", '') AS "te1i",
+        COALESCE(tt2."wrImage", '') AS "te2i",
+        COALESCE(tt1."WrTeamJersey", '') AS "t1jr",
+        COALESCE(tt2."WrTeamJersey", '') AS "t2jr",
+        COALESCE(tc."wrLocation", '') AS "loc",
+        COALESCE(tt1."wrImagePath", '') AS "nte1i",
+        COALESCE(tt2."wrImagePath", '') AS "nte2i",
+        COALESCE(tt1."wrJerseyPath", '') AS "nt1jr",
+        COALESCE(tt2."wrJerseyPath", '') AS "nt2jr",
+        false AS isrun,
+        COALESCE(
+          CASE 
+            WHEN tct1."wrTeamScore" IS NOT NULL THEN 
+              COALESCE(tct1."wrTeamScore"::TEXT, '0') || '/' || 
+              COALESCE(tct1."wrTeamWicket"::TEXT, '0') || '(' || 
+              COALESCE(tct1."wrTeamOver"::TEXT, '0') || ')'
+            ELSE '0/0(0)'
+          END, 
+          '0/0(0)'
+        ) AS t1s,
+        COALESCE(
+          CASE 
+            WHEN tct2."wrTeamScore" IS NOT NULL THEN 
+              COALESCE(tct2."wrTeamScore"::TEXT, '0') || '/' || 
+              COALESCE(tct2."wrTeamWicket"::TEXT, '0') || '(' || 
+              COALESCE(tct2."wrTeamOver"::TEXT, '0') || ')'
+            ELSE '0/0(0)'
+          END, 
+          '0/0(0)'
+        ) AS t2s,
+        tc."wrDisplayStatus" AS "dis",
+        COALESCE(tc."wrRmk", '') AS "rmk",
+        COALESCE(tc."wrWinRmk", '') AS "winRmk",
+        COALESCE(tc."wrTossRmk", '') AS "tossRmk",
+        COALESCE(tc."wrCardType", 0) AS "cardType",
+        COALESCE(CAST(tct1."wrCrr" AS FLOAT), 0) AS "te1crr",
+        COALESCE(CAST(tct2."wrCrr" AS FLOAT), 0) AS "te2crr",
+        COALESCE(CAST(tct1."wrRrr" AS FLOAT), 0) AS "te1rrr",
+        COALESCE(CAST(tct2."wrRrr" AS FLOAT), 0) AS "te2rrr",
+        0 AS crr,
+        0 AS rrr,
+        tc."wrCommentaryStatus" AS "cst",
+        COALESCE(tc."wrCommentaryResult", '') AS "res",
+        CASE 
+            WHEN tc."wrCurrentInnings" > 1 
+            THEN (
+                SELECT jsonb_agg(
+                    jsonb_build_object(
+                        'inning', t."wrCurrentInnings",
+                        't1s', COALESCE(t1."wrTeamScore" || '/' || COALESCE(t1."wrTeamWicket"::TEXT, '0') || 
+                                 '(' || COALESCE(t1."wrTeamOver"::TEXT, '0.0') || ')', '0/0(0.0)'),
+                        't2s', COALESCE(t2."wrTeamScore" || '/' || COALESCE(t2."wrTeamWicket"::TEXT, '0') || 
+                                 '(' || COALESCE(t2."wrTeamOver"::TEXT, '0.0') || ')', '0/0(0.0)')
+                    )
+                ) 
+                FROM (
+                    SELECT DISTINCT t."wrCommentaryId", t1."wrCurrentInnings", t."wrTeam1Id", t."wrTeam2Id"
+                    FROM "tblCommentaries" t
+                    JOIN "tblCommentaryTeams" t1 ON t."wrCommentaryId" = t1."wrCommentaryId"
+                    WHERE t."wrCommentaryId" = tc."wrCommentaryId"
+                      AND t1."wrCurrentInnings" <= tc."wrCurrentInnings"
+                    ORDER BY t1."wrCurrentInnings" ASC
+                ) AS t
+                LEFT JOIN "tblCommentaryTeams" t1 ON t1."wrCommentaryId" = t."wrCommentaryId" 
+                    AND t1."wrTeamId" = t."wrTeam1Id" 
+                    AND t1."wrCurrentInnings" = t."wrCurrentInnings"
+                LEFT JOIN "tblCommentaryTeams" t2 ON t2."wrCommentaryId" = t."wrCommentaryId" 
+                    AND t2."wrTeamId" = t."wrTeam2Id" 
+                    AND t2."wrCurrentInnings" = t."wrCurrentInnings"
+            ) 
+            ELSE '[]'::jsonb 
+        END AS tsi,
+        tct1."wrBackgroundColor" AS "t1bg",
+        tct2."wrBackgroundColor" AS "t2bg",
+        tct1."wrTeamColor" AS "t1co",
+        tct2."wrTeamColor" AS "t2co",
+        NULL AS batid,
+        NULL AS ballid,
+        tc."wrTeam1Id" AS "t1id",
+        tc."wrTeam2Id" AS "t2id",
+        tc."wrIsPredictMarket" AS "isPr",
+        tc."wrIsClientShow" AS "ics",
+        tc."wrIsTest" AS "isTest",
+        tc."wrWinnerId" AS "winId",
+        tc."wrWinnerName" AS "winNm",
+        tc."wrIsActive" AS "isActive",
+        tet."wrEventTypeId" AS "etyId",
+        tc."wrIsVirtual" as "isVirtual",
+        tc."wrTestDayCount" as "testDayCount",
+        tc."wrOnfieldUmpires" as "onfieldUmpires",
+        tc."wrThirdUmpire" as "thirdUmpire",
+        tc."wrMatchReferee" as "matchReferee",
+        tc."wrSession" as "session",
+        tc."wrBallDelay" as "ballDelay",
+        tc."wrOverDelay" as "overDelay",
+        tc."wrInningDelay" as "inningDelay",
+        tc."wrTossDelay" as "tossDelay",
+        tc."wrCountryId" as "countryId",
+        tc."wrVenueId" as "venueId",
+        tc."wrScoringType" as "scoringType",
+        tc."wrPythonId" as "pythonId",
+        tc."wrPythonURI" as "pythonURI",
+        tc."wrViews" as "views",
+        tc."wrEventNo" as "eventNo",
+        tc."wrCancelTime" as "cancelTime"
+      FROM "tblCommentaries" tc
+      LEFT JOIN "tblTeams" tt1 ON tt1."wrTeamId" = tc."wrTeam1Id" AND tt1."wrIsDeleted" = false
+      LEFT JOIN "tblTeams" tt2 ON tt2."wrTeamId" = tc."wrTeam2Id" AND tt2."wrIsDeleted" = false
+      LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId" AND mt."wrIsDeleted" = false
+      LEFT JOIN "tblMatchTypes" mt2 ON tc."wrHistoryMatchTypeId" = mt2."wrMatchTypeId" AND mt2."wrIsDeleted" = false
+      LEFT JOIN "tblEventTypes" tet ON tc."wrEventTypeId" = tet."wrEventTypeId" AND tet."wrIsDeleted" = false
+      LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId" AND co."wrIsDeleted" = false
+      LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
+      LEFT JOIN "tblCommentaryTeams" tct1 ON tct1."wrCommentaryId" = tc."wrCommentaryId"
+        AND tct1."wrTeamId" = tc."wrTeam1Id" 
+        AND tct1."wrCurrentInnings" = tc."wrCurrentInnings" AND tct1."wrIsDelete" = false
+      LEFT JOIN "tblCommentaryTeams" tct2 ON tct2."wrCommentaryId" = tc."wrCommentaryId"
+        AND tct2."wrTeamId" = tc."wrTeam2Id" 
+        AND tct2."wrCurrentInnings" = tc."wrCurrentInnings" AND tct2."wrIsDelete" = false
+      LEFT JOIN "tblCommentaryTeams" tct3 ON tct3."wrCommentaryId" = tc."wrCommentaryId"
+        AND tct3."wrTeamId" = tc."wrTossWonBy" 
+        AND tct3."wrCurrentInnings" = tc."wrCurrentInnings" AND tct3."wrIsDelete" = false
+      WHERE tc."wrIsDelete" = FALSE
+        AND tc."wrIsActive" = TRUE AND tc."wrIsTest" = FALSE
+        AND tc."wrCompetitionId" = $1 AND co."wrIsDeleted" = FALSE
+      ORDER BY tc."wrUpdateTime" DESC
+      LIMIT $2 OFFSET $3;
       `,
       {
         type: fastify.db.QueryTypes.SELECT,
