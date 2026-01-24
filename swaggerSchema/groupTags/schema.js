@@ -5401,6 +5401,22 @@ const Score = {
         required: ["competitionId"]
       }
     }
+  },
+  getAllCommentaryByCompetitionId: {
+    schema: {
+      tags: ["Score"],
+      description: "get all commentary by competition id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+          page: { type: "integer" },
+          limit: { type: "integer" }
+        },
+        required: ["competitionId"]
+      }
+    }
   }
 };
 

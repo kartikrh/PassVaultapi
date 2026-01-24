@@ -100,6 +100,7 @@ const {
   updateCommentaryDateByCommentaryIdQuery,
   getHeadToHeadCommentaryQuery,
   getCommentaryStatisticsQuery,
+  getAllCommentaryByCompetitionIdForClientQuery
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -25611,6 +25612,11 @@ const getCommentaryStatisticsService = async (request, fastify) => {
   return result || [];
 };
 
+const getAllCommentaryByCompetitionIdForClientService = async (request, fastify) => {
+  const result = await getAllCommentaryByCompetitionIdForClientQuery(request, fastify);
+  return result || [];
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -25735,5 +25741,6 @@ module.exports = {
   checkSUpdatePasswordService,
   updateCommentaryPlayersFromEntityService,
   getHeadToHeadCommentaryService,
-  getCommentaryStatisticsService
+  getCommentaryStatisticsService,
+  getAllCommentaryByCompetitionIdForClientService
 };
