@@ -120,12 +120,22 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
 
     const promisies = entitySports.map(async (urlConfig) => {
       if (urlConfig.status === clientSocketStatus.connected) {
-        console.log(`Entity connection to ${urlConfig.url} already connected, skipping reconnection`);
+        errorLogger(
+          fastify,
+          `Entity connection to ${urlConfig.url} already connected, skipping reconnection`,
+          "Entity Socket --> socketIo.js/entitySports/connectEntitySport - status - connected",
+          null
+        );
         return;
       }
 
       if (urlConfig.isAutoScoreUpdate === false) {
-        console.log(`Auto score update is not active for ${urlConfig.url}`);
+        errorLogger(
+          fastify,
+          `Auto score update is not active for ${urlConfig.url}`,
+          "Entity Socket --> socketIo.js/entitySports/connectEntitySport - isAutoScoreUpdate - false",
+          null
+        );
         return;
       }
 
@@ -152,7 +162,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
         errorLogger(
           fastify,
           emitMessage,
-          "Entity Web Socket --> socketIo.js/entitySports/connectEntitySport/connect",
+          "Entity Socket --> socketIo.js/entitySports/connectEntitySport/connect",
           null
         );
 
@@ -168,7 +178,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
           errorLogger(
             fastify,
             error.message,
-            "Entity Web Socket --> socketIo.js/entitySports/connectEntitySport/connect - updateEntitySocketStatusQuery",
+            "Entity Socket --> socketIo.js/entitySports/connectEntitySport/connect - updateEntitySocketStatusQuery",
             null
           );
         }
@@ -181,7 +191,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
         errorLogger(
           fastify,
           emitMessage,
-          "Entity Web Socket --> socketIo.js/entitySports/connectEntitySport/disconnect",
+          "Entity Socket --> socketIo.js/entitySports/connectEntitySport/disconnect",
           null
         );
 
@@ -197,7 +207,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
           errorLogger(
             fastify,
             error.message,
-            "Entity Web Socket --> socketIo.js/entitySports/connectEntitySport/disconnect - updateEntitySocketStatusQuery",
+            "Entity Socket --> socketIo.js/entitySports/connectEntitySport/disconnect - updateEntitySocketStatusQuery",
             null
           );
         }
@@ -228,7 +238,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
         errorLogger(
           fastify,
           `Entity Reconnect attempt: ${attemptNumber} for ${urlConfig.url} at ${new Date().toISOString()}`,
-          "Entity Web Socket --> socketIo.js/entitySports/connectEntitySport/reconnect",
+          "Entity Socket --> socketIo.js/entitySports/connectEntitySport/reconnect",
           null
         );
         updateReconnectCountQuery(
@@ -251,7 +261,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
         errorLogger(
           fastify,
           `Entity socket Reconnected to ${urlConfig.url} after ${attempt} attempts at ${new Date().toISOString()}`,
-          "Entity Web Socket --> socketIo.js/entitySports/connectEntitySport/reconnect",
+          "Entity Socket --> socketIo.js/entitySports/connectEntitySport/reconnect",
           null
         );
       });
@@ -260,7 +270,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
         errorLogger(
           fastify,
           error.message,
-          "Entity Web Socket --> socketIo.js/entitySports/connectEntitySport/reconnect_error",
+          "Entity Socket --> socketIo.js/entitySports/connectEntitySport/reconnect_error",
           null
         );
       });
@@ -269,7 +279,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
         errorLogger(
           fastify,
           null,
-          "Entity Web Socket --> socketIo.js/entitySports/connectEntitySport/reconnect_failed",
+          "Entity Socket --> socketIo.js/entitySports/connectEntitySport/reconnect_failed",
           null
         );
       });
