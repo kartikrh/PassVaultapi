@@ -135,9 +135,9 @@ module.exports = async function (fastify, opts) {
           // connectClients(fastify);
           connectClients2(fastify);
           disconnectClients(fastify);
-          disconnectEntitySports(fastify);
-          resetEntitySocketReconnectCountQuery(fastify);
-          connectEntitySport(fastify);
+          await disconnectEntitySports(fastify);
+          await resetEntitySocketReconnectCountQuery(fastify);
+          await connectEntitySport(fastify);
           webPushset(webPush);
           updateMarket(fastify)
 
