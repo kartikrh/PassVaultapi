@@ -805,29 +805,36 @@ const importUpdateTournamentTeamPointFromEntitySportService = async (data, fasti
 
 const insertTournamentTeamPointInAutoImportService = async (fastify) => {
   try {
-    const formatDate = (date) => date.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
-    const now = new Date();
-    const istToday = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
-    istToday.setDate(istToday.getDate() - 1);
-    const yesterdayStr = formatDate(istToday);
-    const competitionList = global.tblCompetitions.filter(cp => {
-      const startStr = formatDate(new Date(cp.startDate));
-      const endStr = formatDate(new Date(cp.endDate));
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-      return yesterdayStr >= startStr && yesterdayStr <= endStr && cp.tpId !== null;
-    })
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
 
+    const competitionList = global.tblCompetitions.filter(cp => cp.tpId);
     for (const competition of competitionList) {
-      await insertAutoImportDataService({
-        body: {
-          refId: competition?.tpId || competition?.competitionId,
-          refType: RefType.tournamentTeamPointUpdate,
-          sourceId: 3
-        },
-        userTokenInfo: {
-          WrUserId: -2
-        }
-      }, fastify);
+      const start = new Date(competition.startDate);
+      const end = new Date(competition.endDate);
+
+      start.setHours(0, 0, 0, 0);
+      end.setHours(0, 0, 0, 0);
+
+      const isActiveToday = today >= start && today <= end;
+
+      const endedYesterday = end.getTime() === yesterday.getTime();
+
+      if (isActiveToday || endedYesterday) {
+        await insertAutoImportDataService({
+          body: {
+            refId: competition.tpId,
+            refType: RefType.tournamentTeamPointUpdate,
+            sourceId: 3
+          },
+          userTokenInfo: {
+            WrUserId: -2
+          }
+        }, fastify);
+      }
     }
   } catch (error) {
     errorLogger(
