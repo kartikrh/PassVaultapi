@@ -1427,10 +1427,13 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             onStrike: false,
             bowlerOver: b.overs,
             bowlerRun: b.runs_conceded,
-            bowlerWicket: b.wickets,
+            bowlerTotalWicket: b.wickets,
             bowlerEconomy: parseFloat(b.econ) ?? "0",
             bowlerOrder,
             bowlerMaidenOver: b?.maidens ?? 0,
+            bowlerWideBall : b.wides,
+            bowlerNoBall : b.noballs,
+            bowlerDotBall : b.run0
           };
           currentPlayers.push(comP.commentaryPlayerId);
         }
@@ -1623,9 +1626,9 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                   ...playerTpIdObj[c.bowler_id],
                 }
               }
-              playersMap[c.bowler_id].bowlerWideBall = (playersMap[c.bowler_id].bowlerWideBall || 0) + 1;
+              // playersMap[c.bowler_id].bowlerWideBall = (playersMap[c.bowler_id].bowlerWideBall || 0) + 1;
               playersMap[c.bowler_id].bowlerWideBallRun = (playersMap[c.bowler_id].bowlerWideBallRun || 0) + runToUpdate;
-              playersMap[c.bowler_id].bowlerRun = (playersMap[c.bowler_id].bowlerRun || 0) + runToUpdate;
+              // playersMap[c.bowler_id].bowlerRun = (playersMap[c.bowler_id].bowlerRun || 0) + runToUpdate;
               updateBall.bowlerId = playersMap[c.bowler_id].commentaryPlayerId;
             } else if (c.score && String(c.score).includes('nb')) {
               const runToUpdate = +(c?.run ?? 0);
@@ -1728,9 +1731,9 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                   ...playerTpIdObj[c.bowler_id],
                 }
               }
-              playersMap[c.bowler_id].bowlerNoBall = (playersMap[c.bowler_id].bowlerNoBall || 0) + 1;
+              // playersMap[c.bowler_id].bowlerNoBall = (playersMap[c.bowler_id].bowlerNoBall || 0) + 1;
               playersMap[c.bowler_id].bowlerNoBallRun = (playersMap[c.bowler_id].bowlerNoBallRun || 0) + runToUpdate;
-              playersMap[c.bowler_id].bowlerRun = (playersMap[c.bowler_id].bowlerRun || 0) + runToUpdate;
+              // playersMap[c.bowler_id].bowlerRun = (playersMap[c.bowler_id].bowlerRun || 0) + runToUpdate;
               updateBall.bowlerId = playersMap[c.bowler_id].commentaryPlayerId;
             }
             else {
@@ -2011,13 +2014,13 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           }
           const overKey = `${comDetails.commentaryId}-${comDetails.currentInnings}-${battingTeam.teamId}-${overNumber}`;
           let over = oversMap[overKey];
-           let strikePId = playerTpIdObj[c.batsman_id]?.commentaryPlayerId
+          let strikePId = playerTpIdObj[c.batsman_id]?.commentaryPlayerId
           let bowlerPId = playerTpIdObj[c.bowler_id]?.commentaryPlayerId
           let nonStrike = response.live.batsmen.find((i)=> i.batsman_id != c.batsman_id).batsman_id
           let nonStrikePId = playerTpIdObj[nonStrike]?.commentaryPlayerId;
           if(playersMap[c.bowler_id]){
             // playersMap[c.bowler_id].bowlerOver = ((playersMap[c.bowler_id].bowlerOver || 0) + 0.1).toFixed(1) 
-            playersMap[c.bowler_id].bowlerTotalWicket = (playersMap[c.bowler_id].bowlerTotalWicket || 0) + 1
+            // playersMap[c.bowler_id].bowlerTotalWicket = (playersMap[c.bowler_id].bowlerTotalWicket || 0) + 1
             playersMap[c.bowler_id].bowlerTotalBall = (playersMap[c.bowler_id].bowlerTotalBall || 0) + 1
             playersMap[c.bowler_id].bowlerDotBall = (playersMap[c.bowler_id].bowlerDotBall || 0) + 1
           }
@@ -2026,7 +2029,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               ...playerTpIdObj[c.bowler_id],
               // bowlerOver :((playerTpIdObj[c.bowler_id].bowlerOver || 0) + 0.1).toFixed(1),
               isPlay : true,
-              bowlerTotalWicket : playerTpIdObj[c.bowler_id].bowlerTotalWicket ? playerTpIdObj[c.bowler_id].bowlerTotalWicket + 1 : 1,
+              // bowlerTotalWicket : playerTpIdObj[c.bowler_id].bowlerTotalWicket ? playerTpIdObj[c.bowler_id].bowlerTotalWicket + 1 : 1,
               bowlerTotalBall : playerTpIdObj[c.bowler_id].bowlerTotalBall ? playerTpIdObj[c.bowler_id].bowlerTotalBall + 1 : 1,  
               bowlerDotBall : playerTpIdObj[c.bowler_id].bowlerDotBall ? playerTpIdObj[c.bowler_id].bowlerDotBall + 1 : 1,  
             }
@@ -4310,7 +4313,7 @@ const wicketUndoService = async (data, fastify, request) => {
     }
   }
 
-  playersMap[tpBall.bowler_id].bowlerTotalWicket = playersMap[tpBall.bowler_id].bowlerTotalWicket > 0 ? playersMap[tpBall.bowler_id].bowlerTotalWicket - 1 : 0;
+  // playersMap[tpBall.bowler_id].bowlerTotalWicket = playersMap[tpBall.bowler_id].bowlerTotalWicket > 0 ? playersMap[tpBall.bowler_id].bowlerTotalWicket - 1 : 0;
   playersMap[tpBall.bowler_id].bowlerTotalBall = playersMap[tpBall.bowler_id].bowlerTotalBall > 0 ? playersMap[tpBall.bowler_id].bowlerTotalBall - 1 : 0;
   playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playersMap[tpBall.bowler_id].bowlerDotBall - 1 : 0;
   let o = parseFloat(playersMap[tpBall.bowler_id].bowlerOver || 0);
