@@ -196,7 +196,7 @@ module.exports = async function (fastify, opts) {
     }
   });
 
-  cron.schedule('30 19 * * *', async () => {
+  cron.schedule('30 0 * * *', async () => {
     try {
       if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
         await insertTournamentTeamPointInAutoImportService(fastify);
