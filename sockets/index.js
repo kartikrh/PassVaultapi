@@ -588,7 +588,7 @@ const connectClients2 = async (fastify, clientSocketId = undefined)=>{
           reconnectionDelayMax: 8000,
           timeout: 20000,
           // transport-level ping
-          pingInterval: 12000,
+          pingInterval: 15000,
           pingTimeout: 4000,
           forceNew: true,
           autoConnect: true
