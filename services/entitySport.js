@@ -903,6 +903,9 @@ const setEntityCom2Service = async (request , fastify) =>{
         }   
         comDetails = global.tblCommentaries.find((i) => i.commentaryId == comDetails.commentaryId)
         if(comDetails.commentaryStatus == commentaryStatus.INPROGRESS || comDetails.commentaryStatus == commentaryStatus.INNINGCHANGE){
+          if(!response.live.commentaries || response.live.commentaries.length == 0){
+            return true;
+          }
           comDetails.isClientShow = true;
           const bat = await checkBattingTeamService(response, comDetails);
           if (bat) {
