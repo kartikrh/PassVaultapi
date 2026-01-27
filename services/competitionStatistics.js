@@ -451,26 +451,36 @@ const getCompetitionStatisticsByCompetitionIdService = async (request, fastify) 
 
 const insertCompetitionstatisticsInAutoImportService = async (fastify) => {
     try {
-        const formatDate = (date) => date.toISOString().split("T")[0];
-        const yesterdayStr = formatDate(new Date(Date.now() - 24 * 60 * 60 * 1000));
-        const competitionList = global.tblCompetitions.filter(cp => {
-            const startStr = formatDate(new Date(cp.startDate));
-            const endStr = formatDate(new Date(cp.endDate));
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-            return yesterdayStr >= startStr && yesterdayStr <= endStr && cp.tpId !== null;
-        })
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
 
+        const competitionList = global.tblCompetitions.filter(cp => cp.tpId);
         for (const competition of competitionList) {
-            await insertAutoImportDataService({
-                body: {
-                    refId: competition?.tpId || competition?.competitionId,
-                    refType: RefType.CompetitionStatistics,
-                    sourceId: 3
-                },
-                userTokenInfo: {
-                    WrUserId: -2
-                }
-            }, fastify);
+            const start = new Date(competition.startDate);
+            const end = new Date(competition.endDate);
+
+            start.setHours(0, 0, 0, 0);
+            end.setHours(0, 0, 0, 0);
+
+            const isActiveToday = today >= start && today <= end;
+
+            const endedYesterday = end.getTime() === yesterday.getTime();
+
+            if (isActiveToday || endedYesterday) {
+                await insertAutoImportDataService({
+                    body: {
+                        refId: competition.tpId,
+                        refType: RefType.CompetitionStatistics,
+                        sourceId: 3
+                    },
+                    userTokenInfo: {
+                        WrUserId: -2
+                    }
+                }, fastify);
+            }
         }
     } catch (error) {
         errorLogger(

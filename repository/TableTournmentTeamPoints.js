@@ -442,7 +442,8 @@ const getClientTournamentTeamPointsQuery = async (request, fastify) => {
           ttp."wrGroupName"  as "groupName",
           ttp."wrPosition" as "position",
           tp."wrTeamName" as "teamName",
-          tp."wrTeamShortName" as "teamShortName"
+          tp."wrTeamShortName" as "teamShortName",
+          tp."wrImage" as "teamImage"
         FROM "tblTournamentTeamPoint" ttp
         LEFT JOIN "tblCompetitions" tc ON ttp."wrCompetitionId" = tc."wrCompetitionId"
         LEFT JOIN "tblTeams" tp ON tp."wrTeamId" = ttp."wrTeamId"
