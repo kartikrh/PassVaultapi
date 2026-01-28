@@ -299,6 +299,8 @@ const getTournamentTeamPlayersByCompetitionIdForClientService = async (request, 
     commentariesByMatchType.get(mtId).push(c);
   }
 
+  const teamPlayersCache = new Map();
+
   const result = [];
 
   for (const [matchTypeId, mtCommentaries] of commentariesByMatchType.entries()) {
@@ -309,15 +311,32 @@ const getTournamentTeamPlayersByCompetitionIdForClientService = async (request, 
 
       for (const cp of cps) {
         const teamId = toId(cp.teamId);
+
         if (!teamsInMatch.has(teamId)) {
           const teamData = teamsMap.get(teamId) || {};
           teamsInMatch.set(teamId, { ...teamData, players: [] });
+
+          if (!teamPlayersCache.has(teamId)) {
+            const teamPlayers = await newGetAllPlayersByTeamIdQuery(teamId, fastify, request);
+            teamPlayersCache.set(teamId, teamPlayers || []);
+          }
         }
 
+        const teamPlayers = teamPlayersCache.get(teamId);
         const player = playersMap.get(toId(cp.playerId));
-        const teamPlayerByTeamId = await newGetAllPlayersByTeamIdQuery(teamId, fastify, request);
-        if (player) teamsInMatch.get(teamId).players.push(teamPlayerByTeamId.find(tp => tp.playerId === player.playerId));
+        if (!player) continue;
+
+        const fullPlayer = teamPlayers.find(tp => toId(tp.playerId) === toId(player.playerId));
+        if (fullPlayer) {
+          teamsInMatch.get(teamId).players.push(fullPlayer);
+        }
       }
+    }
+
+    for (const team of teamsInMatch.values()) {
+      team.players = [
+        ...new Map(team.players.map(p => [toId(p.playerId), p])).values()
+      ];
     }
 
     result.push({
