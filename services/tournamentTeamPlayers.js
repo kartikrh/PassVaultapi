@@ -315,7 +315,8 @@ const getTournamentTeamPlayersByCompetitionIdForClientService = async (request, 
         }
 
         const player = playersMap.get(toId(cp.playerId));
-        if (player) teamsInMatch.get(teamId).players.push(player);
+        const teamPlayerByTeamId = await newGetAllPlayersByTeamIdQuery(teamId, fastify, request);
+        if (player) teamsInMatch.get(teamId).players.push(teamPlayerByTeamId.find(tp => tp.playerId === player.playerId));
       }
     }
 
