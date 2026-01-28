@@ -131,6 +131,7 @@ const {
   extractBowlingStyle,
   RefType,
   lowerEntityMatchTypesEnums,
+  matchStatusEntity,
 } = require("../utilities");
 const {
   getAllPlayersByTeamIdQuery,
@@ -25619,6 +25620,62 @@ const getAllCommentaryByCompetitionIdForClientService = async (request, fastify)
   return result || [];
 };
 
+const importCompetitionMatchService = async (fastify) => {
+  const competitions = global.tblCompetitions.filter(tcp => tcp.isActive && [compStatus.fixture, compStatus.live].includes(tcp.commStatus) && tcp.tpId !== null);
+  for (const comp of competitions) {
+    let entitySportCompetitionMatchesUrl = `/competition/${comp.tpId}/matches?`;
+    let page = 1, totalPages = 1;
+    let allCompetitionMatch = [];
+    while (page <= totalPages) {
+      const params = new URLSearchParams();
+      params.append("paged", page);
+      params.append("per_page", 50);
+      entitySportCompetitionMatchesUrl += `&${params.toString()}`;
+      const entitySportCompetitionMatch = await callEntitySportAPI(entitySportCompetitionMatchesUrl, null, fastify);
+
+      let entitySportCompetitionMatchResponse = entitySportCompetitionMatch?.data?.result;
+      if (!entitySportCompetitionMatchResponse) {
+        errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/competition.js/competitionImportService - entitySportCompetitionMatchResponse", {
+          originalUrl: entitySportCompetitionMatchesUrl
+        }, entitySportCompetitionMatch?.data);
+      } else {
+        if (page === 1) {
+          totalPages = entitySportCompetitionMatchResponse?.total_pages || 1;
+        }
+        allCompetitionMatch.push(...entitySportCompetitionMatchResponse?.items);
+      }
+      page++;
+    }
+
+    if (allCompetitionMatch.length === 0) {
+      return true;
+    }
+
+    allCompetitionMatch = allCompetitionMatch.filter(m => (m.status === matchStatusEntity.Live || m.status === matchStatusEntity.Scheduled) && nullTeamtpIds.includes(Number(m?.teama?.team_id)) === false && nullTeamtpIds.includes(Number(m?.teamb?.team_id)) === false);
+    if (allCompetitionMatch.length === 0) {
+      return true;
+    }
+
+    const allCompetitionMatchTpId = allCompetitionMatch.map(cm => cm.match_id);
+
+    for (const tpId of allCompetitionMatchTpId) {
+      const commentary = global.tblCommentaries.find(tc => tc.tpId === tpId);
+      if (!commentary) {
+        await insertAutoImportDataService({
+          body: {
+            refId: tpId,
+            refType: RefType.Match,
+            sourceId: 3
+          },
+          userTokenInfo: {
+            WrUserId: -2
+          }
+        }, fastify);
+      }
+    }
+  }
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -25744,5 +25801,6 @@ module.exports = {
   updateCommentaryPlayersFromEntityService,
   getHeadToHeadCommentaryService,
   getCommentaryStatisticsService,
-  getAllCommentaryByCompetitionIdForClientService
+  getAllCommentaryByCompetitionIdForClientService,
+  importCompetitionMatchService
 };
