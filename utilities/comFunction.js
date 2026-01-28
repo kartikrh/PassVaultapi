@@ -260,6 +260,8 @@ const generateWicket = (data) => {
     wicketCount: (currentWicket.wicketCount || 0),
     ballCount: Number(currentWicket.ballCount ?? 0),
     currentInnings: commentaryDetails.currentInnings,
+    fieldPlayer2Id: currentWicket?.fieldPlayer2Id || null,
+    fieldPlayer2Name: currentWicket?.fieldPlayer2Name || null,
   }
 }
 const buildOverData = async (data) =>{
@@ -623,7 +625,7 @@ const generateBallET = (data) => {
       updateBall?.nextBatNonStrikeId || 0,
     currentInnings: commentaryDetails.currentInnings,
     autoStrikeBallCount: updateBall?.autoStrikeBallCount || 0,
-    commentaryPartnershipId: updatePartnership.commentaryPartnershipId || 0,
+    commentaryPartnershipId: updatePartnership?.commentaryPartnershipId || 0,
     teamScore: updateBattingTeam?.teamScore || 0,
     teamWicket: updateBattingTeam?.teamWicket || 0,
     tpId : updateBall?.tpId || null,
