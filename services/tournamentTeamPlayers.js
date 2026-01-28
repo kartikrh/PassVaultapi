@@ -338,7 +338,7 @@ const getTournamentTeamPlayersByCompetitionIdForClientService = async (request, 
     }
 
     result.push({
-      matchTypeData: matchTypeMap.get(matchTypeId),
+      ...matchTypeMap.get(matchTypeId),
       team1: {
         ...team1Data,
         players: [...team1PlayersMap.values()]
