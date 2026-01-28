@@ -2158,6 +2158,16 @@ const awardTypes = {
   MAN_OF_THE_MATCH: 6
 };
 
+const lowerEntityMatchTypesEnums = () => {
+  const entityEnumsLowercase = Object.fromEntries(
+    Object.entries(EntityEnums).map(([key, value]) => [
+      key.toLowerCase(),
+      value
+    ])
+  );
+  return entityEnumsLowercase;
+}
+
 module.exports = {    
   ERROR_CODES,
   error,
@@ -2278,5 +2288,6 @@ module.exports = {
   getKeyAndValueKey,
   competitionMatchTypeEnum,
   EntityMatchStatus,
-  awardTypes
+  awardTypes,
+  lowerEntityMatchTypesEnums
 };

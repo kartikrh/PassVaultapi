@@ -130,6 +130,7 @@ const {
   EntityBowlingStyleType,
   extractBowlingStyle,
   RefType,
+  lowerEntityMatchTypesEnums,
 } = require("../utilities");
 const {
   getAllPlayersByTeamIdQuery,
@@ -23531,7 +23532,8 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
   }
 
   const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
-  const matchType = global.tblMatchTypes.find(item => item.entityEnum === EntityEnums[entitySportCompetitionResponse?.game_format.toUpperCase()]);
+  const entityMatchTypeEnums = lowerEntityMatchTypesEnums();
+  const matchType = global.tblMatchTypes.find(item => item.entityEnum === entityMatchTypeEnums[entitySportCompetitionResponse?.game_format.toLowerCase()]);
 
   const pythonIdData = global.tblPythonAPI.find(item => item.isDefault === true && item.isActive === true);
   if (!pythonIdData) {
