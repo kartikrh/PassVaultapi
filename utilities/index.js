@@ -734,6 +734,7 @@ const APIEndpointModuleType = {
   getCompetitionMatchDataByIdFromEntity: 17,
   getCompetitionSquadDataByIdFromEntity: 18,
   searchPlayerDataFromEntity: 19,
+  getCommentaryInningDataFromEntity: 20,
 }
 
 const NotificationSendType = {
@@ -2110,6 +2111,7 @@ const etWicketObj = {
   "runout" : wicketTypeObj.RUN_OUT,
   "hitwicket" : wicketTypeObj.HIT_WICKET,
   "retiredout" : wicketTypeObj.RETIRED_OUT,
+  "retired" : wicketTypeObj.RETIRED_OUT,
   "timedout" : wicketTypeObj.TIMED_OUT,
   "hittheballtwice" : wicketTypeObj.HIT_BALL_TWICE,
   "fieldobstruction" : wicketTypeObj.OBSTRACT_THE_FIELDING,
@@ -2166,6 +2168,26 @@ const lowerEntityMatchTypesEnums = () => {
     ])
   );
   return entityEnumsLowercase;
+}
+
+const getInningWiseDataFromEntity = (moduleType) => {
+  try {
+    let entityData = global.tblAPIEndpoints.find(item => item.serviceType == ServiceType.entitySport && item.isActive == true && item.moduleType === moduleType);
+    if (!entityData) {
+      return {
+        message: `Entity Sport API module ${moduleType} is not active`,
+        data: null
+      };
+    }
+    return {
+      data: entityData?.endPoint
+    };
+  } catch (error) {
+    return {
+      message: error.message,
+      data: null
+    };
+  }
 }
 
 module.exports = {    
@@ -2289,5 +2311,6 @@ module.exports = {
   competitionMatchTypeEnum,
   EntityMatchStatus,
   awardTypes,
-  lowerEntityMatchTypesEnums
+  lowerEntityMatchTypesEnums,
+  getInningWiseDataFromEntity,
 };

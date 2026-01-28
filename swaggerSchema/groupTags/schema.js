@@ -11004,6 +11004,21 @@ const EntitySport = {
       },
     }
   },
+  CommentaryInningData: {
+    schema: {
+      tags: ["EntitySport"],
+      description: "save commentary inning data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          matchId: { type: "integer" },
+          inningNumber: { type: "integer" },
+        },
+        required: ["matchId", "inningNumber"],
+      },
+    }
+  },
 }
 const Agent = {
   signIn : {
