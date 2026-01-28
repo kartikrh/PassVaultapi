@@ -269,29 +269,89 @@ const addAndRemovePlayersFromTournamentTeams = async (request, fastify) => {
 
 const getTournamentTeamPlayersByCompetitionIdForClientService = async (request, fastify) => {
   const { competitionId } = request.body;
-  const result = global.tblTournamentTeamPlayers.filter(
-    (item) => item.competitionId === competitionId
+
+  const competition = global.tblCompetitions.find(
+    c => c.competitionId === competitionId
   );
-  const teams = [...new Set(result.map(item => item.teamId))];
-  const data = [];
-  for (const t of teams) {
-    const teamData = global.tblTeams.find(team => team.teamId === t);
-    const teamPlayerByTeamId = await newGetAllPlayersByTeamIdQuery(t, fastify, request);
-    const players = result.filter(item => item.teamId === t);
-    const teamPlayers = [];
-    for (const p of players) {
-      teamPlayers.push({
-        ...teamPlayerByTeamId.find(tp => tp.playerId === p.playerId),
-        ...p
-      });
+  if (!competition) {
+    throw new Error(`Competition with this id ${competitionId} not found`);
+  }
+
+  const commentaries = global.tblCommentaries.filter(
+    c => c.competitionId === competitionId
+  );
+  if (!commentaries.length) return [];
+
+  const matchTypeMap = new Map(
+    global.tblMatchTypes.map(mt => [mt.matchTypeId, mt])
+  );
+
+  const playersMap = new Map(
+    global.tblPlayers.map(p => [p.playerId, p])
+  );
+
+  const teamsMap = new Map(
+    global.tblTeams.map(t => [t.teamId, t])
+  );
+
+  const commentaryPlayersByCommentary = new Map();
+  for (const cp of global.tblCommentaryPlayers) {
+    if (!commentaryPlayersByCommentary.has(cp.commentaryId)) {
+      commentaryPlayersByCommentary.set(cp.commentaryId, []);
     }
-    data.push({
-      teamData,
-      teamPlayers
+    commentaryPlayersByCommentary.get(cp.commentaryId).push(cp);
+  }
+
+  const commentariesByMatchType = new Map();
+  for (const c of commentaries) {
+    if (!commentariesByMatchType.has(c.matchTypeId)) {
+      commentariesByMatchType.set(c.matchTypeId, []);
+    }
+    commentariesByMatchType.get(c.matchTypeId).push(c);
+  }
+
+  const result = [];
+
+  for (const [matchTypeId, mtCommentaries] of commentariesByMatchType.entries()) {
+    const team1PlayersMap = new Map();
+    const team2PlayersMap = new Map();
+
+    let team1Data = null;
+    let team2Data = null;
+
+    for (const c of mtCommentaries) {
+      team1Data ??= teamsMap.get(c.team1Id);
+      team2Data ??= teamsMap.get(c.team2Id);
+
+      const cps = commentaryPlayersByCommentary.get(c.commentaryId) || [];
+
+      for (const cp of cps) {
+        const player = playersMap.get(cp.playerId);
+        if (!player) continue;
+
+        if (cp.teamId === c.team1Id) {
+          team1PlayersMap.set(player.playerId, player);
+        } else if (cp.teamId === c.team2Id) {
+          team2PlayersMap.set(player.playerId, player);
+        }
+      }
+    }
+
+    result.push({
+      matchTypeData: matchTypeMap.get(matchTypeId),
+      team1: {
+        ...team1Data,
+        players: [...team1PlayersMap.values()]
+      },
+      team2: {
+        ...team2Data,
+        players: [...team2PlayersMap.values()]
+      }
     });
   }
-  return data;
-}
+
+  return result;
+};
 
 module.exports = {
   allTournamentTeamPlayersService,
