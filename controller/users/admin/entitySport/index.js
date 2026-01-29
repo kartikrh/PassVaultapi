@@ -9,7 +9,8 @@ const {
   saveVenueService,
   setEntityComService,
   setEntityCom2Service,
-  saveTournamentTeamPlayerService
+  saveTournamentTeamPlayerService,
+  storeInningWiseEntityDataService,
 } = require("../../../../services/entitySport");
 const { updateCommentaryPlayersFromEntityService } = require("../../../../services/commentry")
 
@@ -114,6 +115,15 @@ const updateCommentaryPlayersPlaying11 = async (request, reply, fastify) => {
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 }
+const storeInningWiseEntityData = async (request, reply, fastify) => {
+    try {
+        const result = await storeInningWiseEntityDataService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, path + "/storeInningWiseEntityData", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+}
 
 module.exports = {
     saveTeams,
@@ -126,4 +136,5 @@ module.exports = {
     setEntityCom2,
     saveTournamentTeamPlayer,
     updateCommentaryPlayersPlaying11,
+    storeInningWiseEntityData,
 }

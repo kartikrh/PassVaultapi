@@ -298,9 +298,12 @@ const getAllPlayersByTeamIdQuery = async (teamId, fastify, request) => {
       "wrHomeTeam" as "homeTeam",
       "wrBatsmanAverage" as "batsmanAverage",
       "wrBatsmanStrikeRate" as "batsmanStrikeRate",
-      "wrIsKipper" as "isKipper"     
+      "wrIsKipper" as "isKipper",
+      pl."wrPlayerTypeId" as "playerTypeId",
+      tpt."wrPlayerType" as "playerType"
       FROM "tblTeamPlayers" tp 
       left join "tblPlayers" pl on tp."wrRefPlayerId" = pl."wrPlayerId" AND pl."wrIsDeleted" = false
+      LEFT JOIN "tblPlayerTypes" tpt ON pl."wrPlayerTypeId" = tpt."wrPlayerTypeId"
       where tp."wrTeamId" = $1 and tp."wrIsDeleted" = false`,
       {
         bind: [teamId],

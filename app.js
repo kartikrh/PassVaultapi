@@ -48,6 +48,7 @@ const { ISPLAYERCALCULATIONON } = require("./utilities/configConstants.js");
 const { insertCompetitionstatisticsInAutoImportService } = require("./services/competitionStatistics.js");
 const { insertICCRankingInAutoImportService } = require("./services/iccRanking.js");
 const { insertTournamentTeamPointInAutoImportService } = require("./services/tournamentTeamPoints.js");
+const { importCompetitionMatchService } = require("./services/commentry.js");
 // const { nodeProfilingIntegration } = require('@sentry/profiling-node');
 // const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 // Pass --options via CLI arguments in command to enable these options.
@@ -202,6 +203,7 @@ module.exports = async function (fastify, opts) {
         await insertTournamentTeamPointInAutoImportService(fastify);
         await insertCompetitionstatisticsInAutoImportService(fastify);
         await insertICCRankingInAutoImportService(fastify);
+        await importCompetitionMatchService(fastify);
       }
     } catch (error) {
       console.error("Error during scheduled task:", error);
