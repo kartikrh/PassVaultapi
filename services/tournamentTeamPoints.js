@@ -18,6 +18,7 @@ const { callClientAPI, ServiceType, APIEndpointModuleType, callEntitySportAPI, e
 const { nullTeamtpIds } = require("../utilities/entityConst");
 const { errorLogger } = require("../utilities/logger");
 const { insertAutoImportDataService } = require("./autoImportData");
+const { insertTeamAndPlayers } = require("./commentry");
 const { saveCompetitionService } = require("./competition");
 
 const allTournamentTeamPointsService = async (request, fastify) => {
@@ -620,7 +621,13 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
   const filterTeamIds = (result?.teams || []).filter(team => !nullTeamtpIds.includes(team.tid));
   for (let team of filterTeamIds) {
     const highestOrder = Math.max(...result?.rounds.map(group => group.order));
-    const checkTeam = global.tblTeams.find(item => item.tpId === team?.tid);
+    let checkTeam = global.tblTeams.find(item => item.tpId === team?.tid);
+    if (!checkTeam) {
+      const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
+      checkTeam = await insertTeamAndPlayers({
+        tid: team?.tid
+      }, eventType, request, fastify);
+    }
     if (checkTeam) {
       const teamPlayers = await getAllPlayersByTeamIdQuery(checkTeam?.teamId, fastify, request);
       const tournamentTeamPlayers = checkTournamentTeamPlayers.filter(item => item.teamId === checkTeam?.teamId);
