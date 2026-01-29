@@ -1022,14 +1022,6 @@ const setEntityCom2Service = async (request , fastify) =>{
             }
           )
         }
-      } else {
-        errorLogger(
-          fastify,
-          `Man of the match not found for commentary id: ${comDetails.commentaryId}`,
-          "Error --> services/entitySport.js/setEntityCom2servie - playerOfTheMatch",
-          null,
-          request?.body
-        )
       }
     }
 
