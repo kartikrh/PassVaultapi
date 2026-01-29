@@ -5514,6 +5514,7 @@ const SubScribesDomain = {
         type: "object",
         properties: {
           isApproved: { type: "boolean" },
+          isVideoApproved: { type: "boolean" }
         },
       },
     },
@@ -5544,6 +5545,7 @@ const SubScribesDomain = {
           siteDomain: { type: "string" },
           isApproved: { type: "boolean" },
           subDomains: { type: "array", items: { type: "string" } },
+          isVideoApproved: { type: "boolean" }
         },
         required: ["siteDomain"],
       },
@@ -5582,6 +5584,21 @@ const SubScribesDomain = {
       },
     },
   },
+  activeInactiveVideoApproved: {
+    schema: {
+      tags: ["SubScribesDomain"],
+      description: "active inactive isVideoApproved",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          subScribesDomainId: { type: "integer" },
+          isVideoApproved: { type: "boolean" },
+        },
+        required: ["subScribesDomainId", "isVideoApproved"],
+      },
+    },
+  }
 };
 const MatchTypePredictor = {
   getAll: {
