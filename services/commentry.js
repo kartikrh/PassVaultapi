@@ -25610,7 +25610,7 @@ const getCommentaryStatisticsService = async (request, fastify) => {
   const filterResult = result?.map(r => r.matchTypeId);
   const hasDuplicates = new Set(filterResult).size !== filterResult.length;
   if(hasDuplicates) {
-    throw new Error(`This competition id ${competitionId} has not valid statistics`);
+    return [];
   }
   return result || [];
 };
