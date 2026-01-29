@@ -191,8 +191,7 @@ const getCommentariesDataQuery = async (fastify , where = null) => {
     tc."wrCancelTime" as "cancelTime",
     tc."wrStreamingUrl" as "streamingUrl",
     tc."wrViews" as "views",
-    tc."wrStreamingType" as "streamingType",
-    co."wrImage" as "competitionImage"
+    tc."wrStreamingType" as "streamingType"
     from "tblCommentaries" tc
 
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
