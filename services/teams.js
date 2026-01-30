@@ -876,10 +876,29 @@ const UpdateTeamFromEntityService = async (data, fastify, request) => {
           jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage || null,
           jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
         }, fastify, request);
-        await updateTeamPlayerHomeTeamQuery({
+        const homeTeam = await updateTeamPlayerHomeTeamQuery({
           refPlayerId: player?.playerId,
-          teamId: checkTeamData.teamId
+          teamId: checkTeam?.teamId
         }, fastify, request);
+
+        if (player?.image && checkTeamData?.jersey && homeTeam?.[0]?.teamPlayerId) {
+          try {
+            await mergeAndSaveImage({
+              playerImage: player.image,
+              jersey: checkTeamData.jersey,
+              playerName: player.playerName,
+              teamName: checkTeamData.teamName,
+              teamPlayerId: homeTeam?.[0]?.teamPlayerId,
+              commentaryPlayerId: null,
+              commentaryId: null,
+            }, fastify);
+            if (homeTeam?.[0]?.homeTeam == true) {
+              await playerImageChangeOnClientAPIService(player, fastify);
+            }
+          } catch (error) {
+
+          }
+        }
       }
     }
   }
@@ -1149,10 +1168,29 @@ const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
           jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage || null,
           jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
         }, fastify, request);
-        await updateTeamPlayerHomeTeamQuery({
+        const homeTeam = await updateTeamPlayerHomeTeamQuery({
           refPlayerId: player?.playerId,
           teamId: checkTeam?.teamId
         }, fastify, request);
+
+        if (player?.image && checkTeam?.jersey && homeTeam?.[0]?.teamPlayerId) {
+          try {
+            await mergeAndSaveImage({
+              playerImage: player.image,
+              jersey: checkTeam.jersey,
+              playerName: player.playerName,
+              teamName: checkTeam.teamName,
+              teamPlayerId: homeTeam?.[0]?.teamPlayerId,
+              commentaryPlayerId: null,
+              commentaryId: null,
+            }, fastify);
+            if (homeTeam?.[0]?.homeTeam == true) {
+              await playerImageChangeOnClientAPIService(player, fastify);
+            }
+          } catch (error) {
+
+          }
+        }
       }
     }
   }
@@ -1170,5 +1208,10 @@ module.exports = {
   mergeTeamJerseyAndPlayerImageService,
   UpdateTeamFromEntityService,
   teamImportService,
-  activeInactiveTeamService
+  activeInactiveTeamService,
+<<<<<<<<< Temporary merge branch 1
+  insertTeamAndPlayers,
+=========
+  insertTeamAndPlayers
+>>>>>>>>> Temporary merge branch 2
 };
