@@ -243,7 +243,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       });
 
       client.on("entityScoreData", async (payload) => {
-        console.log("🚀 ~ connectEntitySport ~ payload")
+        // console.log("🚀 ~ connectEntitySport ~ payload")
         try {
           // console.log("Received entity data from Backend A:", payload);
           const request = { body: payload };
