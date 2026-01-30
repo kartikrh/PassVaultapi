@@ -38,6 +38,8 @@ const { insertWeatherQuery, updateWeatherQuery } = require("../repository/TableW
 const { updatePitchConditionQuery, insertPitchConditionQuery } = require("../repository/TablePitchCondition");
 const { insertAutoImportDataService } = require("./autoImportData");
 const { insertAutoUpdateCommentaryDataQuery, getAllAutoUpdateCommentaryDataQuery } = require("../repository/TableAutoUpdateCommentaryData");
+const { mergeAndSaveImage } = require("../utilities/imageMerge");
+const { playerImageChangeOnClientAPIService } = require("./player");
 
 // const allCompetitionService = async (request) => {
 //   const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type } = request.body;
@@ -1062,6 +1064,10 @@ const insertTeamPlayersByTeamId = async (teamId, teamTpId, isMen, request, fasti
 
   const teamPlayerByTeamId = await getAllPlayersByTeamIdQuery(teamId, fastify, request);
   if (uniquePlayers.length > 0) {
+    let checkTeam = null;
+    if (teamId) {
+      checkTeam = global.tblTeams.find(tt => tt.teamId === teamId);
+    }
     for (const player of uniquePlayers) {
       if (teamId) {
         const checkPlayerExistsInTeam = teamPlayerByTeamId.find(item => item.playerId === player.playerId);
@@ -1074,10 +1080,29 @@ const insertTeamPlayersByTeamId = async (teamId, teamTpId, isMen, request, fasti
             jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage || null,
             jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
           }, fastify, request);
-          await updateTeamPlayerHomeTeamQuery({
+          const homeTeam = await updateTeamPlayerHomeTeamQuery({
             refPlayerId: player?.playerId,
-            teamId: teamId
+            teamId: checkTeam?.teamId
           }, fastify, request);
+
+          if (player?.image && checkTeam?.jersey && homeTeam?.[0]?.teamPlayerId) {
+            try {
+              await mergeAndSaveImage({
+                playerImage: player.image,
+                jersey: checkTeam.jersey,
+                playerName: player.playerName,
+                teamName: checkTeam.teamName,
+                teamPlayerId: homeTeam?.[0]?.teamPlayerId,
+                commentaryPlayerId: null,
+                commentaryId: null,
+              }, fastify);
+              if (homeTeam?.[0]?.homeTeam == true) {
+                await playerImageChangeOnClientAPIService(player, fastify);
+              }
+            } catch (error) {
+
+            }
+          }
         }
       }
     }
@@ -1113,6 +1138,7 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
 
   const teamPlayerByTeamId = await getAllPlayersByTeamIdQuery(teamId, fastify, request);
   if (teamId && uniquePlayers.length > 0) {
+    let checkTeam = global.tblTeams.find(tt => tt.teamId === teamId);
     for (const player of uniquePlayers) {
       const checkPlayerExistsInTeam = teamPlayerByTeamId.find(item => item.playerId === player.playerId);
       if (!checkPlayerExistsInTeam) {
@@ -1124,10 +1150,29 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
           jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage || null,
           jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
         }, fastify, request);
-        await updateTeamPlayerHomeTeamQuery({
+        const homeTeam = await updateTeamPlayerHomeTeamQuery({
           refPlayerId: player?.playerId,
-          teamId
+          teamId: checkTeam?.teamId
         }, fastify, request);
+
+        if (player?.image && checkTeam?.jersey && homeTeam?.[0]?.teamPlayerId) {
+          try {
+            await mergeAndSaveImage({
+              playerImage: player.image,
+              jersey: checkTeam.jersey,
+              playerName: player.playerName,
+              teamName: checkTeam.teamName,
+              teamPlayerId: homeTeam?.[0]?.teamPlayerId,
+              commentaryPlayerId: null,
+              commentaryId: null,
+            }, fastify);
+            if (homeTeam?.[0]?.homeTeam == true) {
+              await playerImageChangeOnClientAPIService(player, fastify);
+            }
+          } catch (error) {
+
+          }
+        }
       }
     }
   }
@@ -1638,10 +1683,29 @@ const competitionImportService = async (data, fastify, request) => {
                 jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage || null,
                 jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
               }, fastify, request);
-              await updateTeamPlayerHomeTeamQuery({
+              const homeTeam = await updateTeamPlayerHomeTeamQuery({
                 refPlayerId: player?.playerId,
                 teamId: checkTeam?.teamId
               }, fastify, request);
+
+              if (player?.image && checkTeam?.jersey && homeTeam?.[0]?.teamPlayerId) {
+                try {
+                  await mergeAndSaveImage({
+                    playerImage: player.image,
+                    jersey: checkTeam.jersey,
+                    playerName: player.playerName,
+                    teamName: checkTeam.teamName,
+                    teamPlayerId: homeTeam?.[0]?.teamPlayerId,
+                    commentaryPlayerId: null,
+                    commentaryId: null,
+                  }, fastify);
+                  if (homeTeam?.[0]?.homeTeam == true) {
+                    await playerImageChangeOnClientAPIService(player, fastify);
+                  }
+                } catch (error) {
+
+                }
+              }
             }
           }
         }

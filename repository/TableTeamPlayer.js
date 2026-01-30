@@ -243,6 +243,7 @@ const updateTeamPlayerHomeTeamQuery = async (data, fastify, request) => {
        RETURNING
           "wrTeamId" AS "teamId",
           "wrRefPlayerId" AS "refPlayerId",
+          "wrTeamPlayerId" AS "teamPlayerId",
           "wrHomeTeam" AS "homeTeam"`,
       {
         bind: [data.refPlayerId, data.teamId],
