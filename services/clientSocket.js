@@ -5,6 +5,8 @@ const {
     updateActionTypeQuery,
     updateActiveInactiveClientSocketQuery,
     changeIsUpdateViewClientSocketQuery,
+    resetAllClientSocketReconnectCountQuery,
+    disconnectAllClientSocketQuery,
 } = require("../repository/TableClientSocket");
 const { connectClients2, disconnectClients, disconnectInactiveClients,connectClients } = require("../sockets");
 const { 
@@ -12,7 +14,9 @@ const {
     callSocketCountClientAPI,
     APIEndpointModuleType, 
     ServiceType,
+    clientSocketStatus,
  } = require("../utilities");
+const { connectClients: newConnectClients, disconnectClientSockets } = require("../sockets/client");
 
 const getAllClientSocketService = async (request, fastify) => {
     const {isActive} = request.body;
@@ -154,9 +158,9 @@ const changeActionTypeService = async (request, fastify) => {
         global.tblClientSocket[index].actionType = request.body.actionType;
         const clientSocketId = global.tblClientSocket[index]?.clientSocketId
         if(request.body.actionType === clientSocketActionType.connect) {
-            connectClients2(fastify, clientSocketId);
+            await newConnectClients(fastify, clientSocketId);
         } else if(request.body.actionType === clientSocketActionType.disconnect){
-            disconnectClients(fastify, clientSocketId);
+            await disconnectClientSockets(fastify, clientSocketId);
         }
     }
     // if(request.body.actionType === clientSocketActionType.connect){
@@ -170,25 +174,26 @@ const changeActionTypeService = async (request, fastify) => {
     return `Client Socket updated successfully`;
 
 }
+
 const activeInactiveClientSocketService = async (request, fastify) => {
-    const {clientSocketId , isActive} = request.body;
+    const { clientSocketId, isActive } = request.body;
     //validate id exists
     let index = global.tblClientSocket.findIndex((item) => item.clientSocketId === clientSocketId);
-    if(index === -1){
+    if (index === -1) {
         throw new Error(`Client with this id not found`);
     }
-    await updateActiveInactiveClientSocketQuery(	
+    await updateActiveInactiveClientSocketQuery(
         request,
         fastify
     )
-    if(isActive === true){
-        connectClients2(fastify);
-        disconnectClients(fastify);
-    }else{
-        disconnectInactiveClients(fastify);
-    }
-    
     global.tblClientSocket[index].isActive = isActive;
+
+    if (isActive) {
+        await newConnectClients(fastify, clientSocketId);
+    } else {
+        await disconnectClientSockets(fastify, clientSocketId);
+    }
+
     return `Client Socket updated successfully`;
 }
 
@@ -204,6 +209,28 @@ const changeIsUpdateViewClientSocketService = async (request, fastify) => {
     return `Client Socket updated successfully`;
 }
 
+const resetAllClientSocketReconnectCountService = async (request, fastify) => {
+    const result = await resetAllClientSocketReconnectCountQuery(request, fastify);
+    for (const id of result) {
+        const index = global.tblClientSocket.findIndex(item => item.clientSocketId === id.clientSocketId);
+        if (index !== -1) {
+            global.tblClientSocket[index].reconnectCount = 0;
+        }
+    }
+    return result;
+}
+
+const disconnectAllClientSocketService = async (request, fastify) => {
+    const result = await disconnectAllClientSocketQuery(request, fastify);
+    for (const id of result) {
+        const index = global.tblClientSocket.findIndex(item => item.clientSocketId === id.clientSocketId);
+        if (index !== -1) {
+            global.tblClientSocket[index].status = clientSocketStatus.disconnected;
+        }
+    }
+    return result;
+}
+
 module.exports = {
     getAllClientSocketService,
     getClientSocketByIdService,
@@ -213,4 +240,6 @@ module.exports = {
     activeInactiveClientSocketService,
     socketCountService,
     changeIsUpdateViewClientSocketService,
+    resetAllClientSocketReconnectCountService,
+    disconnectAllClientSocketService
 }

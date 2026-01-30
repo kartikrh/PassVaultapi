@@ -140,7 +140,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       }
 
       const client = io(urlConfig.url, {
-        transport: ["websocket"],
+        transports: ["websocket"],
         query: { source: `admin-panel-entity-${urlConfig.serverName}` },
         reconnection: true,
         reconnectionDelay: urlConfig.reconnectDelay || 1000,
@@ -243,6 +243,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       });
 
       client.on("entityScoreData", async (payload) => {
+        // console.log("🚀 ~ connectEntitySport ~ payload")
         try {
           // console.log("Received entity data from Backend A:", payload);
           const request = { body: payload };
@@ -295,17 +296,15 @@ const disconnectEntitySports = async (fastify, entitySocketId = undefined) => {
     let disconnectClientUrls;
     if (entitySocketId) {
       disconnectClientUrls = global.tblEntitySockets.filter(
-        (c) => c.isActive === true && c.entitySocketId === entitySocketId
+        (c) => c.entitySocketId === entitySocketId
       );
     } else {
-      disconnectClientUrls = global.tblEntitySockets.filter(
-        (c) => c.isActive === true
-      );
+      disconnectClientUrls = global.tblEntitySockets;
     }
     const promises = disconnectClientUrls?.map(async (client) => {
       const entitySocket = global.connectedEntitySocketClients.find(item => item.urlConfig.entitySocketId === client.entitySocketId);
       if (entitySocket) {
-        entitySocket?.client.disconnect(true);
+        entitySocket?.client?.disconnect(true);
         entitySocket?.client?.removeAllListeners();
       }
 

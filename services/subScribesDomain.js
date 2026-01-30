@@ -4,19 +4,23 @@ const {
   updateDomainStatusQuery,
   insertSubScribeSubDomainQuery,
   getDomainByIdQuery,
+  updateActiveInactiveVideoApprovedQuery,
 } = require("../repository/TableSubScibesDomain");
 
 const allSubScribesDomainService = async (request) => {
-  const { isApproved } = request.body;
+  const { isApproved, isVideoApproved } = request.body;
+  let result = global.tblSubScribesDomain;
   if (isApproved !== undefined) {
-    const domains = global.tblSubScribesDomain.filter(
+    result = result.filter(
       (d) => d.isApproved === isApproved
-    ).sort((a, b) => b.createdDate - a.createdDate);
-    return domains;
+    );
   }
-  const result = global.tblSubScribesDomain;
-  result.sort((a, b) => b.createdDate - a.createdDate);
-  return result;
+  if (isVideoApproved !== undefined) {
+    result = result.filter(
+      (d) => d.isVideoApproved === isVideoApproved
+    );
+  }
+  return result.sort((a, b) => b.createdDate - a.createdDate);
 };
 const subScribeDomainByIdService = async (request) => {
   const { subScribesDomainId } = request.body;
@@ -132,10 +136,27 @@ const approveDomainService = async (request, fastify) => {
 
   return "Domain updated Successfully";
 }
+
+const activeInactiveVideoApprovedService = async (request, fastify) => {
+  const index = global.tblSubScribesDomain.findIndex(
+    (d) => d.isVideoApproved === request.body.isVideoApproved
+  );
+  if (index == -1) {
+    throw new Error("Domain not found");
+  }
+
+  await updateActiveInactiveVideoApprovedQuery(request, fastify);
+
+  global.tblSubScribesDomain[index].isVideoApproved = request.body.isVideoApproved;
+
+  return "Video approved updated Successfully";
+}
+
 module.exports = {
   allSubScribesDomainService,
   subScribeDomainByIdService,
   saveSubScribeDomainService,
   deleteSubScribeDomainService,
-  approveDomainService
+  approveDomainService,
+  activeInactiveVideoApprovedService
 };

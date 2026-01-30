@@ -309,8 +309,10 @@ const activeInactiveEntitySocketService = async (request, fastify) => {
         isAutoUpdateCommentary: isActive ? global.tblEntitySockets[index].isAutoUpdateCommentary : false,
     };
 
-    if (isActive === false) {
-        await disconnectEntitySports(fastify, entityId);
+    if (isActive) {
+        await connectEntitySport(fastify, entitySocketId);
+    } else {
+        await disconnectEntitySports(fastify, entitySocketId);
     }
 
     return `Entity Socket updated successfully`;
@@ -322,6 +324,11 @@ const isAutoScoreUpdateEntitySocketService = async (request, fastify) => {
     if (index === -1) {
         throw new Error(`Entity with this id not found`);
     }
+
+    if (!global.tblEntitySockets[index].isActive) {
+        throw new Error(`Entity with id ${entitySocketId} is not active`);
+    }
+
     await isAutoScoreUpdateEntitySocketQuery(request, fastify);
 
     global.tblEntitySockets[index].isAutoScoreUpdate = isAutoScoreUpdate;
@@ -341,6 +348,11 @@ const isAutoUpdateCommentaryEntitySocketService = async (request, fastify) => {
     if (index === -1) {
         throw new Error(`Entity with this id not found`);
     }
+
+    if (!global.tblEntitySockets[index].isActive) {
+        throw new Error(`Entity with id ${entitySocketId} is not active`);
+    }
+
     await isAutoUpdateCommentaryEntitySocketQuery(request, fastify);
 
     global.tblEntitySockets[index].isAutoUpdateCommentary = isAutoUpdateCommentary;

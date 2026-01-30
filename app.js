@@ -49,6 +49,8 @@ const { insertCompetitionstatisticsInAutoImportService } = require("./services/c
 const { insertICCRankingInAutoImportService } = require("./services/iccRanking.js");
 const { insertTournamentTeamPointInAutoImportService } = require("./services/tournamentTeamPoints.js");
 const { importCompetitionMatchService } = require("./services/commentry.js");
+const { resetAllClientSocketReconnectCountService, disconnectAllClientSocketService } = require("./services/clientSocket.js");
+const { connectClients: newConnectClients } = require("./sockets/client.js");
 // const { nodeProfilingIntegration } = require('@sentry/profiling-node');
 // const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 // Pass --options via CLI arguments in command to enable these options.
@@ -130,15 +132,23 @@ module.exports = async function (fastify, opts) {
         try {
           // await featchData(fastify);
           await fetchAllDataFromDb(fastify);
-          await disConnectClientSocketQuery(fastify);
+          // await disConnectClientSocketQuery(fastify);
           // await disConnectEntitySocketQuery(fastify);
           await startSignalR(fastify);
           // connectClients(fastify);
-          connectClients2(fastify);
-          disconnectClients(fastify);
+          // connectClients2(fastify);
+          // disconnectClients(fastify);
+
+          // Client Sockets
+          await resetAllClientSocketReconnectCountService(null, fastify);
+          await disconnectAllClientSocketService(null, fastify);
+          await newConnectClients(fastify);
+
+          //Entity Sockets
           await disconnectEntitySports(fastify);
           await resetEntitySocketReconnectCountQuery(fastify);
           await connectEntitySport(fastify);
+
           webPushset(webPush);
           updateMarket(fastify)
 

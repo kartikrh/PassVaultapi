@@ -1,4 +1,4 @@
-const { allSubScribesDomainService ,subScribeDomainByIdService, saveSubScribeDomainService, deleteSubScribeDomainService, approveDomainService} = require("../../../../services/subScribesDomain");
+const { allSubScribesDomainService ,subScribeDomainByIdService, saveSubScribeDomainService, deleteSubScribeDomainService, approveDomainService, activeInactiveVideoApprovedService} = require("../../../../services/subScribesDomain");
 const { error, success,ERROR_CODES } = require("../../../../utilities");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -49,10 +49,21 @@ const approveDomain = async (request, reply, fastify) => {
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 };
+
+const activeInactiveVideoApproved = async (request, reply, fastify) => {
+    try {
+        const result = await activeInactiveVideoApprovedService(request,fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/activeInactiveVideoApproved", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
 module.exports = {
     getAllSubScribesDomain,
     getSubscribeDomainById,
     saveSubScribeDomain,
     deleteSubScribeDomain,
-    approveDomain
+    approveDomain,
+    activeInactiveVideoApproved
 }
