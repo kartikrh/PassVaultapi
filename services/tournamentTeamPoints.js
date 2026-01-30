@@ -18,7 +18,7 @@ const { callClientAPI, ServiceType, APIEndpointModuleType, callEntitySportAPI, e
 const { nullTeamtpIds } = require("../utilities/entityConst");
 const { errorLogger } = require("../utilities/logger");
 const { insertAutoImportDataService } = require("./autoImportData");
-const { insertTeamAndPlayers } = require("./commentry");
+const { insertTeamAndPlayers } = require("./teams");
 const { saveCompetitionService } = require("./competition");
 
 const allTournamentTeamPointsService = async (request, fastify) => {
