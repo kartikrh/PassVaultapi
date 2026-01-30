@@ -1209,5 +1209,5 @@ module.exports = {
   UpdateTeamFromEntityService,
   teamImportService,
   activeInactiveTeamService,
-  insertTeamAndPlayers,
+  insertTeamAndPlayers
 };
