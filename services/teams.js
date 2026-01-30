@@ -1170,6 +1170,5 @@ module.exports = {
   mergeTeamJerseyAndPlayerImageService,
   UpdateTeamFromEntityService,
   teamImportService,
-  activeInactiveTeamService,
-  insertTeamAndPlayers,
+  activeInactiveTeamService
 };

@@ -3,6 +3,7 @@ const cron = require("node-cron");
 const { clientSocketStatus, clientSocketActionType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 const { updateClientSocketStatusQuery, updateReconnectCountQuery } = require("../repository/TableClientSocket");
+const { updateCommentaryViewsQuery } = require("../repository/TableCommentary");
 
 const cleanupSocket = (clientSocketId) => {
   const index = global.clientSocketIo.findIndex(
