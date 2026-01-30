@@ -1209,9 +1209,5 @@ module.exports = {
   UpdateTeamFromEntityService,
   teamImportService,
   activeInactiveTeamService,
-<<<<<<<<< Temporary merge branch 1
   insertTeamAndPlayers,
-=========
-  insertTeamAndPlayers
->>>>>>>>> Temporary merge branch 2
 };

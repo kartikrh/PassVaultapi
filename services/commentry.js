@@ -23583,10 +23583,6 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
   return insertCompetition;
 }
 
-<<<<<<<<< Temporary merge branch 1
-
-=========
->>>>>>>>> Temporary merge branch 2
 const matchImportService = async (data, fastify, request = null) => {
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getMatchDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
