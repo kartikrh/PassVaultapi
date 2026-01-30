@@ -59,6 +59,12 @@ const connectClients = async (fastify, clientSocketId) => {
         global.clientSocketIo.push(socketObj);
 
         client.on("connect", async () => {
+          errorLogger(
+            fastify,
+            `Connected to ${config.url}`,
+            "Client Socket --> sockets/client.js/connectClients - connect",
+            null
+          );
           try {
             await updateClientSocketStatusQuery(
               {
@@ -112,6 +118,12 @@ const connectClients = async (fastify, clientSocketId) => {
         });
 
         client.on("disconnect", async () => {
+          errorLogger(
+            fastify,
+            `Disconnected to ${config.url}`,
+            "Client Socket --> sockets/client.js/connectClients - disconnect",
+            null
+          );
           cleanupSocket(config.clientSocketId);
 
           try {
