@@ -981,7 +981,7 @@ const runMergePlayerImageJob = async (type, request, fastify) => {
 const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getTeamDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
-    errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/commentary.js/insertTeamAndPlayers - checkEntitySportAPIEndpoint", request);
+    errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/teams.js/insertTeamAndPlayers - checkEntitySportAPIEndpoint", request);
     return false;
   }
 
@@ -994,7 +994,7 @@ const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
 
   let entitySportTeamPlayersResponse = entitySportTeamPlayers?.data?.result?.items;
   if (!entitySportTeamPlayersResponse) {
-    errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/commentary.js/insertTeamAndPlayers - entitySportTeamPlayersResponse", {
+    errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/teams.js/insertTeamAndPlayers - entitySportTeamPlayersResponse", {
       ...request,
       originalUrl: url
     }, entitySportTeamPlayers?.data);
