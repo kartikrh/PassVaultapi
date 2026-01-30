@@ -13,8 +13,8 @@ const cleanupSocket = (clientSocketId) => {
 
   const socket = global.clientSocketIo[index];
   socket.cronJob?.stop();
-  socket.client.removeAllListeners();
   socket.client.disconnect(true);
+  socket.client.removeAllListeners();
 
   global.clientSocketIo.splice(index, 1);
 };
