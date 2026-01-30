@@ -222,12 +222,12 @@ const { insertCompetitionQuery } = require("../repository/TableCompitition");
 const { getImageFromUrl } = require("../utilities/Images");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { insertTeamPlayersByTeamId, insertCommentaryPlayersByTeam } = require("./competition");
-const { insertTeamAndPlayers } = require("./teams");
 const cron = require('node-cron');
 const { insertAutoImportDataService } = require("./autoImportData");
 const { insertTournamentTeamPlayersQuery, deleteTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { insertAutoUpdateCommentaryDataQuery, getAllAutoUpdateCommentaryDataQuery } = require("../repository/TableAutoUpdateCommentaryData");
 const { createDataQuery } = require("../repository/TableEntityDataLog")
+const { insertTeamAndPlayers } = require("./teams");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -23582,7 +23582,6 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
   global.tblCompetitions.push(insertCompetition);
   return insertCompetition;
 }
-
 
 const matchImportService = async (data, fastify, request = null) => {
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getMatchDataByIdFromEntity);
