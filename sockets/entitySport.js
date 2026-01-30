@@ -140,7 +140,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       }
 
       const client = io(urlConfig.url, {
-        transport: ["websocket"],
+        transports: ["websocket"],
         query: { source: `admin-panel-entity-${urlConfig.serverName}` },
         reconnection: true,
         reconnectionDelay: urlConfig.reconnectDelay || 1000,
@@ -243,6 +243,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       });
 
       client.on("entityScoreData", async (payload) => {
+        console.log("🚀 ~ connectEntitySport ~ payload")
         try {
           // console.log("Received entity data from Backend A:", payload);
           const request = { body: payload };

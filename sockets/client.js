@@ -45,7 +45,7 @@ const connectClients = async (fastify, clientSocketId) => {
 
         const client = io(config.url, {
           transports: ["websocket"],
-          query: { source: `admin-panel-client-${config.serverName}` },
+          query: { source: `admin-panel` },
           reconnection: true,
           reconnectionDelay: config.reconnectDelay || 1000,
           reconnectionDelayMax: config.reconnectMaxDelay || 5000,
