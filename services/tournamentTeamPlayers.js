@@ -5,7 +5,7 @@ const {
   getAllPlayersByTeamAndCompetitionIdQuery,
   deletePlayersByTeamAndPlayerIdQuery,
 } = require("../repository/TableTournamentsTeamPlayers");
-const { insertCommentaryPlayers, deleteCommentaryPlayersQuery } = require("../repository/TableCommentary");
+const { insertCommentaryPlayers, deleteCommentaryPlayersQuery, getCommentariesDataQuery, getAllCommentaryPlayerDataQuery } = require("../repository/TableCommentary");
 const { getAllTeamPlayersByTeamIdAndPlayerIdQuery } = require("../repository/TableTeamPlayer");
 const { getAllPlayersByTeamIdQuery: newGetAllPlayersByTeamIdQuery} = require("../repository/TableTeams");
 
@@ -269,32 +269,31 @@ const addAndRemovePlayersFromTournamentTeams = async (request, fastify) => {
 
 const getTournamentTeamPlayersByCompetitionIdForClientService = async (request, fastify) => {
   const { competitionId } = request.body;
-  const toId = v => Number(v);
 
   const competition = global.tblCompetitions.find(
-    c => toId(c.competitionId) === toId(competitionId)
+    c => c.competitionId === competitionId
   );
   if (!competition) throw new Error(`Competition with this id ${competitionId} not found`);
 
-  const commentaries = global.tblCommentaries.filter(
-    c => toId(c.competitionId) === toId(competitionId)
-  );
+  const commentaries = await getCommentariesDataQuery(fastify, `tc."wrCompetitionId" = ${competitionId}`);
   if (!commentaries.length) return [];
 
-  const matchTypeMap = new Map(global.tblMatchTypes.map(mt => [toId(mt.matchTypeId), mt]));
-  const playersMap = new Map(global.tblPlayers.map(p => [toId(p.playerId), p]));
-  const teamsMap = new Map(global.tblTeams.map(t => [toId(t.teamId), t]));
+  const matchTypeMap = new Map(global.tblMatchTypes.map(mt => [mt.matchTypeId, mt]));
+  const playersMap = new Map(global.tblPlayers.map(p => [p.playerId, p]));
+  const teamsMap = new Map(global.tblTeams.map(t => [t.teamId, t]));
 
   const commentaryPlayersByCommentary = new Map();
-  for (const cp of global.tblCommentaryPlayers) {
-    const cid = toId(cp.commentaryId);
+  const commentaryIds = commentaries.map(c => c.commentaryId);
+  const commentaryPlayers = await getAllCommentaryPlayerDataQuery(`tcp."wrCommentaryId" IN (${commentaryIds})`, fastify);
+  for (const cp of commentaryPlayers) {
+    const cid = cp.commentaryId;
     if (!commentaryPlayersByCommentary.has(cid)) commentaryPlayersByCommentary.set(cid, []);
     commentaryPlayersByCommentary.get(cid).push(cp);
   }
 
   const commentariesByMatchType = new Map();
   for (const c of commentaries) {
-    const mtId = toId(c.matchTypeId);
+    const mtId = c.matchTypeId;
     if (!commentariesByMatchType.has(mtId)) commentariesByMatchType.set(mtId, []);
     commentariesByMatchType.get(mtId).push(c);
   }
@@ -307,10 +306,10 @@ const getTournamentTeamPlayersByCompetitionIdForClientService = async (request, 
     const teamsInMatch = new Map();
 
     for (const c of mtCommentaries) {
-      const cps = commentaryPlayersByCommentary.get(toId(c.commentaryId)) || [];
+      const cps = commentaryPlayersByCommentary.get(c.commentaryId) || [];
 
       for (const cp of cps) {
-        const teamId = toId(cp.teamId);
+        const teamId = cp.teamId;
 
         if (!teamsInMatch.has(teamId)) {
           const teamData = teamsMap.get(teamId) || {};
@@ -323,10 +322,10 @@ const getTournamentTeamPlayersByCompetitionIdForClientService = async (request, 
         }
 
         const teamPlayers = teamPlayersCache.get(teamId);
-        const player = playersMap.get(toId(cp.playerId));
+        const player = playersMap.get(cp.playerId);
         if (!player) continue;
 
-        const fullPlayer = teamPlayers.find(tp => toId(tp.playerId) === toId(player.playerId));
+        const fullPlayer = teamPlayers.find(tp => tp.playerId === player.playerId);
         if (fullPlayer) {
           teamsInMatch.get(teamId).players.push(fullPlayer);
         }
@@ -335,7 +334,7 @@ const getTournamentTeamPlayersByCompetitionIdForClientService = async (request, 
 
     for (const team of teamsInMatch.values()) {
       team.players = [
-        ...new Map(team.players.map(p => [toId(p.playerId), p])).values()
+        ...new Map(team.players.map(p => [p.playerId, p])).values()
       ];
     }
 

@@ -295,17 +295,15 @@ const disconnectEntitySports = async (fastify, entitySocketId = undefined) => {
     let disconnectClientUrls;
     if (entitySocketId) {
       disconnectClientUrls = global.tblEntitySockets.filter(
-        (c) => c.isActive === true && c.entitySocketId === entitySocketId
+        (c) => c.entitySocketId === entitySocketId
       );
     } else {
-      disconnectClientUrls = global.tblEntitySockets.filter(
-        (c) => c.isActive === true
-      );
+      disconnectClientUrls = global.tblEntitySockets;
     }
     const promises = disconnectClientUrls?.map(async (client) => {
       const entitySocket = global.connectedEntitySocketClients.find(item => item.urlConfig.entitySocketId === client.entitySocketId);
       if (entitySocket) {
-        entitySocket?.client.disconnect(true);
+        entitySocket?.client?.disconnect(true);
         entitySocket?.client?.removeAllListeners();
       }
 
