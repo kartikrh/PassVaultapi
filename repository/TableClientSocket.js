@@ -73,25 +73,41 @@ const updateClientSocketStatusQuery = async(data,fastify) =>{
         throw new Error(error.message); 
    }
 }
-const updateReconnectCountQuery = async(data,fastify) =>{
-    let result = await fastify.db.query(`
-        UPDATE "tblClientSockets"
-        SET
-            "wrReconnectCount" = $1
-        WHERE "wrId" = $2 AND "wrIsDeleted" = false
-    `,
-    {
-        type: fastify.db.QueryTypes.UPDATE,
-        bind: [
-            data.reconnectCount,
-            data.clientSocketId
-        ]
-    })
 
-    let index = global.tblClientSocket.findIndex((c) => c.clientSocketId === data.clientSocketId);
-    global.tblClientSocket[index].reconnectCount = data.reconnectCount;
-    return result;
+const updateReconnectCountQuery = async (data, fastify) => {
+    try {
+        let result = await fastify.db.query(`
+                UPDATE "tblClientSockets"
+                SET
+                    "wrReconnectCount" = $1
+                WHERE "wrId" = $2 AND "wrIsDeleted" = false
+            `,
+            {
+                type: fastify.db.QueryTypes.UPDATE,
+                bind: [
+                    data.reconnectCount,
+                    data.clientSocketId
+                ]
+            })
+
+        let index = global.tblClientSocket.findIndex((c) => c.clientSocketId === data.clientSocketId);
+        if (index !== -1) {
+            global.tblClientSocket[index].reconnectCount = data.reconnectCount;
+        } else {
+            console.log(`Warning: Client socket ${data.entitySocketId} not found in global.tblClientSocket when updating reconnect count`);
+        }
+        return result;
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB Error --> repository/TableClientSockets.js/updateReconnectCountQuery",
+            null
+        );
+        throw new Error(error.message);
+    }
 }
+
 const createClientSocketQuery =async (data,request,fastify) =>{
     try {
         const query = `
@@ -342,6 +358,56 @@ const disConnectClientSocketQuery = async (fastify) => {
       throw error; // Re-throw the error to handle it at a higher level if needed
     }
 };
+
+const resetAllClientSocketReconnectCountQuery = async (request, fastify) => {
+    try {
+        const result = await fastify.db.query(`
+            UPDATE "tblClientSockets"
+            SET
+              "wrReconnectCount" = $1
+            WHERE "wrIsActive" = $2 AND "wrIsDeleted" = $3
+            RETURNING "wrId" as "clientSocketId";
+            `,
+            {
+                type: fastify.db.QueryTypes.SELECT,
+                bind: [0, true, false]
+            });
+        return result;
+    } catch (error) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB Error --> repository/TableClientSockets.js/resetClientSocketReconnectCountQuery",
+            request
+        )
+        throw new Error(err.message);
+    }
+}
+
+const disconnectAllClientSocketQuery = async (request, fastify) => {
+    try {
+        const result = await fastify.db.query(`
+            UPDATE "tblClientSockets"
+            SET
+              "wrStatus" = $1
+            WHERE "wrIsActive" = $2 AND "wrIsDeleted" = $3
+            RETURNING "wrId" as "clientSocketId";
+            `,
+            {
+                type: fastify.db.QueryTypes.SELECT,
+                bind: [clientSocketStatus.disconnected, true, false]
+            });
+        return result;
+    } catch (error) {
+        errorLogger(
+            fastify,
+            error.message,
+            "DB Error --> repository/TableClientSockets.js/disconnectAllClientSocketQuery",
+            request
+        )
+        throw new Error(error.message);
+    }
+}
   
 module.exports = {
     getAllClientSocketQuery,
@@ -354,4 +420,6 @@ module.exports = {
     updateReconnectCountQuery,
     disConnectClientSocketQuery,
     changeIsUpdateViewClientSocketQuery,
+    resetAllClientSocketReconnectCountQuery,
+    disconnectAllClientSocketQuery
 }
