@@ -61,7 +61,7 @@ const connectClients = async (fastify, clientSocketId) => {
         client.on("connect", async () => {
           errorLogger(
             fastify,
-            `Connected to ${config.url}`,
+            `Client socket connected to ${config.url}`,
             "Client Socket --> sockets/client.js/connectClients - connect",
             null
           );
@@ -120,7 +120,7 @@ const connectClients = async (fastify, clientSocketId) => {
         client.on("disconnect", async () => {
           errorLogger(
             fastify,
-            `Disconnected to ${config.url}`,
+            `Client socket disconnected to ${config.url}`,
             "Client Socket --> sockets/client.js/connectClients - disconnect",
             null
           );
