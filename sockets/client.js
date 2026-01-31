@@ -181,7 +181,7 @@ const disconnectClientSockets = async (fastify, clientSocketId) => {
     }
 
     const promises = clientConfigs?.map(async (client) => {
-      const clientSocket = global.clientSocketIo.find(item => item.urlConfig.clientSocketId === client.clientSocketId);
+      const clientSocket = global.clientSocketIo.find(item => item.clientSocketId === client.clientSocketId);
       if (clientSocket) {
         clientSocket?.cronJob?.stop();
         clientSocket?.client?.disconnect(true);
