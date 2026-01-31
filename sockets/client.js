@@ -56,10 +56,9 @@ const connectClients = async (fastify, clientSocketId) => {
           pingTimeout: 10000,
         });
 
-        const socketObj = { ...config, client, cronJob: null };
-        global.clientSocketIo.push(socketObj);
-
         client.on("connect", async () => {
+          const socketObj = { ...config, client, cronJob: null };
+          global.clientSocketIo.push(socketObj);
           errorLogger(
             fastify,
             `Client socket connected to ${config.url}`,
@@ -118,10 +117,10 @@ const connectClients = async (fastify, clientSocketId) => {
           }
         });
 
-        client.on("disconnect", async () => {
+        client.on("disconnect", async (reason) => {
           errorLogger(
             fastify,
-            `Client socket disconnected to ${config.url}`,
+            `Client socket disconnected to ${config.url}. reason: ${reason}`,
             "Client Socket --> sockets/client.js/connectClients - disconnect",
             null
           );
@@ -149,6 +148,24 @@ const connectClients = async (fastify, clientSocketId) => {
             fastify
           ).catch(err =>
             errorLogger(fastify, err.message, "Reconnect count error", null)
+          );
+        });
+
+        client.io.on("reconnect_error", (error) => {
+          errorLogger(
+            fastify,
+            error.message,
+            "Client Socket --> sockets/client.js/connectClients - reconnect_error",
+            null
+          );
+        });
+
+        client.io.on("reconnect_failed", () => {
+          errorLogger(
+            fastify,
+            null,
+            "Client Socket --> sockets/client.js/connectClients - reconnect_failed",
+            null
           );
         });
       })
