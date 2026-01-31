@@ -22,7 +22,7 @@ const {
 const {storeImageOnServer, removeImageFromServer, generateImageName, getImageFromUrl } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
-const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive, matchStatusEntity, error, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, parseUmpires, ScoringTypes, RefType, lowerEntityMatchTypesEnums } = require("../utilities");
+const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive, matchStatusEntity, error, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, parseUmpires, ScoringTypes, RefType, lowerEntityMatchTypesEnums, EntityCommentaryStatus } = require("../utilities");
 const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryTeams, getCommentaryTeamsQuery, insertCommentaryPlayers, deleteCommentaryPlayersByPlayerId, updateCommentaryPlayerById, isCountInPOintCommentaryChangeQuery, updateCommentaryDateByCommentaryIdQuery } = require("../repository/TableCommentary")
 const { deleteTournamentTeamPlayersByCompIdQuery, deleteTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
@@ -1771,6 +1771,7 @@ const competitionImportService = async (data, fastify, request) => {
       }
 
       if (!checkCommentary) {
+        commentaryData.scoringType = match?.game_state == EntityCommentaryStatus.INPROGRESS ? ScoringTypes.Panel : ScoringTypes.Entity;
         const insertCommentary = await insertCommentaryQuery({
           ...request,
           body: commentaryData

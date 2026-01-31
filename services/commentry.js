@@ -132,6 +132,7 @@ const {
   RefType,
   lowerEntityMatchTypesEnums,
   matchStatusEntity,
+  EntityCommentaryStatus,
 } = require("../utilities");
 const {
   getAllPlayersByTeamIdQuery,
@@ -23733,7 +23734,7 @@ const matchImportService = async (data, fastify, request = null) => {
         isCountInPoint: checkCompetition?.isPointTable,
         countryId: checkCountry?.id,
         venueId: checkVenue?.id,
-        scoringType: ScoringTypes.Entity
+        scoringType: matchInfoResponse?.game_state == EntityCommentaryStatus.INPROGRESS ? ScoringTypes.Panel : ScoringTypes.Entity,
       }
       const insertCommentary = await insertCommentaryQuery({
         ...request,
