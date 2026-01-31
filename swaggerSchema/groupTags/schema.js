@@ -11030,9 +11030,8 @@ const EntitySport = {
         type: "object",
         properties: {
           matchId: { type: "integer" },
-          inningNumber: { type: "integer" },
         },
-        required: ["matchId", "inningNumber"],
+        required: ["matchId"],
       },
     }
   },
