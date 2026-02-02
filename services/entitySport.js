@@ -942,16 +942,6 @@ const setEntityCom2Service = async (request , fastify) =>{
         // }
     }
 
-    // if(gameState == EntityCommentaryStatus.INNINGCHANGE){
-    //   if(comDetails.commentaryStatus != commentaryStatus.INNINGCHANGE){
-    //     await onInningChangeService(request.body, fastify, comDetails);
-
-    //   }
-    //   else {
-    //     return true;
-    //   }
-    // }
-    
     if (gameState == EntityCommentaryStatus.INNINGCHANGE) {
       // if (comDetails.commentaryStatus != commentaryStatus.INNINGCHANGE) {
         comDetails.isClientShow = false;
@@ -959,7 +949,15 @@ const setEntityCom2Service = async (request , fastify) =>{
         await inningChangeStateService(fastify, comDetails);
         return true;
       // }
-    }
+    }    
+    // if (gameState == EntityCommentaryStatus.INNINGCHANGE) {
+    //   // if (comDetails.commentaryStatus != commentaryStatus.INNINGCHANGE) {
+    //     comDetails.isClientShow = false;
+    //     await handleComArr(request.body, request, fastify, comDetails)
+    //     await inningChangeStateService(fastify, comDetails);
+    //     return true;
+    //   // }
+    // }
     const entityStatus = response?.match_info?.status
     if (gameState == EntityCommentaryStatus.DEFAULT && entityStatus != EntityMatchStatus.SCHEDULED &&
       comDetails.commentaryStatus != commentaryStatus.COMPLETED) {
