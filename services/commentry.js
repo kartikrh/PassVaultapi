@@ -23748,6 +23748,36 @@ const matchImportService = async (data, fastify, request = null) => {
     if (checkCommentary && checkCommentary?.commentaryId) {
       const upsertedCommentaryId = checkCommentary.commentaryId;
 
+      if (checkCommentary.team1Id !== teamAData?.teamId) {
+        const updateCommentaryData = await updateCommentaryQuery({
+          body: {
+            ...checkCommentary,
+            team1Id: teamAData?.teamId
+          }
+        }, fastify);
+
+        let index = global.tblCommentaries.findIndex((i) => i.commentaryId == upsertedCommentaryId);
+        if (index !== -1) {
+          global.tblCommentaries[index] = updateCommentaryData[0][0];
+          checkCommentary = global.tblCommentaries[index];
+        }
+      }
+
+      if (checkCommentary.team2Id !== teamBData?.teamId) {
+        const updateCommentaryData = await updateCommentaryQuery({
+          body: {
+            ...checkCommentary,
+            team2Id: teamBData?.teamId
+          }
+        }, fastify);
+
+        let index = global.tblCommentaries.findIndex((i) => i.commentaryId == upsertedCommentaryId);
+        if (index !== -1) {
+          global.tblCommentaries[index] = updateCommentaryData[0][0];
+          checkCommentary = global.tblCommentaries[index];
+        }
+      }
+
       const esStart = matchInfoResponse?.date_start
         ? new Date(matchInfoResponse?.date_start)
         : null;
@@ -23761,7 +23791,7 @@ const matchImportService = async (data, fastify, request = null) => {
           ...request,
           body: {
             eventDate: esStart,
-            commentaryId: checkCommentary?.commentaryId
+            commentaryId: upsertedCommentaryId
           }
         }, fastify);
         const index = global.tblCommentaries.findIndex(tc => tc.commentaryId === upsertedCommentaryId);
