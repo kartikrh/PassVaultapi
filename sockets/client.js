@@ -132,10 +132,11 @@ const connectClients = async (fastify, clientSocketId) => {
       });
 
       client.io.on("reconnect_attempt", (attempt) => {
+        const reconnectCounts = global.tblClientSocket.find(c => c.clientSocketId === config.clientSocketId)?.reconnectCount;
         updateReconnectCountQuery(
           {
             clientSocketId: config.clientSocketId,
-            reconnectCount: attempt,
+            reconnectCount: Number(reconnectCounts ?? 0) + 1
           },
           fastify
         ).catch(err =>
