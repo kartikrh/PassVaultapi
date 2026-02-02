@@ -6,6 +6,7 @@ const {
   getDomainByIdQuery,
   updateActiveInactiveVideoApprovedQuery,
 } = require("../repository/TableSubScibesDomain");
+const { callClientAPI, APIEndpointModuleType, ServiceType } = require("../utilities");
 
 const allSubScribesDomainService = async (request) => {
   const { isApproved, isVideoApproved } = request.body;
@@ -22,6 +23,75 @@ const allSubScribesDomainService = async (request) => {
   }
   return result.sort((a, b) => b.createdDate - a.createdDate);
 };
+const getAllSubDomainDataService = async (request) => {
+  return global.tblSubScribesSubDomain;
+};
+const insertSubDomainsService = async (request,fastify) => {
+  let domainData = global.tblSubScribesDomain.find(
+    (d) => d.subScribesDomainId == request.body.subScribesDomainId
+  );
+  const subDomainInDB =  global.tblSubScribesSubDomain.filter(
+      (d) => d.subScribesDomainId === domainData.subScribesDomainId
+  ).map((d) => d.siteSubDomain.toLowerCase());
+
+  const newSubDomain = request.body.subDomains.filter(
+    (d) => !subDomainInDB.includes(d.toLowerCase())
+  );
+  let subDomain;
+  if(request.body.subDomains && request.body.subDomains.length > 0){
+      const body = {
+        subScribesDomainId: domainData.subScribesDomainId,
+        subDomains: newSubDomain,
+      };
+      subDomain = await insertSubScribeSubDomainQuery(body ,request, fastify);
+      global.tblSubScribesSubDomain.push(...subDomain);
+  }
+  // const subDomain = await insertSubScribeSubDomainQuery(request.body ,request, fastify);
+  // global.tblSubScribesSubDomain.push(...subDomain);  
+  domainData.subDomains = global.tblSubScribesSubDomain.filter(
+    (d) => d.subScribesDomainId === domainData.subScribesDomainId
+  );
+  domainData.subDomainCount = domainData.subDomains.length;
+  const index = global.tblSubScribesDomain.findIndex(
+    (d) => d.subScribesDomainId === domainData.subScribesDomainId
+  );
+  global.tblSubScribesDomain[index] = domainData;
+  return subDomain;
+}
+const insertDomainsService = async (request,fastify) => {
+  // check if domain exist
+  let domainData = global.tblSubScribesDomain.find(
+    (d) => d.siteDomain?.toLowerCase() === request.body.siteDomain?.toLowerCase()
+  );
+  let subDomainData;
+  if (!domainData) {
+    domainData = await insertSubScribeDomainQuery(request, fastify);
+    if(request.body.subDomains && request.body.subDomains.length > 0){
+        const body = {
+          subScribesDomainId: domainData.subScribesDomainId,
+          subDomains: request.body.subDomains,
+        };
+        subDomainData = await insertSubScribeSubDomainQuery(body ,request, fastify);
+        global.tblSubScribesSubDomain.push(
+          ...subDomainData
+        );
+    }
+    domainData.subDomains = global.tblSubScribesSubDomain.filter(
+      (d) => d.subScribesDomainId === domainData.subScribesDomainId
+    );
+    domainData.subDomainCount = domainData.subDomains.length;
+    global.tblSubScribesDomain.push(domainData);
+    // const data = await getDomainByIdQuery(domainData.subScribesDomainId, fastify);
+    // return data;
+    return {
+      domainData,
+      subDomainData
+    };
+  }
+  else {
+    return null;
+  }
+}
 const subScribeDomainByIdService = async (request) => {
   const { subScribesDomainId } = request.body;
   const result = global.tblSubScribesDomain.find(
@@ -134,12 +204,36 @@ const approveDomainService = async (request, fastify) => {
 
   global.tblSubScribesDomain[index].isApproved = request.body.isApproved;
 
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.updateSeoModule,
+      data: {
+        data : {
+          subScribesDomainId: request.body.subScribesDomainId,
+          isApproved: request.body.isApproved,
+        },
+        type: "isApproved",
+        module : "subScribesDomain"
+      },
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("cll client api console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/subScribesDomain.js/approveDomainService",
+      request
+    );
+  });
   return "Domain updated Successfully";
 }
 
 const activeInactiveVideoApprovedService = async (request, fastify) => {
   const index = global.tblSubScribesDomain.findIndex(
-    (d) => d.isVideoApproved === request.body.isVideoApproved
+    (d) => d.subScribesDomainId === request.body.subScribesDomainId
   );
   if (index == -1) {
     throw new Error("Domain not found");
@@ -149,6 +243,30 @@ const activeInactiveVideoApprovedService = async (request, fastify) => {
 
   global.tblSubScribesDomain[index].isVideoApproved = request.body.isVideoApproved;
 
+  callClientAPI(
+    { 
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.updateSeoModule,
+      data: {
+        data : {
+          subScribesDomainId: request.body.subScribesDomainId,
+          isVideoApproved: request.body.isVideoApproved,
+        },
+        type: "isVideoApproved",
+        module : "subScribesDomain"
+      },
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("cll client api console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/subScribesDomain.js/activeInactiveVideoApprovedService",
+      request
+    );
+  });
   return "Video approved updated Successfully";
 }
 
@@ -158,5 +276,8 @@ module.exports = {
   saveSubScribeDomainService,
   deleteSubScribeDomainService,
   approveDomainService,
-  activeInactiveVideoApprovedService
+  activeInactiveVideoApprovedService,
+  getAllSubDomainDataService,
+  insertSubDomainsService,
+  insertDomainsService
 };
