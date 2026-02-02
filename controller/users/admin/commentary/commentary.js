@@ -110,6 +110,7 @@ const {
   getHeadToHeadCommentaryService,
   getCommentaryStatisticsService,
   getAllCommentaryByCompetitionIdForClientService,
+  storeInningWiseEntityDataService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService, getAllCommentariesDataServiceV1, getAllCommentariesDataV2Service } = require("../../../../services/score");
@@ -1461,6 +1462,16 @@ const getAllCommentaryByCompetitionIdForClient = async (request, reply, fastify)
   }
 };
 
+const storeInningWiseEntityData = async (request, reply, fastify) => {
+  try {
+    const result = await storeInningWiseEntityDataService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/storeInningWiseEntityData", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 module.exports = {
   getAllCommentaries,
   getCommentaryById,
@@ -1587,5 +1598,6 @@ module.exports = {
   checkSUpdatePassword,
   getHeadToHeadCommentary,
   getCommentaryStatistics,
-  getAllCommentaryByCompetitionIdForClient
+  getAllCommentaryByCompetitionIdForClient,
+  storeInningWiseEntityData,
 }
