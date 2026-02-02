@@ -12115,7 +12115,6 @@ const revertCommentaryService = async (request, fastify) => {
     global.tblCommentaries[index].winRmk = null;
     global.tblCommentaries[index].tossRmk = null;
     global.tblCommentaries[index].updateTime = new Date();
-    global.tblCommentaries[index].tpId = null;
     global.tblCommentaries[index].commentaryResult = null;
     global.tblCommentaries[index].commentaryCloseTime = null;
     global.tblCommentaries[index].currentInnings = 1;
