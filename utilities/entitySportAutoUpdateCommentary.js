@@ -78,6 +78,8 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                 const { commentaryId, eventDate, eventName, team1Id, team2Id, onfieldUmpires, thirdUmpire: cThirdUmpire, matchReferee, venueId, location, countryId, eventTypeId } = commentary;
                                 let changedValues = {
                                     id: commentaryId,
+                                    team1Id: team1Id,
+                                    team2Id: team2Id,
                                     eventDate: new Date(eventDate),
                                     eventName: eventName,
                                     onfieldUmpires: onfieldUmpires,
@@ -90,6 +92,16 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
 
                                 if (!eventName || (eventName !== matchInfoData.title)) {
                                     changedValues.eventName = matchInfoData.title;
+                                }
+
+                                const esTeam1Id = global.tblTeams.find(tt => tt.tpId === matchInfoData.teama?.team_id)
+                                if (!team1Id || (team1Id !== esTeam1Id?.teamId)) {
+                                    changedValues.team1Id = esTeam1Id?.teamId;
+                                }
+
+                                const esTeam2Id = global.tblTeams.find(tt => tt.tpId === matchInfoData.teamb?.team_id)
+                                if (!team2Id || (team2Id !== esTeam2Id?.teamId)) {
+                                    changedValues.team2Id = esTeam2Id?.teamId;
                                 }
 
                                 const { onFieldUmpires, thirdUmpire } = parseUmpires(matchInfoData.umpires);
@@ -169,6 +181,8 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
 
                                 let isChanged = (
                                     changedValues.eventName !== eventName ||
+                                    changedValues.team1Id !== team1Id ||
+                                    changedValues.team2Id !== team2Id ||
                                     changedValues.onfieldUmpires !== onfieldUmpires ||
                                     changedValues.thirdUmpire !== cThirdUmpire ||
                                     changedValues.matchReferee !== matchReferee ||
@@ -224,16 +238,16 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                 if (teamASquad && teamASquad.length > 0) {
                                     commentaryTeamPlayers.push({
                                         commentaryId,
-                                        teamId: team1Id,
+                                        teamId: changedValues.team1Id,
                                         players: teamASquad.map(item => Number(item.player_id))
                                     });
                                 }
 
                                 if (teamASquad.length === 0) {
-                                    teamASquad = await getAllPlayersByTeamIdQuery(team1Id, fastify, null);
+                                    teamASquad = await getAllPlayersByTeamIdQuery(changedValues.team1Id, fastify, null);
                                     teamASquad = teamASquad.filter(item => item.tpId != null);
                                     if (teamASquad.length === 0) {
-                                        teamASquad = await insertTeamPlayersByTeamId(team1Id, teama?.team_id, getTeamIsMen, null, fastify);
+                                        teamASquad = await insertTeamPlayersByTeamId(changedValues.team1Id, teama?.team_id, getTeamIsMen, null, fastify);
                                         teamASquad = teamASquad.filter(item => item.tpId != null);
                                     }
                                     teamASquad = teamASquad?.map(item => ({
@@ -245,16 +259,16 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                 if (teamBSquad && teamBSquad.length > 0) {
                                     commentaryTeamPlayers.push({
                                         commentaryId,
-                                        teamId: team2Id,
+                                        teamId: changedValues.team2Id,
                                         players: teamBSquad.map(item => Number(item.player_id))
                                     });
                                 }
 
                                 if (teamBSquad.length === 0) {
-                                    teamBSquad = await getAllPlayersByTeamIdQuery(team2Id, fastify, null);
+                                    teamBSquad = await getAllPlayersByTeamIdQuery(changedValues.team2Id, fastify, null);
                                     teamBSquad = teamBSquad.filter(item => item.tpId != null);
                                     if (teamBSquad.length === 0) {
-                                        teamBSquad = await insertTeamPlayersByTeamId(team2Id, teamb?.team_id, getTeamIsMen, null, fastify);
+                                        teamBSquad = await insertTeamPlayersByTeamId(changedValues.team2Id, teamb?.team_id, getTeamIsMen, null, fastify);
                                         teamBSquad = teamBSquad.filter(item => item.tpId != null);
                                     }
                                     teamBSquad = teamBSquad?.map(item => ({
@@ -268,11 +282,11 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                         (item) =>
                                             item.commentaryId === commentary.commentaryId &&
                                             item.currentInnings === i &&
-                                            (item.teamId === team1Id || item.teamId === team2Id)
+                                            (item.teamId === changedValues.team1Id || item.teamId === changedValues.team2Id)
                                     );
                                     if (commentaryTeam.length === 0) {
-                                        const team1Data = global.tblTeams.find(tt => tt.teamId === team1Id);
-                                        const team2Data = global.tblTeams.find(tt => tt.teamId === team2Id);
+                                        const team1Data = global.tblTeams.find(tt => tt.teamId === changedValues.team1Id);
+                                        const team2Data = global.tblTeams.find(tt => tt.teamId === changedValues.team2Id);
                                         await insertCommentaryTeams({
                                             body: {
                                                 commentaryId: commentary.commentaryId,
@@ -286,18 +300,18 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                         }, fastify);
                                         const teamACommentaryTeam = await getCommentaryTeamsQuery({
                                             commentaryId: commentary.commentaryId,
-                                            teamId: team1Id,
+                                            teamId: changedValues.team1Id,
                                             currentInnings: i
                                         }, fastify, null);
                                         const teamBCommentaryTeam = await getCommentaryTeamsQuery({
                                             commentaryId: commentary.commentaryId,
-                                            teamId: team2Id,
+                                            teamId: changedValues.team2Id,
                                             currentInnings: i
                                         }, fastify, null);
                                         global.tblCommentaryTeams.push(teamACommentaryTeam, teamBCommentaryTeam);
                                     }
 
-                                    const teamAUpdated = await insertCommentaryPlayersByTeam(i, commentary.commentaryId, team1Id, teamASquad, entitySportMatchResponse?.players, matchType?.matchTypeId, getTeamIsMen, fastify, {
+                                    const teamAUpdated = await insertCommentaryPlayersByTeam(i, commentary.commentaryId, changedValues.team1Id, teamASquad, entitySportMatchResponse?.players, matchType?.matchTypeId, getTeamIsMen, fastify, {
                                         userTokenInfo: {
                                             WrUserId: -2
                                         }
@@ -306,7 +320,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                         isChanged = true;
                                     }
 
-                                    const teamBUpdated = await insertCommentaryPlayersByTeam(i, commentary.commentaryId, team2Id, teamBSquad, entitySportMatchResponse?.players, matchType?.matchTypeId, getTeamIsMen, fastify, {
+                                    const teamBUpdated = await insertCommentaryPlayersByTeam(i, commentary.commentaryId, changedValues.team2Id, teamBSquad, entitySportMatchResponse?.players, matchType?.matchTypeId, getTeamIsMen, fastify, {
                                         userTokenInfo: {
                                             WrUserId: -2
                                         }
