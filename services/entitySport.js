@@ -905,53 +905,43 @@ const setEntityCom2Service = async (request , fastify) =>{
             // }
         }   
         comDetails = global.tblCommentaries.find((i) => i.commentaryId == comDetails.commentaryId)
-        // if(comDetails.commentaryStatus == commentaryStatus.INPROGRESS || comDetails.commentaryStatus == commentaryStatus.INNINGCHANGE){
-        //   if(!response.live.commentaries || response.live.commentaries.length == 0){
-        //     return true;
-        //   }
-        //   comDetails.isClientShow = true;
-        //   const bat = await checkBattingTeamService(response, comDetails);
-        //   if (bat) {
-        //     let res = await handleComArr(request.body, request,fastify,comDetails)
-        //     return res;
-        //   } else {
-        //     await onInningChangeService(request.body, fastify, comDetails);
-        //     let res = await handleComArr(request.body, request,fastify,comDetails)
-        //     return res;
-        //   }
-        // }
-        if(comDetails.commentaryStatus == commentaryStatus.INPROGRESS){
+        if(comDetails.commentaryStatus == commentaryStatus.INPROGRESS || comDetails.commentaryStatus == commentaryStatus.INNINGCHANGE){
+          if(!response.live.commentaries || response.live.commentaries.length == 0){
+            return true;
+          }
           comDetails.isClientShow = true;
-          let res = await handleComArr(request.body, request,fastify,comDetails)
-          return res;
-        }
-        if(comDetails.commentaryStatus == commentaryStatus.INNINGCHANGE){
-          comDetails.isClientShow = false;
           const bat = await checkBattingTeamService(response, comDetails);
           if (bat) {
             let res = await handleComArr(request.body, request,fastify,comDetails)
-            await inningChangeStateService(fastify, comDetails);
             return res;
           } else {
-            comDetails.isClientShow = true;
             await onInningChangeService(request.body, fastify, comDetails);
-            // await inningChangeStateService(fastify, comDetails);
             let res = await handleComArr(request.body, request,fastify,comDetails)
             return res;
           }
         }
+        // if(comDetails.commentaryStatus == commentaryStatus.INPROGRESS){
+        //   comDetails.isClientShow = true;
+        //   let res = await handleComArr(request.body, request,fastify,comDetails)
+        //   return res;
+        // }
+        // if(comDetails.commentaryStatus == commentaryStatus.INNINGCHANGE){
+        //   comDetails.isClientShow = false;
+        //   const bat = await checkBattingTeamService(response, comDetails);
+        //   if (bat) {
+        //     let res = await handleComArr(request.body, request,fastify,comDetails)
+        //     await inningChangeStateService(fastify, comDetails);
+        //     return res;
+        //   } else {
+        //     comDetails.isClientShow = true;
+        //     await onInningChangeService(request.body, fastify, comDetails);
+        //     // await inningChangeStateService(fastify, comDetails);
+        //     let res = await handleComArr(request.body, request,fastify,comDetails)
+        //     return res;
+        //   }
+        // }
     }
 
-    // if(gameState == EntityCommentaryStatus.INNINGCHANGE){
-    //   if(comDetails.commentaryStatus != commentaryStatus.INNINGCHANGE){
-    //     await onInningChangeService(request.body, fastify, comDetails);
-
-    //   }
-    //   else {
-    //     return true;
-    //   }
-    // }
-    
     if (gameState == EntityCommentaryStatus.INNINGCHANGE) {
       // if (comDetails.commentaryStatus != commentaryStatus.INNINGCHANGE) {
         comDetails.isClientShow = false;
@@ -959,7 +949,15 @@ const setEntityCom2Service = async (request , fastify) =>{
         await inningChangeStateService(fastify, comDetails);
         return true;
       // }
-    }
+    }    
+    // if (gameState == EntityCommentaryStatus.INNINGCHANGE) {
+    //   // if (comDetails.commentaryStatus != commentaryStatus.INNINGCHANGE) {
+    //     comDetails.isClientShow = false;
+    //     await handleComArr(request.body, request, fastify, comDetails)
+    //     await inningChangeStateService(fastify, comDetails);
+    //     return true;
+    //   // }
+    // }
     const entityStatus = response?.match_info?.status
     if (gameState == EntityCommentaryStatus.DEFAULT && entityStatus != EntityMatchStatus.SCHEDULED &&
       comDetails.commentaryStatus != commentaryStatus.COMPLETED) {
