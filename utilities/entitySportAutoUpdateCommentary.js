@@ -107,7 +107,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
 
                                 if (!checkCompetition?.matchTypeId) {
                                     const esAllCompetitionMatches = await esGetMatchNumberFromCompetitionMatchAPI(checkCompetition.tpId);
-                                    const getMatchNumber = esAllCompetitionMatches.find(m => m.match_id === match?.match_id);
+                                    const getMatchNumber = esAllCompetitionMatches.find(m => m.match_id === matchInfoData?.match_id);
                                     if (eventNo !== getMatchNumber.match_number) {
                                         changedValues.eventNo = getMatchNumber.match_number ?? matchInfoData?.match_number;
                                     }
