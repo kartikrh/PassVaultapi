@@ -1275,6 +1275,45 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
   return isAllPlaying11;
 }
 
+const esGetMatchNumberFromCompetitionMatchAPI = async (competitionTpId, request, fastify) => {
+  let allCompetitionMatch = [], page = 1, totalPages = 1, matchNumber = 1, lastESMatchType = null;
+  while (page <= totalPages) {
+    const params = new URLSearchParams();
+    let url = `/competition/${competitionTpId}/matches` + "?";
+    params.append("paged", page);
+    params.append("per_page", 50);
+    url += `&${params.toString()}`;
+    const entitySportCompetitionMatch = await callEntitySportAPI(url, request, fastify);
+
+    let entitySportCompetitionMatchResponse = entitySportCompetitionMatch?.data?.result;
+    if (!entitySportCompetitionMatchResponse) {
+      errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/commentary.js/esGetMatchNumberFromCompetitionMatchAPI - entitySportCompetitionMatchResponse", {
+        ...request,
+        originalUrl: url
+      }, entitySportCompetitionMatch?.data);
+    } else {
+      if (page === 1) {
+        totalPages = entitySportCompetitionMatchResponse?.total_pages || 1;
+      }
+      allCompetitionMatch.push(...entitySportCompetitionMatchResponse?.items?.map(item => {
+        if (lastESMatchType !== item?.format) {
+          lastESMatchType = item?.format;
+          matchNumber = 1;
+        } else {
+          matchNumber++;
+        }
+        return {
+          match_id: item.match_id,
+          match_number: matchNumber,
+          format: item.format
+        }
+      }));
+    }
+    page++;
+  }
+  return allCompetitionMatch;
+}
+
 const competitionImportService = async (data, fastify, request) => {
   const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getCompetitionDataByIdFromEntity);
   if (!checkEntitySportAPIEndpoint.data) {
@@ -1326,6 +1365,7 @@ const competitionImportService = async (data, fastify, request) => {
   const entityMatchTypeEnums = lowerEntityMatchTypesEnums();
   let matchType = global.tblMatchTypes.find(item => item.entityEnum === entityMatchTypeEnums[entitySportCompetitionResponse?.game_format.toLowerCase()]);
 
+  let isMixedESCompetitionMatchTypeFormat = entitySportCompetitionResponse?.game_format.toLowerCase() === "mixed";
   if (entitySportCompetitionResponse?.game_format.toUpperCase() == "MIXED") {
     matchType = null
   }
@@ -1772,6 +1812,13 @@ const competitionImportService = async (data, fastify, request) => {
           scoringType: ScoringTypes.Entity
         }
         commentaryData.scoringType = match?.game_state == EntityCommentaryStatus.INPROGRESS ? ScoringTypes.Panel : ScoringTypes.Entity;
+
+        if (!checkCompetition?.matchTypeId) {
+          const esAllCompetitionMatches = await esGetMatchNumberFromCompetitionMatchAPI(checkCompetition.tpId);
+          const getMatchNumber = esAllCompetitionMatches.find(m => m.match_id === match?.match_id);
+          commentaryData.eventNo = getMatchNumber.match_number ?? match?.match_number;
+        }
+
         const insertCommentary = await insertCommentaryQuery({
           ...request,
           body: commentaryData
@@ -1782,6 +1829,25 @@ const competitionImportService = async (data, fastify, request) => {
       }
 
       const commentaryId = checkCommentary?.commentaryId;
+
+      if (!checkCompetition?.matchTypeId) {
+        const esAllCompetitionMatches = await esGetMatchNumberFromCompetitionMatchAPI(checkCompetition.tpId);
+        const getMatchNumber = esAllCompetitionMatches.find(m => m.match_id === match?.match_id);
+        if (checkCommentary?.eventNo !== getMatchNumber.match_number) {
+          const updateCommentaryData = await updateCommentaryQuery({
+            body: {
+              ...checkCommentary,
+              eventNo: getMatchNumber.match_number ?? match?.match_number
+            }
+          }, fastify);
+
+          let index = global.tblCommentaries.findIndex((i) => i.commentaryId == commentaryId);
+          if (index !== -1) {
+            global.tblCommentaries[index] = updateCommentaryData[0][0];
+            checkCommentary = global.tblCommentaries[index];
+          }
+        }
+      }
 
       if (checkCommentary.team1Id !== teamA?.teamId) {
         const updateCommentaryData = await updateCommentaryQuery({
@@ -2163,4 +2229,5 @@ module.exports = {
   insertCommentaryPlayersByTeam,
   changeIsCompetitionStatisticsCalculationStatusService,
   getAllCompetitionsService,
+  esGetMatchNumberFromCompetitionMatchAPI
 };
