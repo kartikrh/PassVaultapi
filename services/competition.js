@@ -1753,7 +1753,7 @@ const competitionImportService = async (data, fastify, request) => {
       competitionTeams.push(checkTeam);
     }
   }
-
+  let newCommentaryImport = false;
   let commentaryTeamPlayers = [];
   for (const match of allCompetitionMatch) {
     const teamA = competitionTeams.find(t => t.tpId === match?.teama?.team_id);
@@ -1808,9 +1808,8 @@ const competitionImportService = async (data, fastify, request) => {
           isCountInPoint: checkCompetition?.isPointTable,
           countryId: countryData.find(c => c.countryName?.toLowerCase() === match?.venue?.country?.toLowerCase())?.id || null,
           venueId: getVenueData?.id,
-          scoringType: ScoringTypes.Entity
+          scoringType: match?.game_state == EntityCommentaryStatus.INPROGRESS ? ScoringTypes.Panel : ScoringTypes.Entity,
         }
-        commentaryData.scoringType = match?.game_state == EntityCommentaryStatus.INPROGRESS ? ScoringTypes.Panel : ScoringTypes.Entity;
 
         if (!checkCompetition?.matchTypeId) {
           const esAllCompetitionMatches = await esGetMatchNumberFromCompetitionMatchAPI(checkCompetition.tpId);
@@ -1825,6 +1824,7 @@ const competitionImportService = async (data, fastify, request) => {
 
         global.tblCommentaries.push(insertCommentary);
         checkCommentary = insertCommentary;
+        newCommentaryImport = true;
       }
 
       const commentaryId = checkCommentary?.commentaryId;
@@ -2091,6 +2091,13 @@ const competitionImportService = async (data, fastify, request) => {
 
         await insertCommentaryPlayersByTeam(i, commentaryId, teamA.teamId, teamASquad, entitySportMatchResponse?.players, matchType?.matchTypeId, checkCompetition.isMen, fastify, request);
         await insertCommentaryPlayersByTeam(i, commentaryId, teamB.teamId, teamBSquad, entitySportMatchResponse?.players, matchType?.matchTypeId, checkCompetition.isMen, fastify, request);
+      }
+      if (newCommentaryImport && match?.game_state == EntityCommentaryStatus.INPROGRESS) {
+        const { storeInningWiseEntityDataService } = require("./entitySport")
+        request.body = {
+          matchId: match?.match_id,
+        };
+        await storeInningWiseEntityDataService(request, fastify);
       }
     }
   }
