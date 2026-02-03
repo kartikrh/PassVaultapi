@@ -229,7 +229,7 @@ const { insertVenueQuery, updateVenueQuery } = require("../repository/TableVenue
 const { insertCompetitionQuery } = require("../repository/TableCompitition");
 const { getImageFromUrl } = require("../utilities/Images");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
-const { insertTeamPlayersByTeamId, insertCommentaryPlayersByTeam } = require("./competition");
+const { insertTeamPlayersByTeamId, insertCommentaryPlayersByTeam, esGetMatchNumberFromCompetitionMatchAPI } = require("./competition");
 const cron = require('node-cron');
 const { insertAutoImportDataService } = require("./autoImportData");
 const { insertTournamentTeamPlayersQuery, deleteTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
@@ -23745,6 +23745,13 @@ const matchImportService = async (data, fastify, request = null) => {
         venueId: checkVenue?.id,
         scoringType: matchInfoResponse?.game_state == EntityCommentaryStatus.INPROGRESS ? ScoringTypes.Panel : ScoringTypes.Entity,
       }
+
+      if (!checkCompetition?.matchTypeId) {
+        const esAllCompetitionMatches = await esGetMatchNumberFromCompetitionMatchAPI(checkCompetition.tpId);
+        const getMatchNumber = esAllCompetitionMatches.find(m => m.match_id === entitySportMatchResponse?.match_id);
+        commentaryData.eventNo = getMatchNumber.match_number ?? matchInfoResponse?.match_number;
+      }
+
       const insertCommentary = await insertCommentaryQuery({
         ...request,
         body: commentaryData
@@ -23757,6 +23764,25 @@ const matchImportService = async (data, fastify, request = null) => {
 
     if (checkCommentary && checkCommentary?.commentaryId) {
       const upsertedCommentaryId = checkCommentary.commentaryId;
+      
+      if (!checkCompetition?.matchTypeId) {
+        const esAllCompetitionMatches = await esGetMatchNumberFromCompetitionMatchAPI(checkCompetition.tpId);
+        const getMatchNumber = esAllCompetitionMatches.find(m => m.match_id === match?.match_id);
+        if (checkCommentary?.eventNo !== getMatchNumber.match_number) {
+          const updateCommentaryData = await updateCommentaryQuery({
+            body: {
+              ...checkCommentary,
+              eventNo: getMatchNumber.match_number ?? matchInfoResponse?.match_number
+            }
+          }, fastify);
+
+          let index = global.tblCommentaries.findIndex((i) => i.commentaryId == upsertedCommentaryId);
+          if (index !== -1) {
+            global.tblCommentaries[index] = updateCommentaryData[0][0];
+            checkCommentary = global.tblCommentaries[index];
+          }
+        }
+      }
 
       if (checkCommentary.team1Id !== teamAData?.teamId) {
         const updateCommentaryData = await updateCommentaryQuery({

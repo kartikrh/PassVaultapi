@@ -3,7 +3,7 @@ const { errorLogger } = require("./logger");
 const { autoUpdateCommentaryDataStatus, intervalTimesForUpdateCommentary } = require('./entityConst');
 const { getAllAutoUpdateCommentaryDataQuery, insertAutoUpdateCommentaryDataQuery, updateAutoUpdateCommentaryDataQuery } = require('../repository/TableAutoUpdateCommentaryData');
 const { updateCommentaryQuery, insertCommentaryTeams, getCommentaryTeamsQuery, deleteCommentaryPlayersByPlayerId, updateCommentaryDateByCommentaryIdQuery } = require('../repository/TableCommentary');
-const { insertCommentaryPlayersByTeam, insertTeamPlayersByTeamId } = require('../services/competition');
+const { insertCommentaryPlayersByTeam, insertTeamPlayersByTeamId, esGetMatchNumberFromCompetitionMatchAPI } = require('../services/competition');
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { updateWeatherQuery, insertWeatherQuery } = require("../repository/TableWeather");
 const { updatePitchConditionQuery, insertPitchConditionQuery } = require("../repository/TablePitchCondition");
@@ -75,13 +75,14 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
 
                                 insertAutoUpdateCommentaryData = await insertAutoUpdateCommentaryDataQuery(insertData, fastify);
 
-                                const { commentaryId, eventDate, eventName, team1Id, team2Id, onfieldUmpires, thirdUmpire: cThirdUmpire, matchReferee, venueId, location, countryId, eventTypeId } = commentary;
+                                const { commentaryId, eventDate, eventName, eventNo, team1Id, team2Id, onfieldUmpires, thirdUmpire: cThirdUmpire, matchReferee, venueId, location, countryId, eventTypeId } = commentary;
                                 let changedValues = {
                                     id: commentaryId,
                                     team1Id: team1Id,
                                     team2Id: team2Id,
                                     eventDate: new Date(eventDate),
                                     eventName: eventName,
+                                    eventNo: eventNo,
                                     onfieldUmpires: onfieldUmpires,
                                     thirdUmpire: cThirdUmpire,
                                     matchReferee: matchReferee,
@@ -102,6 +103,14 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                 const esTeam2Id = global.tblTeams.find(tt => tt.tpId === matchInfoData.teamb?.team_id)
                                 if (!team2Id || (team2Id !== esTeam2Id?.teamId)) {
                                     changedValues.team2Id = esTeam2Id?.teamId;
+                                }
+
+                                if (!checkCompetition?.matchTypeId) {
+                                    const esAllCompetitionMatches = await esGetMatchNumberFromCompetitionMatchAPI(checkCompetition.tpId);
+                                    const getMatchNumber = esAllCompetitionMatches.find(m => m.match_id === match?.match_id);
+                                    if (eventNo !== getMatchNumber.match_number) {
+                                        changedValues.eventNo = getMatchNumber.match_number ?? matchInfoData?.match_number;
+                                    }
                                 }
 
                                 const { onFieldUmpires, thirdUmpire } = parseUmpires(matchInfoData.umpires);
@@ -183,6 +192,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     changedValues.eventName !== eventName ||
                                     changedValues.team1Id !== team1Id ||
                                     changedValues.team2Id !== team2Id ||
+                                    changedValues.eventNo !== eventNo ||
                                     changedValues.onfieldUmpires !== onfieldUmpires ||
                                     changedValues.thirdUmpire !== cThirdUmpire ||
                                     changedValues.matchReferee !== matchReferee ||
