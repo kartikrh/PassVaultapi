@@ -4179,20 +4179,6 @@ const Commentary = {
       }
     }
   },
-  CommentaryInningData: {
-    schema: {
-      tags: ["EntitySport"],
-      description: "save commentary inning data",
-      security: [{ bearerAuth: [] }],
-      body: {
-        type: "object",
-        properties: {
-          matchId: { type: "integer" },
-        },
-        required: ["matchId"],
-      },
-    }
-  },
 };
 
 const Compitition = {
