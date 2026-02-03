@@ -1,4 +1,4 @@
-const { checkEntitySportAPIEndpointIsActive, APIEndpointModuleType, callEntitySportAPI, parseUmpires, ScoringTypes, ServiceType, callClientAPI } = require(".");
+const { checkEntitySportAPIEndpointIsActive, APIEndpointModuleType, callEntitySportAPI, parseUmpires, ScoringTypes, ServiceType, callClientAPI, commentaryStatus } = require(".");
 const { errorLogger } = require("./logger");
 const { autoUpdateCommentaryDataStatus, intervalTimesForUpdateCommentary } = require('./entityConst');
 const { getAllAutoUpdateCommentaryDataQuery, insertAutoUpdateCommentaryDataQuery, updateAutoUpdateCommentaryDataQuery } = require('../repository/TableAutoUpdateCommentaryData');
@@ -14,7 +14,7 @@ const { getMatchDataByCId } = require("../services/commentry");
 
 const entitySportAutoUpdateCommentary = async (fastify) => {
     try {
-        const getAllCommentaryData = global.tblCommentaries.filter(item => item.tpId !== null && item.commentaryStatus === 1 && item.scoringType === ScoringTypes.Entity && item.isEventStart === false && new Date(item.eventDate) > new Date() && new Date(item.eventDate) <= new Date(Date.now() + 50 * 60 * 60 * 1000));
+        const getAllCommentaryData = global.tblCommentaries.filter(item => item.tpId !== null && [commentaryStatus.OPEN, commentaryStatus.TOSSDONE].includes(item.commentaryStatus) && item.scoringType === ScoringTypes.Entity && item.isEventStart === false && new Date(item.eventDate) > new Date() && new Date(item.eventDate) <= new Date(Date.now() + 50 * 60 * 60 * 1000));
         if (getAllCommentaryData && getAllCommentaryData.length > 0) {
             for (const commentary of getAllCommentaryData) {
                 const currentDate = new Date();
