@@ -23767,7 +23767,7 @@ const matchImportService = async (data, fastify, request = null) => {
       
       if (!checkCompetition?.matchTypeId) {
         const esAllCompetitionMatches = await esGetMatchNumberFromCompetitionMatchAPI(checkCompetition.tpId);
-        const getMatchNumber = esAllCompetitionMatches.find(m => m.match_id === match?.match_id);
+        const getMatchNumber = esAllCompetitionMatches.find(m => m.match_id === matchInfoResponse?.match_id);
         if (checkCommentary?.eventNo !== getMatchNumber.match_number) {
           const updateCommentaryData = await updateCommentaryQuery({
             body: {
