@@ -1365,7 +1365,6 @@ const competitionImportService = async (data, fastify, request) => {
   const entityMatchTypeEnums = lowerEntityMatchTypesEnums();
   let matchType = global.tblMatchTypes.find(item => item.entityEnum === entityMatchTypeEnums[entitySportCompetitionResponse?.game_format.toLowerCase()]);
 
-  let isMixedESCompetitionMatchTypeFormat = entitySportCompetitionResponse?.game_format.toLowerCase() === "mixed";
   if (entitySportCompetitionResponse?.game_format.toUpperCase() == "MIXED") {
     matchType = null
   }
@@ -1768,9 +1767,9 @@ const competitionImportService = async (data, fastify, request) => {
 
       let checkCommentary = global.tblCommentaries.find(item => item.tpId === match.match_id);
 
+      matchType = global.tblMatchTypes.find(item => item.entityEnum === match.format);
       if (!checkCommentary) {
         const getVenueData = venueData.find(v => v.tpId === Number(match?.venue?.venue_id));
-        matchType = global.tblMatchTypes.find(item => item.entityEnum === match.format);
         let commentaryData = {
           eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
           matchTypeId: matchType?.matchTypeId,
