@@ -12,6 +12,10 @@ const {
   updateCommentaryPlayersPlaying11,
   storeInningWiseEntityData,
 } = require("../../../controller/users/admin/entitySport");
+const {
+  authorize,
+  checkPermission,
+} = require("../../../controller/middleware");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/saveTeam", {
@@ -55,6 +59,9 @@ module.exports = async (fastify, opts) => {
   });
   fastify.post("/inningData", {
     schema: EntitySport.CommentaryInningData.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+    ],
     handler: (request, reply) => storeInningWiseEntityData(request, reply, fastify),
   });
 };

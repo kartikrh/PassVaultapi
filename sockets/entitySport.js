@@ -218,10 +218,11 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       });
 
       client.io.on("reconnect_attempt", (attemptNumber) => {
+        const reconnectCounts = global.tblEntitySockets.find(c => c.entitySocketId === urlConfig.entitySocketId)?.reconnectCount;
         updateReconnectCountQuery(
           {
             entitySocketId: urlConfig.entitySocketId,
-            reconnectCount: attemptNumber,
+            reconnectCount: Number(reconnectCounts ?? 0) + 1
           },
           fastify
         ).catch((error) => {
