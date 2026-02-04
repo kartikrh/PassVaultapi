@@ -122,7 +122,7 @@ const deletePythonAPIService = async (request, fastify) => {
 };
 
 const updateIsDefultService = async (request, fastify) => {
-    const { id, isDefault } = request.body;
+    const { id, isDefault, isApplyForAll } = request.body;
     const result = global.tblPythonAPI.find(
         (item) => item.id === id
     );
@@ -154,6 +154,14 @@ const updateIsDefultService = async (request, fastify) => {
 
     if (index !== -1) {
         global.tblPythonAPI[index].isDefault = isDefault;
+    }
+    if (isDefault === true && isApplyForAll === true) {
+        global.tblCommentaries.forEach(com => {
+            if (![4, 10].includes(com.commentaryStatus)) {
+                com.pythonId = id;
+                com.pythonURI = global.tblPythonAPI[index].URI;
+            }
+        });
     }
 
     return `IsDefault updated successfully`;

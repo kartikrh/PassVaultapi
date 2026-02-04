@@ -44,6 +44,10 @@ const {
 } = require("../../../controller/users/admin/score");
 const {
   saveSubScribeDomain,
+  getAllSubScribesDomain,
+  getAllSubDomainData,
+  insertSubDomains,
+  insertDomains,
 } = require("../../../controller/users/admin/subScribesDomain");
 const { allCongifService } = require("../../../services/config");
 const { getAllBanners } = require("../../../controller/users/admin/banner");
@@ -467,6 +471,22 @@ module.exports = async (fastify, opts) => {
   fastify.post("/getAllCommentaryByCompetitionId", {
     schema: Score.getAllCommentaryByCompetitionId.schema,
     handler: (request , reply) => getAllCommentaryByCompetitionIdForClient(request, reply, fastify)
+  });
+  fastify.post("/getDomain", {
+    // schema: Score.getAllCommentaryByCompetitionId.schema,
+    handler: (request , reply) => getAllSubScribesDomain(request, reply, fastify)
+  });
+  fastify.post("/getSubDomain", {
+    // schema: Score.getAllCommentaryByCompetitionId.schema,
+    handler: (request , reply) => getAllSubDomainData(request, reply, fastify)
+  });
+  fastify.post("/insertSubDomain", {
+    // schema: Score.getAllCommentaryByCompetitionId.schema,
+    handler: (request , reply) => insertSubDomains(request, reply, fastify)
+  });
+  fastify.post("/insertDomain", {
+    // schema: Score.getAllCommentaryByCompetitionId.schema,
+    handler: (request , reply) => insertDomains(request, reply, fastify)
   });
 };
 

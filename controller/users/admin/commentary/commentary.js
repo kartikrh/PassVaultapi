@@ -1587,5 +1587,5 @@ module.exports = {
   checkSUpdatePassword,
   getHeadToHeadCommentary,
   getCommentaryStatistics,
-  getAllCommentaryByCompetitionIdForClient
+  getAllCommentaryByCompetitionIdForClient,
 }

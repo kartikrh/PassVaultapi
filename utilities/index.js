@@ -1528,7 +1528,8 @@ const RefType = {
   tournamentTeamPointUpdate: 8,
   ICCRanking: 9,
   CompetitionStatistics: 10,
-  CompetitionUpdate: 11
+  CompetitionUpdate: 11,
+  InningDataUpdate: 12,
 };
 const SourceID = {
   Prediction: 1,

@@ -30,6 +30,7 @@ const getAllSubScribesDomainQuery = async (fastify) =>{
         "tblSubScribesDomains" tsd
     LEFT JOIN
         "tblSubScribesSubDomains" tssd ON tsd."wrSubScribesDomainId" = tssd."wrSubScribesDomainId"
+        AND tssd."wrIsDeleted" = false
     WHERE tsd."wrIsDeleted" = false
     GROUP BY
         tsd."wrSubScribesDomainId";  
@@ -142,6 +143,7 @@ const insertSubScribeDomainQuery = async (request,fastify) =>{
                 "wrSiteName" as "siteName",
                 "wrSiteDomain" as "siteDomain",
                 "wrIsApproved" as "isApproved",
+                "wrIsVideoApproved" as "isVideoApproved",
                 "wrCreatedDate" as "createdDate"
             FROM insert_data
             `,

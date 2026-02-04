@@ -4178,7 +4178,7 @@ const Commentary = {
         required: ["competitionId"]
       }
     }
-  }
+  },
 };
 
 const Compitition = {
