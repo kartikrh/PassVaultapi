@@ -86,8 +86,8 @@ const insertTeamPlayerQuery = async (data, fastify, request) => {
       select COALESCE(max("wrPlayerOrder"),0) as "playerOrder" from "tblTeamPlayers" where "wrTeamId" =$1
     ),
     insert_team_player as (
-      insert into "tblTeamPlayers" ("wrTeamId", "wrRefPlayerId", "wrPlayerOrder","wrCreatedDate", "wrCreatedBy", "wrTpId", "wrHomeTeam", "wrJerseyPlayerImage", "wrJerseyPlayerImagePath")
-      values ($1,$2, (  select "playerOrder" from display_order) + 1, $3, $4, $5, $6, $7, $8)
+      insert into "tblTeamPlayers" ("wrTeamId", "wrRefPlayerId", "wrPlayerOrder","wrCreatedDate", "wrCreatedBy", "wrTpId", "wrHomeTeam", "wrJerseyPlayerImage", "wrJerseyPlayerImagePath", "wrMatchTypeId")
+      values ($1,$2, (  select "playerOrder" from display_order) + 1, $3, $4, $5, $6, $7, $8, $9)
       returning *
     )
 
@@ -97,12 +97,13 @@ const insertTeamPlayerQuery = async (data, fastify, request) => {
         "wrRefPlayerId" as "refPlayerId",
         "wrPlayerOrder" as "playerOrder",
         "wrHomeTeam" as "homeTeam",
-        "wrTpId" as "tpId"
+        "wrTpId" as "tpId",
+        "wrMatchTypeId" as "matchtypeId"
          from "insert_team_player"
 
     `,
       {
-        bind: [data.teamId, data.refPlayerId, new Date(), data.userId, data.tpId || null, data.homeTeam || false, data?.jerseyPlayerImage || null, data?.jerseyPlayerImagePath || null],
+        bind: [data.teamId, data.refPlayerId, new Date(), data.userId, data.tpId || null, data.homeTeam || false, data?.jerseyPlayerImage || null, data?.jerseyPlayerImagePath || null, data?.matchTypeId ?? -1],
         type: fastify.db.QueryTypes.SELECT,
       }
     );
@@ -418,6 +419,80 @@ const getHomeTeamPlayerQuery = async (data, fastify, request) => {
   }
 };
 
+const getTeamPlayersByTeamMatchTypeIdQuery = async (request, fastify) => {
+  try {
+    const { teamId, matchTypeId } = request.body;
+    const result = await fastify.db.query(
+      `
+        SELECT
+          ttp."wrTeamPlayerId" AS "teamPlayerId",
+          ttp."wrTeamId" AS "teamId",
+          tt."wrTeamName" AS "teamName",
+          ttp."wrRefPlayerId" AS "refPlayerId",
+          tp."wrPlayerName" AS "playerName",
+          ttp."wrMatchTypeId" AS "matchTypeId"
+        FROM "tblTeamPlayers" ttp
+        LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = ttp."wrTeamId"
+        LEFT JOIN "tblPlayers" tp ON tp."wrPlayerId" = ttp."wrRefPlayerId"
+        LEFT JOIN "tblMatchTypes" tmt ON tmt."wrMatchTypeId" = ttp."wrMatchTypeId"
+        WHERE ttp."wrTeamId" = $1 AND ttp."wrMatchTypeId" = $2 AND ttp."wrIsDeleted" = $3;
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          teamId,
+          matchTypeId,
+          false
+        ]
+      }
+    );
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableTeamPlayer/getTeamPlayersByTeamMatchTypeIdQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+
+const updateTeamPlayerMatchTypeIdQuery = async (request, fastify) => {
+  try {
+    const { teamId, matchTypeId, refPlayerId, oldMatchTypeId } = request.body;
+    const result = await fastify.db.query(
+      `
+      UPDATE "tblTeamPlayers" SET
+        "wrMatchTypeId" = $1,
+        "wrModifyBy" = $2,
+        "wrModifyDate" = $3
+      WHERE "wrTeamId" = $4 AND "wrRefPlayerId" = $5 AND "wrMatchTypeId" = $6;
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          matchTypeId,
+          request?.userTokenInfo?.WrUserId ?? -5,
+          new Date(),
+          teamId,
+          refPlayerId,
+          oldMatchTypeId
+        ]
+      }
+    );
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableTeamPlayer.js/updateTeamPlayerMatchTypeIdQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+
 module.exports = {
   insertTeamPlayerQuery,
   getAllTeamPlayersByTeamIdAndPlayerIdQuery,
@@ -432,4 +507,6 @@ module.exports = {
   AllTeamPlayersQuery,
   AllTeamPlayersNullImageQuery,
   getHomeTeamPlayerQuery,
+  getTeamPlayersByTeamMatchTypeIdQuery,
+  updateTeamPlayerMatchTypeIdQuery
 };
