@@ -1287,6 +1287,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             batSix: p.sixes,
             batterOrder,
             batsmanStrikeRate: parseFloat(p.strike_rate) ?? "0",
+            isInPlayingEleven: true,
           };
           currentPlayers.push(comP.commentaryPlayerId);
         }
@@ -1329,7 +1330,8 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             bowlerMaidenOver: b?.maidens ?? 0,
             bowlerWideBall : b.wides,
             bowlerNoBall : b.noballs,
-            bowlerDotBall : b.run0
+            bowlerDotBall : b.run0,
+            isInPlayingEleven: true
           };
           currentPlayers.push(comP.commentaryPlayerId);
         }
@@ -2189,6 +2191,20 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
 
           const commFielder1Id = playerTpIdObj[commFielder]?.commentaryPlayerId;
           const commFielder2Id = playerTpIdObj[commFielder2]?.commentaryPlayerId;
+          
+          if (commFielder != Number(c?.bowler_id)) {
+            playersMap[commFielder] = {
+              ...playerTpIdObj[commFielder],
+              isInPlayingEleven: true,
+            }
+          }
+          if (commFielder != commFielder2 || commFielder2 != Number(c?.bowler_id)) {
+            playersMap[commFielder2] = {
+              ...playerTpIdObj[commFielder2],
+              isInPlayingEleven: true,
+            }
+          }
+
           if(
             w.wicketType != null && batsmanId == w.batterId && 
             w.fieldPlayerId == commFielder1Id && w.fieldPlayer2Id == commFielder2Id
