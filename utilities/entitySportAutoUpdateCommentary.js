@@ -56,7 +56,6 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                 const teama = matchInfoData.teama || {};
                                 const teamb = matchInfoData.teamb || {};
                                 const venue = matchInfoData.venue || {};
-                                const pitchDetails = entitySportMatchResponse?.pitch_details || {};
 
                                 const checkCompetition = global.tblCompetitions.find(item => item.tpId === matchInfoData?.competition?.cid);
                                 if (!checkCompetition) {
@@ -365,10 +364,10 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     }
                                 }
 
-                                if (entitySportMatchResponse?.weather && entitySportMatchResponse?.weather.length > 0) {
+                                const matchWeather = entitySportMatchResponse?.weather;
+                                if (matchWeather && typeof matchWeather === "object") {
                                     const checkWeather = global.tblWeather.find(item => item.commentaryId === commentary.commentaryId);
                                     if (checkWeather) {
-                                        const matchWeather = entitySportMatchResponse?.weather[0];
                                         const weatherData = {
                                             weatherCondition: matchWeather?.weather ?? checkWeather?.weatherCondition,
                                             description: matchWeather?.weather_desc ?? checkWeather?.description,
@@ -389,7 +388,6 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                             global.tblWeather.push(updateWeather[0]);
                                         }
                                     } else {
-                                        const matchWeather = entitySportMatchResponse?.weather[0];
                                         const weatherData = {
                                             weatherCondition: matchWeather?.weather,
                                             description: matchWeather?.weather_desc,
@@ -406,14 +404,15 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     }
                                 }
 
-                                if (Object.keys(pitchDetails).length > 0 && (pitchDetails?.pitch_condition != "" || pitchDetails?.batting_condition != "" || pitchDetails?.pace_bowling_condition != "" || pitchDetails?.spine_bowling_condition != "")) {
+                                const matchPitch = matchInfoResponse?.pitch;
+                                if (matchPitch && (matchPitch?.pitch_condition != "" || matchPitch?.batting_condition != "" || matchPitch?.pace_bowling_condition != "" || matchPitch?.spine_bowling_condition != "")) {
                                     const checkPitchDetails = global.tblPitchConditions.find(item => item?.commentaryId === commentary.commentaryId);
                                     if (checkPitchDetails) {
                                         const pitchConditionData = {
-                                            pitchCondition: pitchDetails?.pitch_condition ?? checkPitchDetails?.pitchCondition,
-                                            battingCondition: pitchDetails?.batting_condition ?? checkPitchDetails?.battingCondition,
-                                            paceBowlingCondition: pitchDetails?.pace_bowling_condition ?? checkPitchDetails?.paceBowlingCondition,
-                                            spineBowlingConniton: pitchDetails?.spine_bowling_condition ?? checkPitchDetails?.spineBowlingCondition,
+                                            pitchCondition: matchPitch?.pitch_condition ?? checkPitchDetails?.pitchCondition,
+                                            battingCondition: matchPitch?.batting_condition ?? checkPitchDetails?.battingCondition,
+                                            paceBowlingCondition: matchPitch?.pace_bowling_condition ?? checkPitchDetails?.paceBowlingCondition,
+                                            spineBowlingConniton: matchPitch?.spine_bowling_condition ?? checkPitchDetails?.spineBowlingCondition,
                                             commentaryId: commentary.commentaryId,
                                             id: checkPitchDetails?.id
                                         };
@@ -427,10 +426,10 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                         }
                                     } else {
                                         const pitchConditionData = {
-                                            pitchCondition: pitchDetails?.pitch_condition,
-                                            battingCondition: pitchDetails?.batting_condition,
-                                            paceBowlingCondition: pitchDetails?.pace_bowling_condition,
-                                            spineBowlingConniton: pitchDetails?.spine_bowling_condition,
+                                            pitchCondition: matchPitch?.pitch_condition,
+                                            battingCondition: matchPitch?.batting_condition,
+                                            paceBowlingCondition: matchPitch?.pace_bowling_condition,
+                                            spineBowlingConniton: matchPitch?.spine_bowling_condition,
                                             commentaryId: commentary.commentaryId
                                         };
 

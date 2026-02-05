@@ -1904,10 +1904,10 @@ const competitionImportService = async (data, fastify, request) => {
         }
       }
 
-      if (match?.weather && match?.weather.length > 0) {
+      const matchWeather = match?.weather;
+      if (matchWeather && typeof matchWeather === "object") {
         const checkWeather = global.tblWeather.find(item => item.commentaryId === commentaryId);
         if (checkWeather) {
-          const matchWeather = match?.weather[0];
           const weatherData = {
             weatherCondition: matchWeather?.weather ?? checkWeather?.weatherCondition,
             description: matchWeather?.weather_desc ?? checkWeather?.description,
@@ -1927,7 +1927,6 @@ const competitionImportService = async (data, fastify, request) => {
             global.tblWeather.push(updateWeather[0]);
           }
         } else {
-          const matchWeather = match?.weather[0];
           const weatherData = {
             weatherCondition: matchWeather?.weather,
             description: matchWeather?.weather_desc,
@@ -1943,19 +1942,20 @@ const competitionImportService = async (data, fastify, request) => {
         }
       }
 
-      if (match?.pitch_details && (match?.pitch_details?.pitch_condition != "" || match?.pitch_details?.batting_condition != "" || match?.pitch_details?.pace_bowling_condition != "" || match?.pitch_details?.spine_bowling_condition != "")) {
+      const matchPitch = match?.pitch;
+      if (matchPitch && (matchPitch?.pitch_condition != "" || matchPitch?.batting_condition != "" || matchPitch?.pace_bowling_condition != "" || matchPitch?.spine_bowling_condition != "")) {
         const checkPitchDetails = global.tblPitchConditions.find(item => item?.commentaryId === commentaryId);
         if (checkPitchDetails) {
           const pitchConditionData = {
-            pitchCondition: match?.pitch_details?.pitch_condition ?? checkPitchDetails?.pitchCondition,
-            battingCondition: match?.pitch_details?.batting_condition ?? checkPitchDetails?.battingCondition,
-            paceBowlingCondition: match?.pitch_details?.pace_bowling_condition ?? checkPitchDetails?.paceBowlingCondition,
-            spineBowlingConniton: match?.pitch_details?.spine_bowling_condition ?? checkPitchDetails?.spineBowlingConniton,
+            pitchCondition: matchPitch?.pitch_condition ?? checkPitchDetails?.pitchCondition,
+            battingCondition: matchPitch?.batting_condition ?? checkPitchDetails?.battingCondition,
+            paceBowlingCondition: matchPitch?.pace_bowling_condition ?? checkPitchDetails?.paceBowlingCondition,
+            spineBowlingConniton: matchPitch?.spine_bowling_condition ?? checkPitchDetails?.spineBowlingConniton,
             commentaryId: commentaryId,
             id: checkPitchDetails?.id
           };
           const updatePitch = await updatePitchConditionQuery(pitchConditionData, fastify, request);
-          const index = global.tblPitchConditions.findIndex(item => item?.commentaryId === request.body.commentaryId);
+          const index = global.tblPitchConditions.findIndex(item => item?.commentaryId === commentaryId);
           if (index !== -1) {
             global.tblPitchConditions[index] = updatePitch[0]
           } else {
@@ -1963,10 +1963,10 @@ const competitionImportService = async (data, fastify, request) => {
           }
         } else {
           const pitchConditionData = {
-            pitchCondition: match?.pitch_details?.pitch_condition,
-            battingCondition: match?.pitch_details?.batting_condition,
-            paceBowlingCondition: match?.pitch_details?.pace_bowling_condition,
-            spineBowlingConniton: match?.pitch_details?.spine_bowling_condition,
+            pitchCondition: matchPitch?.pitch_condition,
+            battingCondition: matchPitch?.batting_condition,
+            paceBowlingCondition: matchPitch?.pace_bowling_condition,
+            spineBowlingConniton: matchPitch?.spine_bowling_condition,
             commentaryId: commentaryId
           };
 
