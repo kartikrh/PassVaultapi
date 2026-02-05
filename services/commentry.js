@@ -23840,10 +23840,10 @@ const matchImportService = async (data, fastify, request = null) => {
         }
       }
 
-      if (matchInfoResponse?.weather && matchInfoResponse?.weather.length > 0) {
+      const matchWeather = matchInfoResponse?.weather;
+      if (matchInfoResponse?.weather && typeof matchWeather === "object") {
         const checkWeather = global.tblWeather.find(item => item.commentaryId === upsertedCommentaryId);
         if (checkWeather) {
-          const matchWeather = matchInfoResponse?.weather[0];
           const weatherData = {
             weatherCondition: matchWeather?.weather ?? checkWeather?.weatherCondition,
             description: matchWeather?.weather_desc ?? checkWeather?.description,
@@ -23863,7 +23863,6 @@ const matchImportService = async (data, fastify, request = null) => {
             global.tblWeather.push(updateWeather[0]);
           }
         } else {
-          const matchWeather = matchInfoResponse?.weather[0];
           const weatherData = {
             weatherCondition: matchWeather?.weather,
             description: matchWeather?.weather_desc,
@@ -23879,14 +23878,15 @@ const matchImportService = async (data, fastify, request = null) => {
         }
       }
 
-      if (matchInfoResponse?.pitch_details && (matchInfoResponse?.pitch_details?.pitch_condition != "" || matchInfoResponse?.pitch_details?.batting_condition != "" || matchInfoResponse?.pitch_details?.pace_bowling_condition != "" || matchInfoResponse?.pitch_details?.spine_bowling_condition != "")) {
+      const matchPitch = matchInfoResponse?.pitch;
+      if (matchPitch && (matchPitch?.pitch_condition != "" || matchPitch?.batting_condition != "" || matchPitch?.pace_bowling_condition != "" || matchPitch?.spine_bowling_condition != "")) {
         const checkPitchDetails = global.tblPitchConditions.find(item => item?.commentaryId === upsertedCommentaryId);
         if (checkPitchDetails) {
           const pitchConditionData = {
-            pitchCondition: matchInfoResponse?.pitch_details?.pitch_condition ?? checkPitchDetails?.pitchCondition,
-            battingCondition: matchInfoResponse?.pitch_details?.batting_condition ?? checkPitchDetails?.battingCondition,
-            paceBowlingCondition: matchInfoResponse?.pitch_details?.pace_bowling_condition ?? checkPitchDetails?.paceBowlingCondition,
-            spineBowlingConniton: matchInfoResponse?.pitch_details?.spine_bowling_condition ?? checkPitchDetails?.spineBowlingCondition,
+            pitchCondition: matchPitch?.pitch_condition ?? checkPitchDetails?.pitchCondition,
+            battingCondition: matchPitch?.batting_condition ?? checkPitchDetails?.battingCondition,
+            paceBowlingCondition: matchPitch?.pace_bowling_condition ?? checkPitchDetails?.paceBowlingCondition,
+            spineBowlingConniton: matchPitch?.spine_bowling_condition ?? checkPitchDetails?.spineBowlingCondition,
             commentaryId: upsertedCommentaryId,
             id: checkPitchDetails?.id
           };
@@ -23899,10 +23899,10 @@ const matchImportService = async (data, fastify, request = null) => {
           }
         } else {
           const pitchConditionData = {
-            pitchCondition: matchInfoResponse?.pitch_details?.pitch_condition,
-            battingCondition: matchInfoResponse?.pitch_details?.batting_condition,
-            paceBowlingCondition: matchInfoResponse?.pitch_details?.pace_bowling_condition,
-            spineBowlingConniton: matchInfoResponse?.pitch_details?.spine_bowling_condition,
+            pitchCondition: matchPitch?.pitch_condition,
+            battingCondition: matchPitch?.batting_condition,
+            paceBowlingCondition: matchPitch?.pace_bowling_condition,
+            spineBowlingConniton: matchPitch?.spine_bowling_condition,
             commentaryId: upsertedCommentaryId
           };
 
