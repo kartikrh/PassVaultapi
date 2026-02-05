@@ -404,7 +404,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     }
                                 }
 
-                                const matchPitch = matchInfoResponse?.pitch;
+                                const matchPitch = entitySportMatchResponse?.pitch;
                                 if (matchPitch && (matchPitch?.pitch_condition != "" || matchPitch?.batting_condition != "" || matchPitch?.pace_bowling_condition != "" || matchPitch?.spine_bowling_condition != "")) {
                                     const checkPitchDetails = global.tblPitchConditions.find(item => item?.commentaryId === commentary.commentaryId);
                                     if (checkPitchDetails) {
