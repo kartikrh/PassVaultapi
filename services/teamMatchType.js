@@ -89,8 +89,8 @@ const updateTeamMatchTypeDataByTeamService = async (request, fastify) => {
             }
         }, fastify);
 
-        const newPlayerIds = request.body.playerIds;
-        const players = global.tblPlayers.find(tp => tp.playerId === newPlayerIds.includes(tp.playerId));
+        const newPlayerIds = JSON.parse(request.body.playerIds);
+        const players = global.tblPlayers.filter(tp => newPlayerIds.includes(tp.playerId));
 
         for (const pId of newPlayerIds) {
             const exists = oldTeamPlayers.find(otp => otp.refPlayerId === pId);
