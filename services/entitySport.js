@@ -1781,6 +1781,26 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                 updateBall.nextBatStrikeId = nonStrikePId;
                 updateBall.nextBatNonStrikeId = strikePId;
             }
+            if (c.commentary && c.commentary.toLowerCase().includes("retired hurt")) {
+              // check if getting same data from entity
+              const retiredBatter = response?.scorecard?.innings
+                ?.find(i => i?.number == inningNo)?.batsmen
+                ?.find(i1 => (i1?.how_out == "Retired hurt" || i1?.dismissal == "retired") && c.commentary.includes(i1.name));
+
+              if (retiredBatter && playerTpIdObj[retiredBatter.batsman_id]) {
+                if (!playersMap[retiredBatter.batsman_id]) {
+                  playersMap[retiredBatter.batsman_id] = {
+                    ...playerTpIdObj[retiredBatter.batsman_id],
+                  }
+                }
+                playersMap[retiredBatter.batsman_id] = {
+                  ...playersMap[retiredBatter.batsman_id],
+                  isBatterRetir: true,
+                  isPlay: null,
+                  onStrike: null
+                }
+              }
+            }
             const ballByBallUp = generateBallET(
               {
                 updateBall,
