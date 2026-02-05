@@ -88,7 +88,7 @@ const insertTeamMatchTypeByTeamQuery = async (request, fastify) => {
 
 const updateTeamMatchTypeJerseyImageByTeamQuery = async (request, fastify) => {
     try {
-        const { teamJerseyImage, teamJerseyImagePath } = request.body;
+        const { teamMatchTypeId, teamJerseyImage, teamJerseyImagePath } = request.body;
         const result = await fastify.db.query(
             `
             WITH update_data AS (
@@ -120,7 +120,8 @@ const updateTeamMatchTypeJerseyImageByTeamQuery = async (request, fastify) => {
                     teamJerseyImage,
                     teamJerseyImagePath,
                     request?.userTokenInfo?.WrUserId ?? -5,
-                    new Date()
+                    new Date(),
+                    teamMatchTypeId
                 ]
             }
         );
