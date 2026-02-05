@@ -48,7 +48,6 @@ const saveTeamMatchTypeByTeamService = async (request, fastify) => {
 const updateTeamMatchTypeDataByTeamService = async (request, fastify) => {
     const { teamMatchTypeId } = request.body;
     const teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamMatchTypeId" = ${teamMatchTypeId}`);
-    console.log("🚀 ~ updateTeamMatchTypeDataByTeamService ~ teamMatchType:", teamMatchType)
     if (!teamMatchType[0]) {
         throw new Error(`TeamMatchType with team match type id ${teamMatchTypeId} not found`);
     }
