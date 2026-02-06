@@ -506,7 +506,8 @@ const setEntityCom2Service = async (request , fastify) =>{
             throw new Error("Batting or Bowling team not found in commentary teams.")
         }
         let comWinTeam = comDetails.tossWonBy;
-        if(team1.teamId != comWinTeam){
+        let choseTo = comDetails.choseTo;
+        if(team1.teamId != comWinTeam || choseTo != tossInfo.decision){
           // update toss info again
           await updateToss(request , fastify,comDetails);
           return true;
@@ -909,41 +910,44 @@ const setEntityCom2Service = async (request , fastify) =>{
             // }
         }   
         comDetails = global.tblCommentaries.find((i) => i.commentaryId == comDetails.commentaryId)
-        if(comDetails.commentaryStatus == commentaryStatus.INPROGRESS || comDetails.commentaryStatus == commentaryStatus.INNINGCHANGE){
-          if(!response.live.commentaries || response.live.commentaries.length == 0){
-            return true;
-          }
-          comDetails.isClientShow = true;
-          const bat = await checkBattingTeamService(response, comDetails);
-          if (bat) {
-            let res = await handleComArr(request.body, request,fastify,comDetails)
-            return res;
-          } else {
-            await onInningChangeService(request.body, fastify, comDetails);
-            let res = await handleComArr(request.body, request,fastify,comDetails)
-            return res;
-          }
-        }
-        // if(comDetails.commentaryStatus == commentaryStatus.INPROGRESS){
+        // if(comDetails.commentaryStatus == commentaryStatus.INPROGRESS || comDetails.commentaryStatus == commentaryStatus.INNINGCHANGE){
+        //   if(!response.live.commentaries || response.live.commentaries.length == 0){
+        //     return true;
+        //   }
         //   comDetails.isClientShow = true;
-        //   let res = await handleComArr(request.body, request,fastify,comDetails)
-        //   return res;
-        // }
-        // if(comDetails.commentaryStatus == commentaryStatus.INNINGCHANGE){
-        //   comDetails.isClientShow = false;
         //   const bat = await checkBattingTeamService(response, comDetails);
         //   if (bat) {
         //     let res = await handleComArr(request.body, request,fastify,comDetails)
-        //     await inningChangeStateService(fastify, comDetails);
         //     return res;
         //   } else {
-        //     comDetails.isClientShow = true;
         //     await onInningChangeService(request.body, fastify, comDetails);
-        //     // await inningChangeStateService(fastify, comDetails);
         //     let res = await handleComArr(request.body, request,fastify,comDetails)
         //     return res;
         //   }
         // }
+        if(comDetails.commentaryStatus == commentaryStatus.INPROGRESS){
+          comDetails.isClientShow = true;
+          let res = await handleComArr(request.body, request,fastify,comDetails)
+          return res;
+        }
+        if(comDetails.commentaryStatus == commentaryStatus.INNINGCHANGE){
+          comDetails.isClientShow = false;
+          const bat = await checkBattingTeamService(response, comDetails);
+          if (bat) {
+            if(!response.live.commentaries || response.live.commentaries.length == 0){
+              return true;
+            }
+            let res = await handleComArr(request.body, request,fastify,comDetails)
+            await inningChangeStateService(fastify, comDetails);
+            return res;
+          } else {
+            comDetails.isClientShow = true;
+            await onInningChangeService(request.body, fastify, comDetails);
+            // await inningChangeStateService(fastify, comDetails);
+            let res = await handleComArr(request.body, request,fastify,comDetails)
+            return res;
+          }
+        }
     }
 
     if (gameState == EntityCommentaryStatus.INNINGCHANGE) {
@@ -1360,6 +1364,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     } else {
       upComDetails.rmk = response.live.status_note;
     }
+    upComDetails.commentaryStatus = commentaryStatus.INPROGRESS;
     if(commentaries?.length > 0){
       if(comDetails.commentaryStatus == commentaryStatus.INNINGCHANGE){
         upComDetails.commentaryStatus = commentaryStatus.INPROGRESS
