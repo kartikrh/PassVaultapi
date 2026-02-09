@@ -1888,10 +1888,7 @@ const competitionImportService = async (data, fastify, request) => {
           playerName: upsertedPlayer.playerName,
           userId: request?.userTokenInfo?.WrUserId ?? -2,
           tpId: upsertedPlayer?.tpId ?? null
-        },
-          request,
-          fastify
-        );
+        }, request, fastify);
         global.tblTournamentTeamPlayers.push(tournamentTeamPlayer[0]);
         tournamentTeamsPlayers.push(tournamentTeamPlayer[0]);
       }
