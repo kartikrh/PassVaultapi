@@ -1198,6 +1198,57 @@ const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
   return checkTeam;
 }
 
+const upsertTeamOnImportService = async (esTeam, entitySocketData, eventType, fastify, request) => {
+  let checkTeam = global.tblTeams.find(item => item.tpId === esTeam?.tid || item.teamName.toLowerCase() === esTeam.title.replace(/'/g, "''").toLowerCase());
+  if (!checkTeam) {
+    let imageUrl = esTeam?.logo_url;
+    if (!imageUrl) {
+      imageUrl = {
+        fullPath: entitySocketData?.defaultTeamImage || null,
+        imagePath: entitySocketData?.defaultTeamImagePath || null
+      }
+    } else {
+      const getImageDataFromUrl = await getImageFromUrl({
+        type: ImgModuleConfig.Teams.type,
+        imageUrl
+      });
+
+      if (getImageDataFromUrl && getImageDataFromUrl.fullPath) {
+        imageUrl = getImageDataFromUrl;
+      }
+    }
+
+    const teamData = {
+      teamName: esTeam?.title,
+      teamShortName: esTeam?.abbr,
+      eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
+      userId: -2,
+      tpId: esTeam?.tid || null,
+      image: imageUrl.fullPath,
+      imagePath: imageUrl.imagePath,
+      jersey: entitySocketData?.defaultJerseyImage || null,
+      jerseyPath: entitySocketData?.defaultJerseyImagePath || null,
+      isMen: esTeam?.sex === "male"
+    }
+    const insertTeam = await insertTeamQuery(teamData, fastify, request);
+    global.tblTeams.push(insertTeam);
+    checkTeam = insertTeam;
+  } else if (checkTeam?.tpId === null || !checkTeam?.tpId || checkTeam?.tpId !== esTeam?.tid) {
+    const data = {
+      userId: -2,
+      tpId: esTeam?.tid || null,
+      teamId: checkTeam.teamId
+    }
+    const updateTeam = await updateExchangeTeamQuery(data, fastify, request);
+    let index = global.tblTeams.findIndex((i) => i.teamId == checkTeam.teamId)
+    if (index != -1) {
+      global.tblTeams[index] = updateTeam[0]
+    }
+    checkTeam = global.tblTeams[index];
+  }
+  return checkTeam;
+}
+
 module.exports = {
   allTeamsService,
   teamByIdService,
@@ -1209,5 +1260,6 @@ module.exports = {
   UpdateTeamFromEntityService,
   teamImportService,
   activeInactiveTeamService,
-  insertTeamAndPlayers
+  insertTeamAndPlayers,
+  upsertTeamOnImportService
 };
