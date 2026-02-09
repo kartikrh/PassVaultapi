@@ -11612,6 +11612,35 @@ const TeamMatchType = {
         required: ["teamMatchTypeId"]
       }
     }
+  },
+  activeInactive: {
+    schema: {
+      tags: ["Team Match Type"],
+      description: "update active/inactive Match Type of Team",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          teamMatchTypeId: { type: "integer" },
+          isActive: { type: "boolean" }
+        },
+        required: ["teamMatchTypeId", "isActive"]
+      }
+    }
+  },
+  delete: {
+    schema: {
+      tags: ["Team Match Type"],
+      description: "delete Match Type of Team",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          teamMatchTypeId: { type: "integer" }
+        },
+        required: ["teamMatchTypeId"]
+      }
+    }
   }
 };
 

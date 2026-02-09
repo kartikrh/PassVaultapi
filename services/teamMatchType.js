@@ -1,4 +1,4 @@
-const { getTeamMatchTypeByTeamQuery, insertTeamMatchTypeByTeamQuery, updateTeamMatchTypeJerseyImageByTeamQuery } = require("../repository/TableTeamMatchType");
+const { getTeamMatchTypeByTeamQuery, insertTeamMatchTypeByTeamQuery, updateTeamMatchTypeJerseyImageByTeamQuery, activeInactiveTeamMatchTypeByTeamQuery, deleteTeamMatchTypeByTeamQuery } = require("../repository/TableTeamMatchType");
 const { getTeamPlayersByTeamMatchTypeIdQuery, insertTeamPlayerQuery, updateTeamPlayerMatchTypeIdQuery } = require("../repository/TableTeamPlayer");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
@@ -126,8 +126,32 @@ const updateTeamMatchTypeDataByTeamService = async (request, fastify) => {
     return true;
 }
 
+const activeInactiveTeamMatchDataTypeByTeamIdService = async (request, fastify) => {
+    const { teamMatchTypeId } = request.body;
+    const teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamMatchTypeId" = ${teamMatchTypeId}`);
+    if (!teamMatchType[0]) {
+        throw new Error(`TeamMatchType with team match type id ${teamMatchTypeId} not found`);
+    }
+
+    await activeInactiveTeamMatchTypeByTeamQuery(request, fastify);
+    return true;
+}
+
+const deleteTeamMatchTypeByTeamIdService = async (request, fastify) => {
+    const { teamMatchTypeId } = request.body;
+    const teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamMatchTypeId" = ${teamMatchTypeId}`);
+    if (!teamMatchType[0]) {
+        throw new Error(`TeamMatchType with team match type id ${teamMatchTypeId} not found`);
+    }
+
+    await deleteTeamMatchTypeByTeamQuery(request, fastify);
+    return true;
+}
+
 module.exports = {
     getTeamMatchTypeByTeamService,
     saveTeamMatchTypeByTeamService,
-    updateTeamMatchTypeDataByTeamService
+    updateTeamMatchTypeDataByTeamService,
+    activeInactiveTeamMatchDataTypeByTeamIdService,
+    deleteTeamMatchTypeByTeamIdService
 }

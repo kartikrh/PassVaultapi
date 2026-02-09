@@ -261,14 +261,14 @@ const activeInactiveTeamMatchTypeByTeamQuery = async (request, fastify) => {
 
 const deleteTeamMatchTypeByTeamQuery = async (request, fastify) => {
     try {
-        const { teamMatchTypeIds } = request.body;
+        const { teamMatchTypeId } = request.body;
 
         const query = `
             UPDATE "tblTeamMatchType" SET
                 "wrIsDelete" = $1,
                 "wrDeletedBy" = $2,
                 "wrDeletedAt" = $3
-            WHERE "wrTeamMatchTypeId" = ANY($4);
+            WHERE "wrTeamMatchTypeId" = $4;
         `;
 
         const result = await fastify.db.query(
@@ -279,7 +279,7 @@ const deleteTeamMatchTypeByTeamQuery = async (request, fastify) => {
                     true,
                     request?.userTokenInfo?.WrUserId ?? -5,
                     new Date(),
-                    teamMatchTypeIds
+                    teamMatchTypeId
                 ]
             }
         );

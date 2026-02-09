@@ -1,4 +1,4 @@
-const { getTeamMatchTypeByTeamService, saveTeamMatchTypeByTeamService, updateTeamMatchTypeDataByTeamService } = require("../../../../services/teamMatchType");
+const { getTeamMatchTypeByTeamService, saveTeamMatchTypeByTeamService, updateTeamMatchTypeDataByTeamService, activeInactiveTeamMatchDataTypeByTeamIdService, deleteTeamMatchTypeByTeamIdService } = require("../../../../services/teamMatchType");
 const { success, error, ERROR_CODES } = require("../../../../utilities");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -34,8 +34,30 @@ const updateTeamMatchDataTypeByTeamId = async (request, reply, fastify) => {
   }
 };
 
+const activeInactiveTeamMatchDataTypeByTeamId = async (request, reply, fastify) => {
+  try {
+    const result = await activeInactiveTeamMatchDataTypeByTeamIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/activeInactiveTeamMatchDataTypeByTeamId", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const deleteTeamMatchTypeByTeamId = async (request, reply, fastify) => {
+  try {
+    const result = await deleteTeamMatchTypeByTeamIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/deleteTeamMatchTypeByTeamId", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 module.exports = {
     getTeamMatchTypeByTeamId,
     saveTeamMatchTypeByTeamId,
-    updateTeamMatchDataTypeByTeamId
+    updateTeamMatchDataTypeByTeamId,
+    activeInactiveTeamMatchDataTypeByTeamId,
+    deleteTeamMatchTypeByTeamId
 }
