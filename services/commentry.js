@@ -23891,9 +23891,9 @@ const matchImportService = async (data, fastify, request = null) => {
             id: checkPitchDetails?.id
           };
           const updatePitch = await updatePitchConditionQuery(pitchConditionData, fastify, request);
-          const index = global.tblPitchConditions.findIndex(item => item?.commentaryId === request.body.commentaryId);
+          const index = global.tblPitchConditions.findIndex(item => item?.commentaryId === upsertedCommentaryId);
           if (index !== -1) {
-            global.tblPitchConditions[index] = updatePitch[0]
+            global.tblPitchConditions[index] = updatePitch[0];
           } else {
             global.tblPitchConditions.push(updatePitch[0]);
           }
