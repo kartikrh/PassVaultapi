@@ -24,7 +24,7 @@ const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
 const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive, matchStatusEntity, error, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, parseUmpires, ScoringTypes, RefType, lowerEntityMatchTypesEnums, EntityCommentaryStatus } = require("../utilities");
 const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryPlayers, updateCommentaryPlayerById, isCountInPOintCommentaryChangeQuery, updateCommentaryDateByCommentaryIdQuery, updateCommentaryQuery, insertCommentaryTeamQuery, deleteInningWiseCommentaryPlayersQuery } = require("../repository/TableCommentary")
-const { deleteTournamentTeamPlayersByCompIdQuery, insertTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
+const { deleteTournamentTeamPlayersByCompIdQuery, insertTournamentTeamPlayersQuery, deletePlayersByTeamAndPlayerIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
 const { nullTeamtpIds, autoUpdateCommentaryDataStatus } = require("../utilities/entityConst");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
@@ -1338,6 +1338,13 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
   if (teamSquad.length > 0) {
     const commentaryTeamPlayers = commentaryPlayers.filter(cp => cp.teamId === team.teamId && cp.currentInnings === i);
     const newTeamSquadTpIds = teamSquad.map(tas => Number(tas.player_id));
+    const teamPlayers = await getTeamPlayersByTeamMatchTypeIdQuery({
+      ...request,
+      body: {
+        teamId: team.teamId,
+        matchTypeId: -1
+      }
+    }, fastify);
 
     for (const pId of newTeamSquadTpIds) {
       const exists = commentaryTeamPlayers.find(ctp => ctp.tpId === pId);
@@ -1349,13 +1356,6 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
             player = await upsertPlayerOnImportService(esPlayer, entitySocketData, checkCompetition.isMen, fastify, request);
           }
         }
-        const teamPlayers = await getTeamPlayersByTeamMatchTypeIdQuery({
-          ...request,
-          body: {
-            teamId: team.teamId,
-            matchTypeId: -1
-          }
-        }, fastify);
         let teamPlayer = teamPlayers.find(tp => tp.refPlayerId === player.playerId || tp.tpId === player.tpId);
         if (!teamPlayer) {
           teamPlayer = await insertTeamPlayerWithHomeTeamQuery({
@@ -1446,7 +1446,14 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
         playerIds: removeCommentaryPlayerIds,
         currentInnings: i
       }, request, fastify);
-      global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(tcp => tcp.commentaryId === checkCommentary?.commentaryId && tcp.teamId === team.teamId && tcp.currentInnings === i && removeCommentaryPlayerIds.includes(tcp.playerId));
+      global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(tcp => !(tcp.commentaryId === checkCommentary?.commentaryId && tcp.teamId === team.teamId && tcp.currentInnings === i && removeCommentaryPlayerIds.includes(tcp.playerId)));
+
+      await deletePlayersByTeamAndPlayerIdQuery({
+        competitionId: checkCompetition.competitionId,
+        teamId: team.teamId,
+        playerIds: removeCommentaryPlayerIds
+      }, request, fastify);
+      global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(ttp => !(ttp.competitionId === checkCompetition.competitionId && ttp.teamId === team.teamId && removeCommentaryPlayerIds.includes(ttp.playerId)));
     }
   } else {
     const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
@@ -2266,5 +2273,6 @@ module.exports = {
   insertCommentaryPlayersByTeam,
   changeIsCompetitionStatisticsCalculationStatusService,
   getAllCompetitionsService,
-  esGetMatchNumberFromCompetitionMatchAPI
+  esGetMatchNumberFromCompetitionMatchAPI,
+  upsertCommentaryTeamsAndPlayersService
 };
