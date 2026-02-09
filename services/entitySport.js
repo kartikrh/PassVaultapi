@@ -35,6 +35,8 @@ const commentary = require("../routes/admin/commentary")
 const { upActivePartQuery } = require("../repository/entitySportCom")
 const { assignAwardService } = require("./commentaryAward")
 const { insertAutoImportDataQuery, updateAutoImportDataQuery } = require("../repository/TableAutoImportData");
+const { insertTeamPlayersByTeamId, insertCommentaryPlayersByTeam } = require("./competition");
+const { insertTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers")
 
 
 const saveTeamsService = async (request , fastify)=>{
@@ -1260,8 +1262,91 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     ltSetOrder = existingBatters.length
       ? Math.max(...existingBatters?.map(i => i.batterOrder))
       : 0;
+    const isMen = global.tblCompetitions.find(item => item.competitionId == comDetails?.competitionId)?.isMen
     if (response.live?.batsmen) {
       for (let p of response.live.batsmen) {
+        if (!playerTpIdObj[p.batsman_id]) {
+          let teamTpId = response.live?.live_inning?.batting_team_id
+          const teamId = global.tblTeams.find(item => item.tpId == teamTpId)?.teamId
+          await insertTeamPlayersByTeamId(teamId, teamTpId, isMen, request, fastify);
+          let player = global.tblPlayers.find(item => item.tpId == p.batsman_id);
+          const tournamentTeamsPlayer = global.tblTournamentTeamPlayers.find(tttp => 
+            tttp.competitionId == comDetails.competitionId &&
+            tttp.teamId == teamId &&
+            (tttp.playerId == player?.playerId || tttp.tpId == p.batsman_id)
+          );
+          if (!tournamentTeamsPlayer) {
+            const tournamentPlayer = await insertTournamentTeamPlayersQuery({
+              competitionId: comDetails.competitionId,
+              teamId: teamId,
+              playerId: player?.playerId,
+              playerName: player?.playerName,
+              userId: request?.userTokenInfo?.WrUserId ?? -2,
+              tpId: player?.tpId || p.batsman_id
+            },
+              request,
+              fastify
+            );
+            global.tblTournamentTeamPlayers.push(tournamentPlayer[0]);
+          }
+          const playerRes = response?.players.filter(item => item.pid == p.batsman_id);
+          let playerData = {
+            player_id: p.batsman_id,
+            playing11: true
+          }
+          if (playerRes.length > 0) {
+            await insertCommentaryPlayersByTeam(
+              comDetails?.currentInnings,
+              comDetails?.commentaryId,
+              teamId,
+              [playerData],
+              playerRes,
+              comDetails?.matchTypeId,
+              isMen,
+              fastify,
+              request
+            );
+            const commPlayers = global.tblCommentaryPlayers.find(item => 
+              item.commentaryId == comDetails.commentaryId &&
+              item.currentInnings == comDetails.currentInnings &&
+              item.tpId == p.batsman_id
+            )
+            if (commPlayers) {
+              playerTpIdObj[p.batsman_id] = commPlayers
+            }
+          } else {
+            let url = `/player/${p.batsman_id}/info`;
+            const entitySportPlayer = await callEntitySportAPI(url, request, fastify);
+            let entitySportPlayerResponse = entitySportPlayer?.data?.result;
+            entitySportPlayerResponse = entitySportPlayerResponse?.player;
+            if (!entitySportPlayerResponse) {
+              errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/entitySport.js/handleComArr - entitySportPlayerResponse", {
+                ...request,
+                originalUrl: url
+              }, entitySportPlayer?.data);
+            } else {
+              await insertCommentaryPlayersByTeam(
+                comDetails?.currentInnings,
+                comDetails?.commentaryId,
+                teamId,
+                [playerData],
+                [entitySportPlayerResponse],
+                comDetails?.matchTypeId,
+                isMen,
+                fastify,
+                request
+              );
+              const commPlayers = global.tblCommentaryPlayers.find(item =>
+                item.commentaryId == comDetails.commentaryId &&
+                item.currentInnings == comDetails.currentInnings &&
+                item.tpId == p.batsman_id
+              )
+              if (commPlayers) {
+                playerTpIdObj[p.batsman_id] = commPlayers
+              }
+            }
+          }
+        }
         let comP = playerTpIdObj[p.batsman_id];
         let batterData = response?.scorecard?.innings
           ?.find(i => i?.number === response?.live?.live_inning_number)?.batsmen
@@ -1294,6 +1379,91 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             isInPlayingEleven: true,
           };
           currentPlayers.push(comP.commentaryPlayerId);
+        }
+      }
+    }
+    if (response.live?.bowlers) {
+      for (let p of response.live.bowlers) {
+        if (!playerTpIdObj[p.bowler_id]) {
+          let teamTpId = response.live?.live_inning?.fielding_team_id
+          const teamId = global.tblTeams.find(item => item.tpId == teamTpId)?.teamId
+          await insertTeamPlayersByTeamId(teamId, teamTpId, isMen, request, fastify);
+          let playerData = {
+            player_id: p.bowler_id,
+            playing11: true
+          }
+          let player = global.tblPlayers.find(item => item.tpId == p.bowler_id);
+          const tournamentTeamsPlayer = global.tblTournamentTeamPlayers.find(tttp =>
+            tttp.competitionId == comDetails.competitionId &&
+            tttp.teamId == teamId &&
+            (tttp.playerId == player?.playerId || tttp.tpId == p.bowler_id)
+          );
+          if (!tournamentTeamsPlayer) {
+            const tournamentPlayer = await insertTournamentTeamPlayersQuery({
+              competitionId: comDetails.competitionId,
+              teamId: teamId,
+              playerId: player?.playerId,
+              playerName: player?.playerName,
+              userId: request?.userTokenInfo?.WrUserId ?? -2,
+              tpId: player?.tpId || p.bowler_id
+            },
+              request,
+              fastify
+            );
+            global.tblTournamentTeamPlayers.push(tournamentPlayer[0]);
+          }
+          const playerRes = response?.players.filter(item => item.pid == p.bowler_id);
+          if (playerRes.length > 0) {
+            await insertCommentaryPlayersByTeam(
+              comDetails?.currentInnings,
+              comDetails?.commentaryId,
+              teamId,
+              [playerData],
+              playerRes,
+              comDetails?.matchTypeId,
+              isMen,
+              fastify,
+              request
+            );
+            const commPlayers = global.tblCommentaryPlayers.find(item =>
+              item.commentaryId == comDetails.commentaryId &&
+              item.currentInnings == comDetails.currentInnings &&
+              item.tpId == p.bowler_id
+            )
+            if (commPlayers) {
+              playerTpIdObj[p.bowler_id] = commPlayers
+            }
+          } else {
+            let url = `/player/${p.bowler_id}/info`;
+            const entitySportPlayer = await callEntitySportAPI(url, request, fastify);
+            let entitySportPlayerResponse = entitySportPlayer?.data?.result;
+            if (!entitySportPlayerResponse) {
+              errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/entitySport.js/handleComArr - entitySportPlayerResponse", {
+                ...request,
+                originalUrl: url
+              }, entitySportPlayer?.data);
+            } else {
+              await insertCommentaryPlayersByTeam(
+                comDetails?.currentInnings,
+                comDetails?.commentaryId,
+                teamId,
+                [playerData],
+                [entitySportPlayerResponse],
+                comDetails?.matchTypeId,
+                isMen,
+                fastify,
+                request
+              );
+              const commPlayers = global.tblCommentaryPlayers.find(item =>
+                item.commentaryId == comDetails.commentaryId &&
+                item.currentInnings == comDetails.currentInnings &&
+                item.tpId == p.bowler_id
+              )
+              if (commPlayers) {
+                playerTpIdObj[p.bowler_id] = commPlayers
+              }
+            }
+          }
         }
       }
     }
@@ -3699,23 +3869,20 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
     }
 
     let inningWiseRes = []
+    let partData = [];
     let upComDetails = {};
-    const matchInfoAPI = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getMatchDataByIdFromEntity);
-    if (!matchInfoAPI.data) {
+    let url = `/match/${matchId}/info`;
+    const infoRes = await callEntitySportAPI(url, request, fastify);
+    let matchInfoData = infoRes?.data?.result;
+    if (!matchInfoData) {
       errorLogger(
         fastify,
-        matchInfoAPI.message,
+        "Invalid response from Entit-Sport API", "/services/entitySport.js/storeInningWiseEntityDataService - entitySportMatchInfoResponse",
         "/services/entitySport.js/storeInningWiseEntityDataService",
         request
       );
       throw new Error("Match Info API not found");
     }
-    const infoRes = await callEntitySportAPI(
-      matchInfoAPI.data.replace("{mid}", matchId),
-      request,
-      fastify
-    );
-    let matchInfoData = infoRes?.data?.result;
     let liveInningNumber = matchInfoData?.match_info?.latest_inning_number ||
       matchInfoData?.live?.live_inning_number;
     const gameState = matchInfoData?.match_info?.game_state ?? matchInfoData?.live?.game_state;
@@ -3855,24 +4022,20 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
     }
     if (!liveInningNumber || liveInningNumber == 0) return;
 
-    const checkEntitySportAPIEndpoint = getInningWiseDataFromEntity(APIEndpointModuleType.getCommentaryInningDataFromEntity);
-    if (!checkEntitySportAPIEndpoint.data) {
-      errorLogger(
-        fastify,
-        checkEntitySportAPIEndpoint.message,
-        "/services/entitySport.js/storeInningWiseEntityDataService",
-        request
-      );
-      throw new Error("Inning wise data API not found");
-    }
     for (let i = 1; i <= liveInningNumber; i++) {
-      const entitySportMatch = await callEntitySportAPI(
-        checkEntitySportAPIEndpoint.data.replace("{mid}", matchId).replace("{innNo}", i),
-        request,
-        fastify
-      );
-
+      let url = `/match/${matchId}/innings/${i}/commentary`;
+      const entitySportMatch = await callEntitySportAPI(url, request, fastify);
       let entitySportMatchResponse = entitySportMatch?.data?.result;
+      if (!entitySportMatchResponse) {
+        errorLogger(
+          fastify,
+          "Invalid response from Entit-Sport API", "/services/entitySport.js/storeInningWiseEntityDataService - entitySportInningDataResponse",
+          "/services/entitySport.js/storeInningWiseEntityDataService",
+          request
+        );
+        throw new Error("Inning wise data API not found");
+      }
+
       if (!entitySportMatchResponse?.commentaries?.length) continue;
       const commentaries = entitySportMatchResponse?.commentaries;
 
@@ -3929,6 +4092,96 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
       ltSetOrder = existingBatters.length
         ? Math.max(...existingBatters?.map(i => i.batterOrder))
         : 0;
+
+      // partnership create and update
+      let statsURL = `/match/${matchId}/statistics`;
+      const entitySportMatchStats = await callEntitySportAPI(statsURL, request, fastify);
+      let entitySportMatchStatsResponse = entitySportMatchStats?.data?.result;
+      if (!entitySportMatchStatsResponse) {
+        errorLogger(
+          fastify,
+          "Invalid response from Entit-Sport API", "/services/entitySport.js/storeInningWiseEntityDataService - entitySportMatchStatsResponse",
+          "/services/entitySport.js/storeInningWiseEntityDataService",
+          request
+        );
+        throw new Error("Match statistics data API not found");
+      }
+
+      const statsData = entitySportMatchStatsResponse?.innings.find(item => 
+        item.inning_id == inningData?.iid
+      );
+      const partnershpData = statsData?.statistics?.partnership
+      if (partnershpData.length > 0) {
+        for (const part of partnershpData) {
+          let [b1, b2] = part?.batsmen;
+          let batter1 = b1?.batsman_id;
+          let batter2 = b2?.batsman_id;
+          let liveInningData = matchInfoData?.live?.live_inning;
+          let activePartnership =
+            liveInningData?.iid === inningData?.iid &&
+            [batter1, batter2].every(id =>
+              liveInningData?.current_partnership?.batsmen?.some(
+                item => item.batsman_id === id
+              )
+            );
+
+          let partExist = global.tblCommentaryPartnership.find((i) =>
+            i.commentaryId == comDetails.commentaryId &&
+            i.currentInnings == comDetails.currentInnings &&
+            (
+              (i.batter1Id == playerTpIdObj[batter1].commentaryPlayerId && i.batter2Id == playerTpIdObj[batter2].commentaryPlayerId) ||
+              (i.batter1Id == playerTpIdObj[batter2].commentaryPlayerId && i.batter2Id == playerTpIdObj[batter1].commentaryPlayerId)
+            )
+          );
+          if (partExist) {
+            let comPlayerId1 = global.tblCommentaryPlayers.find((i) => i.commentaryPlayerId == partExist.batter1Id)
+            let comPlayerId2 = global.tblCommentaryPlayers.find((i) => i.commentaryPlayerId == partExist.batter2Id)
+            let cp1 = part.batsmen.find((i) => i.batsman_id == comPlayerId1.tpId)
+            let cp2 = part.batsmen.find((i) => i.batsman_id == comPlayerId2.tpId)
+            let partnership = {
+              ...partExist,
+              totalRuns: part.runs,
+              totalBalls: part.balls_faced,
+              batter1Runs: cp1.runs,
+              batter2Runs: cp2.runs,
+              batter1Balls: cp1.balls_faced,
+              batter2Balls: cp2.balls_faced,
+              isActive: activePartnership,
+            }
+            partData.push({
+              ...partnership,
+              type: "update"
+            })
+          } else {
+            let cp1 = playerTpIdObj[part.batsmen[0].batsman_id]
+            let cp2 = playerTpIdObj[part.batsmen[1].batsman_id]
+            let newPart = genEtPartnership({
+              currentPartnership: {
+                batter1Id: cp1.commentaryPlayerId,
+                batter1Name: cp1.playerName,
+                batter2Id: cp2.commentaryPlayerId,
+                batter2Name: cp2.playerName,
+                totalRuns: part.runs,
+                totalBalls: part.balls_faced,
+                commentaryBallByBallId: 0,
+                batter1Runs: part.batsmen[0].runs,
+                batter2Runs: part.batsmen[1].runs,
+                batter1Balls: part.batsmen[0].balls_faced,
+                batter2Balls: part.batsmen[1].balls_faced,
+                order: part?.order,
+                isActive: activePartnership,
+              },
+              commentaryDetails: comDetails,
+              updateBattingTeam: battingTeam
+            })
+            partData.push({
+              ...newPart,
+              type: "create"
+            })
+          }
+        }
+      }
+
       if (batsmen.length > 0) {
         for (let p of batsmen) {
           let comP = playerTpIdObj[p.batsman_id];
@@ -4551,6 +4804,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
         commentaryBallByBall: ballbyball,
         commentaryOvers: overArr,
         commentaryTeams: upTeams,
+        commentaryPartnership: partData,
         commentaryWicket: wickets
       }, fastify, request)
     }
