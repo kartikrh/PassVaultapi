@@ -429,8 +429,12 @@ const getTeamPlayersByTeamMatchTypeIdQuery = async (request, fastify) => {
           ttp."wrTeamId" AS "teamId",
           tt."wrTeamName" AS "teamName",
           ttp."wrRefPlayerId" AS "refPlayerId",
+          tp."wrTpId" AS "tpId",
           tp."wrPlayerName" AS "playerName",
-          ttp."wrMatchTypeId" AS "matchTypeId"
+          ttp."wrMatchTypeId" AS "matchTypeId",
+          ttp."wrPlayerOrder" AS "playerOrder",
+          ttp."wrJerseyPlayerImage" AS "jerseyPlayerImage",
+          ttp."wrJerseyPlayerImagePath" AS "jerseyPlayerImagePath"
         FROM "tblTeamPlayers" ttp
         LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = ttp."wrTeamId"
         LEFT JOIN "tblPlayers" tp ON tp."wrPlayerId" = ttp."wrRefPlayerId"
@@ -493,6 +497,93 @@ const updateTeamPlayerMatchTypeIdQuery = async (request, fastify) => {
   }
 }
 
+const insertTeamPlayerWithHomeTeamQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      WITH display_order AS (
+        SELECT COALESCE(MAX("wrPlayerOrder"), 0) AS "playerOrder"
+        FROM "tblTeamPlayers"
+        WHERE "wrTeamId" = $1
+      ),
+      insert_team_player AS (
+        INSERT INTO "tblTeamPlayers" (
+          "wrTeamId",
+          "wrRefPlayerId",
+          "wrPlayerOrder",
+          "wrCreatedDate",
+          "wrCreatedBy",
+          "wrTpId",
+          "wrHomeTeam",
+          "wrJerseyPlayerImage",
+          "wrJerseyPlayerImagePath",
+          "wrMatchTypeId"
+        )
+        VALUES (
+          $1,
+          $2,
+          (SELECT "playerOrder" FROM display_order) + 1,
+          $3,
+          $4,
+          $5,
+          CASE
+            WHEN EXISTS (
+              SELECT 1
+              FROM "tblTeamPlayers"
+              WHERE "wrRefPlayerId" = $2
+                AND "wrHomeTeam" = true AND "wrIsDeleted" = false
+            )
+            THEN false
+            ELSE true
+          END,
+          $6,
+          $7,
+          $8
+        )
+        RETURNING *
+      )
+      SELECT
+        ttp."wrTeamPlayerId" AS "teamPlayerId",
+        ttp."wrTeamId" AS "teamId",
+        tt."wrTeamName" AS "teamName",
+        ttp."wrRefPlayerId" AS "refPlayerId",
+        tp."wrTpId" AS "tpId",
+        tp."wrPlayerName" AS "playerName",
+        ttp."wrMatchTypeId" AS "matchTypeId",
+        ttp."wrPlayerOrder" AS "playerOrder"
+      FROM insert_team_player ttp
+      LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = ttp."wrTeamId"
+      LEFT JOIN "tblPlayers" tp ON tp."wrPlayerId" = ttp."wrRefPlayerId"
+      LEFT JOIN "tblMatchTypes" tmt ON tmt."wrMatchTypeId" = ttp."wrMatchTypeId"
+      `,
+      {
+        bind: [
+          data.teamId,
+          data.refPlayerId,
+          new Date(),
+          data.userId,
+          data.tpId ?? null,
+          data?.jerseyPlayerImage ?? null,
+          data?.jerseyPlayerImagePath ?? null,
+          data?.matchTypeId ?? -1
+        ],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+
+    return result[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/insertTeamPlayerWithHomeTeamQuery",
+      request,
+      data
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   insertTeamPlayerQuery,
   getAllTeamPlayersByTeamIdAndPlayerIdQuery,
@@ -508,5 +599,6 @@ module.exports = {
   AllTeamPlayersNullImageQuery,
   getHomeTeamPlayerQuery,
   getTeamPlayersByTeamMatchTypeIdQuery,
-  updateTeamPlayerMatchTypeIdQuery
+  updateTeamPlayerMatchTypeIdQuery,
+  insertTeamPlayerWithHomeTeamQuery
 };

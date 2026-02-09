@@ -229,7 +229,7 @@ const { insertVenueQuery, updateVenueQuery } = require("../repository/TableVenue
 const { insertCompetitionQuery } = require("../repository/TableCompitition");
 const { getImageFromUrl } = require("../utilities/Images");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
-const { insertTeamPlayersByTeamId, insertCommentaryPlayersByTeam, esGetMatchNumberFromCompetitionMatchAPI } = require("./competition");
+const { insertTeamPlayersByTeamId, insertCommentaryPlayersByTeam, esGetMatchNumberFromCompetitionMatchAPI, upsertCommentaryTeamsAndPlayersService } = require("./competition");
 const cron = require('node-cron');
 const { insertAutoImportDataService } = require("./autoImportData");
 const { insertTournamentTeamPlayersQuery, deleteTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
@@ -23692,7 +23692,6 @@ const matchImportService = async (data, fastify, request = null) => {
     }, eventType, request, fastify);
   }
 
-  const isMen = !teamAData?.teamName?.toLowerCase().includes("women");
   let newCommentaryImport = false
   let checkCommentary = null;
   if (teamAData && teamBData) {
@@ -23911,111 +23910,23 @@ const matchImportService = async (data, fastify, request = null) => {
         }
       }
 
-      let commentaryTeamPlayers = [];
+      const entitySocketData = global.tblEntitySockets[0];
       const noOfInning = matchType.noOfIningsPerSide;
       const maxOver = matchType.maxOversInFirstInings;
       const matchPlaying11Squad = entitySportMatchResponse?.["match-playing11"];
+
       let teamASquad = matchPlaying11Squad?.teama?.squads?.length > 0 ? matchPlaying11Squad?.teama?.squads : [];
       let teamBSquad = matchPlaying11Squad?.teamb?.squads?.length > 0 ? matchPlaying11Squad?.teamb?.squads : [];
 
-      if (teamASquad && teamASquad.length > 0) {
-        commentaryTeamPlayers.push({
-          commentaryId: upsertedCommentaryId,
-          teamId: teamAData.teamId,
-          players: teamASquad.map(item => Number(item.player_id))
-        });
-      }
-
-      if (teamASquad.length === 0) {
-        teamASquad = await getAllPlayersByTeamIdQuery(teamAData.teamId, fastify, request);
-        teamASquad = teamASquad.filter(item => item.tpId != null);
-        if (teamASquad.length === 0) {
-          teamASquad = await insertTeamPlayersByTeamId(teamAData.teamId, teamAData.tpId, checkCompetition?.isMen, request, fastify);
-          teamASquad = teamASquad.filter(item => item.tpId != null);
-        }
-        teamASquad = teamASquad?.map(item => ({
-          player_id: `${item.tpId}`,
-          playing11: `${true}`
-        }))
-      }
-
-      if (teamBSquad && teamBSquad.length > 0) {
-        commentaryTeamPlayers.push({
-          commentaryId: upsertedCommentaryId,
-          teamId: teamBData.teamId,
-          players: teamBSquad.map(item => Number(item.player_id))
-        });
-      }
-
-      if (teamBSquad.length === 0) {
-        teamBSquad = await getAllPlayersByTeamIdQuery(teamBData.teamId, fastify, request);
-        teamBSquad = teamBSquad.filter(item => item.tpId != null);
-        if (teamBSquad.length === 0) {
-          teamBSquad = await insertTeamPlayersByTeamId(teamBData.teamId, teamBData.tpId, checkCompetition?.isMen, request, fastify);
-          teamBSquad = teamBSquad.filter(item => item.tpId != null);
-        }
-        teamBSquad = teamBSquad?.map(item => ({
-          player_id: `${item.tpId}`,
-          playing11: `${true}`
-        }))
-      }
-
+      const tournamentTeamsPlayers = global.tblTournamentTeamPlayers.filter(tttp => tttp.competitionId === checkCompetition.competitionId);
+      const commentaryTeams = global.tblCommentaryTeams.filter(tct => tct.commentaryId === checkCommentary.commentaryId && [teamAData.teamId, teamBData.teamId].includes(tct.teamId));
+      const commentaryPlayers = global.tblCommentaryPlayers.filter(item => item.commentaryId === checkCommentary.commentaryId && [teamAData.teamId, teamBData.teamId].includes(item.teamId));
       for (let i = 1; i <= noOfInning; i++) {
-        let commentaryTeam = global.tblCommentaryTeams.findIndex(
-          (item) =>
-            item.commentaryId === upsertedCommentaryId &&
-            item.currentInnings === i
-        );
-        if (commentaryTeam === -1) {
-          await insertCommentaryTeams({
-            ...request,
-            body: {
-              commentaryId: upsertedCommentaryId,
-              team1Id: teamAData?.teamId,
-              team2Id: teamBData?.teamId,
-              currentInnings: i,
-              teamMaxOver: maxOver,
-              team1TpId: teamAData?.tpId,
-              team2TpId: teamBData?.tpId,
-              drsCount: checkCompetition?.drsCount || 2
-            },
-          }, fastify);
-          const teamACommentaryTeam = await getCommentaryTeamsQuery({
-            commentaryId: upsertedCommentaryId,
-            teamId: teamAData?.teamId,
-            currentInnings: i
-          }, fastify, request);
-          const teamBCommentaryTeam = await getCommentaryTeamsQuery({
-            commentaryId: upsertedCommentaryId,
-            teamId: teamBData?.teamId,
-            currentInnings: i
-          }, fastify, request);
-          global.tblCommentaryTeams.push(teamACommentaryTeam, teamBCommentaryTeam);
-        }
+        // teamA
+        await upsertCommentaryTeamsAndPlayersService(checkCompetition, tournamentTeamsPlayers, checkCommentary, maxOver, commentaryTeams, teamAData, i, commentaryPlayers, teamASquad, entitySportMatchResponse?.players, entitySocketData, request, fastify);
 
-        await insertCommentaryPlayersByTeam(i, upsertedCommentaryId, teamAData.teamId, teamASquad, entitySportMatchResponse?.players, matchType?.matchTypeId, isMen, fastify, request);
-        await insertCommentaryPlayersByTeam(i, upsertedCommentaryId, teamBData.teamId, teamBSquad, entitySportMatchResponse?.players, matchType?.matchTypeId, isMen, fastify, request);
-      }
-
-      const upsertedTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(item => item.competitionId === checkCompetition?.competitionId);
-      for (const teamPlayers of commentaryTeamPlayers) {
-        const { commentaryId, teamId, players } = teamPlayers;
-        const removedCommentaryPlayers = global.tblCommentaryPlayers.filter(item => item.commentaryId === commentaryId && item.teamId === teamId && !players.includes(item.tpId));
-        if (removedCommentaryPlayers && removedCommentaryPlayers.length > 0) {
-          const playerIds = removedCommentaryPlayers?.map(item => item.playerId);
-          await deleteCommentaryPlayersByPlayerId({
-            playerIds,
-            commentaryId
-          }, request, fastify);
-          global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(item => !(item.commentaryId === commentaryId && item.teamId === teamId && playerIds.includes(item.playerId)));
-        }
-
-        const removedTournamentTeamPlayers = upsertedTournamentTeamPlayers.filter(item => item.teamId === teamId && !players.includes(item.tpId));
-        if (removedTournamentTeamPlayers && removedTournamentTeamPlayers.length > 0) {
-          const playerIds = removedTournamentTeamPlayers?.map(item => item.id);
-          await deleteTournamentTeamPlayersQuery(playerIds, request, fastify);
-          global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(item => !playerIds.includes(item.id));
-        }
+        // TeamB
+        await upsertCommentaryTeamsAndPlayersService(checkCompetition, tournamentTeamsPlayers, checkCommentary, maxOver, commentaryTeams, teamBData, i, commentaryPlayers, teamBSquad, entitySportMatchResponse?.players, entitySocketData, request, fastify);
       }
       if (newCommentaryImport && matchInfoResponse?.game_state == EntityCommentaryStatus.INPROGRESS) {
         const { storeInningWiseEntityDataService } = require("./entitySport")

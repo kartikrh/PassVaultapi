@@ -9382,6 +9382,129 @@ const getAllCommentaryByCompetitionIdForClientQuery = async (request, fastify) =
   }
 };
 
+const insertCommentaryTeamQuery = async (request, fastify) => {
+  try {
+    const { commentaryId, teamId, teamCaptain, teamKipper, teamShortName, teamName, currentInnings, teamColor, backgroundColor, teamMaxOver, drsCount, subInning, teamTpId, teamGroupId } = request.body;
+    const result = await fastify.db.query(
+      `
+        WITH insert_data AS (
+            INSERT INTO "tblCommentaryTeams"
+                ("wrCommentaryId", "wrTeamId", "wrTeamCaptain", "wrTeamKipper", "wrShortName",
+                "wrTeamName", "wrCurrentInnings", "wrIsBattingComplete", "wrTeamColor",
+                "wrBackgroundColor", "wrTeamMaxOver", "wrDrsCount", "wrSubInning", "wrTpId",
+                "wrGroupId")
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+            RETURNING *
+        )
+        SELECT
+          "wrCommentaryTeamId" as "commentaryTeamId",
+          "wrCommentaryId" AS "commentaryId",
+          "wrTeamId" AS "teamId",
+          "wrShortName" AS "shortName",
+          "wrTeamName" AS "teamName",
+          "wrTeamCaptain" AS "teamCaptain",	
+          "wrTeamKipper" AS "teamKipper",
+          "wrTeamScore" AS "teamScore",
+          "wrTeamOver" AS "teamOver",
+          "wrTeamWicket" AS "teamWicket",
+          COALESCE(CAST("wrCrr" AS FLOAT), 0) AS "crr",
+          COALESCE(CAST("wrRrr" AS FLOAT), 0) AS "rrr",
+          "wrTeamStatus" AS "teamStatus",
+          "wrTeamTrialRuns" AS "teamTrialRuns",
+          "wrTeamLeadRuns" AS "teamLeadRuns",
+          "wrTeamWideRuns" AS "teamWideRuns",
+          "wrTeamByRuns" AS "teamByRuns",
+          "wrTeamLegByRuns" AS "teamLegByRuns",
+          "wrTeamNoBallRuns" AS "teamNoBallRuns",
+          "wrTeamPenaltyRuns" AS "teamPenaltyRuns",
+          "wrIsWin" AS "isWin",
+          "wrTeamBattingOrder" AS "teamBattingOrder",
+          "wrCurrentInnings" AS "currentInnings", 
+          "wrIsBattingComplete" AS "isBattingComplete",
+          "wrCommentaryPlayerTeamCaptain" AS "commentaryPlayerTeamCaptain",
+          "wrCommentaryPlayerTeamKipper" AS "commentaryPlayerTeamKipper",
+          "wrTeamColor" AS "teamColor",
+          "wrBackgroundColor" AS "backgroundColor",
+          "wrTeamMaxOver" AS "teamMaxOver",
+          "wrIsSuperOver" AS "isSuperOver",
+          "wrTeamPredictionPercentage" AS "teamPredictionPercentage",
+          "wrDrsCount" AS "drsCount",
+          "wrNoOfAttempt" AS "drsAttempt",
+          "wrGroupId" AS "groupId",
+          "wrNoOfFail" AS "drsFail",
+          "wrSubInning" AS "subInning",
+          "wrTpId" AS "tpId"
+        FROM "insert_data";
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          commentaryId,
+          teamId,
+          teamCaptain ?? null,
+          teamKipper ?? null,
+          teamShortName ?? null,
+          teamName ?? null,
+          currentInnings ?? null,
+          false,
+          teamColor ?? null,
+          backgroundColor ?? null,
+          teamMaxOver ?? null,
+          drsCount ?? 0,
+          subInning ?? null,
+          teamTpId ?? null,
+          teamGroupId ?? null
+        ]
+      }
+    );
+    return result?.[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/insertCommentaryTeamQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const deleteInningWiseCommentaryPlayersQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+      UPDATE "tblCommentaryPlayers" SET
+        "wrIsDelete" = $1,
+        "wrDeletedBy" = $2,
+        "wrDeletedAt" = now()
+      WHERE "wrCommentaryId" = $3
+      AND "wrTeamId" = $4
+      AND "wrPlayerId" = ANY($5)
+      AND "wrCurrentInnings" = $6;
+    `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          true,
+          request.userTokenInfo.WrUserId,
+          data.commentaryId,
+          data.teamId,
+          data.playerIds,
+          data.currentInnings
+        ],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/deleteInningWiseCommentaryPlayersQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -9535,5 +9658,7 @@ module.exports = {
   getHeadToHeadCommentaryQuery,
   getCommentaryPlayerByIdsQuery,
   getCommentaryStatisticsQuery,
-  getAllCommentaryByCompetitionIdForClientQuery
+  getAllCommentaryByCompetitionIdForClientQuery,
+  insertCommentaryTeamQuery,
+  deleteInningWiseCommentaryPlayersQuery
 };

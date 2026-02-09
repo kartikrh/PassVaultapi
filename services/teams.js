@@ -5,6 +5,8 @@ const {
   getTeamPlayerByTeamIdQuery,
   updateTeamPlayerHomeTeamQuery,
   getHomeTeamPlayerQuery,
+  getTeamPlayersByTeamMatchTypeIdQuery,
+  insertTeamPlayerWithHomeTeamQuery,
 } = require("../repository/TableTeamPlayer");
 const {
   insertTeamQuery,
@@ -32,7 +34,7 @@ const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { insertAutoImportDataService } = require("./autoImportData");
 const { errorLogger } = require("../utilities/logger");
 const { upTeamNameInComQuery } = require("../repository/TableCommentary");
-const { playerImageChangeOnClientAPIService } = require("../services/player");
+const { playerImageChangeOnClientAPIService, upsertPlayerOnImportService } = require("../services/player");
 const allTeamsService = async () => {
   return global.tblTeams;
 };
@@ -1022,12 +1024,70 @@ const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
 
   const teamData = entitySportTeamPlayersResponse?.team;
   const isMen = teamData?.sex === "male";
-  const teamPlayerData = Object.values(entitySportTeamPlayersResponse?.players).flat()
   const entitySocketData = global.tblEntitySockets[0];
 
-  let checkTeam = global.tblTeams.find(item => item.tpId === teamData?.tid || item.teamName.toLowerCase() === teamData.title.replace(/'/g, "''").toLowerCase());
+  const checkTeam = await upsertTeamOnImportService(entitySportTeamPlayersResponse?.team, entitySocketData, eventType, fastify, request);
+
+  const teamPlayerData = Object.values(entitySportTeamPlayersResponse?.players).flat()
+  const upsertedPlayers = [];
+  const uniquePlayers = [...new Map(teamPlayerData.map(player => [player.pid, player])).values()];
+  for (const player of uniquePlayers) {
+    const checkPlayer = await upsertPlayerOnImportService(player, entitySocketData, isMen, fastify, request);
+    upsertedPlayers.push(checkPlayer);
+  }
+
+  const teamPlayers = await getTeamPlayersByTeamMatchTypeIdQuery({
+    ...request,
+    body: {
+      teamId: checkTeam.teamId,
+      matchTypeId: -1
+    }
+  }, fastify);
+
+  for (const player of upsertedPlayers) {
+    const teamPlayer = teamPlayers.find(tp => tp.refPlayerId === player.playerId || tp.tpId === player?.tpId);
+    if (!teamPlayer) {
+      const upsertedTeamPlayer = await insertTeamPlayerWithHomeTeamQuery(
+        {
+          teamId: checkTeam.teamId,
+          refPlayerId: player.playerId,
+          tpId: player?.tpId ?? null,
+          userId: request?.userTokenInfo?.WrUserId ?? -2,
+          jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage ?? null,
+          jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath ?? null,
+        },
+        fastify,
+        request
+      );
+
+      if (player?.image && checkTeam?.jersey && upsertedTeamPlayer?.teamPlayerId) {
+        try {
+          await mergeAndSaveImage({
+            playerImage: player.image,
+            jersey: checkTeam.jersey,
+            playerName: player.playerName,
+            teamName: checkTeam.teamName,
+            teamPlayerId: upsertedTeamPlayer?.teamPlayerId,
+            commentaryPlayerId: null,
+            commentaryId: null,
+          }, fastify);
+          if (upsertedTeamPlayer?.homeTeam == true) {
+            await playerImageChangeOnClientAPIService(player, fastify);
+          }
+        } catch (error) {
+
+        }
+      }
+    }
+  }
+
+  return checkTeam;
+}
+
+const upsertTeamOnImportService = async (esTeam, entitySocketData, eventType, fastify, request) => {
+  let checkTeam = global.tblTeams.find(item => item.tpId === esTeam?.tid || item.teamName.toLowerCase() === esTeam.title.replace(/'/g, "''").toLowerCase());
   if (!checkTeam) {
-    let imageUrl = teamData?.logo_url;
+    let imageUrl = esTeam?.logo_url;
     if (!imageUrl) {
       imageUrl = {
         fullPath: entitySocketData?.defaultTeamImage || null,
@@ -1040,29 +1100,29 @@ const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
       });
 
       if (getImageDataFromUrl && getImageDataFromUrl.fullPath) {
-        imageUrl = getImageDataFromUrl
+        imageUrl = getImageDataFromUrl;
       }
     }
 
-    const newTeamData = {
-      teamName: teamData?.title,
-      teamShortName: teamData?.abbr,
+    const teamData = {
+      teamName: esTeam?.title,
+      teamShortName: esTeam?.abbr,
       eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
       userId: -2,
-      tpId: teamData?.tid || null,
+      tpId: esTeam?.tid || null,
       image: imageUrl.fullPath,
       imagePath: imageUrl.imagePath,
       jersey: entitySocketData?.defaultJerseyImage || null,
       jerseyPath: entitySocketData?.defaultJerseyImagePath || null,
-      isMen
+      isMen: esTeam?.sex === "male"
     }
-    const insertTeam = await insertTeamQuery(newTeamData, fastify, request);
+    const insertTeam = await insertTeamQuery(teamData, fastify, request);
     global.tblTeams.push(insertTeam);
     checkTeam = insertTeam;
-  } else if (checkTeam?.tpId === null || !checkTeam?.tpId || checkTeam?.tpId !== teamData?.tid) {
+  } else if (checkTeam?.tpId === null || !checkTeam?.tpId || checkTeam?.tpId !== esTeam?.tid) {
     const data = {
       userId: -2,
-      tpId: teamData?.tid || null,
+      tpId: esTeam?.tid || null,
       teamId: checkTeam.teamId
     }
     const updateTeam = await updateExchangeTeamQuery(data, fastify, request);
@@ -1072,129 +1132,6 @@ const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
     }
     checkTeam = global.tblTeams[index];
   }
-
-  const upsertedPlayers = [];
-  const uniquePlayers = [...new Map(teamPlayerData.map(player => [player.pid, player])).values()];
-  for (const player of uniquePlayers) {
-    let checkPlayer = global.tblPlayers.find(item => item.tpId === player.pid);
-    if (!checkPlayer) {
-      checkPlayer = global.tblPlayers.find((item) => item.tpId == null
-        && item.playerName.toLowerCase() === player?.title.replace(/'/g, "''").toLowerCase() &&
-        item.displayName.trim().replace(/'/g, "''").toLowerCase() == player?.short_name.toLowerCase());
-
-      if (!checkPlayer) {
-        let getCountry = null;
-        if (player?.nationality) {
-          getCountry = global.tblCountryCodes.find(item => item.countryName.toLowerCase() === player?.nationality.toLowerCase());
-          if (!getCountry) {
-            const insertCountryData = {
-              countryName: player?.nationality || null,
-              isActive: true,
-            };
-            const insertCountryCode = await insertCountryCodeQuery(insertCountryData, fastify, request);
-            global.tblCountryCodes.push(insertCountryCode);
-            getCountry = insertCountryCode;
-          }
-        }
-
-        let insertPlayerData = {
-          eventTypeId: EventType['Cricket'],
-          playerTypeId: EntityPlayerType[player?.playing_role],
-          playerName: player?.title,
-          displayName: player?.short_name,
-          countryId: getCountry?.id,
-          isActive: true,
-          isKipper: player?.playing_role === 'wk' ? true : false,
-          isLeftHandedBatting: player.batting_style ? !player.batting_style.includes('Right') : false,
-          isLeftArmFielding: player.bowling_style ? !player.bowling_style.includes('Right') : false,
-          userId: -2,
-          batsmanAverage: 0.0,
-          batsmanStrikeRate: 0.0,
-          bowlerAverage: 0.0,
-          bowlerEconomy: 0.0,
-          tpId: player?.pid || null,
-          bowlingStyleId: player.bowling_type ? EntityBowlingStyleType[player.bowling_type.toLowerCase()] : null,
-          bowlingTypeId: extractBowlingStyle(player.bowling_type, player.bowling_style),
-          image: entitySocketData?.defaultPlayerImage || null,
-          imagePath: entitySocketData?.defaultPlayerImagePath || null,
-          isMen,
-          birthDate: player?.birthdate || null,
-          birthPlace: player?.birthplace ?? null
-        };
-        const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
-        global.tblPlayers.push(insertPlayer);
-        checkPlayer = insertPlayer;
-
-        await insertAutoImportDataService({
-          ...request,
-          body: {
-            refId: insertPlayer?.playerId,
-            refType: RefType.PlayerUpdate,
-            sourceId: 3
-          },
-          userTokenInfo: {
-            WrUserId: request?.userTokenInfo?.WrUserId ?? -2
-          }
-        }, fastify);
-      }
-      else if (checkPlayer?.tpId === null || !checkPlayer?.tpId || checkPlayer?.tpId !== player?.pid) {
-        const data = {
-          userId: -2,
-          tpId: player?.pid || null,
-          playerId: checkPlayer.playerId,
-        };
-        const updatePlayer = await updateExchangePlayerQuery(data, fastify, request);
-        let index = global.tblPlayers.findIndex((i) => i.playerId == checkPlayer.playerId)
-        if (index != -1) {
-          global.tblPlayers[index] = updatePlayer
-        }
-        checkPlayer = updatePlayer;
-      }
-    }
-    upsertedPlayers.push(checkPlayer);
-  }
-
-  const teamPlayerByTeamId = await getAllPlayersByTeamIdQuery(checkTeam?.teamId, fastify, request);
-  const uniqueUpsertedPlayers = [...new Map(upsertedPlayers.map(player => [player.playerId, player])).values()];
-  if (uniqueUpsertedPlayers.length > 0 && checkTeam.teamId) {
-    for (const player of uniqueUpsertedPlayers) {
-      const checkPlayerExistsInTeam = teamPlayerByTeamId.find(item => item.playerId === player.playerId);
-      if (!checkPlayerExistsInTeam) {
-        await insertTeamPlayerQuery({
-          teamId: checkTeam?.teamId,
-          refPlayerId: player?.playerId,
-          tpId: player?.tpId,
-          userId: -2,
-          jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage || null,
-          jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
-        }, fastify, request);
-        const homeTeam = await updateTeamPlayerHomeTeamQuery({
-          refPlayerId: player?.playerId,
-          teamId: checkTeam?.teamId
-        }, fastify, request);
-
-        if (player?.image && checkTeam?.jersey && homeTeam?.[0]?.teamPlayerId) {
-          try {
-            await mergeAndSaveImage({
-              playerImage: player.image,
-              jersey: checkTeam.jersey,
-              playerName: player.playerName,
-              teamName: checkTeam.teamName,
-              teamPlayerId: homeTeam?.[0]?.teamPlayerId,
-              commentaryPlayerId: null,
-              commentaryId: null,
-            }, fastify);
-            if (homeTeam?.[0]?.homeTeam == true) {
-              await playerImageChangeOnClientAPIService(player, fastify);
-            }
-          } catch (error) {
-
-          }
-        }
-      }
-    }
-  }
-
   return checkTeam;
 }
 
@@ -1209,5 +1146,6 @@ module.exports = {
   UpdateTeamFromEntityService,
   teamImportService,
   activeInactiveTeamService,
-  insertTeamAndPlayers
+  insertTeamAndPlayers,
+  upsertTeamOnImportService
 };
