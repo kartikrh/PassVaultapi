@@ -214,7 +214,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
 
                                     let index = global.tblCommentaries.findIndex((i) => i.commentaryId == commentary?.commentaryId);
                                     if (index !== -1) {
-                                        global.tblCommentaries[index] = updateCommentaryData[0][0];
+                                        global.tblCommentaries[index] = updatedCommentaryData[0][0];
                                     }
                                 }
 
