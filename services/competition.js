@@ -1435,7 +1435,7 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
       } else {
         const updatedData = {
           ...exists,
-          isInPlayingEleven: teamSquadHasPlaying11 ? teamSquad?.find(item => Number(item.player_id) === player.tpId)?.playing11 === "true" : true
+          isInPlayingEleven: teamSquadHasPlaying11 ? teamSquad?.find(item => Number(item.player_id) === pId)?.playing11 === "true" : true
         };
         await updateCommentaryPlayerById(updatedData, request, fastify);
 
@@ -1843,7 +1843,7 @@ const competitionImportService = async (data, fastify, request) => {
     }
   }
 
-  let entitySportCompetitionSquadResponse = entitySportCompetitionSquad?.data?.result?.squads;
+  let entitySportCompetitionSquadResponse = entitySportCompetitionSquad?.data?.result?.squads?.filter(t => !nullTeamtpIds.includes(Number(t.team_id)));
   const tournamentTeamsPlayers = global.tblTournamentTeamPlayers.filter(tttp => tttp.competitionId === checkCompetition.competitionId);
   for (const squad of entitySportCompetitionSquadResponse) {
     const team = await upsertTeamOnImportService(squad.team, entitySocketData, eventType, fastify, request);
