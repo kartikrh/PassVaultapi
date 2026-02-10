@@ -3869,7 +3869,6 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
     }
 
     let inningWiseRes = []
-    let partData = [];
     let upComDetails = {};
     let url = `/match/${matchId}/info`;
     const infoRes = await callEntitySportAPI(url, request, fastify);
@@ -4060,6 +4059,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
 
       let batsmen = inningData?.batsmen || [];
       let bowlers = inningData?.bowlers || [];
+      let partData = [];
 
       // store ballbyball
       let playerTpIdObj = {};
@@ -4176,6 +4176,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
             })
             partData.push({
               ...newPart,
+              order: part?.order,
               type: "create"
             })
           }
@@ -4437,6 +4438,31 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
               battingTeam.teamByRuns += Number(c?.bye_run) ?? 0;
             }
 
+
+            if (c?.commentary?.toLowerCase().includes("retired")) {
+              const retiredBatter = batsmen.find(batsman => {
+                const isRetired =
+                  batsman?.how_out?.toLowerCase() === "retired hurt" ||
+                  batsman?.dismissal?.toLowerCase() === "retired";
+                const isNameMatch = c.commentary?.toLowerCase().includes(batsman?.name?.toLowerCase());
+                return isRetired && isNameMatch;
+              });
+              if (retiredBatter && playerTpIdObj[retiredBatter.batsman_id]) {
+                if (!playersMap[retiredBatter.batsman_id]) {
+                  playersMap[retiredBatter.batsman_id] = {
+                    ...playerTpIdObj[retiredBatter.batsman_id],
+                  }
+                }
+                playersMap[retiredBatter.batsman_id] = {
+                  ...playersMap[retiredBatter.batsman_id],
+                  isBatterRetir: true,
+                  isPlay: null,
+                  onStrike: null
+                }
+                ball_Type = BALL_TYPE.RETIRED_HURT
+              }
+            }
+
             updateBall = {
               ballIsCount: true,
               ballType: ball_Type,
@@ -4664,6 +4690,30 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
           over.ballCount = c.ball;
           over.dotBall += 1;
           over.teamScore = `${battingTeam?.teamScore || 0}/${battingTeam?.teamWicket || 0}`;
+          let typeOfBall = BALL_TYPE.REGULAR
+          if (c?.commentary?.toLowerCase().includes("retired")) {
+            const retiredBatter = batsmen.find(batsman => {
+              const isRetired =
+                batsman?.how_out?.toLowerCase() === "retired hurt" ||
+                batsman?.dismissal?.toLowerCase() === "retired";
+              const isNameMatch = c.commentary?.toLowerCase().includes(batsman?.name?.toLowerCase());
+              return isRetired && isNameMatch;
+            });
+            if (retiredBatter && playerTpIdObj[retiredBatter.batsman_id]) {
+              if (!playersMap[retiredBatter.batsman_id]) {
+                playersMap[retiredBatter.batsman_id] = {
+                  ...playerTpIdObj[retiredBatter.batsman_id],
+                }
+              }
+              playersMap[retiredBatter.batsman_id] = {
+                ...playersMap[retiredBatter.batsman_id],
+                isBatterRetir: true,
+                isPlay: null,
+                onStrike: null
+              }
+              typeOfBall = BALL_TYPE.RETIRED_HURT
+            }
+          }
           if (playersMap[wicketBatsId]) {
             playersMap[wicketBatsId] = {
               ...playersMap[wicketBatsId],
@@ -4698,7 +4748,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
             batNonStrikeId: nonStrikePId,
             ballPlayerId: playerTpIdObj[wicketBatsId]?.commentaryPlayerId,
             ballIsCount: true,
-            ballType: BALL_TYPE.REGULAR,
+            ballType: typeOfBall,
             ballRun: wicketData.runs,
             ballIsDot: true,
             tpId: c.event_id,
