@@ -1435,7 +1435,7 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
       } else {
         const updatedData = {
           ...exists,
-          isInPlayingEleven: teamSquadHasPlaying11 ? teamSquad?.find(item => Number(item.player_id) === player.tpId)?.playing11 === "true" : true
+          isInPlayingEleven: teamSquadHasPlaying11 ? teamSquad?.find(item => Number(item.player_id) === pId)?.playing11 === "true" : true
         };
         await updateCommentaryPlayerById(updatedData, request, fastify);
 
