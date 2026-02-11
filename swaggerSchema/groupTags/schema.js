@@ -11569,6 +11569,81 @@ const CompititionStatistics = {
   }
 };
 
+const TeamMatchType = {
+  getbyTeamId: {
+    schema: {
+      tags: ["Team Match Type"],
+      description: "get all Match Type of Team",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          teamId: { type: "integer" }
+        },
+        required: ["teamId"]
+      }
+    }
+  },
+  save: {
+    schema: {
+      tags: ["Team Match Type"],
+      description: "save Match Type of Team",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          teamId: { type: "integer" },
+          matchTypeId: { type: "integer" }
+        },
+        required: ["teamId", "matchTypeId"]
+      }
+    }
+  },
+  update: {
+    schema: {
+      tags: ["Team Match Type"],
+      description: "update Match Type of Team",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          teamMatchTypeId: { type: "integer" }
+        },
+        required: ["teamMatchTypeId"]
+      }
+    }
+  },
+  activeInactive: {
+    schema: {
+      tags: ["Team Match Type"],
+      description: "update active/inactive Match Type of Team",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          teamMatchTypeId: { type: "integer" },
+          isActive: { type: "boolean" }
+        },
+        required: ["teamMatchTypeId", "isActive"]
+      }
+    }
+  },
+  delete: {
+    schema: {
+      tags: ["Team Match Type"],
+      description: "delete Match Type of Team",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          teamMatchTypeId: { type: "integer" }
+        },
+        required: ["teamMatchTypeId"]
+      }
+    }
+  }
+};
+
 module.exports = {
   Auth,
   Tabs,
@@ -11651,5 +11726,6 @@ module.exports = {
   EntitySocket,
   AutoUpdatePlayerStatisticsData,
   CompititionStatisticsType,
-  CompititionStatistics
+  CompititionStatistics,
+  TeamMatchType
 };

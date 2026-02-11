@@ -38,6 +38,7 @@ const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { savePlayerBatHistQuery, savePlayerBallHistQuery, getAllCommentaryBattingHistory, getAllCommentaryBowlingHistory, deleteCommentaryPlayerBowlingHistoryQuery, deleteCommentaryPlayerBattingHistoryQuery } = require("../repository/TableCommPlayerHistory");
 const { fieldNamesService } = require("../services/fieldNamesService");
 const { getAllPlayersBattingHistory, insertPlayerBattingHistoryQuery, updatePlayerBattingHistoryQuery, getAllPlayerBowlingHistory, updatePlayerBowlingHistoryQuery, insertPlayerBowlingHistoryQuery } = require("../repository/TablePlayerHistory");
+const { insertAutoImportDataService } = require("./autoImportData");
 
 const allPlayerService = async (request,fastify) => {
   const { isActive, eventTypeId, teamId, isMen } = request.body;
@@ -1425,6 +1426,81 @@ const playerImageChangeOnClientAPIService = async (playerId, fastify) => {
   }
 }
 
+const upsertPlayerOnImportService = async (esPlayer, entitySocketData, isMen, fastify, request) => {
+  let checkPlayer = global.tblPlayers.find(item => item.tpId === esPlayer.pid);
+  if (!checkPlayer) {
+    checkPlayer = global.tblPlayers.find((item) => item.tpId == null
+      && item.playerName.toLowerCase() === esPlayer?.title.replace(/'/g, "''").toLowerCase() &&
+      item.displayName.trim().replace(/'/g, "''").toLowerCase() == esPlayer?.short_name.toLowerCase())
+    if (!checkPlayer) {
+      let getCountry = null;
+      if (esPlayer?.nationality) {
+        getCountry = global.tblCountryCodes.find(item => item.countryName.toLowerCase() === esPlayer?.nationality.toLowerCase());
+        if (!getCountry) {
+          const insertCountryData = {
+            countryName: esPlayer?.nationality || null,
+            isActive: true,
+          };
+          const insertCountryCode = await insertCountryCodeQuery(insertCountryData, fastify, request);
+          global.tblCountryCodes.push(insertCountryCode);
+          getCountry = insertCountryCode;
+        }
+      }
+
+      let insertPlayerData = {
+        eventTypeId: EventType['Cricket'],
+        playerTypeId: EntityPlayerType[esPlayer?.playing_role],
+        playerName: esPlayer?.title,
+        displayName: esPlayer?.short_name,
+        countryId: getCountry?.id,
+        isActive: true,
+        isKipper: esPlayer?.playing_role === 'wk' ? true : false,
+        isLeftHandedBatting: esPlayer.batting_style ? !esPlayer.batting_style.includes('Right') : false,
+        isLeftArmFielding: esPlayer.bowling_style ? !esPlayer.bowling_style.includes('Right') : false,
+        userId: -2,
+        batsmanAverage: 0.0,
+        batsmanStrikeRate: 0.0,
+        bowlerAverage: 0.0,
+        bowlerEconomy: 0.0,
+        tpId: esPlayer?.pid || null,
+        bowlingStyleId: esPlayer.bowling_type ? EntityBowlingStyleType[esPlayer.bowling_type.toLowerCase()] : null,
+        bowlingTypeId: extractBowlingStyle(esPlayer.bowling_type, esPlayer.bowling_style),
+        image: entitySocketData?.defaultPlayerImage || null,
+        imagePath: entitySocketData?.defaultPlayerImagePath || null,
+        isMen,
+        birthDate: esPlayer?.birthdate || null,
+        birthPlace: esPlayer?.birthplace ?? null
+      };
+      checkPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
+      global.tblPlayers.push(checkPlayer);
+
+      await insertAutoImportDataService({
+        ...request,
+        body: {
+          refId: checkPlayer?.playerId,
+          refType: RefType.PlayerUpdate,
+          sourceId: 3
+        },
+        userTokenInfo: {
+          WrUserId: request?.userTokenInfo?.WrUserId ?? -2
+        }
+      }, fastify);
+    } else if (checkPlayer?.tpId === null || !checkPlayer?.tpId || checkPlayer?.tpId !== esPlayer?.pid) {
+      const data = {
+        userId: -2,
+        tpId: esPlayer.pid,
+        playerId: checkPlayer.playerId,
+      };
+      checkPlayer = await updateExchangePlayerQuery(data, fastify, request);
+      let index = global.tblPlayers.findIndex((i) => i.playerId == checkPlayer.playerId)
+      if (index != -1) {
+        global.tblPlayers[index] = checkPlayer
+      }
+    }
+  }
+  return checkPlayer;
+}
+
 module.exports = {
   allPlayerService,
   playerByIdService,
@@ -1449,4 +1525,5 @@ module.exports = {
   getPlayerPlayInCommentaryListByIdService,
   getPlayerCreatedDetailsService,
   playerImageChangeOnClientAPIService,
+  upsertPlayerOnImportService
 };
