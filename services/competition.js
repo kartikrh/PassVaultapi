@@ -1050,7 +1050,7 @@ const insertTeamPlayersByTeamId = async (teamId, teamTpId, isMen, request, fasti
 
   let entitySportTeamPlayersResponse = entitySportTeamPlayers?.data?.result?.items?.players;
   if (!entitySportTeamPlayersResponse) {
-    throw new Error("Invalid response from Entit-Sport API");
+    throw new Error(`Invalid response from Entit-Sport API for url ${url}`);
   }
 
   const entitySocketData = global.tblEntitySockets[0];
@@ -1289,7 +1289,10 @@ const esGetMatchNumberFromCompetitionMatchAPI = async (competitionTpId, request,
 
     let entitySportCompetitionMatchResponse = entitySportCompetitionMatch?.data?.result;
     if (!entitySportCompetitionMatchResponse) {
-      errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/commentary.js/esGetMatchNumberFromCompetitionMatchAPI - entitySportCompetitionMatchResponse", {
+      errorLogger(
+        fastify,
+        `Invalid response from Entit-Sport API for url ${url}`,
+        "/services/commentary.js/esGetMatchNumberFromCompetitionMatchAPI - entitySportCompetitionMatchResponse", {
         ...request,
         originalUrl: url
       }, entitySportCompetitionMatch?.data);
@@ -1539,7 +1542,10 @@ const competitionImportService = async (data, fastify, request) => {
 
   let entitySportCompetitionResponse = entitySportCompetition?.data?.result;
   if (!entitySportCompetitionResponse) {
-    errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/competition.js/competitionImportService - entitySportCompetitionResponse", {
+    errorLogger(
+      fastify,
+      `Invalid response from Entit-Sport API for url ${url}`,
+      "/services/competition.js/competitionImportService - entitySportCompetitionResponse", {
       ...request,
       originalUrl: url
     }, entitySportCompetition?.data);
@@ -1661,7 +1667,10 @@ const competitionImportService = async (data, fastify, request) => {
 
     let entitySportCompetitionMatchResponse = entitySportCompetitionMatch?.data?.result;
     if (!entitySportCompetitionMatchResponse) {
-      errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/competition.js/competitionImportService - entitySportCompetitionMatchResponse", {
+      errorLogger(
+        fastify,
+        `Invalid response from Entit-Sport API for url ${url2}`,
+        "/services/competition.js/competitionImportService - entitySportCompetitionMatchResponse", {
         ...request,
         originalUrl: url2
       }, entitySportCompetitionMatch?.data);
@@ -2156,7 +2165,10 @@ const competitionImportService = async (data, fastify, request) => {
 
       let entitySportMatchResponse = entitySportMatch?.data?.result;
       if (!entitySportMatchResponse) {
-        errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/competition.js/competitionImportService - entitySportMatchResponse", {
+        errorLogger(
+          fastify,
+          `Invalid response from Entit-Sport API for url ${url4}`,
+          "/services/competition.js/competitionImportService - entitySportMatchResponse", {
           ...request,
           originalUrl: url4
         }, entitySportMatch?.data);

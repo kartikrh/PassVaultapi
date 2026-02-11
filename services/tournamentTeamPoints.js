@@ -793,7 +793,7 @@ const importUpdateTournamentTeamPointFromEntitySportService = async (data, fasti
 
   let entitySportCompetitionInfoResponse = entitySportCompetitionInfo?.data?.result;
   if (!entitySportCompetitionInfoResponse) {
-    throw new Error("Invalid response from Entit-Sport API - entitySportCompetitionInfo");
+    throw new Error(`Invalid response from Entit-Sport API for url ${url}`);
   }
 
   await addEditTournamentTeamPointDataService(entitySportCompetitionInfoResponse, checkCompetition?.competitionId, fastify, request);

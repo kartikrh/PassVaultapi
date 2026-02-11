@@ -1320,7 +1320,10 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             let entitySportPlayerResponse = entitySportPlayer?.data?.result;
             entitySportPlayerResponse = entitySportPlayerResponse?.player;
             if (!entitySportPlayerResponse) {
-              errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/entitySport.js/handleComArr - entitySportPlayerResponse", {
+              errorLogger(
+                fastify,
+                `Invalid response from Entit-Sport API for url ${url}`,
+                "/services/entitySport.js/handleComArr - entitySportPlayerResponse", {
                 ...request,
                 originalUrl: url
               }, entitySportPlayer?.data);
@@ -1438,7 +1441,10 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             const entitySportPlayer = await callEntitySportAPI(url, request, fastify);
             let entitySportPlayerResponse = entitySportPlayer?.data?.result;
             if (!entitySportPlayerResponse) {
-              errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/entitySport.js/handleComArr - entitySportPlayerResponse", {
+              errorLogger(
+                fastify,
+                `Invalid response from Entit-Sport API for url ${url}`,
+                "/services/entitySport.js/handleComArr - entitySportPlayerResponse", {
                 ...request,
                 originalUrl: url
               }, entitySportPlayer?.data);

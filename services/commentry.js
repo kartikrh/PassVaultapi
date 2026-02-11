@@ -23540,7 +23540,7 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
 
   let entitySportCompetitionResponse = entitySportCompetition?.data?.result;
   if (!entitySportCompetitionResponse) {
-    throw new Error("Invalid response from Entit-Sport API");
+    throw new Error(`Invalid response from Entit-Sport API for url ${url}`);
   }
 
   const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
@@ -23611,7 +23611,10 @@ const matchImportService = async (data, fastify, request = null) => {
 
   let entitySportMatchResponse = entitySportMatch?.data?.result;
   if (!entitySportMatchResponse) {
-    errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/commentary.js/matchImportService - entitySportMatchResponse", {
+    errorLogger(
+      fastify,
+      `Invalid response from Entit-Sport API for url ${url}`,
+      "/services/commentary.js/matchImportService - entitySportMatchResponse", {
       ...request,
       originalUrl: url
     }, entitySportMatch?.data);
@@ -25287,7 +25290,10 @@ const updateCommentaryPlayersFromEntityService = async (request, fastify) => {
 
   await insertAutoUpdateCommentaryDataQuery(insertDataInCommentaryUpdate, fastify);
   if (!entitySportMatchResponse) {
-    errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/commentary.js/matchImportService - entitySportMatchResponse", {
+    errorLogger(
+      fastify,
+      `Invalid response from Entit-Sport API for url ${url}`,
+      "/services/commentary.js/matchImportService - entitySportMatchResponse", {
       ...request,
       originalUrl: url
     }, entitySportMatch?.data);
@@ -25439,7 +25445,10 @@ const importCompetitionMatchService = async (fastify) => {
 
       let entitySportCompetitionMatchResponse = entitySportCompetitionMatch?.data?.result;
       if (!entitySportCompetitionMatchResponse) {
-        errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/competition.js/competitionImportService - entitySportCompetitionMatchResponse", {
+        errorLogger(
+          fastify,
+          `Invalid response from Entit-Sport API for url ${entitySportCompetitionMatchesUrl}`,
+          "/services/commentary.js/importCompetitionMatchService - entitySportCompetitionMatchResponse", {
           originalUrl: entitySportCompetitionMatchesUrl
         }, entitySportCompetitionMatch?.data);
       } else {
