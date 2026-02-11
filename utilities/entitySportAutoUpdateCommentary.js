@@ -262,7 +262,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     await upsertCommentaryTeamsAndPlayersService(checkCompetition, tournamentTeamsPlayers, commentaryData, maxOver, commentaryTeams, teamB, i, commentaryPlayers, teamBSquad, entitySportMatchResponse?.players, entitySocketData, request, fastify);
                                 }
 
-                                const matchWeather = entitySportMatchResponse?.weather;
+                                const matchWeather = entitySportMatchResponse?.match_info?.weather;
                                 if (matchWeather && typeof matchWeather === "object") {
                                     const checkWeather = global.tblWeather.find(item => item.commentaryId === commentary.commentaryId);
                                     if (checkWeather) {
@@ -302,7 +302,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     }
                                 }
 
-                                const matchPitch = entitySportMatchResponse?.pitch;
+                                const matchPitch = entitySportMatchResponse?.match_info?.pitch;
                                 if (matchPitch && (matchPitch?.pitch_condition != "" || matchPitch?.batting_condition != "" || matchPitch?.pace_bowling_condition != "" || matchPitch?.spine_bowling_condition != "")) {
                                     const checkPitchDetails = global.tblPitchConditions.find(item => item?.commentaryId === commentary.commentaryId);
                                     if (checkPitchDetails) {
