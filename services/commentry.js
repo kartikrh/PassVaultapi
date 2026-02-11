@@ -435,6 +435,7 @@ const commentaryDetailsByIdService = async (request, fastify) => {
   let dataToreturn = {
     eid: commentary.eventRefId || "",
     ety: eventType?.eventType || "",
+    matchTypeId: commentary.matchTypeId || null,
     mtyp: commentary.matchType || "",
     hmtyp: commentary.historyMatchType || "",
     com: competition?.competition || "",
@@ -7494,6 +7495,7 @@ const commentaryDetailsByEventIdService = async (
   resultArr.et = convertDate(result.eventDate, "hh:mm:ss") || "";
   (resultArr.utc = result.eventDate),
     (resultArr.ety = eventType?.eventType || "");
+  resultArr.matchTypeId = result.matchTypeId || null;
   resultArr.mtyp = result.matchType || "";
   resultArr.hmtyp = result.historyMatchType || "";
   resultArr.com = competition?.competition || "";
@@ -8117,6 +8119,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   resultArr.ed = convertDate(result.eventDate, "DD/MM/YYYY") || "";
   resultArr.et = convertDate(result.eventDate, "hh:mm:ss") || "";
   resultArr.ety = eventType?.eventType || "";
+  resultArr.matchTypeId = result.matchTypeId || null;
   resultArr.mtyp = result.matchType || "";
   resultArr.hmtyp = result.historyMatchType || "";
   resultArr.com = competition?.competition || "";
@@ -8596,6 +8599,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       cid: item.commentaryId,
       eid: item.eventRefId || "",
       ety: eventType?.eventType || "",
+      matchTypeId: item.matchTypeId || null,
       mtyp: item.matchType || "",
       hmtyp: item.historyMatchType || "",
       com: competition?.competition || "",
@@ -8819,6 +8823,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
     cid : com.commentaryId,
     eid: com.eventRefId || "",
     ety: eventType?.eventType || "",
+    matchTypeId: com.matchTypeId || null,
     mtyp: com.matchType || "",
     hmtyp: com.historyMatchType || "",
     com: competition?.competition || "",
@@ -9197,6 +9202,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       cid: commentary.commentaryId || 0,
       eid: commentary.eventRefId || "",
       ety: eventType?.eventType || "",
+      matchTypeId: commentary.matchTypeId || null,
       mtyp: commentary.matchType || "",
       hmtyp: commentary.historyMatchType || "",
       com: competition?.competition || "",
@@ -10286,6 +10292,7 @@ const getNodeEventbyEidService = async (request, fastify) => {
       let es = {
         eid: commentary.eventRefId || "",
         ety: eventType?.eventType || "",
+        matchTypeId: commentary.matchTypeId || null,
         mtyp: commentary.matchType || "",
         hmtyp: commentary.historyMatchType || "",
         com: competition?.competition || "",
@@ -10416,6 +10423,7 @@ const getActiveCommertyService = async (fastify) => {
       let es = {
         eid: commentary.eventRefId || "",
         ety: eventType?.eventType || "",
+        matchTypeId: commentary.matchTypeId || null,
         mtyp: commentary.matchType || "",
         hmtyp: commentary.historyMatchType || "",
         com: competition?.competition || "",
@@ -10614,6 +10622,7 @@ const getEventDetailsByCIdService = async (request, fastify) => {
       es: {
         eid: commentary.eventRefId || "",
         ety: eventType?.eventType || "",
+        matchTypeId: commentary.matchTypeId || null,
         mtyp: commentary.matchType || "",
         hmtyp: commentary.historyMatchType || "",
         mtyi: commentary.matchTypeId,

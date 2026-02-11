@@ -2325,6 +2325,7 @@ const getComDataByCId = async (data, request, fastify) => {
     cid : com.commentaryId,
     eid: com.eventRefId || "",
     ety: eventType?.eventType || "",
+    matchTypeId: com.matchTypeId || null,
     mtyp: com.matchType || "",
     hmtyp: com.historyMatchType || "",
     com: competition?.competition || "",
