@@ -41,13 +41,13 @@ const getTeamMatchTypeByTeamQuery = async (request, fastify, whereCondition = nu
 
 const insertTeamMatchTypeByTeamQuery = async (request, fastify) => {
     try {
-        const { teamId, matchTypeId, isActive } = request.body;
+        const { teamId, teamJerseyImage, teamJerseyImagePath, matchTypeId, isActive } = request.body;
         const result = await fastify.db.query(
             `
             WITH insert_data AS (
                 INSERT INTO "tblTeamMatchType"
-                    ("wrTeamId", "wrMatchTypeId", "wrIsActive", "wrCreatedBy", "wrIsDeleted")
-                VALUES ($1, $2, $3, $4, $5)
+                    ("wrTeamId", "wrTeamJerseyImage", "wrTeamJerseyImagePath", "wrMatchTypeId", "wrIsActive", "wrCreatedBy", "wrIsDeleted")
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
                 RETURNING "wrTeamMatchTypeId", "wrTeamId", "wrTeamJerseyImage", "wrTeamJerseyImagePath", "wrMatchTypeId", "wrIsActive"
             )
             SELECT
@@ -67,6 +67,8 @@ const insertTeamMatchTypeByTeamQuery = async (request, fastify) => {
                 type: fastify.db.QueryTypes.SELECT,
                 bind: [
                     teamId,
+                    teamJerseyImage,
+                    teamJerseyImagePath,
                     matchTypeId,
                     isActive ?? true,
                     request?.userTokenInfo?.WrUserId ?? -5,

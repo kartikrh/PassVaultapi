@@ -1378,7 +1378,6 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
             teamId: team.teamId,
             refPlayerId: player.playerId,
             tpId: player?.tpId ?? null,
-            userId: request?.userTokenInfo?.WrUserId ?? -2,
             jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage ?? null,
             jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath ?? null,
             matchTypeId: matchTypeId
@@ -1885,7 +1884,6 @@ const competitionImportService = async (data, fastify, request) => {
             teamId: team.teamId,
             refPlayerId: upsertedPlayer.playerId,
             tpId: upsertedPlayer?.tpId ?? null,
-            userId: request?.userTokenInfo?.WrUserId ?? -2,
             jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage ?? null,
             jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath ?? null,
             matchTypeId: matchTypeId
