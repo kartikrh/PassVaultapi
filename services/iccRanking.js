@@ -483,7 +483,7 @@ const importICCRankingFromEntitySportService = async (data = null, fastify, requ
 
     let entitySportICCRankingResponse = entitySportICCRanking?.data?.result;
     if (!entitySportICCRankingResponse) {
-        throw new Error("Invalid response from Entit-Sport API");
+        throw new Error("Invalid response from Entit-Sport API for ICC Ranking data");
     }
 
     const menEntries = await extractEntries(entitySportICCRankingResponse.ranks, true, request, fastify);

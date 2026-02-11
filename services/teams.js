@@ -773,7 +773,10 @@ const UpdateTeamFromEntityService = async (data, fastify, request) => {
 
   let entitySportTeamPlayerResponse = entitySportTeamPlayer?.data?.result?.items;
   if (!entitySportTeamPlayerResponse) {
-    errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/teams.js/UpdateTeamFromEntityService - entitySportTeamPlayerResponse", {
+    errorLogger(
+      fastify,
+      `Invalid response from Entit-Sport API for url ${url}`,
+      "/services/teams.js/UpdateTeamFromEntityService - entitySportTeamPlayerResponse", {
       ...request,
       originalUrl: url
     }, entitySportTeamPlayer?.data);
@@ -1017,7 +1020,10 @@ const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
 
   let entitySportTeamPlayersResponse = entitySportTeamPlayers?.data?.result?.items;
   if (!entitySportTeamPlayersResponse) {
-    errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/teams.js/insertTeamAndPlayers - entitySportTeamPlayersResponse", {
+    errorLogger(
+      fastify,
+      `Invalid response from Entit-Sport API for url ${url}`,
+      "/services/teams.js/insertTeamAndPlayers - entitySportTeamPlayersResponse", {
       ...request,
       originalUrl: url
     }, entitySportTeamPlayers?.data);
