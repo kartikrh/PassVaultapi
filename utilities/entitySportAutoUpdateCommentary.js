@@ -52,7 +52,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
 
                                 let entitySportMatchResponse = entitySportMatch?.data?.result;
                                 if (!entitySportMatchResponse) {
-                                    throw new Error("Invalid response from Entit-Sport API");
+                                    throw new Error(`Invalid response from Entit-Sport API for url ${url}`);
                                 }
 
                                 const matchInfoData = entitySportMatchResponse.match_info || {};
