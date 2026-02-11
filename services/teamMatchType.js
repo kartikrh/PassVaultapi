@@ -57,7 +57,7 @@ const updateTeamMatchTypeDataByTeamService = async (request, fastify) => {
         throw new Error(`TeamMatchType with team match type id ${teamMatchTypeId} not found`);
     }
 
-    const { teamId, matchTypeId } = teamMatchType[0];
+    const { teamId, matchTypeId, teamJerseyImage } = teamMatchType[0];
 
     const team = global.tblTeams.find(tt => tt.teamId === teamId);
     if (!team) {
@@ -117,7 +117,7 @@ const updateTeamMatchTypeDataByTeamService = async (request, fastify) => {
                         try {
                             await mergeAndSaveImage({
                                 playerImage: player.image,
-                                jersey: team.jersey,
+                                jersey: teamJerseyImage ?? team.jersey,
                                 playerName: player.playerName,
                                 teamName: team.teamName,
                                 teamPlayerId: teamPlayer?.teamPlayerId,
