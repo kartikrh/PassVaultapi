@@ -1010,9 +1010,12 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
     const entitySportSearchPlayer = await callEntitySportAPI(url2, request, fastify);
 
     if (!entitySportSearchPlayer?.data?.result) {
-      errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/player.js/UpdatePlayerFromEntityService - entitySportSearchPlayer", {
+      errorLogger(
+        fastify,
+        `Invalid response from Entit-Sport API for url ${url2}`,
+        "/services/player.js/UpdatePlayerFromEntityService - entitySportSearchPlayer", {
         ...request,
-        originalUrl: url
+        originalUrl: url2
       }, entitySportSearchPlayer?.data);
       return false;
     }
@@ -1046,7 +1049,10 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
 
   const entitySportPlayerResponse = entitySportPlayer?.data?.result;
   if (!entitySportPlayerResponse) {
-    errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/player.js/UpdatePlayerFromEntityService - entitySportPlayerResponse", {
+    errorLogger(
+      fastify,
+      `Invalid response from Entit-Sport API for url ${url}`,
+      "/services/player.js/UpdatePlayerFromEntityService - entitySportPlayerResponse", {
       ...request,
       originalUrl: url
     }, entitySportPlayer?.data);
@@ -1055,7 +1061,10 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
 
   const entitySportPlayerInfoResponse = entitySportPlayerResponse?.player;
   if (!entitySportPlayerInfoResponse) {
-    errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/player.js/UpdatePlayerFromEntityService - entitySportPlayerInfoResponse", {
+    errorLogger(
+      fastify,
+      `Invalid response from Entit-Sport API for url ${url}`,
+      "/services/player.js/UpdatePlayerFromEntityService - entitySportPlayerInfoResponse", {
       ...request,
       originalUrl: url
     }, entitySportPlayer?.data);
@@ -1198,7 +1207,10 @@ const playerImportService = async (data, fastify, request) => {
   let entitySportPlayerResponse = entitySportPlayer?.data?.result?.player;
   let entitySportPlayerStatisticsResponse = entitySportPlayer?.data?.result;
   if (!entitySportPlayerResponse) {
-    errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/player.js/playerImportService - entitySportPlayerStatisticsResponse", {
+    errorLogger(
+      fastify,
+      `Invalid response from Entit-Sport API for url ${url}`,
+      "/services/player.js/playerImportService - entitySportPlayerStatisticsResponse", {
       ...request,
       originalUrl: url
     }, entitySportPlayer?.data);
