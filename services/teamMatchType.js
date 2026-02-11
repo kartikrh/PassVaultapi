@@ -1,8 +1,10 @@
 const { getTeamMatchTypeByTeamQuery, insertTeamMatchTypeByTeamQuery, updateTeamMatchTypeJerseyImageByTeamQuery, activeInactiveTeamMatchTypeByTeamQuery, deleteTeamMatchTypeByTeamQuery } = require("../repository/TableTeamMatchType");
-const { getTeamPlayersByTeamMatchTypeIdQuery, insertTeamPlayerQuery, updateTeamPlayerMatchTypeIdQuery } = require("../repository/TableTeamPlayer");
+const { getTeamPlayersByTeamMatchTypeIdQuery, updateTeamPlayerMatchTypeIdQuery, insertTeamPlayerWithHomeTeamQuery } = require("../repository/TableTeamPlayer");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
+const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const { generateImageName, storeImageOnServer } = require("../utilities/Images");
+const { playerImageChangeOnClientAPIService } = require("./player");
 
 const getTeamMatchTypeByTeamService = async (request, fastify) => {
     const teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${request.body.teamId}`);
@@ -41,6 +43,9 @@ const saveTeamMatchTypeByTeamService = async (request, fastify) => {
     if (teamMatchType.find(tmt => tmt.matchTypeId === matchTypeId)) {
         throw new Error(`TeamMatchType with match type id ${matchTypeId} already exists`);
     }
+
+    request.body.teamJerseyImage = global.tblEntitySockets?.[0]?.defaultJerseyImage ?? null;
+    request.body.teamJerseyImagePath = global.tblEntitySockets?.[0]?.defaultJerseyImagePath ?? null;
 
     return await insertTeamMatchTypeByTeamQuery(request, fastify);
 }
@@ -81,6 +86,7 @@ const updateTeamMatchTypeDataByTeamService = async (request, fastify) => {
     }
 
     if (request.body?.playerIds) {
+        const entitySocketData = global.tblEntitySockets[0];
         const oldTeamPlayers = await getTeamPlayersByTeamMatchTypeIdQuery({
             ...request,
             body: {
@@ -97,13 +103,34 @@ const updateTeamMatchTypeDataByTeamService = async (request, fastify) => {
             if (!exists) {
                 const player = players.find(tp => tp.playerId === pId);
                 if (player) {
-                    await insertTeamPlayerQuery({
-                        teamId,
-                        refPlayerId: pId,
-                        userId: request?.userTokenInfo?.WrUserId ?? -5,
-                        tpId: player.tpId,
-                        matchTypeId
+                    const teamPlayer = await insertTeamPlayerWithHomeTeamQuery({
+                        teamId: team.teamId,
+                        refPlayerId: player.playerId,
+                        tpId: player?.tpId ?? null,
+                        userId: request?.userTokenInfo?.WrUserId ?? -2,
+                        jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage ?? null,
+                        jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath ?? null,
+                        matchTypeId: matchTypeId
                     }, fastify, request);
+
+                    if (player?.image && team?.jersey && teamPlayer?.teamPlayerId) {
+                        try {
+                            await mergeAndSaveImage({
+                                playerImage: player.image,
+                                jersey: team.jersey,
+                                playerName: player.playerName,
+                                teamName: team.teamName,
+                                teamPlayerId: teamPlayer?.teamPlayerId,
+                                commentaryPlayerId: null,
+                                commentaryId: null,
+                            }, fastify);
+                            if (teamPlayer?.homeTeam == true) {
+                                await playerImageChangeOnClientAPIService(player, fastify);
+                            }
+                        } catch (error) {
+
+                        }
+                    }
                 }
             }
         }
@@ -116,7 +143,9 @@ const updateTeamMatchTypeDataByTeamService = async (request, fastify) => {
                         teamId,
                         matchTypeId: -1,
                         refPlayerId: oldPlayer.refPlayerId,
-                        oldMatchTypeId: oldPlayer?.matchTypeId
+                        oldMatchTypeId: oldPlayer?.matchTypeId,
+                        jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage ?? null,
+                        jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath ?? null,
                     }
                 }, fastify);
             }
