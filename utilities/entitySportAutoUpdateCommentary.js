@@ -56,8 +56,6 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                 }
 
                                 const matchInfoData = entitySportMatchResponse.match_info || {};
-                                const teama = matchInfoData.teama || {};
-                                const teamb = matchInfoData.teamb || {};
                                 const venue = matchInfoData.venue || {};
 
                                 const checkCompetition = global.tblCompetitions.find(item => item.tpId === matchInfoData?.competition?.cid);
@@ -77,7 +75,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
 
                                 insertAutoUpdateCommentaryData = await insertAutoUpdateCommentaryDataQuery(insertData, fastify);
 
-                                let updatedCommentaryData = commentary;
+                                let commentaryData = commentary;
                                 const { commentaryId, eventDate, eventName, eventNo, team1Id, team2Id, onfieldUmpires, thirdUmpire: cThirdUmpire, matchReferee, venueId, location, countryId, matchTypeId } = commentary;
                                 let changedValues = {
                                     id: commentaryId,
@@ -205,7 +203,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                 );
 
                                 if (isChanged) {
-                                    updatedCommentaryData = await updateCommentaryQuery({
+                                    const updatedCommentaryData = await updateCommentaryQuery({
                                         body: {
                                             ...commentary,
                                             ...changedValues,
@@ -215,6 +213,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     let index = global.tblCommentaries.findIndex((i) => i.commentaryId == commentary?.commentaryId);
                                     if (index !== -1) {
                                         global.tblCommentaries[index] = updatedCommentaryData[0][0];
+                                        commentaryData = global.tblCommentaries[index];
                                     }
                                 }
 
@@ -236,6 +235,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                             ...global.tblCommentaries[index],
                                             ...updated
                                         };
+                                        commentaryData = global.tblCommentaries[index];
                                     }
                                 }
 
@@ -252,14 +252,14 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                 let teamBSquad = matchPlaying11Squad?.teamb?.squads?.length > 0 ? matchPlaying11Squad?.teamb?.squads : [];
 
                                 const tournamentTeamsPlayers = global.tblTournamentTeamPlayers.filter(tttp => tttp.competitionId === checkCompetition.competitionId);
-                                const commentaryTeams = global.tblCommentaryTeams.filter(tct => tct.commentaryId === updatedCommentaryData.commentaryId && [teamA.teamId, teamB.teamId].includes(tct.teamId));
-                                const commentaryPlayers = global.tblCommentaryPlayers.filter(item => item.commentaryId === updatedCommentaryData.commentaryId && [teamA.teamId, teamB.teamId].includes(item.teamId));
+                                const commentaryTeams = global.tblCommentaryTeams.filter(tct => tct.commentaryId === commentaryId && [teamA.teamId, teamB.teamId].includes(tct.teamId));
+                                const commentaryPlayers = global.tblCommentaryPlayers.filter(item => item.commentaryId === commentaryId && [teamA.teamId, teamB.teamId].includes(item.teamId));
                                 for (let i = 1; i <= noOfInning; i++) {
                                     // teamA
-                                    await upsertCommentaryTeamsAndPlayersService(checkCompetition, tournamentTeamsPlayers, updatedCommentaryData, maxOver, commentaryTeams, teamA, i, commentaryPlayers, teamASquad, entitySportMatchResponse?.players, entitySocketData, request, fastify);
+                                    await upsertCommentaryTeamsAndPlayersService(checkCompetition, tournamentTeamsPlayers, commentaryData, maxOver, commentaryTeams, teamA, i, commentaryPlayers, teamASquad, entitySportMatchResponse?.players, entitySocketData, request, fastify);
 
                                     // TeamB
-                                    await upsertCommentaryTeamsAndPlayersService(checkCompetition, tournamentTeamsPlayers, updatedCommentaryData, maxOver, commentaryTeams, teamB, i, commentaryPlayers, teamBSquad, entitySportMatchResponse?.players, entitySocketData, request, fastify);
+                                    await upsertCommentaryTeamsAndPlayersService(checkCompetition, tournamentTeamsPlayers, commentaryData, maxOver, commentaryTeams, teamB, i, commentaryPlayers, teamBSquad, entitySportMatchResponse?.players, entitySocketData, request, fastify);
                                 }
 
                                 const matchWeather = entitySportMatchResponse?.weather;
