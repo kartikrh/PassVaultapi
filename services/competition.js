@@ -1322,9 +1322,9 @@ const esGetMatchNumberFromCompetitionMatchAPI = async (competitionTpId, request,
 const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tournamentTeamsPlayers, checkCommentary, maxOver, commentaryTeams, team, i, commentaryPlayers, teamSquad, entitySportMatchResponsePlayers, entitySocketData, request, fastify) => {
   const teamSquadHasPlaying11 = teamSquad.find(t => t.playing11 === "true");
   const matchTypeId = global.tblMatchTypes.find(mt => mt.matchTypeId === checkCommentary.matchTypeId)?.matchTypeId || null;
-  const teamMatchTypeId = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${team.teamId} AND ttmt."wrMatchTypeId" = ${matchTypeId}`);
+  let teamMatchTypeId = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${team.teamId} AND ttmt."wrMatchTypeId" = ${matchTypeId}`);
   if (!teamMatchTypeId || teamMatchTypeId.length === 0) {
-    await saveTeamMatchTypeByTeamService({
+    teamMatchTypeId = await saveTeamMatchTypeByTeamService({
       ...request,
       body: {
         teamId: team.teamId,
@@ -1387,7 +1387,7 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
             try {
               await mergeAndSaveImage({
                 playerImage: player.image,
-                jersey: team.jersey,
+                jersey: teamMatchTypeId?.[0]?.teamJerseyImage ?? team.jersey,
                 playerName: player.playerName,
                 teamName: team.teamName,
                 teamPlayerId: teamPlayer?.teamPlayerId,
@@ -1856,9 +1856,9 @@ const competitionImportService = async (data, fastify, request) => {
   for (const squad of entitySportCompetitionSquadResponse) {
     const team = await upsertTeamOnImportService(squad.team, entitySocketData, eventType, fastify, request);
     const matchTypeId = global.tblMatchTypes.find(mt => mt.entityEnum === Number(squad.format))?.matchTypeId || null;
-    const teamMatchTypeId = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${team.teamId} AND ttmt."wrMatchTypeId" = ${matchTypeId}`);
+    let teamMatchTypeId = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${team.teamId} AND ttmt."wrMatchTypeId" = ${matchTypeId}`);
     if (!teamMatchTypeId || teamMatchTypeId.length === 0) {
-      await saveTeamMatchTypeByTeamService({
+      teamMatchTypeId = await saveTeamMatchTypeByTeamService({
         ...request,
         body: {
           teamId: team.teamId,
@@ -1896,7 +1896,7 @@ const competitionImportService = async (data, fastify, request) => {
           try {
             await mergeAndSaveImage({
               playerImage: upsertedPlayer.image,
-              jersey: team.jersey,
+              jersey: teamMatchTypeId?.[0]?.teamJerseyImage ?? team.jersey,
               playerName: upsertedPlayer.playerName,
               teamName: team.teamName,
               teamPlayerId: upsertedTeamPlayer?.teamPlayerId,
