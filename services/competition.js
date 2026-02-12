@@ -2283,6 +2283,43 @@ const getAllCompetitionsService = async (request) => {
   return compData;
 };
 
+const insertCompletedCompetitionsInAutoImportService = async (fastify) => {
+  try {
+    const now = Date.now();
+    const twoDaysAgo = now - 2 * 24 * 60 * 60 * 1000;
+
+    const completedCompetitions = global.tblCompetitions.filter((comp) => {
+      if (comp.commStatus !== compStatus.completed || !comp.endDate) return false;
+
+      const endDate = new Date(comp.endDate).getTime();
+      return endDate <= now && endDate > twoDaysAgo;
+    });
+
+    await Promise.all(
+      completedCompetitions.map((competition) =>
+        insertAutoImportDataService(
+          {
+            body: {
+              refId: competition.tpId,
+              refType: RefType.CompetitionUpdate,
+              sourceId: 3,
+            },
+            userTokenInfo: { WrUserId: -2 },
+          },
+          fastify
+        )
+      )
+    );
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> services/competition.js/insertCompletedCompetitionsInAutoImportService",
+      null
+    );
+  }
+};
+
 module.exports = {
   allCompetitionService,
   competitionByIdService,
@@ -2308,5 +2345,6 @@ module.exports = {
   changeIsCompetitionStatisticsCalculationStatusService,
   getAllCompetitionsService,
   esGetMatchNumberFromCompetitionMatchAPI,
-  upsertCommentaryTeamsAndPlayersService
+  upsertCommentaryTeamsAndPlayersService,
+  insertCompletedCompetitionsInAutoImportService
 };

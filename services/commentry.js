@@ -25604,7 +25604,7 @@ const matchCompleteService = async (data, fastify, comDetails) => {
   return true
 }
 
-const getCompletedCommentaryService = async (fastify) => {
+const insertCompletedCommentaryForTournamentTeamPointUpdateService = async (fastify) => {
   try {
     const now = Date.now();
     const thirtyMinutesAgo = now - 30 * 60 * 1000;
@@ -25647,7 +25647,7 @@ const getCompletedCommentaryService = async (fastify) => {
     errorLogger(
       fastify,
       error.message,
-      "ERROR --> services/commentary.js/getCompletedCommentaryService",
+      "ERROR --> services/commentary.js/insertCompletedCommentaryForTournamentTeamPointUpdateService",
       null
     );
   }
@@ -25779,5 +25779,5 @@ module.exports = {
   getCommentaryStatisticsService,
   getAllCommentaryByCompetitionIdForClientService,
   importCompetitionMatchService,
-  getCompletedCommentaryService
+  insertCompletedCommentaryForTournamentTeamPointUpdateService
 };
