@@ -169,7 +169,9 @@ module.exports = async function (fastify, opts) {
   cron.schedule('* * * * *', async () => {
     try {
       await upcomingCommentaries(fastify);
-      await insertCompletedCommentaryForTournamentTeamPointUpdateService(fastify);
+      if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
+        await insertCompletedCommentaryForTournamentTeamPointUpdateService(fastify);
+      }
     } catch (error) {
       console.error(new Date(), "Error during scheduled task:", error);
     }
