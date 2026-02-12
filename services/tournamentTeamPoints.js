@@ -816,7 +816,7 @@ const insertTournamentTeamPointInAutoImportService = async (fastify) => {
     today.setHours(0, 0, 0, 0);
 
     const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setDate(yesterday.getDate() - 2);
 
     const competitionList = global.tblCompetitions.filter(cp => cp.tpId);
     for (const competition of competitionList) {
