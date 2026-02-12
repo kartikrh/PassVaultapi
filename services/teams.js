@@ -28,13 +28,15 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { deletePlayersByTeamIdQuery } = require("../repository/TableTournamentsTeamPlayers")
 const { deletePointsByTeamIdQuery } = require("../repository/TableTournmentTeamPoints")
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
-const { trimTextData, callEntitySportAPI, APIEndpointModuleType, ServiceType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, EventType, checkEntitySportAPIEndpointIsActive, RefType, commentaryStatus, callClientAPI } = require("../utilities/index");
+const { trimTextData, callEntitySportAPI, APIEndpointModuleType, ServiceType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, EventType, checkEntitySportAPIEndpointIsActive, RefType, commentaryStatus, callClientAPI, lowerEntityMatchTypesEnums } = require("../utilities/index");
 const { insertPlayerQuery, updateExchangePlayerQuery } = require("../repository/TablePlayer");
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { insertAutoImportDataService } = require("./autoImportData");
 const { errorLogger } = require("../utilities/logger");
 const { upTeamNameInComQuery } = require("../repository/TableCommentary");
 const { playerImageChangeOnClientAPIService, upsertPlayerOnImportService } = require("../services/player");
+const { saveTeamMatchTypeByTeamService } = require("./teamMatchType");
+const { getTeamMatchTypeByTeamQuery } = require("../repository/TableTeamMatchType");
 const allTeamsService = async () => {
   return global.tblTeams;
 };
@@ -771,7 +773,10 @@ const UpdateTeamFromEntityService = async (data, fastify, request) => {
 
   let entitySportTeamPlayerResponse = entitySportTeamPlayer?.data?.result?.items;
   if (!entitySportTeamPlayerResponse) {
-    errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/teams.js/UpdateTeamFromEntityService - entitySportTeamPlayerResponse", {
+    errorLogger(
+      fastify,
+      `Invalid response from Entit-Sport API for url ${url}`,
+      "/services/teams.js/UpdateTeamFromEntityService - entitySportTeamPlayerResponse", {
       ...request,
       originalUrl: url
     }, entitySportTeamPlayer?.data);
@@ -1015,7 +1020,10 @@ const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
 
   let entitySportTeamPlayersResponse = entitySportTeamPlayers?.data?.result?.items;
   if (!entitySportTeamPlayersResponse) {
-    errorLogger(fastify, "Invalid response from Entit-Sport API", "/services/teams.js/insertTeamAndPlayers - entitySportTeamPlayersResponse", {
+    errorLogger(
+      fastify,
+      `Invalid response from Entit-Sport API for url ${url}`,
+      "/services/teams.js/insertTeamAndPlayers - entitySportTeamPlayersResponse", {
       ...request,
       originalUrl: url
     }, entitySportTeamPlayers?.data);
@@ -1036,46 +1044,66 @@ const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
     upsertedPlayers.push(checkPlayer);
   }
 
-  const teamPlayers = await getTeamPlayersByTeamMatchTypeIdQuery({
-    ...request,
-    body: {
-      teamId: checkTeam.teamId,
-      matchTypeId: -1
-    }
-  }, fastify);
+  const entityMatchTypeEnums = lowerEntityMatchTypesEnums();
 
-  for (const player of upsertedPlayers) {
-    const teamPlayer = teamPlayers.find(tp => tp.refPlayerId === player.playerId || tp.tpId === player?.tpId);
-    if (!teamPlayer) {
-      const upsertedTeamPlayer = await insertTeamPlayerWithHomeTeamQuery(
-        {
+  for (const [format, players] of Object.entries(entitySportTeamPlayersResponse?.players || {})) {
+    const matchTypeId = global.tblMatchTypes.find(tmt => tmt.entityEnum === entityMatchTypeEnums[format.toLowerCase()])?.matchTypeId;
+    if (matchTypeId && players.length > 0) {
+      let teamMatchTypeId = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${checkTeam.teamId} AND ttmt."wrMatchTypeId" = ${matchTypeId}`);
+      if (!teamMatchTypeId || teamMatchTypeId.length === 0) {
+        teamMatchTypeId = await saveTeamMatchTypeByTeamService({
+          ...request,
+          body: {
+            teamId: checkTeam.teamId,
+            matchTypeId: matchTypeId ?? -1
+          },
+        }, fastify);
+        teamMatchTypeId = teamMatchTypeId?.[0] ?? null;
+      }
+
+      const teamPlayers = await getTeamPlayersByTeamMatchTypeIdQuery({
+        ...request,
+        body: {
           teamId: checkTeam.teamId,
-          refPlayerId: player.playerId,
-          tpId: player?.tpId ?? null,
-          userId: request?.userTokenInfo?.WrUserId ?? -2,
-          jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage ?? null,
-          jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath ?? null,
-        },
-        fastify,
-        request
-      );
+          matchTypeId: matchTypeId ?? -1
+        }
+      }, fastify);
 
-      if (player?.image && checkTeam?.jersey && upsertedTeamPlayer?.teamPlayerId) {
-        try {
-          await mergeAndSaveImage({
-            playerImage: player.image,
-            jersey: checkTeam.jersey,
-            playerName: player.playerName,
-            teamName: checkTeam.teamName,
-            teamPlayerId: upsertedTeamPlayer?.teamPlayerId,
-            commentaryPlayerId: null,
-            commentaryId: null,
-          }, fastify);
-          if (upsertedTeamPlayer?.homeTeam == true) {
-            await playerImageChangeOnClientAPIService(player, fastify);
+      for (const player of players) {
+        const teamPlayer = teamPlayers.find(tp => tp.tpId === player.pid);
+        if (!teamPlayer) {
+          const p = upsertedPlayers.find(up => up.tpId === player.pid);
+          const upsertedTeamPlayer = await insertTeamPlayerWithHomeTeamQuery(
+            {
+              teamId: checkTeam.teamId,
+              refPlayerId: p.playerId,
+              tpId: p?.tpId ?? null,
+              jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage ?? null,
+              jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath ?? null,
+              matchTypeId: matchTypeId ?? -1
+            },
+            fastify,
+            request
+          );
+
+          if (p?.image && teamMatchTypeId?.teamJerseyImage && upsertedTeamPlayer?.teamPlayerId) {
+            try {
+              await mergeAndSaveImage({
+                playerImage: p.image,
+                jersey: teamMatchTypeId.teamJerseyImage,
+                playerName: p.playerName,
+                teamName: checkTeam.teamName,
+                teamPlayerId: upsertedTeamPlayer?.teamPlayerId,
+                commentaryPlayerId: null,
+                commentaryId: null,
+              }, fastify);
+              if (upsertedTeamPlayer?.homeTeam == true) {
+                await playerImageChangeOnClientAPIService(p, fastify);
+              }
+            } catch (error) {
+
+            }
           }
-        } catch (error) {
-
         }
       }
     }
