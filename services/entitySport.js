@@ -701,7 +701,9 @@ const setEntityCom2Service = async (request , fastify) =>{
                     batterOrder 
                 })
             }
+            let ltbOrder = 0
             for (let b of tpBowler){
+                ltbOrder = ltbOrder + 1
                 let comP = playerTpIdObj[b.bowler_id]
                 bowler = comP;
 
@@ -711,7 +713,7 @@ const setEntityCom2Service = async (request , fastify) =>{
                     // bowlerRun : b.runs_conceded,
                     // bowlerTotalBall,
                     // bowlerOver : b.overs,
-                    bowlerOrder : 1
+                    bowlerOrder : ltbOrder
                     // bowlerDotBall,
                     // bowlerFour,
                     // bowlerSix
@@ -1489,33 +1491,64 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     if(response.scorecard && response.scorecard?.innings?.length > 0){
       let cInning = response.scorecard.innings.find((i) => i.number == inningNo)
       let bowlers = cInning.bowlers;
-      let currentBowler  = bowlers.filter((i)=> i.bowling == "true")
-      for (let b of currentBowler){
-        let comP = playerTpIdObj[b.bowler_id];
+      let currentBowler  = bowlers.filter((i)=> i.bowling == "true").map((i)=>parseInt(i.bowler_id))
+      let lb = response.live.bowlers.map((i)=>parseInt(i.bowler_id))
+      let ttlBowler = [...new Set([...currentBowler, ...lb])];
+      // for (let b of currentBowler){
+      //   let comP = playerTpIdObj[b.bowler_id];
+      //   if(comP){
+      //     let bowlerOrder = comP.bowlerOrder;
+      //     if (bowlerOrder == null) {
+      //       ltSetBowlerOrder += 1;
+      //       bowlerOrder = ltSetBowlerOrder;
+      //     }
+      //     playersMap[b.bowler_id] = {
+      //       ...comP,
+      //       isPlay: true,
+      //       onStrike: false,
+      //       bowlerOver: b.overs,
+      //       bowlerRun: b.runs_conceded,
+      //       bowlerTotalWicket: b.wickets,
+      //       bowlerEconomy: parseFloat(b.econ) ?? "0",
+      //       bowlerOrder,
+      //       bowlerMaidenOver: b?.maidens ?? 0,
+      //       bowlerWideBall : b.wides,
+      //       bowlerNoBall : b.noballs,
+      //       bowlerDotBall : b.run0,
+      //       isInPlayingEleven: true
+      //     };
+      //     currentPlayers.push(comP.commentaryPlayerId);
+      //   }
+        
+      // }
+      for(let b of ttlBowler){
+        let comP = playerTpIdObj[b];
+        let bowlerOrder;
         if(comP){
-          let bowlerOrder = comP.bowlerOrder;
-          if (bowlerOrder == null) {
+          bowlerOrder = comP.bowlerOrder;
+          if(bowlerOrder == null){
             ltSetBowlerOrder += 1;
             bowlerOrder = ltSetBowlerOrder;
           }
-          playersMap[b.bowler_id] = {
-            ...comP,
-            isPlay: true,
-            onStrike: false,
-            bowlerOver: b.overs,
-            bowlerRun: b.runs_conceded,
-            bowlerTotalWicket: b.wickets,
-            bowlerEconomy: parseFloat(b.econ) ?? "0",
-            bowlerOrder,
-            bowlerMaidenOver: b?.maidens ?? 0,
-            bowlerWideBall : b.wides,
-            bowlerNoBall : b.noballs,
-            bowlerDotBall : b.run0,
-            isInPlayingEleven: true
-          };
-          currentPlayers.push(comP.commentaryPlayerId);
         }
-       
+        let tpBowler = bowlers.find((i)=>i.bowler_id == b);
+        playersMap[b] = {
+          ...comP,
+          isPlay : tpBowler.bowling == "true" ? true : null,
+          onStrike : false,
+          bowlerOver: tpBowler.overs,
+          bowlerRun: tpBowler.runs_conceded,
+          bowlerTotalWicket: tpBowler.wickets,
+          bowlerEconomy: parseFloat(tpBowler.econ) ?? "0",
+          bowlerOrder,
+          bowlerMaidenOver: tpBowler?.maidens ?? 0,
+          bowlerWideBall : tpBowler.wides,
+          bowlerNoBall : tpBowler.noballs,
+          bowlerDotBall : tpBowler.run0,
+          isInPlayingEleven: true
+        }
+        currentPlayers.push(comP.commentaryPlayerId)
+        // console.log(playersMap[b])
       }
     }
     // find nonplaying player and set isPlay null
@@ -1934,7 +1967,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             if (run === 0) { 
               updateBall.ballIsDot = true;
               over.dotBall = over.dotBall + ball;
-              playersMap[c.batsman_id].batDotBall = (playersMap[c.batsman_id].batDotBall || 0) + 1
+              playersMap[c.batsman_id].batDotBall = (+playersMap[c.batsman_id].batDotBall || 0) + 1
               // playersMap[c.bowler_id].bowlerDotBall = (playersMap[c.bowler_id].bowlerDotBall || 0) + 1
             }
             else if(isBoundary){
@@ -2125,7 +2158,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             playersMap[c.bowler_id] = {
               ...playerTpIdObj[c.bowler_id],
               // bowlerOver :((playerTpIdObj[c.bowler_id].bowlerOver || 0) + 0.1).toFixed(1),
-              isPlay : true,
+              // isPlay : true,
               // bowlerTotalWicket : playerTpIdObj[c.bowler_id].bowlerTotalWicket ? playerTpIdObj[c.bowler_id].bowlerTotalWicket + 1 : 1,
               bowlerTotalBall : playerTpIdObj[c.bowler_id].bowlerTotalBall ? playerTpIdObj[c.bowler_id].bowlerTotalBall + 1 : 1,  
               // bowlerDotBall : playerTpIdObj[c.bowler_id].bowlerDotBall ? playerTpIdObj[c.bowler_id].bowlerDotBall + 1 : 1,  
@@ -2257,7 +2290,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               isPlay: null,
               onStrike: null,
               // batBall: (playersMap[c.batsman_id]?.batBall || 0) + 1,
-              batDotBall: (playersMap[wicketBatsId]?.batDotBall || 0) + 1,
+              batDotBall: (+playersMap[wicketBatsId]?.batDotBall || 0) + 1,
             }
           }
           else {
@@ -2272,7 +2305,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               isPlay: null,
               onStrike: null,
               // batBall: (playerTpIdObj[c.batsman_id].batBall || 0) + 1,
-              batDotBall: (playerTpIdObj[wicketBatsId].batDotBall || 0) + 1,
+              batDotBall: (+playerTpIdObj[wicketBatsId].batDotBall || 0) + 1,
               // batBall: 1,
               // batDotBall: 1,
             }
@@ -2453,7 +2486,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               isPlay: null,
               onStrike: null,
               // batBall: (playersMap[c.batsman_id]?.batBall || 0) + 1,
-              batDotBall: (playersMap[c.wicket_batsman_id]?.batDotBall || 0) + 1,
+              batDotBall: (+playersMap[c.wicket_batsman_id]?.batDotBall || 0) + 1,
             }
             // change old player
           if (batsmanId != w.batterId) {
@@ -2475,7 +2508,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               bowlerId: null,
               fielderId1: null,
               fielderId2: null,
-              batDotBall: playersMap[oldBatsman.tpId]?.batDotBall - 1,
+              batDotBall: (+playersMap[oldBatsman.tpId]?.batDotBall) - 1,
             }
             w.batterId = playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId;
             w.batterName = playerTpIdObj[c.wicket_batsman_id]?.playerName;
@@ -3462,7 +3495,7 @@ const regularBallUndoService = async (data, fastify, request) => {
   let isBoundary = run == 4 || run == 6 ? true : false;
   if (run == 0) {
     over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
-    playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
+    playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? (+playersMap[tpBall.batsman_id].batDotBall) - 1 : 0;
     // playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playersMap[tpBall.bowler_id].bowlerDotBall - 1 : 0;
   }
   else if (isBoundary) {
@@ -3641,7 +3674,7 @@ const legByeRunUndoService = async (data, fastify, request) => {
   let isBoundary = run == 4 || run == 6 ? true : false;
   if (run == 0) {
     over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
-    playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
+    playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? (+playersMap[tpBall.batsman_id].batDotBall) - 1 : 0;
     // playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playersMap[tpBall.bowler_id].bowlerDotBall - 1 : 0;
   }
   else if (isBoundary) {
@@ -3713,7 +3746,7 @@ const byeRunUndoService = async (data, fastify, request) => {
   let isBoundary = run == 4 || run == 6 ? true : false;
   if (run == 0) {
     over.dotBall = over.dotBall > 0 ? over.dotBall - 1 : 0
-    playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? playersMap[tpBall.batsman_id].batDotBall - 1 : 0;
+    playersMap[tpBall.batsman_id].batDotBall = playersMap[tpBall.batsman_id].batDotBall > 0 ? (+playersMap[tpBall.batsman_id].batDotBall) - 1 : 0;
     // playersMap[tpBall.bowler_id].bowlerDotBall = playersMap[tpBall.bowler_id].bowlerDotBall > 0 ? playersMap[tpBall.bowler_id].bowlerDotBall - 1 : 0;
   }
   else if (isBoundary) {
