@@ -22,7 +22,7 @@ const {
 const {storeImageOnServer, removeImageFromServer, generateImageName, getImageFromUrl } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
-const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive, matchStatusEntity, error, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, parseUmpires, ScoringTypes, RefType, lowerEntityMatchTypesEnums, EntityCommentaryStatus } = require("../utilities");
+const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive, matchStatusEntity, error, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, parseUmpires, ScoringTypes, RefType, lowerEntityMatchTypesEnums, EntityCommentaryStatus, getComDataByCId } = require("../utilities");
 const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryPlayers, updateCommentaryPlayerById, isCountInPOintCommentaryChangeQuery, updateCommentaryDateByCommentaryIdQuery, updateCommentaryQuery, insertCommentaryTeamQuery, deleteInningWiseCommentaryPlayersQuery } = require("../repository/TableCommentary")
 const { deleteTournamentTeamPlayersByCompIdQuery, insertTournamentTeamPlayersQuery, deletePlayersByTeamAndPlayerIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
@@ -315,10 +315,10 @@ const updateCompititionService = async (request, fastify) => {
     isEventSnap: validateId.isEventSnap,
     isPointTable: validateId.isPointTable,
     matchTypeId: request.body.matchTypeId || validateId.matchTypeId,
-    winPoint: request.body.winPoint || validateId.winPoint,
-    tiePoint: request.body.tiePoint || validateId.tiePoint,
-    cancelPoint: request.body.cancelPoint || validateId.cancelPoint,
-    lossPoint: request.body.lossPoint || validateId.lossPoint,
+    winPoint: request.body.winPoint ?? validateId.winPoint,
+    tiePoint: request.body.tiePoint ?? validateId.tiePoint,
+    cancelPoint: request.body.cancelPoint ?? validateId.cancelPoint,
+    lossPoint: request.body.lossPoint ?? validateId.lossPoint,
     drsCount : request.body.drsCount || validateId.drsCount,
     imagePath: validateId.imagePath,
     isMen: validateId.isMen,
@@ -1378,7 +1378,6 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
             teamId: team.teamId,
             refPlayerId: player.playerId,
             tpId: player?.tpId ?? null,
-            userId: request?.userTokenInfo?.WrUserId ?? -2,
             jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage ?? null,
             jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath ?? null,
             matchTypeId: matchTypeId
@@ -1885,7 +1884,6 @@ const competitionImportService = async (data, fastify, request) => {
             teamId: team.teamId,
             refPlayerId: upsertedPlayer.playerId,
             tpId: upsertedPlayer?.tpId ?? null,
-            userId: request?.userTokenInfo?.WrUserId ?? -2,
             jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage ?? null,
             jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath ?? null,
             matchTypeId: matchTypeId
@@ -2202,6 +2200,7 @@ const competitionImportService = async (data, fastify, request) => {
         // TeamB
         await upsertCommentaryTeamsAndPlayersService(checkCompetition, tournamentTeamsPlayers, checkCommentary, maxOver, commentaryTeams, teamB, i, commentaryPlayers, teamBSquad, entitySportMatchResponse?.players, entitySocketData, request, fastify);
       }
+      await getComDataByCId({ commentaryId: commentaryId }, request, fastify)
 
       if (newCommentaryImport && match?.game_state == EntityCommentaryStatus.INPROGRESS) {
         const { storeInningWiseEntityDataService } = require("./entitySport")
@@ -2284,6 +2283,43 @@ const getAllCompetitionsService = async (request) => {
   return compData;
 };
 
+const insertCompletedCompetitionsInAutoImportService = async (fastify) => {
+  try {
+    const now = Date.now();
+    const twoDaysAgo = now - 2 * 24 * 60 * 60 * 1000;
+
+    const completedCompetitions = global.tblCompetitions.filter((comp) => {
+      if (comp.commStatus !== compStatus.completed || !comp.endDate) return false;
+
+      const endDate = new Date(comp.endDate).getTime();
+      return endDate <= now && endDate > twoDaysAgo;
+    });
+
+    await Promise.all(
+      completedCompetitions.map((competition) =>
+        insertAutoImportDataService(
+          {
+            body: {
+              refId: competition.tpId,
+              refType: RefType.CompetitionUpdate,
+              sourceId: 3,
+            },
+            userTokenInfo: { WrUserId: -2 },
+          },
+          fastify
+        )
+      )
+    );
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> services/competition.js/insertCompletedCompetitionsInAutoImportService",
+      null
+    );
+  }
+};
+
 module.exports = {
   allCompetitionService,
   competitionByIdService,
@@ -2309,5 +2345,6 @@ module.exports = {
   changeIsCompetitionStatisticsCalculationStatusService,
   getAllCompetitionsService,
   esGetMatchNumberFromCompetitionMatchAPI,
-  upsertCommentaryTeamsAndPlayersService
+  upsertCommentaryTeamsAndPlayersService,
+  insertCompletedCompetitionsInAutoImportService
 };

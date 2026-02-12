@@ -1078,7 +1078,6 @@ const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
               teamId: checkTeam.teamId,
               refPlayerId: p.playerId,
               tpId: p?.tpId ?? null,
-              userId: request?.userTokenInfo?.WrUserId ?? -2,
               jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage ?? null,
               jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath ?? null,
               matchTypeId: matchTypeId ?? -1

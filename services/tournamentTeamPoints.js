@@ -18,7 +18,7 @@ const { callClientAPI, ServiceType, APIEndpointModuleType, callEntitySportAPI, e
 const { nullTeamtpIds } = require("../utilities/entityConst");
 const { errorLogger } = require("../utilities/logger");
 const { insertAutoImportDataService } = require("./autoImportData");
-const { insertTeamAndPlayers } = require("./teams");
+const { upsertTeamOnImportService } = require("./teams");
 const { saveCompetitionService } = require("./competition");
 
 const allTournamentTeamPointsService = async (request, fastify) => {
@@ -615,46 +615,14 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
   const isValidCompetitionRoundType = competitionRoundType === "series" || competitionRoundType === "group";
   let alltournamentTeamPoints = await getAllTournamentTeamPointsQuery(fastify);
   alltournamentTeamPoints = alltournamentTeamPoints.filter(item => item.competitionId === competitionId);
-
-  const checkTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(item => item.competitionId === competitionId);
+  const entitySocketData = global.tblEntitySockets[0];
+  const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
 
   const filterTeamIds = (result?.teams || []).filter(team => !nullTeamtpIds.includes(team.tid));
   for (let team of filterTeamIds) {
     const highestOrder = Math.max(...result?.rounds.map(group => group.order));
-    let checkTeam = global.tblTeams.find(item => item.tpId === team?.tid);
-    if (!checkTeam) {
-      const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
-      checkTeam = await insertTeamAndPlayers({
-        tid: team?.tid
-      }, eventType, request, fastify);
-    }
+    const checkTeam = await upsertTeamOnImportService(team, entitySocketData, eventType, fastify, request);
     if (checkTeam) {
-      const teamPlayers = await getAllPlayersByTeamIdQuery(checkTeam?.teamId, fastify, request);
-      const tournamentTeamPlayers = checkTournamentTeamPlayers.filter(item => item.teamId === checkTeam?.teamId);
-      const tournamentTeamPlayerIds = new Set(tournamentTeamPlayers.map(p => p.playerId));
-      const missingPlayerIds = teamPlayers.filter(p => !tournamentTeamPlayerIds.has(p.playerId)).map(p => p.playerId);
-      for (const mp of missingPlayerIds) {
-        const checkTournamentTeamPlayersById = checkTournamentTeamPlayers.find(item => item.playerId === mp);
-        if (checkTournamentTeamPlayersById) {
-          if (checkTournamentTeamPlayersById.teamId !== checkTeam.teamId) {
-            await deleteTournamentTeamPlayersQuery([checkTournamentTeamPlayersById.id], request, fastify);
-            global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(item => item.id !== checkTournamentTeamPlayers.id);
-
-            const data = {
-              teamId: checkTeam.teamId,
-              competitionId,
-              playerId: mp,
-              playerName: checkTournamentTeamPlayersById?.playerName,
-              tpId: checkTournamentTeamPlayersById?.tpId || null,
-              userId: request.userTokenInfo.WrUserId,
-            }
-
-            const insertTournamentTeamPlayer = await insertTournamentTeamPlayersQuery(data, request, fastify);
-            global.tblTournamentTeamPlayers.push(insertTournamentTeamPlayer[0])
-          }
-        }
-      }
-
       if (isValidCompetitionRoundType && result?.standing?.standings?.length === 0) {
         const checkTournamentTeamPoint = alltournamentTeamPoints.find(item => item.competitionId === competitionId && item.teamId === checkTeam?.teamId && item.groupId === 1);
         if (!checkTournamentTeamPoint) {
@@ -816,7 +784,7 @@ const insertTournamentTeamPointInAutoImportService = async (fastify) => {
     today.setHours(0, 0, 0, 0);
 
     const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setDate(yesterday.getDate() - 2);
 
     const competitionList = global.tblCompetitions.filter(cp => cp.tpId);
     for (const competition of competitionList) {

@@ -5517,6 +5517,7 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           tc."wrCommentaryId" AS "cid",
           tc."wrEventRefId" AS "eid",
           tet."wrEventType" AS "ety",
+          tc."wrMatchTypeId" AS "matchTypeId",
           mt."wrMatchType" AS "mtyp",
           mt2."wrMatchType" AS "hmtyp",
           COALESCE(co."wrCompetition", '') AS "com",
@@ -5790,6 +5791,7 @@ const getCommentariesDataQueryV1 = async (fastify) => {
     `select 
         tc."wrCommentaryId" as "cid",
         tc."wrMatchTypeId" as "mtypid",
+        tc."wrMatchTypeId" AS "matchTypeId",
         mt."wrMatchType" AS "mtyp",
         tc."wrEventTypeId" as "etypid",
         tet."wrEventType" as "etyp",
@@ -9209,6 +9211,7 @@ const getAllCommentaryByCompetitionIdForClientQuery = async (request, fastify) =
         tc."wrCommentaryId" AS "cid",
         tc."wrEventRefId" AS "eid",
         tet."wrEventType" AS "ety",
+        tc."wrMatchTypeId" AS "matchTypeId",
         mt."wrMatchType" AS "mtyp",
         mt2."wrMatchType" AS "hmtyp",
         COALESCE(co."wrCompetition", '') AS "com",

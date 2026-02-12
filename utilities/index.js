@@ -2190,7 +2190,203 @@ const getInningWiseDataFromEntity = (moduleType) => {
     };
   }
 }
+const comWeatherAndPitchData = async (commentaryId) => {
+  const commentaryData = global.tblCommentaries.find(item => item.commentaryId == commentaryId);
+  const pitchData = global.tblPitchConditions.find(elem => elem.commentaryId == commentaryId);
+  const weatherDetails = global.tblWeather.find(elem => elem.commentaryId == commentaryId);
 
+  return {
+    onfieldUmpires: commentaryData?.onfieldUmpires || "",
+    matchReferee: commentaryData?.matchReferee || "",
+    thirdUmpire: commentaryData?.thirdUmpire || "",
+    difficulty: commentaryData?.difficulty || 0,
+    pitchHardness: commentaryData?.pitchHardness || 0,
+    pitchCracks: commentaryData?.pitchCracks || 0,
+    pitchWareSpeed: commentaryData?.pitchWareSpeed || 0,
+    pitchType: commentaryData?.pitchType || 0,
+    lawnStriping: commentaryData?.lawnStriping || 0,
+    pitchAge: commentaryData?.pitchAge || 0,
+    session: commentaryData?.session || "",
+    battingCondition: pitchData?.battingCondition || "",
+    pitchCondition: pitchData?.pitchCondition || "",
+    paceBowlingCondition: pitchData?.paceBowlingCondition || "",
+    spineBowlingConniton: pitchData?.spineBowlingConniton || "",
+    weatherCondition: weatherDetails?.weatherCondition || "",
+    // description: weatherDetails?.description || "",
+    temp: weatherDetails?.temp || null,
+    humidity: weatherDetails?.humidity || null,
+    visibility: weatherDetails?.visibility || null,
+    windSpeed: weatherDetails?.windSpeed || null,
+    clouds: weatherDetails?.clouds || null,
+  }
+} 
+const getComDataByCId = async (data, request, fastify) => {
+  let com = global.tblCommentaries.find(
+    (item) => item?.commentaryId === data.commentaryId
+  );
+  if (!com) {
+    throw new Error("Commentary with this id not Found");
+  }
+  let rno = 0;
+  let type = null;
+  let status = com.commentaryStatus;
+  if (status != 4 && status != 1 && status != 10) {
+    type = "live";
+  } else if (status == 4 || status == 10) {
+    type = "completed";
+  } else if (status == 1) {
+    type = "scheduled";
+  }
+  const isRun = type == "scheduled" || "completed" ? false : true;
+  let crr, rrr, batid, ballid;
+  let eventType = await global.tblEventTypes.find(
+    (e) => e.eventTypeId == com.eventTypeId
+  );
+  let competition = await global.tblCompetitions.find(
+    (c) => c.competitionId == com.competitionId
+  );
+  //teams set
+  const commentaryTeamsOne = await global.tblCommentaryTeams.find(
+    (team) =>
+      team.commentaryId === com.commentaryId &&
+      team.teamId === com.team1Id &&
+      team.currentInnings === com.currentInnings
+  );
+
+  const commentaryTeamsTwo = await global.tblCommentaryTeams.find(
+    (team) =>
+      team.commentaryId === com.commentaryId &&
+      team.teamId === com.team2Id &&
+      team.currentInnings === com.currentInnings
+  );
+  let teamScore1, teamScore2, t1bg, t1co, t2bg, t2co;
+  if (commentaryTeamsOne) {
+    const wicket1 =
+      commentaryTeamsOne.teamWicket === null
+        ? 0
+        : commentaryTeamsOne.teamWicket;
+    const overs1 =
+      commentaryTeamsOne.teamOver === null ? 0.0 : commentaryTeamsOne.teamOver;
+    teamScore1 = commentaryTeamsOne?.teamScore ?? "0";
+    teamScore1 = teamScore1 + "/" + wicket1 + "(" + overs1 + ")";
+    t1bg = commentaryTeamsOne.backgroundColor || "";
+    t1co = commentaryTeamsOne.teamColor || "";
+  }
+
+  if (commentaryTeamsTwo) {
+    t2sn = commentaryTeamsTwo.shortName;
+    t2n = commentaryTeamsTwo.teamName;
+    const wicket1 =
+      commentaryTeamsTwo.teamWicket === null
+        ? 0
+        : commentaryTeamsTwo.teamWicket;
+    const overs1 =
+      commentaryTeamsTwo.teamOver === null ? 0.0 : commentaryTeamsTwo.teamOver;
+    teamScore2 = commentaryTeamsTwo?.teamScore ?? "0";
+    teamScore2 = teamScore2 + "/" + wicket1 + "(" + overs1 + ")";
+    t2bg = commentaryTeamsTwo.backgroundColor || "";
+    t2co = commentaryTeamsTwo.teamColor || "";
+  }
+  const team1 = await global.tblTeams.find(
+    (team) => team.teamId == com.team1Id
+  );
+  const team2 = await global.tblTeams.find(
+    (team) => team.teamId == com.team2Id
+  );
+  if (type == "scheduled") {
+    crr = 0;
+    rrr = 0;
+  } else {
+    if (commentaryTeamsOne.teamStatus == 1) {
+      crr = parseFloat(commentaryTeamsOne.crr);
+      rrr = parseFloat(commentaryTeamsTwo.rrr);
+      batid = commentaryTeamsOne.teamId;
+      ballid = commentaryTeamsTwo.teamId;
+    } else {
+      crr = parseFloat(commentaryTeamsTwo.crr);
+      rrr = parseFloat(commentaryTeamsTwo.rrr);
+      batid = commentaryTeamsTwo.teamId;
+      ballid = commentaryTeamsOne.teamId;
+    }
+  }
+  const TossTeamName = await global.tblCommentaryTeams.find(
+    (t) =>
+      t.commentaryId == com.commentaryId &&
+      t.teamId == com.tossWonBy &&
+      t.currentInnings == com.currentInnings
+  );
+  let toss = "";
+  if (com.choseTo) {
+    toss = com.choseTo == 1 ? "BAT" : "BOWL";
+  }
+  const weatherAndPitchData = await comWeatherAndPitchData(com.commentaryId);
+  let comDetails = {
+    rno: rno,
+    cid : com.commentaryId,
+    eid: com.eventRefId || "",
+    ety: eventType?.eventType || "",
+    matchTypeId: com.matchTypeId || null,
+    mtyp: com.matchType || "",
+    hmtyp: com.historyMatchType || "",
+    com: competition?.competition || "",
+    ci: com.currentInnings,
+    en: com.eventName || "",
+    ed: convertDate(com.eventDate, "DD/MM/YYYY") || "",
+    et: convertDate(com.eventDate, "hh:mm:ss") || "",
+    utc: com.eventDate,
+    twonby: TossTeamName?.teamName || null,
+    choseto: toss || null,
+    te1n: commentaryTeamsOne?.teamName || "",
+    te2n: commentaryTeamsTwo?.teamName || "",
+    s1n: commentaryTeamsOne?.shortName || "",
+    s2n: commentaryTeamsTwo?.shortName || "",
+    te1i: team1?.image || "",
+    te2i: team2?.image || "",
+    t1jr: team1?.jersey || "",
+    t2jr: team2?.jersey || "",
+    nte1i: team1?.imagePath || "",
+    nt1jr: team1?.jerseyPath || "",
+    nte2i: team2?.imagePath || "",
+    nt2jr: team2?.jerseyPath || "",
+    loc: com.location || "",
+    isrun: isRun,
+    t1s: teamScore1 || "",
+    t2s: teamScore2 || "",
+    dis: com.displayStatus || "",
+    rmk: com.rmk || "",
+    winRmk: com.winRmk || "",
+    cardType: com.cardType,
+    tossRmk: com.tossRmk || "",
+    winNm: com?.winnerName || "",
+    winId: com?.winnerId || 0,
+    te1crr: parseFloat(commentaryTeamsOne.crr) || 0,
+    te2crr: parseFloat(commentaryTeamsTwo.crr) || 0,
+    te1rrr: parseFloat(commentaryTeamsOne.rrr) || 0,
+    te2rrr: parseFloat(commentaryTeamsTwo.rrr) || 0,
+    crr: crr || 0,
+    rrr: rrr || 0,
+    cst: com.commentaryStatus,
+    res: com.result || "",
+    type,
+    batid: batid || null,
+    ballid: ballid || null,
+    t1id: com.team1Id || null,
+    t2id: com.team2Id || null,
+    t1bg: t1bg || "",
+    t1co: t1co || "",
+    t2bg: t2bg || "",
+    t2co: t2co || "",
+    compId: competition?.competitionId || 0,
+    isPr: com.isPredictMarket,
+    ics: com.isClientShow,
+    isTest: com.isTest,
+    isActive: com.isActive,
+    etyId: eventType?.eventTypeId,
+    eventNo: com?.eventNo,
+    ...weatherAndPitchData,
+  };
+  return comDetails;
+};
 module.exports = {    
   ERROR_CODES,
   error,
@@ -2314,4 +2510,5 @@ module.exports = {
   awardTypes,
   lowerEntityMatchTypesEnums,
   getInningWiseDataFromEntity,
+  getComDataByCId,
 };

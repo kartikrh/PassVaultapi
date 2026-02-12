@@ -464,19 +464,23 @@ const getTeamPlayersByTeamMatchTypeIdQuery = async (request, fastify) => {
 
 const updateTeamPlayerMatchTypeIdQuery = async (request, fastify) => {
   try {
-    const { teamId, matchTypeId, refPlayerId, oldMatchTypeId } = request.body;
+    const { teamId, matchTypeId, refPlayerId, oldMatchTypeId, jerseyPlayerImage, jerseyPlayerImagePath } = request.body;
     const result = await fastify.db.query(
       `
       UPDATE "tblTeamPlayers" SET
         "wrMatchTypeId" = $1,
-        "wrModifyBy" = $2,
-        "wrModifyDate" = $3
-      WHERE "wrTeamId" = $4 AND "wrRefPlayerId" = $5 AND "wrMatchTypeId" = $6;
+        "wrJerseyPlayerImage" = $2,
+        "wrJerseyPlayerImagePath" = $3,
+        "wrModifyBy" = $4,
+        "wrModifyDate" = $5
+      WHERE "wrTeamId" = $6 AND "wrRefPlayerId" = $7 AND "wrMatchTypeId" = $8;
       `,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
           matchTypeId,
+          jerseyPlayerImage,
+          jerseyPlayerImagePath,
           request?.userTokenInfo?.WrUserId ?? -5,
           new Date(),
           teamId,
@@ -561,7 +565,7 @@ const insertTeamPlayerWithHomeTeamQuery = async (data, fastify, request) => {
           data.teamId,
           data.refPlayerId,
           new Date(),
-          data.userId,
+          request?.userTokenInfo?.WrUserId ?? -2,
           data.tpId ?? null,
           data?.jerseyPlayerImage ?? null,
           data?.jerseyPlayerImagePath ?? null,
