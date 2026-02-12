@@ -1321,6 +1321,17 @@ const esGetMatchNumberFromCompetitionMatchAPI = async (competitionTpId, request,
 
 const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tournamentTeamsPlayers, checkCommentary, maxOver, commentaryTeams, team, i, commentaryPlayers, teamSquad, entitySportMatchResponsePlayers, entitySocketData, request, fastify) => {
   const teamSquadHasPlaying11 = teamSquad.find(t => t.playing11 === "true");
+  const matchTypeId = global.tblMatchTypes.find(mt => mt.matchTypeId === checkCommentary.matchTypeId)?.matchTypeId || null;
+  const teamMatchTypeId = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${team.teamId} AND ttmt."wrMatchTypeId" = ${matchTypeId}`);
+  if (!teamMatchTypeId || teamMatchTypeId.length === 0) {
+    await saveTeamMatchTypeByTeamService({
+      ...request,
+      body: {
+        teamId: team.teamId,
+        matchTypeId: matchTypeId,
+      },
+    }, fastify);
+  }
   let commentaryTeam = commentaryTeams.find(ct => ct.teamId === team.teamId && ct.currentInnings === i);
   if (!commentaryTeam) {
     commentaryTeam = await insertCommentaryTeamQuery({
@@ -1347,7 +1358,7 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
       ...request,
       body: {
         teamId: team.teamId,
-        matchTypeId: -1
+        matchTypeId: matchTypeId
       }
     }, fastify);
 
@@ -1369,7 +1380,7 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
             tpId: player?.tpId ?? null,
             jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage ?? null,
             jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath ?? null,
-            matchTypeId: -1
+            matchTypeId: matchTypeId
           }, fastify, request);
 
           if (player?.image && team?.jersey && teamPlayer?.teamPlayerId) {
@@ -1844,11 +1855,22 @@ const competitionImportService = async (data, fastify, request) => {
   const tournamentTeamsPlayers = global.tblTournamentTeamPlayers.filter(tttp => tttp.competitionId === checkCompetition.competitionId);
   for (const squad of entitySportCompetitionSquadResponse) {
     const team = await upsertTeamOnImportService(squad.team, entitySocketData, eventType, fastify, request);
+    const matchTypeId = global.tblMatchTypes.find(mt => mt.entityEnum === Number(squad.format))?.matchTypeId || null;
+    const teamMatchTypeId = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${team.teamId} AND ttmt."wrMatchTypeId" = ${matchTypeId}`);
+    if (!teamMatchTypeId || teamMatchTypeId.length === 0) {
+      await saveTeamMatchTypeByTeamService({
+        ...request,
+        body: {
+          teamId: team.teamId,
+          matchTypeId: matchTypeId,
+        },
+      }, fastify);
+    }
     const teamPlayers = await getTeamPlayersByTeamMatchTypeIdQuery({
       ...request,
       body: {
         teamId: team.teamId,
-        matchTypeId: -1
+        matchTypeId: matchTypeId
       }
     }, fastify);
     const tournamentTeamPlayers = tournamentTeamsPlayers.filter(ttp => ttp.teamId === team.teamId);
@@ -1864,7 +1886,7 @@ const competitionImportService = async (data, fastify, request) => {
             tpId: upsertedPlayer?.tpId ?? null,
             jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage ?? null,
             jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath ?? null,
-            matchTypeId: -1
+            matchTypeId: matchTypeId
           },
           fastify,
           request
