@@ -25604,6 +25604,55 @@ const matchCompleteService = async (data, fastify, comDetails) => {
   return true
 }
 
+const getCompletedCommentaryService = async (fastify) => {
+  try {
+    const now = Date.now();
+    const thirtyMinutesAgo = now - 30 * 60 * 1000;
+    const thirtyOneMinutesAgo = now - 31 * 60 * 1000;
+
+    const completedCommentaries = global.tblCommentaries.filter((com) => {
+      if (
+        com.commentaryStatus !== commentaryStatus.COMPLETED ||
+        !com.commentaryCloseTime
+      ) return false;
+
+      const closeTime = new Date(com.commentaryCloseTime).getTime();
+      return closeTime <= thirtyMinutesAgo && closeTime > thirtyOneMinutesAgo;
+    });
+
+    const competitionIdSet = new Set(
+      completedCommentaries.map((c) => c.competitionId)
+    );
+
+    const filteredCompetitions = global.tblCompetitions.filter(
+      (comp) => competitionIdSet.has(comp.competitionId) && comp.tpId !== null
+    );
+
+    await Promise.all(
+      filteredCompetitions.map((competition) =>
+        insertAutoImportDataService(
+          {
+            body: {
+              refId: competition.tpId,
+              refType: RefType.tournamentTeamPointUpdate,
+              sourceId: 3,
+            },
+            userTokenInfo: { WrUserId: -2 },
+          },
+          fastify
+        )
+      )
+    );
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> services/commentary.js/getCompletedCommentaryService",
+      null
+    );
+  }
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -25730,4 +25779,5 @@ module.exports = {
   getCommentaryStatisticsService,
   getAllCommentaryByCompetitionIdForClientService,
   importCompetitionMatchService,
+  getCompletedCommentaryService
 };

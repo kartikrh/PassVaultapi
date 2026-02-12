@@ -47,8 +47,7 @@ const { autoUpdatePlayerStatisticsDataProcess } = require("./utilities/autoUpdat
 const { ISPLAYERCALCULATIONON } = require("./utilities/configConstants.js");
 const { insertCompetitionstatisticsInAutoImportService } = require("./services/competitionStatistics.js");
 const { insertICCRankingInAutoImportService } = require("./services/iccRanking.js");
-const { insertTournamentTeamPointInAutoImportService } = require("./services/tournamentTeamPoints.js");
-const { importCompetitionMatchService } = require("./services/commentry.js");
+const { importCompetitionMatchService, getCompletedCommentaryService } = require("./services/commentry.js");
 const { resetAllClientSocketReconnectCountService, disconnectAllClientSocketService } = require("./services/clientSocket.js");
 const { connectClients: newConnectClients } = require("./sockets/client.js");
 // const { nodeProfilingIntegration } = require('@sentry/profiling-node');
@@ -169,6 +168,7 @@ module.exports = async function (fastify, opts) {
   cron.schedule('* * * * *', async () => {
     try {
       await upcomingCommentaries(fastify);
+      await getCompletedCommentaryService(fastify);
     } catch (error) {
       console.error(new Date(), "Error during scheduled task:", error);
     }
@@ -210,7 +210,6 @@ module.exports = async function (fastify, opts) {
   cron.schedule('30 0 * * *', async () => {
     try {
       if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
-        await insertTournamentTeamPointInAutoImportService(fastify);
         await insertCompetitionstatisticsInAutoImportService(fastify);
         await insertICCRankingInAutoImportService(fastify);
         await importCompetitionMatchService(fastify);
