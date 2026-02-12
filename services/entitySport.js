@@ -2427,15 +2427,23 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           const commFielder2Id = playerTpIdObj[commFielder2]?.commentaryPlayerId;
           
           if (commFielder != Number(c?.bowler_id)) {
-            playersMap[commFielder] = {
-              ...playerTpIdObj[commFielder],
-              isInPlayingEleven: true,
+            if (!playersMap[commFielder]) {
+              playersMap[commFielder] = {
+                ...playerTpIdObj[commFielder],
+                isInPlayingEleven: true,
+              };
+            } else if (playersMap[commFielder].isInPlayingEleven == false) {
+              playersMap[commFielder].isInPlayingEleven = true;
             }
           }
-          if (commFielder != commFielder2 || commFielder2 != Number(c?.bowler_id)) {
-            playersMap[commFielder2] = {
-              ...playerTpIdObj[commFielder2],
-              isInPlayingEleven: true,
+          if (commFielder2 != commFielder && commFielder2 != Number(c?.bowler_id)) {
+            if (!playersMap[commFielder2]) {
+              playersMap[commFielder2] = {
+                ...playerTpIdObj[commFielder2],
+                isInPlayingEleven: true,
+              };
+            } else if (playersMap[commFielder2].isInPlayingEleven == false) {
+              playersMap[commFielder2].isInPlayingEleven = true;
             }
           }
 
