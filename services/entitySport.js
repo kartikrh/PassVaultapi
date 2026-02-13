@@ -4877,7 +4877,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
             }
           }
         }
-        if ((liveInningNumber === 2 && i === 1) || gameState == EntityCommentaryStatus.INNINGCHANGE) {
+        if (liveInningNumber > i || gameState == EntityCommentaryStatus.INNINGCHANGE) {
           upComDetails.commentaryStatus = commentaryStatus.INNINGCHANGE;
           upTeams = [
             { ...battingTeam, isBattingComplete: true, teamStatus: 2 },
