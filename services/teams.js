@@ -28,7 +28,7 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { deletePlayersByTeamIdQuery } = require("../repository/TableTournamentsTeamPlayers")
 const { deletePointsByTeamIdQuery } = require("../repository/TableTournmentTeamPoints")
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
-const { trimTextData, callEntitySportAPI, APIEndpointModuleType, ServiceType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, EventType, checkEntitySportAPIEndpointIsActive, RefType, commentaryStatus, callClientAPI, lowerEntityMatchTypesEnums } = require("../utilities/index");
+const { trimTextData, callEntitySportAPI, APIEndpointModuleType, ServiceType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, EventType, checkEntitySportAPIEndpointIsActive, RefType, commentaryStatus, callClientAPI, ICCMatchType } = require("../utilities/index");
 const { insertPlayerQuery, updateExchangePlayerQuery } = require("../repository/TablePlayer");
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { insertAutoImportDataService } = require("./autoImportData");
@@ -1045,10 +1045,9 @@ const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
       upsertedPlayers.push(checkPlayer);
     }
 
-    const entityMatchTypeEnums = lowerEntityMatchTypesEnums();
-
     for (const [format, players] of Object.entries(entitySportTeamPlayersResponse?.players || {})) {
-      const matchTypeId = global.tblMatchTypes.find(tmt => tmt.entityEnum === entityMatchTypeEnums[format.toLowerCase()])?.matchTypeId;
+      const matchTypeEnum = ICCMatchType[isMen ? "men" : "women"][format.toLowerCase()];
+      const matchTypeId = global.tblMatchTypes.find(tmt => tmt.entityEnum === matchTypeEnum)?.matchTypeId;
       if (matchTypeId && players.length > 0) {
         let teamMatchTypeId = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${checkTeam.teamId} AND ttmt."wrMatchTypeId" = ${matchTypeId}`);
         if (!teamMatchTypeId || teamMatchTypeId.length === 0) {
