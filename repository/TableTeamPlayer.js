@@ -303,10 +303,13 @@ const getTeamListByPlayerIdQuery = async (refPlayerId, fastify, request) => {
         ttp."wrHomeTeam" as "homeTeam",
         ttp."wrJerseyPlayerImage" AS "jerseyPlayerImage",
         ttp."wrJerseyPlayerImagePath" AS "jerseyPlayerImagePath",
-        ttp."wrTpId" as "tpId"
+        ttp."wrTpId" as "tpId",
+        ttp."wrMatchTypeId" as "matchTypeId",
+        tmt."wrMatchType" AS "matchType"
       FROM "tblTeamPlayers" AS ttp
       LEFT JOIN "tblTeams" AS tt ON tt."wrTeamId" = ttp."wrTeamId"
       LEFT JOIN "tblPlayers" AS tp ON tp."wrPlayerId" = ttp."wrRefPlayerId"
+      LEFT JOIN "tblMatchTypes" AS tmt ON tmt."wrMatchTypeId" = ttp."wrMatchTypeId"
       WHERE ttp."wrRefPlayerId" = $1 AND ttp."wrIsDeleted" = FALSE`,
       {
         bind: [refPlayerId],
@@ -335,7 +338,8 @@ const getHomeTeamPlayerByPlayerIdQuery = async (data, fastify, request) => {
         "wrJerseyPlayerImage" as "jerseyPlayerImage",
         "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
         "wrTpId" as "tpId",
-        "wrHomeTeam" as "homeTeam"
+        "wrHomeTeam" as "homeTeam",
+        "wrMatchTypeId" as "matchTypeId"
       FROM "tblTeamPlayers"
       WHERE "wrIsDeleted" = FALSE AND "wrRefPlayerId" = $1 AND "wrHomeTeam" = TRUE`,
       {
