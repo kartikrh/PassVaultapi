@@ -267,7 +267,7 @@ const deleteTeamMatchTypeByTeamQuery = async (request, fastify) => {
 
         const query = `
             UPDATE "tblTeamMatchType" SET
-                "wrIsDelete" = $1,
+                "wrIsDeleted" = $1,
                 "wrDeletedBy" = $2,
                 "wrDeletedAt" = $3
             WHERE "wrTeamMatchTypeId" = $4;

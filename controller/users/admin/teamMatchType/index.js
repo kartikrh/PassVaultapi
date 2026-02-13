@@ -9,7 +9,7 @@ const getTeamMatchTypeByTeamId = async (request, reply, fastify) => {
     const result = await getTeamMatchTypeByTeamService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/getTeamMatchTypeByTeamId", request);
+    errorLogger(fastify, err.message, commonPath + "getTeamMatchTypeByTeamId", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -19,7 +19,7 @@ const saveTeamMatchTypeByTeamId = async (request, reply, fastify) => {
     const result = await saveTeamMatchTypeByTeamService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/saveTeamMatchTypeByTeamId", request);
+    errorLogger(fastify, err.message, commonPath + "saveTeamMatchTypeByTeamId", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -29,7 +29,7 @@ const updateTeamMatchDataTypeByTeamId = async (request, reply, fastify) => {
     const result = await updateTeamMatchTypeDataByTeamService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/updateTeamMatchDataTypeByTeamId", request);
+    errorLogger(fastify, err.message, commonPath + "updateTeamMatchDataTypeByTeamId", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -39,7 +39,7 @@ const activeInactiveTeamMatchDataTypeByTeamId = async (request, reply, fastify) 
     const result = await activeInactiveTeamMatchDataTypeByTeamIdService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/activeInactiveTeamMatchDataTypeByTeamId", request);
+    errorLogger(fastify, err.message, commonPath + "activeInactiveTeamMatchDataTypeByTeamId", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -49,7 +49,7 @@ const deleteTeamMatchTypeByTeamId = async (request, reply, fastify) => {
     const result = await deleteTeamMatchTypeByTeamIdService(request, fastify);
     reply.status(200).send(success(result, 200));
   } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/deleteTeamMatchTypeByTeamId", request);
+    errorLogger(fastify, err.message, commonPath + "deleteTeamMatchTypeByTeamId", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
