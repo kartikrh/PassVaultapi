@@ -307,9 +307,9 @@ const getTeamListByPlayerIdQuery = async (refPlayerId, fastify, request) => {
       FROM "tblTeamPlayers" AS ttp
       LEFT JOIN "tblTeams" AS tt ON tt."wrTeamId" = ttp."wrTeamId"
       LEFT JOIN "tblPlayers" AS tp ON tp."wrPlayerId" = ttp."wrRefPlayerId"
-      WHERE ttp."wrRefPlayerId" = $1 AND ttp."wrIsDeleted" = FALSE AND ttp."wrMatchTypeId" = $2`,
+      WHERE ttp."wrRefPlayerId" = $1 AND ttp."wrIsDeleted" = FALSE`,
       {
-        bind: [refPlayerId, -1],
+        bind: [refPlayerId],
         type: fastify.db.QueryTypes.SELECT,
       }
     );
