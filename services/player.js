@@ -1162,7 +1162,7 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
   const playerTeams = await getAllTeamsByPlayerIdQuery(playerId, fastify, request);
   if (playerTeams && playerTeams.length === 1 && playerTeams.filter(pt => pt.homeTeam)?.length === 0) {
     await updateTeamPlayerHomeTeamQuery({
-      refPlayerId: playerId,
+      teamPlayerId: playerTeams[0].teamPlayerId,
       teamId: playerTeams[0]?.teamId
     }, fastify, request);
     await playerImageChangeOnClientAPIService(playerId, fastify);
@@ -1296,9 +1296,26 @@ const mergePlayerNullImageService = async (request, fastify) => {
 
 const updatePlayerHomeTeamService = async (request, fastify) => {
   const { playerId, homeTeamId } = request.body;
+  const homeTeam = await getTeamListByPlayerIdQuery(parseInt(playerId), fastify, request);
+
+  if (homeTeam && homeTeam.length > 0) {
+    const oldHomeTeam = homeTeam.find(t => t.homeTeam == true);
+    if (oldHomeTeam) {
+      await updateTeamPlayerHomeTeamQuery(
+        {
+          teamPlayerId: oldHomeTeam?.teamPlayerId,
+          teamId: parseInt(homeTeamId),
+        },
+        fastify,
+        request
+      );
+      await playerImageChangeOnClientAPIService(oldHomeTeam?.teamPlayerId, fastify);
+    }
+  }
+
   await updateTeamPlayerHomeTeamQuery(
     {
-      refPlayerId: parseInt(playerId),
+      teamPlayerId: parseInt(playerId),
       teamId: parseInt(homeTeamId),
     },
     fastify,

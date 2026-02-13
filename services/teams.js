@@ -875,7 +875,7 @@ const UpdateTeamFromEntityService = async (data, fastify, request) => {
     for (const player of uniqueUpsertedPlayers) {
       const checkPlayerExistsInTeam = teamPlayerByTeamId.find(item => item.playerId === player.playerId);
       if (!checkPlayerExistsInTeam) {
-        await insertTeamPlayerQuery({
+        const teamPlayerData = await insertTeamPlayerQuery({
           teamId: checkTeamData.teamId,
           refPlayerId: player?.playerId,
           tpId: player?.tpId,
@@ -884,7 +884,7 @@ const UpdateTeamFromEntityService = async (data, fastify, request) => {
           jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
         }, fastify, request);
         const homeTeam = await updateTeamPlayerHomeTeamQuery({
-          refPlayerId: player?.playerId,
+          teamPlayerId: teamPlayerData?.teamPlayerId,
           teamId: checkTeam?.teamId
         }, fastify, request);
 

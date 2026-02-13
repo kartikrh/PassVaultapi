@@ -1074,7 +1074,7 @@ const insertTeamPlayersByTeamId = async (teamId, teamTpId, isMen, request, fasti
       if (teamId) {
         const checkPlayerExistsInTeam = teamPlayerByTeamId.find(item => item.playerId === player.playerId);
         if (!checkPlayerExistsInTeam) {
-          await insertTeamPlayerQuery({
+          const teamPlayerData = await insertTeamPlayerQuery({
             teamId: teamId,
             refPlayerId: player?.playerId,
             tpId: player?.tpId || null,
@@ -1083,7 +1083,7 @@ const insertTeamPlayersByTeamId = async (teamId, teamTpId, isMen, request, fasti
             jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
           }, fastify, request);
           const homeTeam = await updateTeamPlayerHomeTeamQuery({
-            refPlayerId: player?.playerId,
+            teamPlayerId: teamPlayerData?.teamPlayerId,
             teamId: checkTeam?.teamId
           }, fastify, request);
 
