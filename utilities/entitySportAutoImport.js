@@ -29,7 +29,7 @@ const getImportPayload = (importFn, refId) => {
         [competitionImportService.name]: { cid: refId },
         [importUpdateTournamentTeamPointFromEntitySportService.name]: { cid: refId },
         [matchImportService.name]: { mid: refId },
-        [teamImportService.name]: { tid: refId },
+        [teamImportService.name]: { tid: refId, player: true },
         [UpdateTeamFromEntityService.name]: { tid: refId },
         [playerImportService.name]: { pid: refId },
         [UpdatePlayerFromEntityService.name]: { pid: refId },
