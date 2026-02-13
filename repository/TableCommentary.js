@@ -9203,16 +9203,12 @@ const getCommentaryStatisticsQuery = async (competitionId, request, fastify) => 
 
 const getAllCommentaryByCompetitionIdForClientQuery = async (request, fastify) => {
   try {
-    const { competitionId, page = 1, limit = 20 } = request.body;
-
-    const pageNum = Math.max(parseInt(page, 10), 1);
-    const limitNum = Math.min(parseInt(limit, 10), 50);
-    const offset = (pageNum - 1) * limitNum;
+    const { competitionId } = request.body;
 
     const rows = await fastify.db.query(
       `
       SELECT 
-        CAST(ROW_NUMBER() OVER () AS INT) AS rno,
+        CAST(ROW_NUMBER() OVER (ORDER BY tc."wrEventDate" ASC) AS INT) AS rno,
         tc."wrCommentaryId" AS "cid",
         tc."wrEventRefId" AS "eid",
         tet."wrEventType" AS "ety",
@@ -9361,24 +9357,15 @@ const getAllCommentaryByCompetitionIdForClientQuery = async (request, fastify) =
       WHERE tc."wrIsDelete" = FALSE
         AND tc."wrIsActive" = TRUE AND tc."wrIsTest" = FALSE
         AND tc."wrCompetitionId" = $1 AND co."wrIsDeleted" = FALSE
-      ORDER BY tc."wrUpdateTime" DESC
-      LIMIT $2 OFFSET $3;
+      ORDER BY tc."wrEventDate" ASC;
       `,
       {
         type: fastify.db.QueryTypes.SELECT,
-        bind: [competitionId, limitNum + 1, offset],
+        bind: [competitionId],
       }
     );
 
-    const hasMore = rows.length > limitNum;
-    const data = hasMore ? rows.slice(0, limitNum) : rows;
-
-    return {
-      data,
-      page: pageNum,
-      limit: limitNum,
-      hasMore,
-    };
+    return rows;
   } catch (err) {
     errorLogger(
       fastify,
