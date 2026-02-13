@@ -313,7 +313,8 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
 
                         if (res?.team?.tid && !getTeam) {
                             getTeam = await teamImportService({
-                                tid: res.team.tid
+                                tid: res.team.tid,
+                                player: true
                             }, fastify, request);
                         }
 
