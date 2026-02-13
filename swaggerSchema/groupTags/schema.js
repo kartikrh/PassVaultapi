@@ -5410,9 +5410,7 @@ const Score = {
       body: {
         type: "object",
         properties: {
-          competitionId: { type: "integer" },
-          page: { type: "integer" },
-          limit: { type: "integer" }
+          competitionId: { type: "integer" }
         },
         required: ["competitionId"]
       }
