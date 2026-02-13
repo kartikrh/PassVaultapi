@@ -1948,9 +1948,10 @@ const Player = {
       body: {
         type: "object",
         properties: {
-          teamPlayerId: { type: "integer" }
+          playerId: { type: "integer" },
+          homeTeamId: { type: "integer" }
         },
-        required: ["teamPlayerId"]
+        required: ["playerId", "homeTeamId"]
       },
     },
   },

@@ -1083,7 +1083,7 @@ const insertTeamPlayersByTeamId = async (teamId, teamTpId, isMen, request, fasti
             jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath || null,
           }, fastify, request);
           const homeTeam = await updateTeamPlayerHomeTeamQuery({
-            teamPlayerId: teamPlayerData?.teamPlayerId,
+            refPlayerId: teamPlayerData?.refPlayerId,
             teamId: checkTeam?.teamId
           }, fastify, request);
 
