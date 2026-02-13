@@ -239,7 +239,7 @@ const updateTeamPlayerHomeTeamQuery = async (data, fastify, request) => {
             WHEN "wrTeamId" = $2 THEN true
             ELSE false
           END
-       WHERE "wrTeamPlayerId" = $1
+       WHERE "wrRefPlayerId" = $1
          AND "wrIsDeleted" = false
        RETURNING
           "wrTeamId" AS "teamId",
@@ -247,7 +247,7 @@ const updateTeamPlayerHomeTeamQuery = async (data, fastify, request) => {
           "wrTeamPlayerId" AS "teamPlayerId",
           "wrHomeTeam" AS "homeTeam"`,
       {
-        bind: [data.teamPlayerId, data.teamId],
+        bind: [data.refPlayerId, data.teamId],
         type: fastify.db.QueryTypes.UPDATE,
       }
     );
