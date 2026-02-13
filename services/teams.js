@@ -1036,72 +1036,74 @@ const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
 
   const checkTeam = await upsertTeamOnImportService(entitySportTeamPlayersResponse?.team, entitySocketData, eventType, fastify, request);
 
-  const teamPlayerData = Object.values(entitySportTeamPlayersResponse?.players).flat()
-  const upsertedPlayers = [];
-  const uniquePlayers = [...new Map(teamPlayerData.map(player => [player.pid, player])).values()];
-  for (const player of uniquePlayers) {
-    const checkPlayer = await upsertPlayerOnImportService(player, entitySocketData, isMen, fastify, request);
-    upsertedPlayers.push(checkPlayer);
-  }
+  if (data?.player) {
+    const teamPlayerData = Object.values(entitySportTeamPlayersResponse?.players).flat()
+    const upsertedPlayers = [];
+    const uniquePlayers = [...new Map(teamPlayerData.map(player => [player.pid, player])).values()];
+    for (const player of uniquePlayers) {
+      const checkPlayer = await upsertPlayerOnImportService(player, entitySocketData, isMen, fastify, request);
+      upsertedPlayers.push(checkPlayer);
+    }
 
-  const entityMatchTypeEnums = lowerEntityMatchTypesEnums();
+    const entityMatchTypeEnums = lowerEntityMatchTypesEnums();
 
-  for (const [format, players] of Object.entries(entitySportTeamPlayersResponse?.players || {})) {
-    const matchTypeId = global.tblMatchTypes.find(tmt => tmt.entityEnum === entityMatchTypeEnums[format.toLowerCase()])?.matchTypeId;
-    if (matchTypeId && players.length > 0) {
-      let teamMatchTypeId = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${checkTeam.teamId} AND ttmt."wrMatchTypeId" = ${matchTypeId}`);
-      if (!teamMatchTypeId || teamMatchTypeId.length === 0) {
-        teamMatchTypeId = await saveTeamMatchTypeByTeamService({
+    for (const [format, players] of Object.entries(entitySportTeamPlayersResponse?.players || {})) {
+      const matchTypeId = global.tblMatchTypes.find(tmt => tmt.entityEnum === entityMatchTypeEnums[format.toLowerCase()])?.matchTypeId;
+      if (matchTypeId && players.length > 0) {
+        let teamMatchTypeId = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${checkTeam.teamId} AND ttmt."wrMatchTypeId" = ${matchTypeId}`);
+        if (!teamMatchTypeId || teamMatchTypeId.length === 0) {
+          teamMatchTypeId = await saveTeamMatchTypeByTeamService({
+            ...request,
+            body: {
+              teamId: checkTeam.teamId,
+              matchTypeId: matchTypeId ?? -1
+            },
+          }, fastify);
+          teamMatchTypeId = teamMatchTypeId?.[0] ?? null;
+        }
+
+        const teamPlayers = await getTeamPlayersByTeamMatchTypeIdQuery({
           ...request,
           body: {
             teamId: checkTeam.teamId,
             matchTypeId: matchTypeId ?? -1
-          },
+          }
         }, fastify);
-        teamMatchTypeId = teamMatchTypeId?.[0] ?? null;
-      }
 
-      const teamPlayers = await getTeamPlayersByTeamMatchTypeIdQuery({
-        ...request,
-        body: {
-          teamId: checkTeam.teamId,
-          matchTypeId: matchTypeId ?? -1
-        }
-      }, fastify);
+        for (const player of players) {
+          const teamPlayer = teamPlayers.find(tp => tp.tpId === player.pid);
+          if (!teamPlayer) {
+            const p = upsertedPlayers.find(up => up.tpId === player.pid);
+            const upsertedTeamPlayer = await insertTeamPlayerWithHomeTeamQuery(
+              {
+                teamId: checkTeam.teamId,
+                refPlayerId: p.playerId,
+                tpId: p?.tpId ?? null,
+                jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage ?? null,
+                jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath ?? null,
+                matchTypeId: matchTypeId ?? -1
+              },
+              fastify,
+              request
+            );
 
-      for (const player of players) {
-        const teamPlayer = teamPlayers.find(tp => tp.tpId === player.pid);
-        if (!teamPlayer) {
-          const p = upsertedPlayers.find(up => up.tpId === player.pid);
-          const upsertedTeamPlayer = await insertTeamPlayerWithHomeTeamQuery(
-            {
-              teamId: checkTeam.teamId,
-              refPlayerId: p.playerId,
-              tpId: p?.tpId ?? null,
-              jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage ?? null,
-              jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath ?? null,
-              matchTypeId: matchTypeId ?? -1
-            },
-            fastify,
-            request
-          );
+            if (p?.image && teamMatchTypeId?.teamJerseyImage && upsertedTeamPlayer?.teamPlayerId) {
+              try {
+                await mergeAndSaveImage({
+                  playerImage: p.image,
+                  jersey: teamMatchTypeId.teamJerseyImage,
+                  playerName: p.playerName,
+                  teamName: checkTeam.teamName,
+                  teamPlayerId: upsertedTeamPlayer?.teamPlayerId,
+                  commentaryPlayerId: null,
+                  commentaryId: null,
+                }, fastify);
+                if (upsertedTeamPlayer?.homeTeam == true) {
+                  await playerImageChangeOnClientAPIService(p, fastify);
+                }
+              } catch (error) {
 
-          if (p?.image && teamMatchTypeId?.teamJerseyImage && upsertedTeamPlayer?.teamPlayerId) {
-            try {
-              await mergeAndSaveImage({
-                playerImage: p.image,
-                jersey: teamMatchTypeId.teamJerseyImage,
-                playerName: p.playerName,
-                teamName: checkTeam.teamName,
-                teamPlayerId: upsertedTeamPlayer?.teamPlayerId,
-                commentaryPlayerId: null,
-                commentaryId: null,
-              }, fastify);
-              if (upsertedTeamPlayer?.homeTeam == true) {
-                await playerImageChangeOnClientAPIService(p, fastify);
               }
-            } catch (error) {
-
             }
           }
         }

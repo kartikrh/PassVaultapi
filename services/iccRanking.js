@@ -378,7 +378,7 @@ const extractEntries = async (json, isMen, request, fastify) => {
 
     if (teamIds.size > 0) {
         for (const tid of teamIds) {
-            await teamImportService({ tid }, fastify, request);
+            await teamImportService({ tid, player: true }, fastify, request);
 
         }
     }
