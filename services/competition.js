@@ -1482,7 +1482,7 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
       ...request,
       body: {
         teamId: team.teamId,
-        matchTypeId: -1
+        matchTypeId: matchTypeId
       }
     }, fastify);
 
