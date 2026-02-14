@@ -23856,14 +23856,14 @@ const matchImportService = async (data, fastify, request = null) => {
         const checkWeather = global.tblWeather.find(item => item.commentaryId === upsertedCommentaryId);
         if (checkWeather) {
           const weatherData = {
-            weatherCondition: matchWeather?.weather ?? checkWeather?.weatherCondition,
-            description: matchWeather?.weather_desc ?? checkWeather?.description,
-            commentaryId: upsertedCommentaryId ?? checkWeather?.commentaryId,
-            temp: matchWeather?.temp ?? checkWeather?.temp,
-            humidity: matchWeather?.humidity ?? checkWeather?.humidity,
-            visibility: matchWeather?.visibility ?? checkWeather?.visibility,
-            windSpeed: matchWeather?.wind_speed ?? checkWeather?.windSpeed,
-            clouds: matchWeather?.clouds ?? checkWeather?.clouds,
+            weatherCondition: matchWeather?.weather || checkWeather?.weatherCondition,
+            description: matchWeather?.weather_desc || checkWeather?.description,
+            commentaryId: upsertedCommentaryId || checkWeather?.commentaryId,
+            temp: matchWeather?.temp || checkWeather?.temp,
+            humidity: matchWeather?.humidity || checkWeather?.humidity,
+            visibility: matchWeather?.visibility || checkWeather?.visibility,
+            windSpeed: matchWeather?.wind_speed || checkWeather?.windSpeed,
+            clouds: matchWeather?.clouds || checkWeather?.clouds,
             id: checkWeather?.id
           };
           const updateWeather = await updateWeatherQuery(weatherData, fastify, request);
@@ -23875,14 +23875,14 @@ const matchImportService = async (data, fastify, request = null) => {
           }
         } else {
           const weatherData = {
-            weatherCondition: matchWeather?.weather,
-            description: matchWeather?.weather_desc,
+            weatherCondition: matchWeather?.weather || null,
+            description: matchWeather?.weather_desc || null,
             commentaryId: upsertedCommentaryId,
-            temp: matchWeather?.temp,
-            humidity: matchWeather?.humidity,
-            visibility: matchWeather?.visibility,
-            windSpeed: matchWeather?.wind_speed,
-            clouds: matchWeather?.clouds
+            temp: matchWeather?.temp || null,
+            humidity: matchWeather?.humidity || null,
+            visibility: matchWeather?.visibility || null,
+            windSpeed: matchWeather?.wind_speed || null,
+            clouds: matchWeather?.clouds || null
           };
           const insertWeather = await insertWeatherQuery(weatherData, fastify, request);
           global.tblWeather.push(insertWeather);
