@@ -854,6 +854,7 @@ const EntityCommentaryStatus = {
   INPROGRESS: 3,
   COMPLETED: 4,
   INNINGCHANGE: 6,
+  STUMPS: 7,
   CANCELLED: 10,
 
 };

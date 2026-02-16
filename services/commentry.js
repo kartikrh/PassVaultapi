@@ -23651,6 +23651,11 @@ const matchImportService = async (data, fastify, request = null) => {
   if (!pythonIdData) {
     console.error("Default Python API not found");
   }
+  const EntitlyLiveStates = [
+    EntityCommentaryStatus.INPROGRESS,
+    EntityCommentaryStatus.INNINGCHANGE,
+    EntityCommentaryStatus.STUMPS
+  ];
   const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
   let checkCountry, checkVenue;
   if (matchInfoResponse?.venue?.country && matchInfoResponse?.venue?.country !== "") {
@@ -23754,7 +23759,7 @@ const matchImportService = async (data, fastify, request = null) => {
         isCountInPoint: checkCompetition?.isPointTable,
         countryId: checkCountry?.id,
         venueId: checkVenue?.id,
-        scoringType: matchInfoResponse?.game_state == EntityCommentaryStatus.INPROGRESS ? ScoringTypes.Panel : ScoringTypes.Entity,
+        scoringType: EntitlyLiveStates.includes(matchInfoResponse?.game_state) ? ScoringTypes.Panel : ScoringTypes.Entity,
       }
 
       if (!checkCompetition?.matchTypeId) {
@@ -23940,7 +23945,9 @@ const matchImportService = async (data, fastify, request = null) => {
         // TeamB
         await upsertCommentaryTeamsAndPlayersService(checkCompetition, tournamentTeamsPlayers, checkCommentary, maxOver, commentaryTeams, teamBData, i, commentaryPlayers, teamBSquad, entitySportMatchResponse?.players, entitySocketData, request, fastify);
       }
-      if (newCommentaryImport && matchInfoResponse?.game_state == EntityCommentaryStatus.INPROGRESS) {
+      if (newCommentaryImport && 
+        EntitlyLiveStates.includes(matchInfoResponse?.game_state)
+      ) {
         const { storeInningWiseEntityDataService } = require("./entitySport")
         request.body = {
           matchId: entitySportMatchResponse?.match_id,

@@ -1585,6 +1585,11 @@ const competitionImportService = async (data, fastify, request) => {
   if (!pythonIdData) {
     console.error("Default Python API not found");
   }
+  const EntitlyLiveStates = [
+    EntityCommentaryStatus.INPROGRESS,
+    EntityCommentaryStatus.INNINGCHANGE,
+    EntityCommentaryStatus.STUMPS
+  ];
 
   const countryData = [], venueData = [];
   for (const venue of entitySportCompetitionResponse?.venue_list || []) {
@@ -1983,7 +1988,7 @@ const competitionImportService = async (data, fastify, request) => {
           isCountInPoint: checkCompetition?.isPointTable,
           countryId: countryData.find(c => c.countryName?.toLowerCase() === match?.venue?.country?.toLowerCase())?.id || null,
           venueId: getVenueData?.id,
-          scoringType: match?.game_state == EntityCommentaryStatus.INPROGRESS ? ScoringTypes.Panel : ScoringTypes.Entity,
+          scoringType: EntitlyLiveStates.includes(match?.game_state) ? ScoringTypes.Panel : ScoringTypes.Entity,
         }
 
         if (!checkCompetition?.matchTypeId) {
@@ -2203,7 +2208,9 @@ const competitionImportService = async (data, fastify, request) => {
       }
       await getComDataByCId({ commentaryId: commentaryId }, request, fastify)
 
-      if (newCommentaryImport && match?.game_state == EntityCommentaryStatus.INPROGRESS) {
+      if (newCommentaryImport && 
+        EntitlyLiveStates.includes(matchInfoResponse?.game_state)
+      ) {
         const { storeInningWiseEntityDataService } = require("./entitySport")
         request.body = {
           matchId: match?.match_id,
@@ -2289,11 +2296,15 @@ const insertCompletedCompetitionsInAutoImportService = async (fastify) => {
     const now = Date.now();
     const twoDaysAgo = now - 2 * 24 * 60 * 60 * 1000;
 
-    const completedCompetitions = global.tblCompetitions.filter((comp) => {
-      if (comp.commStatus !== compStatus.completed || !comp.endDate) return false;
+    const completedCompetitions = global.tblCompetitions.filter(tcp => {
+      if (!tcp.endDate || !tcp.tpId || !tcp.isActive) return false;
 
-      const endDate = new Date(comp.endDate).getTime();
-      return endDate <= now && endDate > twoDaysAgo;
+      const endDate = new Date(tcp.endDate).getTime();
+
+      return (
+        tcp.commStatus !== compStatus.completed &&
+        endDate <= twoDaysAgo
+      );
     });
 
     await Promise.all(
