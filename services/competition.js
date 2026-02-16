@@ -2209,7 +2209,7 @@ const competitionImportService = async (data, fastify, request) => {
       await getComDataByCId({ commentaryId: commentaryId }, request, fastify)
 
       if (newCommentaryImport && 
-        EntitlyLiveStates.includes(matchInfoResponse?.game_state)
+        EntitlyLiveStates.includes(entitySportMatchResponse?.match_info?.game_state)
       ) {
         const { storeInningWiseEntityDataService } = require("./entitySport")
         request.body = {
