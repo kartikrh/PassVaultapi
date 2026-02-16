@@ -1573,6 +1573,11 @@ const competitionImportService = async (data, fastify, request) => {
   if (!pythonIdData) {
     console.error("Default Python API not found");
   }
+  const EntitlyLiveStates = [
+    EntityCommentaryStatus.INPROGRESS,
+    EntityCommentaryStatus.INNINGCHANGE,
+    EntityCommentaryStatus.STUMPS
+  ];
 
   const countryData = [], venueData = [];
   for (const venue of entitySportCompetitionResponse?.venue_list || []) {
@@ -1960,7 +1965,7 @@ const competitionImportService = async (data, fastify, request) => {
           isCountInPoint: checkCompetition?.isPointTable,
           countryId: countryData.find(c => c.countryName?.toLowerCase() === match?.venue?.country?.toLowerCase())?.id || null,
           venueId: getVenueData?.id,
-          scoringType: match?.game_state == EntityCommentaryStatus.INPROGRESS ? ScoringTypes.Panel : ScoringTypes.Entity,
+          scoringType: EntitlyLiveStates.includes(match?.game_state) ? ScoringTypes.Panel : ScoringTypes.Entity,
         }
 
         if (!checkCompetition?.matchTypeId) {
@@ -2181,11 +2186,7 @@ const competitionImportService = async (data, fastify, request) => {
       await getComDataByCId({ commentaryId: commentaryId }, request, fastify)
 
       if (newCommentaryImport && 
-        [
-          EntityCommentaryStatus.INPROGRESS,
-          EntityCommentaryStatus.INNINGCHANGE,
-          EntityCommentaryStatus.STUMPS,
-        ].includes(matchInfoResponse?.game_state)
+        EntitlyLiveStates.includes(matchInfoResponse?.game_state)
       ) {
         const { storeInningWiseEntityDataService } = require("./entitySport")
         request.body = {
