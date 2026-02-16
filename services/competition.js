@@ -2273,11 +2273,15 @@ const insertCompletedCompetitionsInAutoImportService = async (fastify) => {
     const now = Date.now();
     const twoDaysAgo = now - 2 * 24 * 60 * 60 * 1000;
 
-    const completedCompetitions = global.tblCompetitions.filter((comp) => {
-      if (comp.commStatus !== compStatus.completed || !comp.endDate) return false;
+    const completedCompetitions = global.tblCompetitions.filter(tcp => {
+      if (!tcp.endDate || !tcp.tpId || !tcp.isActive) return false;
 
-      const endDate = new Date(comp.endDate).getTime();
-      return endDate <= now && endDate > twoDaysAgo;
+      const endDate = new Date(tcp.endDate).getTime();
+
+      return (
+        tcp.commStatus !== compStatus.completed &&
+        endDate <= twoDaysAgo
+      );
     });
 
     await Promise.all(
