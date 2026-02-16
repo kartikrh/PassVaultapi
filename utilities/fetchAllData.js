@@ -340,8 +340,6 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     // global.errorLogs = errorLogs
 
     console.log("Okkkk - Data Synchronized successfully");
-    // console.log("Okkkk - Data Synchronized successfully");  
-    // console.log("Okkkk - Data Synchronized successfully");  
     global.isAllDataLoadedInGlobal = true;
 
     if (reply) {
