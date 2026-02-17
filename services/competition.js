@@ -1323,9 +1323,6 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
   const teamSquadHasPlaying11 = teamSquad.find(t => t.playing11 === "true");
   const matchTypeId = global.tblMatchTypes.find(mt => mt.matchTypeId === checkCommentary.matchTypeId)?.matchTypeId || null;
   let teamMatchTypeId = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${team.teamId} AND ttmt."wrMatchTypeId" = ${matchTypeId}`);
-  let comTeams = [];
-  let comPlayers = [];
-  const removeComPlayers = [];
   if (!teamMatchTypeId || teamMatchTypeId.length === 0) {
     teamMatchTypeId = await saveTeamMatchTypeByTeamService({
       ...request,
