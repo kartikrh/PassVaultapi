@@ -613,70 +613,48 @@ const getAllTournamentTeamPointsService = async (request, fastify) => {
 const addEditTournamentTeamPointDataService = async (result, competitionId, fastify = null, request = null) => {
   const competitionRoundType = result?.rounds?.[0]?.type;
   const isValidCompetitionRoundType = competitionRoundType === "series" || competitionRoundType === "group";
-  let alltournamentTeamPoints = await getAllTournamentTeamPointsQuery(fastify);
-  alltournamentTeamPoints = alltournamentTeamPoints.filter(item => item.competitionId === competitionId);
+  if (!isValidCompetitionRoundType) {
+    return true;
+  }
+
+  if (!result?.standing?.standings || result?.standing?.standings?.length === 0) {
+    return true;
+  }
+
   const entitySocketData = global.tblEntitySockets[0];
   const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
 
-  const filterTeamIds = (result?.teams || []).filter(team => !nullTeamtpIds.includes(team.tid));
-  for (let team of filterTeamIds) {
-    const highestOrder = Math.max(...result?.rounds.map(group => group.order));
-    const checkTeam = await upsertTeamOnImportService(team, entitySocketData, eventType, fastify, request);
-    if (checkTeam) {
-      if (isValidCompetitionRoundType && result?.standing?.standings?.length === 0) {
-        const checkTournamentTeamPoint = alltournamentTeamPoints.find(item => item.competitionId === competitionId && item.teamId === checkTeam?.teamId && item.groupId === 1);
-        if (!checkTournamentTeamPoint) {
-          const data = {
-            groupId: 1,
-            groupName: competitionRoundType === "series" ? result?.title : "Group A",
-            teamId: checkTeam?.teamId,
-            competitionId,
-            tpId: checkTeam?.tpId || null,
-            isActive: true,
-          }
+  const filterTeams = (result?.teams || []).filter(team => !nullTeamtpIds.includes(team.tid));
+  const teams = [];
+  for (let team of filterTeams) {
+    team = await upsertTeamOnImportService(team, entitySocketData, eventType, fastify, request);
+    teams.push(team);
+  }
 
-          const pointData = await insertTournamentTeamPointsQuery(data, fastify, request);
-          let validateComp = global.tblCompetitions.find(item => item.compeitionId == competitionId);
-          if (validateComp && validateComp?.isActive == true) {
-            const res = await responseChangeService(pointData?.teamId, pointData?.competitionId);
-            callClientAPI(
-              {
-                serviceType: ServiceType.clientAPI,
-                moduleType: APIEndpointModuleType.updateSeoModule,
-                data: {
-                  module: 'tournamentTeamPoints',
-                  type: "add",
-                  data: { ...pointData, ...res }
-                }
-              }, null, fastify)
-              .catch((err) => {
-                errorLogger(
-                  fastify,
-                  err.message,
-                  "services/tournamentTeamPoints.js/addEditTournamentTeamPointDataService - callClientAPI",
-                  null
-                );
-              });
-          }
-        }
-      }
+  let alltournamentTeamPoints = await getAllTournamentTeamPointsQuery(fastify);
+  alltournamentTeamPoints = alltournamentTeamPoints.filter(item => item.competitionId === competitionId);
 
-      const groupData = extractGroupDataFromArray(result?.standing?.standings, team?.tid);
-      for (let gd of groupData) {
-        let validateComp = global.tblCompetitions.find(item => item.compeitionId == competitionId)
-        const checkTournamentTeamPoint = alltournamentTeamPoints.find(item => item.competitionId === competitionId && item.teamId === checkTeam?.teamId && item.groupId === gd.groupId);
+  const groupData = extractGroupDataFromArray(result?.standing?.standings);
+
+  for (let gd of groupData) {
+    for (let s of gd?.standings || []) {
+      const team = teams.find(team => team.tpId === s.teamTpId);
+      if (team) {
+        const checkTournamentTeamPoint = alltournamentTeamPoints.find(item => item.competitionId === competitionId && item.teamId === team?.teamId && item.groupId === gd.groupId);
         if (checkTournamentTeamPoint) {
           const updateTournamentTeamPointData = {
             ...checkTournamentTeamPoint,
             ...gd,
-            isActive: highestOrder === gd.groupId ? true : (gd.position === teamRemarkType.Q ? false : true)
+            ...s,
+            isActive: !s?.position ? true : (s?.position === teamRemarkType.Q ? false : true)
           }
           let updateData = await updateTournamentTeamPointsQuery(updateTournamentTeamPointData, fastify, request);
           updateData = updateData[0];
+          let validateComp = global.tblCompetitions.find(item => item.competitionId == competitionId)
           if (validateComp && validateComp?.isActive == true) {
             const res = await responseChangeService(updateData?.teamId, updateData?.competitionId);
             callClientAPI(
-             {
+              {
                 serviceType: ServiceType.clientAPI,
                 moduleType: APIEndpointModuleType.updateSeoModule,
                 data: {
@@ -684,57 +662,61 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
                   type: "update",
                   data: { ...updateData, ...res }
                 }
-             }, null, fastify)
-            .catch((err) => {
-              errorLogger(
-                fastify,
-                err.message,
-                "services/tournamentTeamPoints.js/importTournamentTeamPointFromEntitySportService update - callClientAPI",
-                null
-              );
-            });
+              }, null, fastify)
+              .catch((err) => {
+                errorLogger(
+                  fastify,
+                  err.message,
+                  "services/tournamentTeamPoints.js/importTournamentTeamPointFromEntitySportService update - callClientAPI",
+                  null
+                );
+              });
           }
         } else {
           const data = {
-            groupId: 1,
-            groupName: null,
-            teamId: checkTeam?.teamId,
+            groupId: gd.groupId,
+            groupName: gd.groupName || (competitionRoundType === "series" ? result?.title : "Group A"),
+            teamId: team.teamId,
             competitionId,
-            tpId: checkTeam?.tpId || null,
-            isActive: highestOrder === gd.groupId ? true : (gd.position === teamRemarkType.Q ? false : true),
-            ...gd
+            tpId: team.tpId || null,
+            ...gd,
+            ...s,
+            isActive: !s?.position ? true : (s?.position === teamRemarkType.Q ? false : true)
           }
           const pointData = await insertTournamentTeamPointsQuery(data, fastify, request);
-          if (validateComp && validateComp?.isActive == true) {
-            const res = await responseChangeService(pointData?.teamId, pointData?.competitionId);
-            callClientAPI(
-             {
-                serviceType: ServiceType.clientAPI,
-                moduleType: APIEndpointModuleType.updateSeoModule,
-                data: {
-                  module: 'tournamentTeamPoints',
-                  type: "add",
-                  data: { ...pointData, ...res }
-                }
-             }, null, fastify)
-            .catch((err) => {
-              errorLogger(
-                fastify,
-                err.message,
-                "services/tournamentTeamPoints.js/importTournamentTeamPointFromEntitySportService - callClientAPI",
-                null
-              );
-            }); 
+          if (pointData) {
+            let validateComp = global.tblCompetitions.find(item => item.competitionId == competitionId)
+            if (validateComp && validateComp?.isActive == true) {
+              const res = await responseChangeService(pointData?.teamId, pointData?.competitionId);
+              callClientAPI(
+                {
+                  serviceType: ServiceType.clientAPI,
+                  moduleType: APIEndpointModuleType.updateSeoModule,
+                  data: {
+                    module: 'tournamentTeamPoints',
+                    type: "add",
+                    data: { ...pointData, ...res }
+                  }
+                }, null, fastify)
+                .catch((err) => {
+                  errorLogger(
+                    fastify,
+                    err.message,
+                    "services/tournamentTeamPoints.js/importTournamentTeamPointFromEntitySportService add - callClientAPI",
+                    null
+                  );
+                });
+            }
           }
         }
+      } else {
+        errorLogger(
+          fastify,
+          `Missing team tpId ${team?.tid} in competition id ${competitionId}`,
+          "services/tournamentTeamPoints.js/addEditTournamentTeamPointDataService - team",
+          null
+        );
       }
-    } else {
-      errorLogger(
-        fastify,
-        `Missing team tpId ${team?.tid} in competition id ${competitionId}`,
-        "services/tournamentTeamPoints.js/addEditTournamentTeamPointDataService - checkTeam",
-        null
-      );
     }
   }
 }
