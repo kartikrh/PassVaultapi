@@ -1012,6 +1012,31 @@ const setEntityCom2Service = async (request , fastify) =>{
         type: "update",
         data: scoreResponse.commentaryDetails,
       });
+      const cData = await getMatchDataByCId(
+        {
+          commentaryId: comDetails?.commentaryId,
+        },
+        request,
+        fastify
+      );
+
+      callClientAPI(
+        {
+          serviceType: ServiceType.clientAPI,
+          moduleType: APIEndpointModuleType.commentaryUpdate,
+          data: cData,
+        },
+        request,
+        fastify
+      ).catch((err) => {
+        console.log("call client api in setEntityCom2Service - 2", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/entitysport.js/serEntityCom2Service",
+          request
+        );
+      });
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       });
