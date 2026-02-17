@@ -1540,8 +1540,8 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
   if (comTeams.length > 0) {
     sendDataForSocketUpdate.dataToUpdate.push({
       module: "commentaryTeams",
-      type: "update",
-      data: scoreResponse.commentaryDetails,
+      type: "create",
+      data: comTeams,
     });
   }
 
@@ -1577,9 +1577,10 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
   }
   if (removeComPlayers.length > 0) {
     sendDataForSocketUpdate.dataToUpdate.push({
-      module: "commentaryPlayers",
-      type: "multiDelete",
-      data: removeComPlayers,
+      module: "deleteComPlayers",
+      data: {
+        commentaryPlayerIds: removeComPlayers
+      },
     });
   }
 
