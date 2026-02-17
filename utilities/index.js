@@ -1713,33 +1713,34 @@ const teamRemarkType = {
   E: "E"
 }
 
-const extractGroupDataFromArray = (data, teamId) => {
-  const groupData = [];
-
-  for (const group of data) {
-    for (const team of group.standings) {
-      if (Number(team.team_id) === teamId) {
-        groupData.push({
-          groupId: group.round.order,
-          groupName: group.round.name,
-          totalMatches: team.played,
-          totalWin: team.win,
-          totalLose: team.loss,
-          totalTie: team.draw,
-          noResult: team.nr,
-          totalPoint: team.points,
-          netRunRate: team.netrr,
+const extractGroupDataFromArray = (tournamentTamPoint) => {
+  const orderWiseData = tournamentTamPoint
+    .sort((a, b) => a.round.order - b.round.order)
+    .map(group => ({
+      groupId: group.round.order,
+      groupName: group.round.name.trim(),
+      roundId: group.round.rid,
+      standings: group.standings.map(team => ({
+        teamTpId: team.team.tid,
+        totalMatches: Number(team.played),
+        totalWin: Number(team.win),
+        totalLose: Number(team.loss),
+        totalTie: Number(team.draw),
+        noResult: Number(team.nr),
+        totalPoint: Number(team.points),
+        netRunRate: Number(team.netrr),
+        qualified: team.quality === "true",
+        eliminated: team.eliminate === "true",
           ...(team.quality === "true" ? {
             position: teamRemarkType.Q
           } : {}),
           ...(team.eliminate === "true" ? {
             position: teamRemarkType.E
           } : {}),
-        })
-      }
-    }
-  }
-  return groupData.sort((a, b) => a.groupId - b.groupId);
+      }))
+    }));
+
+  return orderWiseData;
 }
 
 const EntityPlayerType = {
