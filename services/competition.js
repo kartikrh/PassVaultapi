@@ -1321,20 +1321,9 @@ const esGetMatchNumberFromCompetitionMatchAPI = async (competitionTpId, request,
 
 const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tournamentTeamsPlayers, checkCommentary, maxOver, commentaryTeams, team, i, commentaryPlayers, teamSquad, entitySportMatchResponsePlayers, entitySocketData, request, fastify) => {
   const teamSquadHasPlaying11 = teamSquad.find(t => t.playing11 === "true");
-  const matchTypeId = global.tblMatchTypes.find(mt => mt.matchTypeId === checkCommentary.matchTypeId)?.matchTypeId || null;
-  let teamMatchTypeId = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${team.teamId} AND ttmt."wrMatchTypeId" = ${matchTypeId}`);
   let comTeams = [];
   let comPlayers = [];
   const removeComPlayers = [];
-  if (!teamMatchTypeId || teamMatchTypeId.length === 0) {
-    teamMatchTypeId = await saveTeamMatchTypeByTeamService({
-      ...request,
-      body: {
-        teamId: team.teamId,
-        matchTypeId: matchTypeId,
-      },
-    }, fastify);
-  }
   let commentaryTeam = commentaryTeams.find(ct => ct.teamId === team.teamId && ct.currentInnings === i);
   if (!commentaryTeam) {
     commentaryTeam = await insertCommentaryTeamQuery({
