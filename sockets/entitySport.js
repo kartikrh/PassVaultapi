@@ -269,7 +269,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
             payload?.response?.ball_event &&
             payload.response.ball_event.toLowerCase() == "playing-11 update"
           ) {
-            const request = { body: payload };
+            const request = { body: payload, userTokenInfo: { WrUserId: -2 } };
             await updateCommentaryPlayersFromEntityService(request, fastify);
             let isLog = global.tblConfigs.find((c) => c.key == configConstants.ISENTITYDATALOG)?.value || "false";
             if (isLog == "false") { return true; }
