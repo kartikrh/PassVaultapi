@@ -1332,6 +1332,9 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
       },
     }, fastify);
   }
+  let comTeams = [];
+  let comPlayers = [];
+  const removeComPlayers = [];
   let commentaryTeam = commentaryTeams.find(ct => ct.teamId === team.teamId && ct.currentInnings === i);
   if (!commentaryTeam) {
     commentaryTeam = await insertCommentaryTeamQuery({
@@ -1350,6 +1353,7 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
       }
     }, fastify);
     global.tblCommentaryTeams.push(commentaryTeam);
+    comTeams.push(commentaryTeam)
   }
   if (teamSquad.length > 0) {
     const commentaryTeamPlayers = commentaryPlayers.filter(cp => cp.teamId === team.teamId && cp.currentInnings === i);
@@ -1433,6 +1437,7 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
           }, i, fastify, request);
           global.tblCommentaryPlayers.push(newCommentaryPlayer[0]);
           commentaryTeamPlayers.push(newCommentaryPlayer[0]);
+          comPlayers.push({ ...newCommentaryPlayer[0], type: "create" })
         }
       } else {
         const updatedData = {
@@ -1444,6 +1449,7 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
         const index = global.tblCommentaryPlayers.findIndex(item => item.commentaryId === checkCommentary.commentaryId && item.teamId === team.teamId && item.currentInnings === i && item.tpId === pId);
         if (index !== -1) {
           global.tblCommentaryPlayers[index] = updatedData;
+          comPlayers.push({ ...updatedData, type: "update" });
         }
       }
     }
@@ -1452,6 +1458,7 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
     for (const cp of commentaryTeamPlayers) {
       if (!newTeamSquadTpIds.includes(cp.tpId)) {
         removeCommentaryPlayerIds.push(cp.playerId);
+        removeComPlayers.push(cp.commentaryPlayerId);
       }
     }
 
@@ -1519,8 +1526,70 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
         }, i, fastify, request);
         global.tblCommentaryPlayers.push(newCommentaryPlayer[0]);
         commentaryPlayers.push(newCommentaryPlayer[0]);
+        comPlayers.push({ ...newCommentaryPlayer[0], type: "create" });
       }
     }
+  }
+
+  const sendDataForSocketUpdate = {
+    commentaryId: checkCommentary.commentaryId,
+    eventRefId: checkCommentary.eventRefId,
+    dataToUpdate: [],
+  };
+
+  if (comTeams.length > 0) {
+    sendDataForSocketUpdate.dataToUpdate.push({
+      module: "commentaryTeams",
+      type: "update",
+      data: scoreResponse.commentaryDetails,
+    });
+  }
+
+  let newPlayer = [];
+  let updatePlayer = [];
+
+  if (comPlayers.length > 0) {
+    for (const cp of comPlayers) {
+      const { type, ...data } = cp;
+
+      if (type === "create") {
+        newPlayer.push(data);
+      } else if (type === "update") {
+        updatePlayer.push(data);
+      }
+    }
+  }
+
+  if (newPlayer.length > 0) {
+    sendDataForSocketUpdate.dataToUpdate.push({
+      module: "commentaryPlayers",
+      type: "create",
+      data: newPlayer,
+    });
+  }
+
+  if (updatePlayer.length > 0) {
+    sendDataForSocketUpdate.dataToUpdate.push({
+      module: "commentaryPlayers",
+      type: "update",
+      data: updatePlayer,
+    });
+  }
+  if (removeComPlayers.length > 0) {
+    sendDataForSocketUpdate.dataToUpdate.push({
+      module: "commentaryPlayers",
+      type: "multiDelete",
+      data: removeComPlayers,
+    });
+  }
+
+  if (
+    global?.clientSocketIo !== undefined &&
+    global?.clientSocketIo.length > 0
+  ) {
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+    });
   }
 }
 
