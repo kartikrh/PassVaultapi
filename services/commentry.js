@@ -25618,7 +25618,8 @@ const insertCompletedCommentaryForTournamentTeamPointUpdateService = async (fast
 
     const completedCommentaries = global.tblCommentaries.filter((com) => {
       if (
-        com.commentaryStatus !== commentaryStatus.COMPLETED ||
+        (com.commentaryStatus !== commentaryStatus.COMPLETED &&
+        com.commentaryStatus !== commentaryStatus.CANCELLED) ||
         !com.commentaryCloseTime
       ) return false;
 
