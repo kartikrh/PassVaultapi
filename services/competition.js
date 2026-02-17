@@ -1335,6 +1335,9 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
       },
     }, fastify);
   }
+  let comTeams = [];
+  let comPlayers = [];
+  const removeComPlayers = [];
   let commentaryTeam = commentaryTeams.find(ct => ct.teamId === team.teamId && ct.currentInnings === i);
   if (!commentaryTeam) {
     commentaryTeam = await insertCommentaryTeamQuery({
