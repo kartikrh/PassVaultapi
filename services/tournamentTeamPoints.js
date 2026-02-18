@@ -712,7 +712,7 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
       } else {
         errorLogger(
           fastify,
-          `Missing team tpId ${team?.tid} in competition id ${competitionId}`,
+          `Missing team tpId ${s.teamTpId} in competition id ${competitionId}`,
           "services/tournamentTeamPoints.js/addEditTournamentTeamPointDataService - team",
           null
         );
