@@ -1012,6 +1012,31 @@ const setEntityCom2Service = async (request , fastify) =>{
         type: "update",
         data: scoreResponse.commentaryDetails,
       });
+      const cData = await getMatchDataByCId(
+        {
+          commentaryId: comDetails?.commentaryId,
+        },
+        request,
+        fastify
+      );
+
+      callClientAPI(
+        {
+          serviceType: ServiceType.clientAPI,
+          moduleType: APIEndpointModuleType.commentaryUpdate,
+          data: cData,
+        },
+        request,
+        fastify
+      ).catch((err) => {
+        console.log("call client api in setEntityCom2Service - 2", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/entitysport.js/serEntityCom2Service",
+          request
+        );
+      });
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       });
@@ -4031,6 +4056,25 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
           let [b1, b2] = part?.batsmen;
           let batter1 = b1?.batsman_id;
           let batter2 = b2?.batsman_id;
+          if (!playerTpIdObj[batter1] || !playerTpIdObj[batter2]) {
+            request.body.response = { match_id: matchId };
+            await updateCommentaryPlayersFromEntityService(request, fastify);
+            let latestPlayers = global.tblCommentaryPlayers.filter(
+              (cp) =>
+                cp.commentaryId == comDetails.commentaryId &&
+                cp.currentInnings == comDetails.currentInnings
+            );
+
+            for (let cp of latestPlayers) {
+              if (!playerTpIdObj[cp.tpId]) {
+                playerTpIdObj[cp.tpId] = {
+                  ...cp,
+                  playerName: cp.playerName,
+                  playerId: cp.playerId,
+                };
+              }
+            }
+          }
           let liveInningData = matchInfoData?.live?.live_inning;
           let activePartnership =
             liveInningData?.iid === inningData?.iid &&
@@ -4100,6 +4144,25 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
 
       if (batsmen.length > 0) {
         for (let p of batsmen) {
+          if (!playerTpIdObj[p.batsman_id]) {
+            request.body.response = { match_id: matchId };
+            await updateCommentaryPlayersFromEntityService(request, fastify);
+            let latestPlayers = global.tblCommentaryPlayers.filter(
+              (cp) =>
+                cp.commentaryId == comDetails.commentaryId &&
+                cp.currentInnings == comDetails.currentInnings
+            );
+
+            for (let cp of latestPlayers) {
+              if (!playerTpIdObj[cp.tpId]) {
+                playerTpIdObj[cp.tpId] = {
+                  ...cp,
+                  playerName: cp.playerName,
+                  playerId: cp.playerId,
+                };
+              }
+            }
+          }
           let comP = playerTpIdObj[p.batsman_id];
           let onStrikeData = p?.position === "striker";
           let isPlayData = p?.batting === "true";
@@ -4143,6 +4206,25 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
 
       if (bowlers.length > 0) {
         for (let b of bowlers) {
+          if (!playerTpIdObj[b.bowler_id]) {
+            request.body.response = { match_id: matchId };
+            await updateCommentaryPlayersFromEntityService(request, fastify);
+            let latestPlayers = global.tblCommentaryPlayers.filter(
+              (cp) =>
+                cp.commentaryId == comDetails.commentaryId &&
+                cp.currentInnings == comDetails.currentInnings
+            );
+
+            for (let cp of latestPlayers) {
+              if (!playerTpIdObj[cp.tpId]) {
+                playerTpIdObj[cp.tpId] = {
+                  ...cp,
+                  playerName: cp.playerName,
+                  playerId: cp.playerId,
+                };
+              }
+            }
+          }
           let currentBowler = b?.bowling == "true"
           let comP = playerTpIdObj[b.bowler_id];
           if (comP) {
