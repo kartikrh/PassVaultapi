@@ -3,7 +3,7 @@ const { getTeamsByIds } = require("../repository/TableTeams")
 const { getCompetitionByIdsQuery } = require("../repository/TableCompitition")
 const { getComEntityQuery, updateVirtualPartnershipQuery, updateCommentaryStatusQuery, scoringTypeCommentaryQuery } = require("../repository/TableCommentary")
 const { getAllTournamentTeamPlayerByIdsQuery } = require("../repository/TableTournamentsTeamPlayers")
-const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService ,addSuperOverInEntity} = require("../services/commentry");
+const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService} = require("../services/commentry");
 const {
     callClientAPI,
     ServiceType,
@@ -931,22 +931,8 @@ const setEntityCom2Service = async (request , fastify) =>{
         // }
         if(comDetails.commentaryStatus == commentaryStatus.INPROGRESS){
           comDetails.isClientShow = true;
-          // check for super over
-          let isSuperOver = response.live.live_inning.issuperover || "false";
-          if(isSuperOver == "true"){
-            // set super ove first
-            let latestInning = response.live.live_inning_number;
-            let alExist = global.tblCommentaryTeams.find((i)=> i.commentaryId == comDetails.commentaryId && i.subInning == latestInning);
-            if(!alExist){
-              await addSuperOverInEntity(request.body , request,fastify , comDetails)
-              comDetails = global.tblCommentaries.find((i)=>i.commentaryId == comDetails.commentaryId)
-            }
-          }
-          if(response.live.commentaries && response.live.commentaries.length > 0){
-            let res = await handleComArr(request.body, request,fastify,comDetails)
-            return res;
-          }
-          return true;
+          let res = await handleComArr(request.body, request,fastify,comDetails)
+          return res;
         }
         if(comDetails.commentaryStatus == commentaryStatus.INNINGCHANGE){
           comDetails.isClientShow = false;
