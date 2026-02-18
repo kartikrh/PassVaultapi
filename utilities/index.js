@@ -14,7 +14,7 @@ const {
   getCommentaryDetailByIdQuery,
 } = require("../repository/TableCommentary");
 const { sendNotification } = require("../WebPushHandler");
-const { entityConstant } = require("./entityConst");
+const { entityConstant, nullTeamtpIds } = require("./entityConst");
 const {
   AllTeamPlayersQuery,
   AllTeamPlayersNullImageQuery,
@@ -1720,24 +1720,26 @@ const extractGroupDataFromArray = (tournamentTamPoint) => {
       groupId: group.round.order,
       groupName: group.round.name.trim(),
       roundId: group.round.rid,
-      standings: group.standings.map(team => ({
-        teamTpId: team.team.tid,
-        totalMatches: Number(team.played),
-        totalWin: Number(team.win),
-        totalLose: Number(team.loss),
-        totalTie: Number(team.draw),
-        noResult: Number(team.nr),
-        totalPoint: Math.round(Number(team.points)),
-        netRunRate: Number(team.netrr),
-        qualified: team.quality === "true",
-        eliminated: team.eliminate === "true",
+      standings: group.standings
+        .filter(team => !nullTeamtpIds.includes(team.team.tid))
+        .map(team => ({
+          teamTpId: team.team.tid,
+          totalMatches: Number(team.played),
+          totalWin: Number(team.win),
+          totalLose: Number(team.loss),
+          totalTie: Number(team.draw),
+          noResult: Number(team.nr),
+          totalPoint: Math.round(Number(team.points)),
+          netRunRate: Number(team.netrr),
+          qualified: team.quality === "true",
+          eliminated: team.eliminate === "true",
           ...(team.quality === "true" ? {
             position: teamRemarkType.Q
           } : {}),
           ...(team.eliminate === "true" ? {
             position: teamRemarkType.E
           } : {}),
-      }))
+        }))
     }));
 
   return orderWiseData;
