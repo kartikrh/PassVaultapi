@@ -5,6 +5,7 @@ const {
   roleCreateService,
   roleByIdService,
   roleByTabService,
+  updateRoleStatusService, 
 } = require("../../../../services/roles");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -96,6 +97,21 @@ const getPermissionByTab = async (request, reply, fastify) => {
   }
 };
 
+const updateRoleStatus = async (request, reply, fastify) => {
+  try {
+    const result = await updateRoleStatusService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/updateRoleStatus",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 module.exports = {
   getAllRoles,
   deleteRoles,
@@ -103,5 +119,6 @@ module.exports = {
   createRole,
   getRoleById,
   getPermissionByTab,
-  getRoleList
+  getRoleList,
+  updateRoleStatus,
 };
