@@ -1289,8 +1289,8 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     ltSetOrder = existingBatters.length
       ? Math.max(...existingBatters?.map(i => i.batterOrder))
       : 0;
-    if (response.live?.batsmen) {
-      for (let p of response.live.batsmen) {
+    if (response.live?.batsmen && response.live?.batsmen.length > 0) {
+      for (let p of response.live?.batsmen) {
         if (!playerTpIdObj[p.batsman_id]) {
           request.body.response = response; 
           await updateCommentaryPlayersFromEntityService(request, fastify);
@@ -1345,8 +1345,8 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
         }
       }
     }
-    if (response.live?.bowlers) {
-      for (let p of response.live.bowlers) {
+    if (response.live?.bowlers && response.live?.bowlers.length >0) {
+      for (let p of response.live?.bowlers) {
         if (!playerTpIdObj[p.bowler_id]) {
           request.body.response = response; 
           await updateCommentaryPlayersFromEntityService(request, fastify);
@@ -1385,7 +1385,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
       let cInning = response.scorecard.innings.find((i) => i.number == inningNo)
       let bowlers = cInning.bowlers;
       let currentBowler  = bowlers.filter((i)=> i.bowling == "true").map((i)=>parseInt(i.bowler_id))
-      let lb = response.live.bowlers.map((i)=>parseInt(i.bowler_id))
+      let lb = response.live.bowlers?.map((i)=>parseInt(i.bowler_id)) || []
       let ttlBowler = [...new Set([...currentBowler, ...lb])];
       // for (let b of currentBowler){
       //   let comP = playerTpIdObj[b.bowler_id];
