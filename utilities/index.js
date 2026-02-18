@@ -1727,7 +1727,7 @@ const extractGroupDataFromArray = (tournamentTamPoint) => {
         totalLose: Number(team.loss),
         totalTie: Number(team.draw),
         noResult: Number(team.nr),
-        totalPoint: Number(team.points),
+        totalPoint: Math.round(Number(team.points)),
         netRunRate: Number(team.netrr),
         qualified: team.quality === "true",
         eliminated: team.eliminate === "true",
