@@ -83,6 +83,23 @@ const editVenueService = async (request, fastify) => {
 
   if (index != -1) {
     global.tblVenues[index] = modifiedData[0];
+    const allCommentaries = global.tblCommentaries.filter(c => c.venueId == modifiedData[0].id);
+    for (const commentary of allCommentaries) {
+      const sendDataForSocketUpdate = {
+          commentaryId: commentary.commentaryId,
+          eventRefId: commentary?.eventRefId,
+          dataToUpdate: [
+            {
+              module: "venueReportData",
+              type: "update",
+              data: modifiedData[0]
+            }
+          ]
+      };
+      global.clientSocketIo?.forEach((socket) => {
+        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      });
+    }
   }
   
   return modifiedData[0];

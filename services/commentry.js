@@ -240,6 +240,7 @@ const { insertTeamAndPlayers } = require("./teams");
 const { generateOverEt, generateBallET, getBowlerOnlyRuns, generateWicket } = require("../utilities/comFunction")
 const { virtualOverQuery, virtualBallByBallQuery, createCommWicketQuery } = require("../repository/TableVirtual")
 const { insertAutoImportDataQuery, updateAutoImportDataQuery } = require("../repository/TableAutoImportData");
+const { createVenueService } = require("./venue");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -23977,12 +23978,13 @@ const matchImportService = async (data, fastify, request = null) => {
 
       const venueIndex = global.tblVenues.findIndex(item => item.id === checkCommentary?.venueId);
       if (venueIndex !== -1) {
-        const existingVenueData = global.tblVenues[venueIndex];
-        const updateVenueReport = await updateVenueQuery({
-          ...existingVenueData,
-          ...updateVenueReportData
-        }, fastify, request);
-        global.tblVenues[venueIndex] = updateVenueReport[0];
+        await createVenueService({
+          ...request,
+          body: {
+            ...global.tblVenues[venueIndex],
+            ...updateVenueReportData
+          }
+        }, fastify);
       }
 
       if (newCommentaryImport && 

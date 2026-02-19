@@ -42,6 +42,7 @@ const { playerImageChangeOnClientAPIService, upsertPlayerOnImportService } = req
 const { upsertTeamOnImportService, insertTeamAndPlayers } = require("./teams");
 const { saveTeamMatchTypeByTeamService } = require("./teamMatchType");
 const { getTeamMatchTypeByTeamQuery } = require("../repository/TableTeamMatchType");
+const { createVenueService } = require("./venue");
 
 // const allCompetitionService = async (request) => {
 //   const { isActive, isTrending, eventTypeId, matchTypeId, isMen, type } = request.body;
@@ -2284,12 +2285,13 @@ const competitionImportService = async (data, fastify, request) => {
 
       const venueIndex = global.tblVenues.findIndex(item => item.id === checkCommentary?.venueId);
       if (venueIndex !== -1) {
-        const existingVenueData = global.tblVenues[venueIndex];
-        const updateVenueReport = await updateVenueQuery({
-          ...existingVenueData,
-          ...updateVenueReportData
-        }, fastify, request);
-        global.tblVenues[venueIndex] = updateVenueReport[0];
+        await createVenueService({
+          ...request,
+          body: {
+            ...global.tblVenues[venueIndex],
+            ...updateVenueReportData
+          }
+        }, fastify);
       }
 
       await getComDataByCId({ commentaryId: commentaryId }, request, fastify)
