@@ -223,62 +223,62 @@ const createTeamService = async (request, fastify) => {
     request
   );
 
-  if (request.body.playerId) {
-    const hashString = request.body.playerId;
-    if (typeof hashString === "object") {
-      // Split the string into an array using commas as the delimiter
-      const jsonString = JSON.stringify(hashString);
-      // Convert the string back to an array of values
-      const hashArray = jsonString.split(",");
-      if (hashArray.length) {
-        for (let i = 0; i < hashArray.length; i++) {
-          if (hashArray[i]) {
-            const playerID = hashArray[i].replace(/[\[\]"]/g, "");
-            if (playerID !== "") {
-              const playerTpId = global.tblPlayers.find(elem => elem.playerId == playerID);
-              const teamPlayerData = await insertTeamPlayerQuery(
-                {
-                  teamId: data.teamId,
-                  refPlayerId: playerID,
-                  tpId: playerTpId?.tpId ?? null,
-                  userId: request.userTokenInfo.WrUserId,
-                },
-                fastify,
-                request
-              );
+  // if (request.body.playerId) {
+  //   const hashString = request.body.playerId;
+  //   if (typeof hashString === "object") {
+  //     // Split the string into an array using commas as the delimiter
+  //     const jsonString = JSON.stringify(hashString);
+  //     // Convert the string back to an array of values
+  //     const hashArray = jsonString.split(",");
+  //     if (hashArray.length) {
+  //       for (let i = 0; i < hashArray.length; i++) {
+  //         if (hashArray[i]) {
+  //           const playerID = hashArray[i].replace(/[\[\]"]/g, "");
+  //           if (playerID !== "") {
+  //             const playerTpId = global.tblPlayers.find(elem => elem.playerId == playerID);
+  //             const teamPlayerData = await insertTeamPlayerQuery(
+  //               {
+  //                 teamId: data.teamId,
+  //                 refPlayerId: playerID,
+  //                 tpId: playerTpId?.tpId ?? null,
+  //                 userId: request.userTokenInfo.WrUserId,
+  //               },
+  //               fastify,
+  //               request
+  //             );
 
-            const playerData = global.tblPlayers.find((item) => item.playerId == playerID);
-            if(request.body.jersey && playerData.image) {
-              request.body.playerImage = playerData.image;
-              request.body.playerId = playerData?.playerId;
-              request.body.playerName = playerData.playerName;
-              request.body.teamPlayerId = teamPlayerData.teamPlayerId;
-              request.body.teamId = data.teamId;
-              runMergePlayerImageJob(2, request, fastify)
-                .catch(err => {
-                  errorLogger(
-                    fastify,
-                    err.message,
-                    "services/teams.js/createTeamService",
-                    null
-                  );
-                });
-              // mergeAndSaveImage({
-              //   jersey: request.body.jersey,
-              //   playerImage: playerData.image,
-              //   playerName: playerData.playerName,
-              //   teamName: request.body.teamName,
-              //   teamPlayerId: teamPlayerData.teamPlayerId,
-              //   commentaryPlayerId: null,
-              //   commentaryId: null,
-              // }, fastify);
-            }
-            }
-          }
-        }
-      }
-    }
-  }
+  //           const playerData = global.tblPlayers.find((item) => item.playerId == playerID);
+  //           if(request.body.jersey && playerData.image) {
+  //             request.body.playerImage = playerData.image;
+  //             request.body.playerId = playerData?.playerId;
+  //             request.body.playerName = playerData.playerName;
+  //             request.body.teamPlayerId = teamPlayerData.teamPlayerId;
+  //             request.body.teamId = data.teamId;
+  //             runMergePlayerImageJob(2, request, fastify)
+  //               .catch(err => {
+  //                 errorLogger(
+  //                   fastify,
+  //                   err.message,
+  //                   "services/teams.js/createTeamService",
+  //                   null
+  //                 );
+  //               });
+  //             // mergeAndSaveImage({
+  //             //   jersey: request.body.jersey,
+  //             //   playerImage: playerData.image,
+  //             //   playerName: playerData.playerName,
+  //             //   teamName: request.body.teamName,
+  //             //   teamPlayerId: teamPlayerData.teamPlayerId,
+  //             //   commentaryPlayerId: null,
+  //             //   commentaryId: null,
+  //             // }, fastify);
+  //           }
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
   // if (request.body.competitionId) {
   //   const hashString = request.body.competitionId;
   //   if (typeof hashString === "object") {
@@ -490,78 +490,78 @@ const updateTeamService = async (request, fastify) => {
 
   global.tblTeams[index] = body;
 
-  if (request.body.playerId) {
-    let playerIds = []
-    const teamPlayersData = await getTeamPlayerByTeamIdQuery(body.teamId, fastify, request);
-      for (const teamData of teamPlayersData) {
-        if (teamData?.homeTeam == true) {
-          playerIds.push(teamData?.refPlayerId)
-        }
-      if (teamData && teamData?.jerseyPlayerImage) {
-        await removeImageFromServer({
-          path: teamData.jerseyPlayerImage,
-        });
-      }
-    }
-    await deleteTeamPlayerByTeamIdQuery(body.teamId, fastify, request);
+  // if (request.body.playerId) {
+  //   let playerIds = []
+  //   const teamPlayersData = await getTeamPlayerByTeamIdQuery(body.teamId, fastify, request);
+  //     for (const teamData of teamPlayersData) {
+  //       if (teamData?.homeTeam == true) {
+  //         playerIds.push(teamData?.refPlayerId)
+  //       }
+  //     if (teamData && teamData?.jerseyPlayerImage) {
+  //       await removeImageFromServer({
+  //         path: teamData.jerseyPlayerImage,
+  //       });
+  //     }
+  //   }
+  //   await deleteTeamPlayerByTeamIdQuery(body.teamId, fastify, request);
 
-    const hashString = request.body.playerId;
-    // Split the string into an array using commas as the delimiter
-    const jsonString = JSON.stringify(hashString);
-    // Convert the string back to an array of values
-    const hashArray = jsonString.split(",");
-    if (hashArray.length) {
-      for (let i = 0; i < hashArray.length; i++) {
-        if (hashArray[i]) {
-          const playerID = hashArray[i].replace(/[\[\]"]/g, "");
-          if (playerID !== "") {
-            const playerTpId = global.tblPlayers.find(elem => elem.playerId == playerID);
-            const homeTeam = playerIds.includes(Number(playerID));
-            const teamPlayerData = await insertTeamPlayerQuery(
-              {
-                teamId: body.teamId,
-                refPlayerId: playerID,
-                tpId: playerTpId?.tpId ?? null,
-                userId: request.userTokenInfo.WrUserId,
-                homeTeam,
-              },
-              fastify,
-              request
-            );
+  //   const hashString = request.body.playerId;
+  //   // Split the string into an array using commas as the delimiter
+  //   const jsonString = JSON.stringify(hashString);
+  //   // Convert the string back to an array of values
+  //   const hashArray = jsonString.split(",");
+  //   if (hashArray.length) {
+  //     for (let i = 0; i < hashArray.length; i++) {
+  //       if (hashArray[i]) {
+  //         const playerID = hashArray[i].replace(/[\[\]"]/g, "");
+  //         if (playerID !== "") {
+  //           const playerTpId = global.tblPlayers.find(elem => elem.playerId == playerID);
+  //           const homeTeam = playerIds.includes(Number(playerID));
+  //           const teamPlayerData = await insertTeamPlayerQuery(
+  //             {
+  //               teamId: body.teamId,
+  //               refPlayerId: playerID,
+  //               tpId: playerTpId?.tpId ?? null,
+  //               userId: request.userTokenInfo.WrUserId,
+  //               homeTeam,
+  //             },
+  //             fastify,
+  //             request
+  //           );
 
-            const playerData = global.tblPlayers.find((item) => item.playerId == playerID);
-            if(body.jersey && playerData.image) {
-              request.body.playerImage = playerData.image;
-              request.body.playerId = playerData?.playerId;
-              request.body.jersey = body.jersey;
-              request.body.playerName = playerData.playerName;
-              request.body.teamName = body.teamName;
-              request.body.teamPlayerId = teamPlayerData.teamPlayerId;
-              request.body.teamId = body.teamId;
-              runMergePlayerImageJob(2, request, fastify)
-                .catch(err => {
-                  errorLogger(
-                    fastify,
-                    err.message,
-                    "services/teams.js/createTeamService",
-                    null
-                  );
-                });
-              // mergeAndSaveImage({
-              //   jersey: body.jersey,
-              //   playerImage: playerData.image,
-              //   playerName: playerData.playerName,
-              //   teamName: body.teamName,
-              //   teamPlayerId: teamPlayerData.teamPlayerId,
-              //   commentaryPlayerId: null,
-              //   commentaryId: null,
-              // }, fastify);
-            }
-          }
-        }
-      }
-    }
-  }
+  //           const playerData = global.tblPlayers.find((item) => item.playerId == playerID);
+  //           if(body.jersey && playerData.image) {
+  //             request.body.playerImage = playerData.image;
+  //             request.body.playerId = playerData?.playerId;
+  //             request.body.jersey = body.jersey;
+  //             request.body.playerName = playerData.playerName;
+  //             request.body.teamName = body.teamName;
+  //             request.body.teamPlayerId = teamPlayerData.teamPlayerId;
+  //             request.body.teamId = body.teamId;
+  //             runMergePlayerImageJob(2, request, fastify)
+  //               .catch(err => {
+  //                 errorLogger(
+  //                   fastify,
+  //                   err.message,
+  //                   "services/teams.js/createTeamService",
+  //                   null
+  //                 );
+  //               });
+  //             // mergeAndSaveImage({
+  //             //   jersey: body.jersey,
+  //             //   playerImage: playerData.image,
+  //             //   playerName: playerData.playerName,
+  //             //   teamName: body.teamName,
+  //             //   teamPlayerId: teamPlayerData.teamPlayerId,
+  //             //   commentaryPlayerId: null,
+  //             //   commentaryId: null,
+  //             // }, fastify);
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
   // if (request.body.competitionId) {
   //   await deleteTeamCompetitionByTeamIdQuery(body.teamId, fastify, request);
   //   global.tblTeamCompetition = global.tblTeamCompetition.filter(

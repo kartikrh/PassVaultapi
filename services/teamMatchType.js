@@ -1,9 +1,9 @@
 const { getTeamMatchTypeByTeamQuery, insertTeamMatchTypeByTeamQuery, updateTeamMatchTypeJerseyImageByTeamQuery, activeInactiveTeamMatchTypeByTeamQuery, deleteTeamMatchTypeByTeamQuery } = require("../repository/TableTeamMatchType");
-const { getTeamPlayersByTeamMatchTypeIdQuery, updateTeamPlayerMatchTypeIdQuery, insertTeamPlayerWithHomeTeamQuery } = require("../repository/TableTeamPlayer");
+const { getTeamPlayersByTeamMatchTypeIdQuery, updateTeamPlayerMatchTypeIdQuery, insertTeamPlayerWithHomeTeamQuery, deleteTeamPlayerByTeamPlayerIdQuery } = require("../repository/TableTeamPlayer");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
-const { generateImageName, storeImageOnServer } = require("../utilities/Images");
+const { generateImageName, storeImageOnServer, removeImageFromServer } = require("../utilities/Images");
 const { playerImageChangeOnClientAPIService } = require("./player");
 
 const getTeamMatchTypeByTeamService = async (request, fastify) => {
@@ -142,17 +142,12 @@ const updateTeamMatchTypeDataByTeamService = async (request, fastify) => {
 
         for (const oldPlayer of oldTeamPlayers) {
             if (!newPlayerIds.includes(oldPlayer.refPlayerId)) {
-                await updateTeamPlayerMatchTypeIdQuery({
-                    ...request,
-                    body: {
-                        teamId,
-                        matchTypeId: -1,
-                        refPlayerId: oldPlayer.refPlayerId,
-                        oldMatchTypeId: oldPlayer?.matchTypeId,
-                        jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage ?? null,
-                        jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath ?? null,
-                    }
-                }, fastify);
+                await deleteTeamPlayerByTeamPlayerIdQuery({
+                    teamPlayerId: oldPlayer.teamPlayerId
+                }, fastify, request);
+                await removeImageFromServer({
+                    path: oldPlayer.jerseyPlayerImage,
+                });
             }
         }
     }
