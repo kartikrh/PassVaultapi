@@ -593,6 +593,31 @@ const insertTeamPlayerWithHomeTeamQuery = async (data, fastify, request) => {
   }
 };
 
+const deleteTeamPlayerByTeamPlayerIdQuery = async (teamPlayerId, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblTeamPlayers" SET
+          "wrIsDeleted" = $1,
+          "wrDeletedBy" = $2,
+          "wrDeletedAt" = now()
+      WHERE "wrTeamPlayerId" = $3
+    `,
+      {
+        bind: [true, request.userTokenInfo.WrUserId, teamPlayerId],
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/deleteTeamPlayerByTeamPlayerIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   insertTeamPlayerQuery,
   getAllTeamPlayersByTeamIdAndPlayerIdQuery,
@@ -609,5 +634,6 @@ module.exports = {
   getHomeTeamPlayerQuery,
   getTeamPlayersByTeamMatchTypeIdQuery,
   updateTeamPlayerMatchTypeIdQuery,
-  insertTeamPlayerWithHomeTeamQuery
+  insertTeamPlayerWithHomeTeamQuery,
+  deleteTeamPlayerByTeamPlayerIdQuery
 };
