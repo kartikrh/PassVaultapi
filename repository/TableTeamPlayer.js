@@ -181,7 +181,8 @@ const getTeamPlayerByPlayerIdQuery = async (refPlayerId, fastify, request) => {
         "wrJerseyPlayerImage" as "jerseyPlayerImage",
         "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
         "wrHomeTeam" as "homeTeam",
-        "wrTpId" as "tpId"
+        "wrTpId" as "tpId",
+        "wrMatchTypeId" as "matchTypeId"
       FROM "tblTeamPlayers"
       WHERE "wrRefPlayerId" = $1 AND "wrIsDeleted" = FALSE`,
       {
