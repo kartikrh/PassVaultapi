@@ -22,7 +22,7 @@ const {
 const {storeImageOnServer, removeImageFromServer, generateImageName, getImageFromUrl } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
-const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive, matchStatusEntity, error, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, parseUmpires, ScoringTypes, RefType, lowerEntityMatchTypesEnums, EntityCommentaryStatus, getComDataByCId } = require("../utilities");
+const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive, matchStatusEntity, error, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, parseUmpires, ScoringTypes, RefType, lowerEntityMatchTypesEnums, EntityCommentaryStatus, getComDataByCId, getCombineFullScore } = require("../utilities");
 const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryPlayers, updateCommentaryPlayerById, isCountInPOintCommentaryChangeQuery, updateCommentaryDateByCommentaryIdQuery, updateCommentaryQuery, insertCommentaryTeamQuery, deleteInningWiseCommentaryPlayersQuery } = require("../repository/TableCommentary")
 const { deleteTournamentTeamPlayersByCompIdQuery, insertTournamentTeamPlayersQuery, deletePlayersByTeamAndPlayerIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
@@ -1685,6 +1685,7 @@ const competitionImportService = async (data, fastify, request) => {
           };
 
           checkVenue = await updateVenueQuery(updateVenueData, fastify, request);
+          checkVenue = checkVenue[0];
           const index = global.tblVenues.findIndex(item => item.id === checkVenue.id);
           global.tblVenues[index] = checkVenue;
         }
@@ -2253,6 +2254,44 @@ const competitionImportService = async (data, fastify, request) => {
         // TeamB
         await upsertCommentaryTeamsAndPlayersService(checkCompetition, tournamentTeamsPlayers, checkCommentary, maxOver, commentaryTeams, teamB, i, commentaryPlayers, teamBSquad, entitySportMatchResponse?.players, entitySocketData, request, fastify);
       }
+
+      const url5 = `/match/${match.match_id}/statistics`;
+      const entitySportMatchStatistics = await callEntitySportAPI(url5, request, fastify);
+      let entitySportMatchStatisticsResponse = entitySportMatchStatistics?.data?.result;
+      if (!entitySportMatchStatisticsResponse) {
+        errorLogger(
+          fastify,
+          `Invalid response from Entit-Sport API for url ${url5}`,
+          "/services/competition.js/competitionImportService - entitySportMatchStatisticsResponse", {
+          ...request,
+          originalUrl: url5
+        }, entitySportMatchStatistics?.data);
+        return false;
+      }
+
+      const venueStats = entitySportMatchStatisticsResponse?.venue_stats;
+      const venueBowlingStats = entitySportMatchStatisticsResponse?.venue_bowling_report;
+      const updateVenueReportData = {
+        avgInn1Score: Number(venueStats?.average_score_for_venue?.[0]?.avgruns || 0),
+        avgInn2Score: Number(venueStats?.average_score_for_venue?.[1]?.avgruns || 0),
+        avgInn3Score: Number(venueStats?.average_score_for_venue?.[2]?.avgruns || 0),
+        avgInn4Score: Number(venueStats?.average_score_for_venue?.[3]?.avgruns || 0),
+        highestTotalFullScore: getCombineFullScore(venueStats?.highest_total?.score, venueStats?.highest_total?.overs),
+        lowestTotalFullScore: getCombineFullScore(venueStats?.lowest_total?.score, venueStats?.lowest_total?.overs),
+        spinWicketsCount: Number(venueBowlingStats?.spin_wickets || 0),
+        paceWicketsCount: Number(venueBowlingStats?.pace_wickets || 0),
+      };
+
+      const venueIndex = global.tblVenues.findIndex(item => item.id === checkCommentary?.venueId);
+      if (venueIndex !== -1) {
+        const existingVenueData = global.tblVenues[venueIndex];
+        const updateVenueReport = await updateVenueQuery({
+          ...existingVenueData,
+          ...updateVenueReportData
+        }, fastify, request);
+        global.tblVenues[venueIndex] = updateVenueReport[0];
+      }
+
       await getComDataByCId({ commentaryId: commentaryId }, request, fastify)
 
       if (newCommentaryImport && 

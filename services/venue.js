@@ -64,6 +64,14 @@ const editVenueService = async (request, fastify) => {
     tpId: request.body.tpId === undefined ? validateId.tpId : request.body.tpId,
     isActive: Boolean(request.body.isActive) ?? validateId.isActive,
     capacity: request.body.capacity ?? validateId.capacity,
+    avgInn1Score: request.body.avgInn1Score ?? validateId.avgInn1Score,
+    avgInn2Score: request.body.avgInn2Score ?? validateId.avgInn2Score,
+    avgInn3Score: request.body.avgInn3Score ?? validateId.avgInn3Score,
+    avgInn4Score: request.body.avgInn4Score ?? validateId.avgInn4Score,
+    highestTotalFullScore: request.body.highestTotalFullScore ?? validateId.highestTotalFullScore,
+    lowestTotalFullScore: request.body.lowestTotalFullScore ?? validateId.lowestTotalFullScore,
+    spinWicketsCount: request.body.spinWicketsCount ?? validateId.spinWicketsCount,
+    paceWicketsCount: request.body.paceWicketsCount ?? validateId.paceWicketsCount,
     id: request.body.id ?? validateId.id,
   };
 

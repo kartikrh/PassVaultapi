@@ -140,6 +140,7 @@ const {
   matchStatusEntity,
   EntityCommentaryStatus,
   getInningWiseDataFromEntity,
+  getCombineFullScore,
 } = require("../utilities");
 const {
   getAllPlayersByTeamIdQuery,
@@ -23690,6 +23691,7 @@ const matchImportService = async (data, fastify, request = null) => {
       };
 
       checkVenue = await updateVenueQuery(venueData, fastify, request);
+      checkVenue = checkVenue[0];
       const index = global.tblVenues.findIndex(item => item.id === checkVenue.id);
       global.tblVenues[index] = checkVenue;
     }
@@ -23945,6 +23947,44 @@ const matchImportService = async (data, fastify, request = null) => {
         // TeamB
         await upsertCommentaryTeamsAndPlayersService(checkCompetition, tournamentTeamsPlayers, checkCommentary, maxOver, commentaryTeams, teamBData, i, commentaryPlayers, teamBSquad, entitySportMatchResponse?.players, entitySocketData, request, fastify);
       }
+      
+      const url2 = `/match/${data.mid}/statistics`;
+      const entitySportMatchStatistics = await callEntitySportAPI(url2, request, fastify);
+      let entitySportMatchStatisticsResponse = entitySportMatchStatistics?.data?.result;
+      if (!entitySportMatchStatisticsResponse) {
+        errorLogger(
+          fastify,
+          `Invalid response from Entit-Sport API for url ${url2}`,
+          "/services/commentary.js/mathImportService - entitySportMatchStatisticsResponse", {
+          ...request,
+          originalUrl: url2
+        }, entitySportMatchStatistics?.data);
+        return false;
+      }
+      
+      const venueStats = entitySportMatchStatisticsResponse?.venue_stats;
+      const venueBowlingStats = entitySportMatchStatisticsResponse?.venue_bowling_report;
+      const updateVenueReportData = {
+        avgInn1Score: Number(venueStats?.average_score_for_venue?.[0]?.avgruns || 0),
+        avgInn2Score: Number(venueStats?.average_score_for_venue?.[1]?.avgruns || 0),
+        avgInn3Score: Number(venueStats?.average_score_for_venue?.[2]?.avgruns || 0),
+        avgInn4Score: Number(venueStats?.average_score_for_venue?.[3]?.avgruns || 0),
+        highestTotalFullScore: getCombineFullScore(venueStats?.highest_total?.score, venueStats?.highest_total?.overs),
+        lowestTotalFullScore: getCombineFullScore(venueStats?.lowest_total?.score, venueStats?.lowest_total?.overs),
+        spinWicketsCount: Number(venueBowlingStats?.spin_wickets || 0),
+        paceWicketsCount: Number(venueBowlingStats?.pace_wickets || 0),
+      };
+
+      const venueIndex = global.tblVenues.findIndex(item => item.id === checkCommentary?.venueId);
+      if (venueIndex !== -1) {
+        const existingVenueData = global.tblVenues[venueIndex];
+        const updateVenueReport = await updateVenueQuery({
+          ...existingVenueData,
+          ...updateVenueReportData
+        }, fastify, request);
+        global.tblVenues[venueIndex] = updateVenueReport[0];
+      }
+
       if (newCommentaryImport && 
         EntitlyLiveStates.includes(matchInfoResponse?.game_state)
       ) {
