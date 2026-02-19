@@ -2391,6 +2391,13 @@ const getComDataByCId = async (data, request, fastify) => {
   };
   return comDetails;
 };
+
+const getCombineFullScore = (score = null, overs = null) => {
+  if (!score || !overs) return "";
+  const newScore = score.split("/");
+  return `${newScore[0]}-${newScore[1]} (${overs})`;
+}
+
 module.exports = {    
   ERROR_CODES,
   error,
@@ -2515,4 +2522,5 @@ module.exports = {
   lowerEntityMatchTypesEnums,
   getInningWiseDataFromEntity,
   getComDataByCId,
+  getCombineFullScore
 };
