@@ -25473,15 +25473,16 @@ const importCompetitionMatchService = async (fastify) => {
         allCompetitionMatch.push(...entitySportCompetitionMatchResponse?.items);
       }
       page++;
+      entitySportCompetitionMatchesUrl = `/competition/${comp.tpId}/matches?`;
     }
 
     if (allCompetitionMatch.length === 0) {
-      return true;
+      continue;
     }
 
     allCompetitionMatch = allCompetitionMatch.filter(m => (m.status === matchStatusEntity.Live || m.status === matchStatusEntity.Scheduled) && nullTeamtpIds.includes(Number(m?.teama?.team_id)) === false && nullTeamtpIds.includes(Number(m?.teamb?.team_id)) === false);
     if (allCompetitionMatch.length === 0) {
-      return true;
+      continue;
     }
 
     const allCompetitionMatchTpId = allCompetitionMatch.map(cm => cm.match_id);
