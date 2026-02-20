@@ -23703,12 +23703,14 @@ const matchImportService = async (data, fastify, request = null) => {
   let teamAData, teamBData;
   if (teamA && !nullTeamtpIds.includes(teamA)) {
     teamAData = await insertTeamAndPlayers({
-      tid: teamA
+      tid: teamA,
+      matchTypeId: [matchType?.matchTypeId]
     }, eventType, request, fastify);
   }
   if (teamB && !nullTeamtpIds.includes(teamB)) {
     teamBData = await insertTeamAndPlayers({
-      tid: teamB
+      tid: teamB,
+      matchTypeId: [matchType?.matchTypeId]
     }, eventType, request, fastify);
   }
 
