@@ -17,6 +17,7 @@ const {
   getTeamPlayerByPlayerIdQuery,
   getTeamListByPlayerIdQuery,
   updateTeamPlayerHomeTeamQuery,
+  updateTeamPlayerHomeTeamByTeamPlayerIdQuery,
 } = require("../repository/TableTeamPlayer");
 const { getAllPlayersByTeamIdQuery, getAllPlayersByCompetitionIdTeamIdQuery } = require("../repository/TableTeams");
 const {
@@ -1322,12 +1323,12 @@ const mergePlayerNullImageService = async (request, fastify) => {
 };
 
 const updatePlayerHomeTeamService = async (request, fastify) => {
-  const { playerId, homeTeamId } = request.body;
+  const { teamPlayerId, playerId } = request.body;
 
-  await updateTeamPlayerHomeTeamQuery(
+  await updateTeamPlayerHomeTeamByTeamPlayerIdQuery(
     {
-      refPlayerId: parseInt(playerId),
-      teamId: parseInt(homeTeamId),
+      teamPlayerId: parseInt(teamPlayerId),
+      playerId: parseInt(playerId)
     },
     fastify,
     request
