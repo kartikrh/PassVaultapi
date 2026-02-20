@@ -543,6 +543,7 @@ const getAllCommentariesDataV2Service = async (request,fastify) => {
 
                 const weatherAndPitchData = await weatherAndPitchDataService(c.commentaryId);
                 const getCompetitionImage = global.tblCompetitions.find(tc => tc.competitionId === c.competitionId);
+                const venueReportData = global.tblVenues.find(v => v.id == c?.venueId);
 
                 commentaries[c.commentaryId] = {
                     commentaryId : c.commentaryId,
@@ -557,6 +558,7 @@ const getAllCommentariesDataV2Service = async (request,fastify) => {
                     commentaryWicket: wickets,
                     commentaryPartnership: partnerships,
                     marketOddsBallByBall : marketOddsBallByBall,
+                    venueReportData: venueReportData || {}
                 };
         }
     

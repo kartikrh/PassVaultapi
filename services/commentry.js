@@ -140,6 +140,7 @@ const {
   matchStatusEntity,
   EntityCommentaryStatus,
   getInningWiseDataFromEntity,
+  getCombineFullScore,
 } = require("../utilities");
 const {
   getAllPlayersByTeamIdQuery,
@@ -239,6 +240,7 @@ const { insertTeamAndPlayers } = require("./teams");
 const { generateOverEt, generateBallET, getBowlerOnlyRuns, generateWicket } = require("../utilities/comFunction")
 const { virtualOverQuery, virtualBallByBallQuery, createCommWicketQuery } = require("../repository/TableVirtual")
 const { insertAutoImportDataQuery, updateAutoImportDataQuery } = require("../repository/TableAutoImportData");
+const { createVenueService } = require("./venue");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -8651,10 +8653,10 @@ const getMatchListByStatus = async (body, request, fastify) => {
       cst: item.commentaryStatus,
       res: item.result || "",
       tsi: [],
-      t1bg: commentaryTeamsOne.backgroundColor || null,
-      t2bg: commentaryTeamsTwo.backgroundColor || null,
-      t1co: commentaryTeamsOne.teamColor || null,
-      t2co: commentaryTeamsTwo.teamColor || null,
+      t1bg: commentaryTeamsOne?.backgroundColor || null,
+      t2bg: commentaryTeamsTwo?.backgroundColor || null,
+      t1co: commentaryTeamsOne?.teamColor || null,
+      t2co: commentaryTeamsTwo?.teamColor || null,
       batid: batid || null,
       ballid: ballid || null,
       t1id: item.team1Id || null,
@@ -23690,6 +23692,7 @@ const matchImportService = async (data, fastify, request = null) => {
       };
 
       checkVenue = await updateVenueQuery(venueData, fastify, request);
+      checkVenue = checkVenue[0];
       const index = global.tblVenues.findIndex(item => item.id === checkVenue.id);
       global.tblVenues[index] = checkVenue;
     }
@@ -23945,6 +23948,45 @@ const matchImportService = async (data, fastify, request = null) => {
         // TeamB
         await upsertCommentaryTeamsAndPlayersService(checkCompetition, tournamentTeamsPlayers, checkCommentary, maxOver, commentaryTeams, teamBData, i, commentaryPlayers, teamBSquad, entitySportMatchResponse?.players, entitySocketData, request, fastify);
       }
+      
+      const url2 = `/match/${data.mid}/statistics`;
+      const entitySportMatchStatistics = await callEntitySportAPI(url2, request, fastify);
+      let entitySportMatchStatisticsResponse = entitySportMatchStatistics?.data?.result;
+      if (!entitySportMatchStatisticsResponse) {
+        errorLogger(
+          fastify,
+          `Invalid response from Entit-Sport API for url ${url2}`,
+          "/services/commentary.js/mathImportService - entitySportMatchStatisticsResponse", {
+          ...request,
+          originalUrl: url2
+        }, entitySportMatchStatistics?.data);
+        return false;
+      }
+      
+      const venueStats = entitySportMatchStatisticsResponse?.venue_stats;
+      const venueBowlingStats = entitySportMatchStatisticsResponse?.venue_bowling_report;
+      const updateVenueReportData = {
+        avgInn1Score: Number(venueStats?.average_score_for_venue?.[0]?.avgruns || 0),
+        avgInn2Score: Number(venueStats?.average_score_for_venue?.[1]?.avgruns || 0),
+        avgInn3Score: Number(venueStats?.average_score_for_venue?.[2]?.avgruns || 0),
+        avgInn4Score: Number(venueStats?.average_score_for_venue?.[3]?.avgruns || 0),
+        highestTotalFullScore: getCombineFullScore(venueStats?.highest_total?.score, venueStats?.highest_total?.overs),
+        lowestTotalFullScore: getCombineFullScore(venueStats?.lowest_total?.score, venueStats?.lowest_total?.overs),
+        spinWicketsCount: Number(venueBowlingStats?.spin_wickets || 0),
+        paceWicketsCount: Number(venueBowlingStats?.pace_wickets || 0),
+      };
+
+      const venueIndex = global.tblVenues.findIndex(item => item.id === checkCommentary?.venueId);
+      if (venueIndex !== -1) {
+        await createVenueService({
+          ...request,
+          body: {
+            ...global.tblVenues[venueIndex],
+            ...updateVenueReportData
+          }
+        }, fastify);
+      }
+
       if (newCommentaryImport && 
         EntitlyLiveStates.includes(matchInfoResponse?.game_state)
       ) {
@@ -25473,15 +25515,16 @@ const importCompetitionMatchService = async (fastify) => {
         allCompetitionMatch.push(...entitySportCompetitionMatchResponse?.items);
       }
       page++;
+      entitySportCompetitionMatchesUrl = `/competition/${comp.tpId}/matches?`;
     }
 
     if (allCompetitionMatch.length === 0) {
-      return true;
+      continue;
     }
 
     allCompetitionMatch = allCompetitionMatch.filter(m => (m.status === matchStatusEntity.Live || m.status === matchStatusEntity.Scheduled) && nullTeamtpIds.includes(Number(m?.teama?.team_id)) === false && nullTeamtpIds.includes(Number(m?.teamb?.team_id)) === false);
     if (allCompetitionMatch.length === 0) {
-      return true;
+      continue;
     }
 
     const allCompetitionMatchTpId = allCompetitionMatch.map(cm => cm.match_id);
