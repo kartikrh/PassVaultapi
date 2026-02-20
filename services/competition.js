@@ -1483,7 +1483,8 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
     const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
     await insertTeamAndPlayers({
       tid: team.tpId,
-      player: true
+      playerImport: true,
+      matchTypeId: [matchTypeId]
     }, eventType, request, fastify);
 
     const teamPlayers = await getTeamPlayersByTeamMatchTypeIdQuery({
