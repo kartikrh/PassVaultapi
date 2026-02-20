@@ -142,9 +142,7 @@ const updateTeamMatchTypeDataByTeamService = async (request, fastify) => {
 
         for (const oldPlayer of oldTeamPlayers) {
             if (!newPlayerIds.includes(oldPlayer.refPlayerId)) {
-                await deleteTeamPlayerByTeamPlayerIdQuery({
-                    teamPlayerId: oldPlayer.teamPlayerId
-                }, fastify, request);
+                await deleteTeamPlayerByTeamPlayerIdQuery(oldPlayer.teamPlayerId, fastify, request);
                 await removeImageFromServer({
                     path: oldPlayer.jerseyPlayerImage,
                 });
