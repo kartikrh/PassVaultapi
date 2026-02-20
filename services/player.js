@@ -324,16 +324,16 @@ const insertPlayerService = async (request, fastify) => {
   //   }
   // }
 
-  if(request.body?.homeTeamId !== null && request.body?.homeTeamId !== undefined) {
-    await updateTeamPlayerHomeTeamQuery(
-      {
-        refPlayerId: result?.playerId,
-        teamId: parseInt(request.body.homeTeamId),
-      },
-      fastify,
-      request
-    );
-  }
+  // if(request.body?.homeTeamId !== null && request.body?.homeTeamId !== undefined) {
+  //   await updateTeamPlayerHomeTeamQuery(
+  //     {
+  //       refPlayerId: result?.playerId,
+  //       teamId: parseInt(request.body.homeTeamId),
+  //     },
+  //     fastify,
+  //     request
+  //   );
+  // }
 
   if (!result) {
     return null;
