@@ -23976,6 +23976,14 @@ const matchImportService = async (data, fastify, request = null) => {
         paceWicketsCount: Number(venueBowlingStats?.pace_wickets || 0),
       };
 
+      entitySportMatchResponse = {
+        ...entitySportMatchResponse,
+        venueReportData: {
+          venue_stats: venueStats,
+          venue_bowling_report: venueBowlingStats
+        }
+      }
+
       const venueIndex = global.tblVenues.findIndex(item => item.id === checkCommentary?.venueId);
       if (venueIndex !== -1) {
         await createVenueService({
