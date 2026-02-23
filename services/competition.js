@@ -36,7 +36,7 @@ const { insertVenueQuery, updateVenueQuery } = require("../repository/TableVenue
 const { insertWeatherQuery, updateWeatherQuery } = require("../repository/TableWeather");
 const { updatePitchConditionQuery, insertPitchConditionQuery } = require("../repository/TablePitchCondition");
 const { insertAutoImportDataService } = require("./autoImportData");
-const { insertAutoUpdateCommentaryDataQuery, getAllAutoUpdateCommentaryDataQuery } = require("../repository/TableAutoUpdateCommentaryData");
+const { insertAutoUpdateCommentaryDataQuery, getAllAutoUpdateCommentaryDataQuery, updateAutoUpdateCommentaryDataQuery } = require("../repository/TableAutoUpdateCommentaryData");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const { playerImageChangeOnClientAPIService, upsertPlayerOnImportService } = require("./player");
 const { upsertTeamOnImportService, insertTeamAndPlayers } = require("./teams");
@@ -2264,7 +2264,7 @@ const competitionImportService = async (data, fastify, request) => {
         responseData: entitySportMatch?.data?.result
       };
 
-      await insertAutoUpdateCommentaryDataQuery(insertDataInCommentaryUpdate, fastify);
+      const autoUpdateId = await insertAutoUpdateCommentaryDataQuery(insertDataInCommentaryUpdate, fastify);
 
       const matchPlaying11Squad = entitySportMatchResponse?.["match-playing11"];
       let teamASquad = matchPlaying11Squad?.teama?.squads?.length > 0 ? matchPlaying11Squad?.teama?.squads : [];
@@ -2306,6 +2306,21 @@ const competitionImportService = async (data, fastify, request) => {
         spinWicketsCount: Number(venueBowlingStats?.spin_wickets || 0),
         paceWicketsCount: Number(venueBowlingStats?.pace_wickets || 0),
       };
+
+      if (autoUpdateId?.id) {
+        await updateAutoUpdateCommentaryDataQuery({
+          responseData: {
+            ...entitySportMatch?.data?.result,
+            venueReportData: {
+              venue_stats: venueStats,
+              venue_bowling_report: venueBowlingStats
+            }
+          },
+          status: autoUpdateId?.status,
+          message: autoUpdateId?.message,
+          id: autoUpdateId?.id
+        }, fastify);
+      }
 
       const venueIndex = global.tblVenues.findIndex(item => item.id === checkCommentary?.venueId);
       if (venueIndex !== -1) {
