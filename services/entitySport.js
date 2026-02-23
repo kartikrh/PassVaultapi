@@ -9,7 +9,7 @@ const {
   updateBallByBallFullCommentaryQuery,
 } = require("../repository/TableCommentary")
 const { getAllTournamentTeamPlayerByIdsQuery } = require("../repository/TableTournamentsTeamPlayers")
-const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService} = require("../services/commentry");
+const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService,addSuperOverInEntity} = require("../services/commentry");
 const {
     callClientAPI,
     ServiceType,
@@ -937,8 +937,23 @@ const setEntityCom2Service = async (request , fastify) =>{
         // }
         if(comDetails.commentaryStatus == commentaryStatus.INPROGRESS){
           comDetails.isClientShow = true;
-          let res = await handleComArr(request.body, request,fastify,comDetails)
-          return res;
+          // check for super over
+          let isSuperOver = response.live.live_inning.issuperover || "false";
+          if(isSuperOver == "true"){
+            // set super ove first
+            let latestInning = response.live.live_inning_number;
+            let alExist = global.tblCommentaryTeams.find((i)=> i.commentaryId == comDetails.commentaryId && i.subInning == latestInning);
+            if(!alExist){
+              await onInningChangeService(request.body, fastify, comDetails, true);
+              await addSuperOverInEntity(request.body , request,fastify , comDetails)
+              comDetails = global.tblCommentaries.find((i)=>i.commentaryId == comDetails.commentaryId)
+            }
+          }
+          if(response.live.commentaries && response.live.commentaries.length > 0){
+            let res = await handleComArr(request.body, request,fastify,comDetails)
+            return res;
+          }
+          return true;
         }
         if(comDetails.commentaryStatus == commentaryStatus.INNINGCHANGE){
           comDetails.isClientShow = false;
@@ -2570,13 +2585,13 @@ const inningChangeStateService = async (fastify, comDetails) => {
   return true;
 }
 
-const onInningChangeService = async (data, fastify, comDetails) => {
+const onInningChangeService = async (data, fastify, comDetails , superOver = false) => {
   const {response} = data;
   const teams = global.tblCommentaryTeams.filter((i) =>i.commentaryId == comDetails.commentaryId &&
   i.currentInnings == comDetails.currentInnings)  
   let matchType = global.tblMatchTypes.find((i)=> i.matchTypeId == comDetails.matchTypeId)
   // chekc if one of the team bat is completed
-  if(matchType.noOfIningsPerSide == 1){
+  if(matchType.noOfIningsPerSide == 1 && superOver == false){
     let oneTeamWon = teams.find((i)=>i.isBattingComplete == true);
     if(oneTeamWon){
       errorLogger(
@@ -2614,20 +2629,20 @@ const onInningChangeService = async (data, fastify, comDetails) => {
     )[0];
 
    let teamUpdates = [
-      { ...batTeam, isBattingComplete: true, teamStatus: 2, subInning: 2 },
+      { ...batTeam, isBattingComplete: true, teamStatus: 2},
       {
         ...bowlTeam,
         // isBattingComplete: false,
         teamStatus: 1,
         teamLeadRuns: leadRuns,
-        teamTrialRuns: trialRuns,
-        subInning: 1,
+        teamTrialRuns: trialRuns
       },
     ];
+   let ds = superOver == true ? response.live.status_note : "Innings Break";
    let commentaryUpdates = {
       commentaryStatus : commentaryStatus.INNINGCHANGE,
       // displayStatus: response.live.status_note,
-      displayStatus: "Innings Break",
+      displayStatus: ds,
       isClientShow: true,
       rmk : generateRemainingRuns({
         team: { ...bowlTeam, teamTrialRuns: trialRuns},
