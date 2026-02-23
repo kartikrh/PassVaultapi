@@ -52,7 +52,6 @@ const saveTeamMatchTypeByTeamService = async (request, fastify) => {
 
 const updateTeamMatchTypeDataByTeamService = async (request, fastify) => {
     const { teamMatchTypeId } = request.body;
-    let isImage = false;
     const teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamMatchTypeId" = ${teamMatchTypeId}`);
     if (!teamMatchType[0]) {
         throw new Error(`TeamMatchType with team match type id ${teamMatchTypeId} not found`);
@@ -173,6 +172,11 @@ const deleteTeamMatchTypeByTeamIdService = async (request, fastify) => {
     teamMatchType = teamMatchType[0];
 
     await deleteTeamMatchTypeByTeamQuery(request, fastify);
+    if (teamMatchType?.teamJerseyImagePath) {
+        await removeImageFromServer({
+            path: teamMatchType.teamJerseyImagePath
+        });
+    }
 
     const players = await getTeamPlayersByTeamMatchTypeIdQuery({
             ...request,
@@ -181,7 +185,7 @@ const deleteTeamMatchTypeByTeamIdService = async (request, fastify) => {
                 matchTypeId: teamMatchType.matchTypeId
             }
     }, fastify);
-    if (players.length) {
+    if (players?.length) {
         for (const player of players) {
             await deleteTeamPlayerByTeamPlayerIdQuery(player.teamPlayerId, fastify, request);
             await removeImageFromServer({
@@ -189,6 +193,7 @@ const deleteTeamMatchTypeByTeamIdService = async (request, fastify) => {
             });
         }
     }
+
     return true;
 }
 
