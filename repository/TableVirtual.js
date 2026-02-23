@@ -129,7 +129,8 @@ const virtualBallByBallQuery = async (data, request, fastify) => {
             "wrTeamWicket",
             "wrCardKey",
             "wrCardType",
-            "wrTpId"
+            "wrTpId",
+            "wrCommentary"
         )
         VALUES (
             $1, $2, $3, $4, $5,
@@ -138,7 +139,7 @@ const virtualBallByBallQuery = async (data, request, fastify) => {
             $16, $17, $18, $19, $20,
             $21, $22, $23, $24, $25,
             $26, $27, $28, $29, $30,
-            $31 ,$32 ,$33 ,$34
+            $31 ,$32 ,$33 ,$34, $35
         )
         RETURNING
             "wrCommentaryBallByBallId" AS "commentaryBallByBallId",
@@ -175,7 +176,8 @@ const virtualBallByBallQuery = async (data, request, fastify) => {
             "wrTeamWicket" AS "teamWicket",
             "wrCardKey" AS "cardKey",
             "wrCardType" AS "cardType",
-            "wrTpId" AS "tpId"
+            "wrTpId" AS "tpId",
+            "wrCommentary" AS "commentary"
             ;`;
 
     const result = await fastify.db.query(query, {
@@ -213,7 +215,8 @@ const virtualBallByBallQuery = async (data, request, fastify) => {
             data.teamWicket ?? null,
             data.cardKey ?? null,
             data.cardType ?? null,
-            data.tpId ?? null
+            data.tpId ?? null,
+            data?.commentary ?? null,
           ],
         type: fastify.db.QueryTypes.SELECT,
     });
