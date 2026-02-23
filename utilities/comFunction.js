@@ -629,6 +629,7 @@ const generateBallET = (data) => {
     teamScore: updateBattingTeam?.teamScore || 0,
     teamWicket: updateBattingTeam?.teamWicket || 0,
     tpId : updateBall?.tpId || null,
+    commentary: updateBall?.commentary || null,
   };
 };
 module.exports = {
