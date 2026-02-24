@@ -2236,6 +2236,7 @@ const getAllCommentaryBallByBallQuery = async (fastify) => {
         tcbb."wrCardKey" as "cardKey",
         tcbb."wrCardType" as "cardType",
         tcbb."wrBowlingStyle" as "bowlingStyle",
+        tcbb."wrCommentary" as "commentary",
         tcbb."wrTpId" as "tpId"
     from "tblCommentaryBallByBalls" tcbb
     WHERE tcbb."wrCommentaryId" IN (
@@ -2309,6 +2310,7 @@ const getAllCommentaryBallByBallDataQuery = async (whereCondition = null, fastif
     "wrCommentryRemark" as "commentryRemark",
     "wrCommentaryPartnershipId" as "commentaryPartnershipId",
     "wrCardKey" as "cardKey",
+    "wrCommentary" as "commentary",
     "wrCardType" as "cardType"
     from "tblCommentaryBallByBalls"
     ${whereCondition ? `WHERE ${whereCondition}` : ""}
@@ -3978,6 +3980,7 @@ const getCommentaryBallByBallQuery = async (request, fastify) => {
         "wrNextBat_NONStrikeID" AS "nextBatNonStrikeId",
         "wrIsDelete" AS "isDelete",
         "wrCurrentInnings" AS "currentInnings",
+        "wrCommentary" as "commentary",
         "wrAutoStrikeBallCount" as "autoStrikeBallCount"
     FROM "tblCommentaryBallByBalls"
     WHERE "wrCommentaryId" = $1 AND "wrIsDeletedStatus" = false
@@ -5109,6 +5112,7 @@ const getCommentaryBallByBallByIdsQuery = async (commentaryBallByBallId, request
       "wrCurrentInnings" as "currentInnings",
       "wrCreatedDate" as "createdDate",
       "wrDevOver" as "devOver",
+      "wrCommentary" as "commentary",
       "wrDevCurrentOverBall" as "devCurrentOverBall",
       "wrAutoStrikeBallCount" as "autoStrikeBallCount"
       from "tblCommentaryBallByBalls"
@@ -6100,6 +6104,7 @@ const getAllCommentaryBallByBallDataQueryV1 = async (whereCondition = null, fast
         "wrCommentryRemark" as "crmk",
         "wrDevOver" as "devOver",
         "wrDevCurrentOverBall" as "devCurrentOverBall",
+        "wrCommentary" as "commentary",
         "wrCommentaryPartnershipId" as "cpartsid"
     from "tblCommentaryBallByBalls"
     ${whereCondition ? `WHERE ${whereCondition}` : ""}`,
@@ -7173,6 +7178,7 @@ const createVirtualBallByBallQuery = async (data, fastify, request) => {
         "wrY2" AS "y2",
         "wrShortType" AS "shortType",
         "wrCommentryRemark" AS "commentryRemark",
+        "wrCommentary" as "commentary",
         "wrCommentaryPartnershipId" AS "commentaryPartnershipId"
       FROM insert_data
       `,
@@ -7525,6 +7531,7 @@ const updateVirtualBallByBallQuery = async (data, fastify, request) => {
         "wrDevOver" as "devOver",
         "wrDevCurrentOverBall" as "devCurrentOverBall",
         "wrNextBat_StrikeID" 	AS 	"nextBatStrikeId",
+        "wrCommentary" as "commentary",
         "wrNextBat_NONStrikeID" 	AS 	"nextBatNonStrikeId"
       `,
       {
@@ -9570,6 +9577,36 @@ const getComTeamQuery = async (data , request , fastify) => {
     //         OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
   );
 };
+
+const updateBallByBallFullCommentaryQuery = async (data, request, fastify) => {
+  try {
+      return await fastify.db.query(
+        `UPDATE "tblCommentaryBallByBalls" SET
+          "wrCommentary" = $1
+        WHERE "wrCommentaryId" = $2
+        AND "wrTpId" = $3
+        AND "wrCommentaryBallByBallId" = $4;`,
+        {
+          type: fastify.db.QueryTypes.UPDATE,
+          bind: [
+            data.commentary,
+            data.commentaryId,
+            data.tpId,
+            data.commentaryBallByBallId
+          ]
+        } 
+      )
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/updateBallByBallFullCommentaryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -9726,5 +9763,6 @@ module.exports = {
   getAllCommentaryByCompetitionIdForClientQuery,
   insertCommentaryTeamQuery,
   deleteInningWiseCommentaryPlayersQuery,
-  getComTeamQuery
+  getComTeamQuery,
+  updateBallByBallFullCommentaryQuery,
 };

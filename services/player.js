@@ -17,6 +17,7 @@ const {
   getTeamPlayerByPlayerIdQuery,
   getTeamListByPlayerIdQuery,
   updateTeamPlayerHomeTeamQuery,
+  updateTeamPlayerHomeTeamByTeamPlayerIdQuery,
 } = require("../repository/TableTeamPlayer");
 const { getAllPlayersByTeamIdQuery, getAllPlayersByCompetitionIdTeamIdQuery } = require("../repository/TableTeams");
 const {
@@ -324,16 +325,16 @@ const insertPlayerService = async (request, fastify) => {
   //   }
   // }
 
-  if(request.body?.homeTeamId !== null && request.body?.homeTeamId !== undefined) {
-    await updateTeamPlayerHomeTeamQuery(
-      {
-        refPlayerId: result?.playerId,
-        teamId: parseInt(request.body.homeTeamId),
-      },
-      fastify,
-      request
-    );
-  }
+  // if(request.body?.homeTeamId !== null && request.body?.homeTeamId !== undefined) {
+  //   await updateTeamPlayerHomeTeamQuery(
+  //     {
+  //       refPlayerId: result?.playerId,
+  //       teamId: parseInt(request.body.homeTeamId),
+  //     },
+  //     fastify,
+  //     request
+  //   );
+  // }
 
   if (!result) {
     return null;
@@ -1322,12 +1323,12 @@ const mergePlayerNullImageService = async (request, fastify) => {
 };
 
 const updatePlayerHomeTeamService = async (request, fastify) => {
-  const { playerId, homeTeamId } = request.body;
+  const { teamPlayerId, playerId } = request.body;
 
-  await updateTeamPlayerHomeTeamQuery(
+  await updateTeamPlayerHomeTeamByTeamPlayerIdQuery(
     {
-      refPlayerId: parseInt(playerId),
-      teamId: parseInt(homeTeamId),
+      teamPlayerId: parseInt(teamPlayerId),
+      playerId: parseInt(playerId)
     },
     fastify,
     request

@@ -1,7 +1,13 @@
 const { getPlyByIdQuery } = require("../repository/TablePlayer")
 const { getTeamsByIds } = require("../repository/TableTeams")
 const { getCompetitionByIdsQuery } = require("../repository/TableCompitition")
-const { getComEntityQuery, updateVirtualPartnershipQuery, updateCommentaryStatusQuery, scoringTypeCommentaryQuery } = require("../repository/TableCommentary")
+const { 
+  getComEntityQuery, 
+  updateVirtualPartnershipQuery, 
+  updateCommentaryStatusQuery, 
+  scoringTypeCommentaryQuery,
+  updateBallByBallFullCommentaryQuery,
+} = require("../repository/TableCommentary")
 const { getAllTournamentTeamPlayerByIdsQuery } = require("../repository/TableTournamentsTeamPlayers")
 const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService,addSuperOverInEntity} = require("../services/commentry");
 const {
@@ -1265,6 +1271,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     let batters = part?.batsmen?.map((i)=>i.batsman_id) || []
     let isChangeStrike = false;
     const prtship = [];
+    const fullCommentaries = [];
     let live_score_data = response?.live?.live_score;
     let liveTeamScore = response?.live?.live_score?.runs;
     if (commentaries?.length > 0) {
@@ -1510,6 +1517,23 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
         battingTeam.teamNoBallRuns = extraRuns?.noballs ?? 0;
         battingTeam.teamPenaltyRuns = Number(extraRuns?.penalty) ?? 0;
 
+        const ballByBall = global.tblCommentaryBallByBall.find(item => 
+          item.tpId == c.event_id && item.commentaryId == comDetails.commentaryId
+        );
+        if (ballByBall && 
+          ballByBall.commentary?.toLowerCase().trim() !==
+          c?.commentary?.toLowerCase().trim() &&
+          c?.text?.trim().length > 0
+        ) {
+          const fullComm = {
+            commentaryId: comDetails.commentaryId,
+            tpId: c.event_id,
+            commentary: c.commentary,
+            commentaryBallByBallId: ballByBall.commentaryBallByBallId
+          }
+          fullCommentaries.push(fullComm);
+        }
+
         if(String(c.score) == "w" ){
           event = "wicket"
         }
@@ -1623,7 +1647,8 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                 nextBatStrikeId : strikePId,
                 nextBatNonStrikeId : nonStrikePId,
                 ballExtraRun : wideRun,
-                tpId : c.event_id
+                tpId : c.event_id,
+                commentary: c?.commentary,
               }
 
               battingTeam["teamScore"] = liveTeamScore;
@@ -1729,7 +1754,8 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                 nextBatStrikeId: strikePId,
                 nextBatNonStrikeId: nonStrikePId,
                 ballExtraRun: noBallRun,
-                tpId: c.event_id
+                tpId: c.event_id,
+                commentary: c?.commentary,
               }
 
               battingTeam["teamScore"] = liveTeamScore;
@@ -1841,7 +1867,8 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                   overId : over.overId,
                   nextBatStrikeId : strikePId,
                   nextBatNonStrikeId : nonStrikePId,
-                  tpId : c.event_id
+                  tpId : c.event_id,
+                  commentary: c?.commentary,
               }
               // battingTeam["teamScore"] = (battingTeam.teamScore || 0) + run;
               battingTeam["teamScore"] = liveTeamScore;
@@ -2233,6 +2260,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             ballIsDot: true,
             tpId : c.event_id,
             currentOverBalls : c.ball,
+            commentary: c?.commentary,
           };
           const ballByBallUp = generateBallET(
             {
@@ -2388,6 +2416,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             ballPlayerId: batsmanId,
             ballFielderId1: w.fieldPlayerId,
             ballFielderId2: w.fieldPlayer2Id,
+            commentary: c?.commentary,
           }
           // if(w.batterId != batsmanId){
            
@@ -2438,6 +2467,11 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
         }
       }
     }
+
+    if (fullCommentaries.length > 0) {
+      updateFullCommentaryOfBallService(fullCommentaries, comDetails, request, fastify);
+    }
+
     // console.log(oversMap)
     let plyArr = Object.values(playersMap);
     let overArr = Object.values(oversMap)
@@ -4393,7 +4427,8 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
               nextBatStrikeId: strikePId,
               nextBatNonStrikeId: nonStrikePId,
               ballExtraRun: wideRun,
-              tpId: c.event_id
+              tpId: c.event_id,
+              commentary: c?.commentary,
             }
 
             // battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
@@ -4424,7 +4459,8 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
               nextBatStrikeId: strikePId,
               nextBatNonStrikeId: nonStrikePId,
               ballExtraRun: noBallRun,
-              tpId: c.event_id
+              tpId: c.event_id,
+              commentary: c?.commentary,
             }
 
             // battingTeam.crr = parseFloat(live_score_data?.runrate) ?? 0;
@@ -4485,7 +4521,8 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
               overId: over.overId,
               nextBatStrikeId: strikePId,
               nextBatNonStrikeId: nonStrikePId,
-              tpId: c.event_id
+              tpId: c.event_id,
+              commentary: c?.commentary,
             }
 
             battingTeam.teamOver = `${c.over}.${c.ball}`;
@@ -4765,6 +4802,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
             ballIsDot: true,
             tpId: c.event_id,
             currentOverBalls: c.ball,
+            commentary: c?.commentary,
           };
           const ballByBallUp = generateBallET(
             {
@@ -4904,6 +4942,74 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
       fastify,
       error.message,
       "ERROR --> services/entitySport.js/storeInningWiseEntityDataService",
+      request
+    );
+    return null;
+  }
+}
+
+const updateFullCommentaryOfBallService = async (fullCommentaries, comDetails, request, fastify) => {
+  try {
+    const startTime = new Date();
+    let updatedData = [];
+    const sendDataForSocketUpdate = {
+      commentaryId: comDetails?.commentaryId,
+      eventRefId: comDetails?.eventRefId,
+      dataToUpdate: [],
+    }
+    for (const data of fullCommentaries) {
+      const index = global.tblCommentaryBallByBall.findIndex(item =>
+        item.tpId == data?.tpId && item.commentaryId == comDetails?.commentaryId &&
+        item.commentaryBallByBallId == data?.commentaryBallByBallId
+      )
+      if (index == -1) {
+        return;
+      }
+      await updateBallByBallFullCommentaryQuery(data, request, fastify);
+      global.tblCommentaryBallByBall[index].commentary = data.commentary;
+
+      updatedData.push({
+        ...global.tblCommentaryBallByBall[index],
+        overCount: global.tblCommentaryBallByBall[index].overCount !== null
+          ? global.tblCommentaryBallByBall[index].overCount.toString() : null,
+        type: "update",
+      })
+    }
+
+    sendDataForSocketUpdate.dataToUpdate.push({
+      module: "entityBallByBalls",
+      data: updatedData
+    })
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+    });
+    await commentaryLogger(
+      {
+        commentaryId: comDetails.commentaryId,
+        requestBody: JSON.stringify(fullCommentaries),
+        response: JSON.stringify(sendDataForSocketUpdate.dataToUpdate),
+        global: null,
+        extra: null,
+        apiName: "/UpdateFullCommentary",
+        reqStartTime: startTime,
+      },
+      null,
+      fastify
+    ).catch((err) => {
+      console.log("commentary logger console of fullCommentary", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/entitySport.js.js/updateFullCommentaryOfBallService",
+        null
+      );
+    });
+    return true;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> services/entitySport.js/updateFullCommentaryOfBallService",
       request
     );
     return null;

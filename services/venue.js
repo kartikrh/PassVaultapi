@@ -39,15 +39,12 @@ const editVenueService = async (request, fastify) => {
   if(request.body.tpId === 0) {
     request.body.tpId = null
   }
-  if(validateId && request.body.id !== null && request.body.id !== undefined) {
+  if(validateId && request.body.id !== null && request.body.id !== undefined && request.body.tpId !== undefined && request.body.tpId !== null) {
     const validateTpId = global.tblVenues.find(
-      (item) =>
-        item.tpId === request.body?.tpId && item.id !== request.body.id &&
-        item.tpId !== null
+      (item) => item.tpId === request.body.tpId && item.id !== request.body.id
     );
-  
-    if (validateTpId) {
-      throw new Error("TpId already exist");
+    if(validateTpId) {
+      throw new Error("Venue with this tpId already exist");
     }
   }
   const validateName = global.tblVenues.find(
