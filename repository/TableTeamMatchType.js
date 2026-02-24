@@ -1,6 +1,6 @@
 const { errorLogger } = require("../utilities/logger");
 
-const errorStack = "DB ERROR --> repository/TableCompetitionStatistics.js/";
+const errorStack = "DB ERROR --> repository/TableTeamMatchType.js/";
 
 const getTeamMatchTypeByTeamQuery = async (request, fastify, whereCondition = null) => {
     try {
