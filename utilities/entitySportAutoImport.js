@@ -5,7 +5,7 @@ const { competitionImportService } = require("../services/competition");
 const { importCompetitionstatisticsService } = require("../services/competitionStatistics");
 const { importICCRankingFromEntitySportService } = require("../services/iccRanking");
 const { playerImportService, UpdatePlayerFromEntityService } = require("../services/player");
-const { teamImportService, UpdateTeamFromEntityService } = require("../services/teams");
+const { teamImportService } = require("../services/teams");
 const { importUpdateTournamentTeamPointFromEntitySportService } = require("../services/tournamentTeamPoints");
 const { errorLogger } = require("./logger");
 
@@ -30,7 +30,6 @@ const getImportPayload = (importFn, refId) => {
         [importUpdateTournamentTeamPointFromEntitySportService.name]: { cid: refId },
         [matchImportService.name]: { mid: refId },
         [teamImportService.name]: { tid: refId, playerImport: true },
-        [UpdateTeamFromEntityService.name]: { tid: refId },
         [playerImportService.name]: { pid: refId },
         [UpdatePlayerFromEntityService.name]: { pid: refId },
         [importCompetitionstatisticsService.name]: { cid: refId }
@@ -87,7 +86,7 @@ const entitySportAutoImportProcess = async (fastify) => {
                 [RefType.Match]: matchImportService,
                 [RefType.Team]: teamImportService,
                 [RefType.Player]: playerImportService,
-                [RefType.TeamUpdate]: UpdateTeamFromEntityService,
+                [RefType.TeamUpdate]: teamImportService,
                 [RefType.PlayerUpdate]: UpdatePlayerFromEntityService,
                 [RefType.tournamentTeamPointUpdate]: importUpdateTournamentTeamPointFromEntitySportService,
                 [RefType.ICCRanking]: importICCRankingFromEntitySportService,
