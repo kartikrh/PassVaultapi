@@ -815,8 +815,8 @@ const UpdateTeamFromEntityService = async (data, fastify, request) => {
           matchTypeId: matchTypeObj.matchTypeId
         },
       }, fastify);
-      teamMatchTypeId = teamMatchTypeId?.[0] ?? null;
     }
+    teamMatchTypeId = teamMatchTypeId?.[0] ?? null;
 
     const teamPlayers = await getTeamPlayersByTeamMatchTypeIdQuery({
       ...request,
@@ -1049,8 +1049,8 @@ const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
           matchTypeId: matchTypeId
         },
       }, fastify);
-      teamMatchTypeId = teamMatchTypeId?.[0] ?? null;
     }
+    teamMatchTypeId = teamMatchTypeId?.[0] ?? null;
 
     const teamPlayers = await getTeamPlayersByTeamMatchTypeIdQuery({
       ...request,
