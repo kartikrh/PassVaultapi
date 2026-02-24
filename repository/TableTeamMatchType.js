@@ -202,7 +202,7 @@ const updateTeamMatchTypeByTeamQuery = async (request, fastify) => {
         errorLogger(
             fastify,
             error.message,
-            error.stack + "updateTeamMatchTypeByTeamQuery",
+            errorStack + "updateTeamMatchTypeByTeamQuery",
             request
         );
         throw new Error(error.message);
@@ -254,7 +254,7 @@ const activeInactiveTeamMatchTypeByTeamQuery = async (request, fastify) => {
         errorLogger(
             fastify,
             error.message,
-            error.stack + "activeInactiveTeamMatchTypeByTeamQuery",
+            errorStack + "activeInactiveTeamMatchTypeByTeamQuery",
             request
         );
         throw new Error(error.message);
@@ -291,7 +291,7 @@ const deleteTeamMatchTypeByTeamQuery = async (request, fastify) => {
         errorLogger(
             fastify,
             error.message,
-            error.stack + "deleteTeamMatchTypeByTeamQuery",
+            errorStack + "deleteTeamMatchTypeByTeamQuery",
             request
         );
         throw new Error(error.message);
