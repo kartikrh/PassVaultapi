@@ -2519,6 +2519,15 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
         })
       }
     }
+  if (
+    prtship.length == 0 &&
+    ballbyball.length == 0 &&
+    overArr.length == 0 &&
+    upTeams.length == 0 &&
+    wickets.length == 0
+  ) {
+    return true;
+  }
 
     await syncEntitySportCommentaryService({
       commentaryId : comDetails.commentaryId,
