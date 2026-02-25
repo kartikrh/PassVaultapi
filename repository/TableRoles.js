@@ -85,11 +85,10 @@ const createRoleQuery = async (body, fastify) => {
         "wrDescription",
         "wrDisplayType",
         "wrIsActive",
-        "wrIsDeleted",
         "wrCreatedBy",
         "wrCreatedDate"
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *
     )
     
