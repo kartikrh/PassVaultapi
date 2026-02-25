@@ -996,7 +996,8 @@ const setTeamPlayerImgService = async (request, fastify) => {
 
 const getTeamListPlayerIdService = async (request, fastify) => {
   const { playerId } = request.body;
-  const result = await getTeamListByPlayerIdQuery(playerId, fastify, request);
+  let result = await getTeamListByPlayerIdQuery(playerId, fastify, request);
+  result = result.filter(p => p.matchTypeId !== -1);
   return result;
 };
 

@@ -7,8 +7,8 @@ const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const { generateImageName, storeImageOnServer, removeImageFromServer } = require("../utilities/Images");
 
 const getTeamMatchTypeByTeamService = async (request, fastify) => {
-    const teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${request.body.teamId}`);
-
+    let teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${request.body.teamId}`);
+    teamMatchType = teamMatchType?.filter(tmt => tmt.matchTypeId !== -1);
     const response = [];
     for (const tmt of teamMatchType) {
         const players = await getTeamPlayersByTeamMatchTypeIdQuery({
