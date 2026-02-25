@@ -963,7 +963,10 @@ const setEntityCom2Service = async (request , fastify) =>{
               return true;
             }
             let res = await handleComArr(request.body, request,fastify,comDetails)
-            await inningChangeStateService(fastify, comDetails);
+            if(gameState == EntityCommentaryStatus.INNINGCHANGE){
+              await inningChangeStateService(fastify, comDetails);
+            }
+            // await inningChangeStateService(fastify, comDetails);
             return res;
           } else {
             comDetails.isClientShow = true;
