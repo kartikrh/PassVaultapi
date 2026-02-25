@@ -17,6 +17,7 @@ const {
   getAllCompetitionByTeamIdQuery,
   updateExchangeTeamQuery,
   activeInactiveTeamQuery,
+  getTeamPlayersByTeamIdAndMatchTypeIdQuery,
 } = require("../repository/TableTeams");
 const {
   removeImageFromServer,
@@ -36,7 +37,7 @@ const { insertAutoImportDataService } = require("./autoImportData");
 const { errorLogger } = require("../utilities/logger");
 const { upTeamNameInComQuery } = require("../repository/TableCommentary");
 const { playerImageChangeOnClientAPIService, upsertPlayerOnImportService } = require("../services/player");
-const { saveTeamMatchTypeByTeamService } = require("./teamMatchType");
+const { saveTeamMatchTypeByTeamService, deleteTeamMatchTypeByTeamIdService } = require("./teamMatchType");
 const { getTeamMatchTypeByTeamQuery } = require("../repository/TableTeamMatchType");
 const allTeamsService = async () => {
   return global.tblTeams;
@@ -210,19 +211,39 @@ const upsertPlayerWithMatchTypeService = async (request, fastify) => {
       }
     }
   }
+
   for (const playerId of removedPlayerIds) {
     const removedTeamPlayer = await deleteTeamPlayerByTeamAndPlayerIdQuery(fastify, {
+      ...request,
+      body: {
+        teamId: teamId,
+        playerId: playerId
+      }
+    });
+    for (const teamPlayer of removedTeamPlayer?.[0] ?? []) {
+      await removeImageFromServer({
+        path: teamPlayer.jerseyPlayerImagePath
+      });
+    }
+  }
+
+  let teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${teamId}`);
+  for (const tmt of teamMatchType) {
+    const teamPlayers = await getTeamPlayersByTeamIdAndMatchTypeIdQuery({
+      ...request,
+      body: {
+        teamId,
+        matchTypeId: tmt.matchTypeId
+      }
+    }, fastify);
+    if (teamPlayers && teamPlayers.length === 0) {
+      await deleteTeamMatchTypeByTeamIdService({
         ...request,
         body: {
-          teamId: request.body.teamId,
-          playerId: playerId
+          teamMatchTypeId: tmt.teamMatchTypeId
         }
-      });
-      for (const teamPlayer of removedTeamPlayer?.[0] ?? []) {
-        await removeImageFromServer({
-          path: teamPlayer.jerseyPlayerImagePath
-        });
-      }
+      }, fastify);
+    }
   }
 }
 
