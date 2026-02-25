@@ -221,14 +221,8 @@ const upsertPlayerWithMatchTypeService = async (request, fastify) => {
   const removed = oldTeamIds.filter(id => !teamIds.includes(id));
   const teams = global.tblTeams.filter(team => teamIds.includes(team.teamId));
   for (const teamId of newlyAdded) {
-    const getTeamPlayer = await getTeamPlayersByTeamIdAndPlayerIdQuery({
-      ...request,
-      body: {
-        playerId: player.playerId,
-        teamId: teamId
-      }
-    }, fastify);
-    if (getTeamPlayer && getTeamPlayer.length === 0) {
+    const getTeamPlayer = playersInTeams.find(p => p.teamId === teamId);
+    if (!getTeamPlayer) {
       let teamMatchTypeId = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${teamId} AND ttmt."wrMatchTypeId" = -1`);
       if (!teamMatchTypeId || teamMatchTypeId.length === 0) {
         teamMatchTypeId = await saveTeamMatchTypeByTeamService({
