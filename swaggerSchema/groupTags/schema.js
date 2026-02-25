@@ -1949,9 +1949,9 @@ const Player = {
         type: "object",
         properties: {
           playerId: { type: "integer" },
-          homeTeamId: { type: "integer" }
+          teamPlayerId: { type: "integer" }
         },
-        required: ["playerId", "homeTeamId"]
+        required: ["playerId", "teamPlayerId"]
       },
     },
   },
@@ -10456,6 +10456,14 @@ const Venue = {
           countryId: { type: "integer" },
           tpId: { type: "integer" },
           name: { type: "string" },
+          avgInn1Score: { type: "integer" },
+          avgInn2Score: { type: "integer" },
+          avgInn3Score: { type: "integer" },
+          avgInn4Score: { type: "integer" },
+          highestTotalFullScore: { type: "string" },
+          lowestTotalFullScore: { type: "string" },
+          spinWicketsCount: { type: "integer" },
+          paceWicketsCount: { type: "integer" }
         },
         required: ["id", "countryId", "name"],
       },

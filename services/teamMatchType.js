@@ -1,9 +1,9 @@
 const { getTeamMatchTypeByTeamQuery, insertTeamMatchTypeByTeamQuery, updateTeamMatchTypeJerseyImageByTeamQuery, activeInactiveTeamMatchTypeByTeamQuery, deleteTeamMatchTypeByTeamQuery } = require("../repository/TableTeamMatchType");
-const { getTeamPlayersByTeamMatchTypeIdQuery, updateTeamPlayerMatchTypeIdQuery, insertTeamPlayerWithHomeTeamQuery } = require("../repository/TableTeamPlayer");
+const { getTeamPlayersByTeamMatchTypeIdQuery, updateTeamPlayerMatchTypeIdQuery, insertTeamPlayerWithHomeTeamQuery, deleteTeamPlayerByTeamPlayerIdQuery } = require("../repository/TableTeamPlayer");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
-const { generateImageName, storeImageOnServer } = require("../utilities/Images");
+const { generateImageName, storeImageOnServer, removeImageFromServer } = require("../utilities/Images");
 const { playerImageChangeOnClientAPIService } = require("./player");
 
 const getTeamMatchTypeByTeamService = async (request, fastify) => {
@@ -52,7 +52,6 @@ const saveTeamMatchTypeByTeamService = async (request, fastify) => {
 
 const updateTeamMatchTypeDataByTeamService = async (request, fastify) => {
     const { teamMatchTypeId } = request.body;
-    let isImage = false;
     const teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamMatchTypeId" = ${teamMatchTypeId}`);
     if (!teamMatchType[0]) {
         throw new Error(`TeamMatchType with team match type id ${teamMatchTypeId} not found`);
@@ -142,17 +141,10 @@ const updateTeamMatchTypeDataByTeamService = async (request, fastify) => {
 
         for (const oldPlayer of oldTeamPlayers) {
             if (!newPlayerIds.includes(oldPlayer.refPlayerId)) {
-                await updateTeamPlayerMatchTypeIdQuery({
-                    ...request,
-                    body: {
-                        teamId,
-                        matchTypeId: -1,
-                        refPlayerId: oldPlayer.refPlayerId,
-                        oldMatchTypeId: oldPlayer?.matchTypeId,
-                        jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage ?? null,
-                        jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath ?? null,
-                    }
-                }, fastify);
+                await deleteTeamPlayerByTeamPlayerIdQuery(oldPlayer.teamPlayerId, fastify, request);
+                await removeImageFromServer({
+                    path: oldPlayer.jerseyPlayerImage,
+                });
             }
         }
     }
@@ -173,12 +165,35 @@ const activeInactiveTeamMatchDataTypeByTeamIdService = async (request, fastify) 
 
 const deleteTeamMatchTypeByTeamIdService = async (request, fastify) => {
     const { teamMatchTypeId } = request.body;
-    const teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamMatchTypeId" = ${teamMatchTypeId}`);
+    let teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamMatchTypeId" = ${teamMatchTypeId}`);
     if (!teamMatchType[0]) {
         throw new Error(`TeamMatchType with team match type id ${teamMatchTypeId} not found`);
     }
+    teamMatchType = teamMatchType[0];
 
     await deleteTeamMatchTypeByTeamQuery(request, fastify);
+    if (teamMatchType?.teamJerseyImagePath) {
+        await removeImageFromServer({
+            path: teamMatchType.teamJerseyImagePath
+        });
+    }
+
+    const players = await getTeamPlayersByTeamMatchTypeIdQuery({
+            ...request,
+            body: {
+                teamId: teamMatchType.teamId,
+                matchTypeId: teamMatchType.matchTypeId
+            }
+    }, fastify);
+    if (players?.length) {
+        for (const player of players) {
+            await deleteTeamPlayerByTeamPlayerIdQuery(player.teamPlayerId, fastify, request);
+            await removeImageFromServer({
+                path: player.jerseyPlayerImage,
+            });
+        }
+    }
+
     return true;
 }
 
