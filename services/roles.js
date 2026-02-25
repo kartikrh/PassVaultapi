@@ -7,16 +7,21 @@ const {
   roleByIdQuery,
   permissionByRoleIdQuery,
   permissionByRoleQuery,
+  updateRoleStatusQuery,
 } = require("../repository/TableRoles");
 
 const allRolesService = async (request) => {
-  if (request.userTokenInfo.WrIsSuperAdmin) {
-    return global.tblRoles;
-  } else {
-    return global.tblRoles.filter(
+  const isActive = request.body?.isActive;
+  let roles = global.tblRoles;
+  if (typeof isActive === "boolean") {
+    roles = roles.filter((r) => r.isActive === isActive);
+  }
+  if (!request.userTokenInfo.WrIsSuperAdmin) {
+    roles = roles.filter(
       (item) => item.createdBy == request.userTokenInfo.WrUserId
     );
   }
+  return roles;
 };
 
 const roleByDisplayTypeService = async (request, fastify) => {
@@ -40,7 +45,11 @@ const roleCreateService = async (request, fastify) => {
     }
 
     const createRole = await createRoleQuery(
-      { ...request.body, userId: request.userTokenInfo.WrUserId },
+      {
+        ...request.body,
+        isActive: request.body.isActive ?? false,
+        userId: request.userTokenInfo.WrUserId,
+      },
       fastify
     );
     role_id = createRole.roleId;
@@ -72,6 +81,9 @@ const roleCreateService = async (request, fastify) => {
     description: request.body.description || getRoleById.description,
     displayType: request.body.displayType || getRoleById.displayType,
     createdBy: getRoleById.createdBy,
+    isActive: request.body.hasOwnProperty("isActive")
+      ? request.body.isActive
+      : getRoleById.isActive,
   };
 
   const index = global.tblRoles.findIndex((item) => item.roleId === role_id);
@@ -193,6 +205,31 @@ const multiRoleService = async (request, fastify, tabName) => {
   return combinedPermissions;
 };
 
+const updateRoleStatusService = async (request, fastify) => {
+  const { roleId, isActive } = request.body;
+
+  const index = global.tblRoles.findIndex(
+    r => String(r.roleId) === String(roleId)
+  );
+
+  if (index === -1) {
+    throw new Error("Invalid role id");
+  }
+  const body = {
+    roleId,
+    isActive,
+    userId: request.userTokenInfo.WrUserId,
+  };
+
+  await updateRoleStatusQuery(body, fastify, request);
+
+  global.tblRoles[index].isActive = isActive;
+
+  return {
+    roleId, isActive,
+  };
+};
+
 module.exports = {
   allRolesService,
   deleteRoleService,
@@ -201,4 +238,5 @@ module.exports = {
   roleByIdService,
   roleByTabService,
   multiRoleService,
+  updateRoleStatusService,
 };
