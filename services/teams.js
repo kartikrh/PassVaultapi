@@ -209,12 +209,13 @@ const upsertPlayerWithMatchTypeService = async (request, fastify) => {
         }
       }
     }
-    for (const playerID of removedPlayerIds) {
-      const removedTeamPlayer = await deleteTeamPlayerByTeamAndPlayerIdQuery(fastify, {
+  }
+  for (const playerId of removedPlayerIds) {
+    const removedTeamPlayer = await deleteTeamPlayerByTeamAndPlayerIdQuery(fastify, {
         ...request,
         body: {
           teamId: request.body.teamId,
-          playerId: playerID
+          playerId: playerId
         }
       });
       for (const teamPlayer of removedTeamPlayer?.[0] ?? []) {
@@ -222,7 +223,6 @@ const upsertPlayerWithMatchTypeService = async (request, fastify) => {
           path: teamPlayer.jerseyPlayerImagePath
         });
       }
-    }
   }
 }
 
