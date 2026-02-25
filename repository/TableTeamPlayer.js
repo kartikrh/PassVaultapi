@@ -58,7 +58,8 @@ const getAllTeamPlayersByTeamIdAndPlayerIdQuery = async (data, fastify, request)
         "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
         "wrHomeTeam" as "homeTeam",
         "wrPlayerOrder" as "playerOrder",
-        "wrTpId" as "tpId"
+        "wrTpId" as "tpId",
+        "wrMatchTypeId" as "matchTypeId"
       FROM "tblTeamPlayers"
       WHERE "wrRefPlayerId" = $1 AND "wrTeamId" = $2
       AND "wrIsDeleted" = FALSE`,
@@ -648,6 +649,68 @@ const updateTeamPlayerHomeTeamByTeamPlayerIdQuery = async (data, fastify, reques
   }
 };
 
+const getTeamPlayersByTeamIdAndPlayerIdQuery = async (request, fastify) => {
+  try {
+    const { teamId, playerId } = request.body;
+    const result = await fastify.db.query(
+      `SELECT 
+        "wrTeamPlayerId" as "teamPlayerId",
+        "wrTeamId" as "teamId",
+        "wrRefPlayerId" as "refPlayerId",
+        "wrJerseyPlayerImage" as "jerseyPlayerImage",
+        "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
+        "wrHomeTeam" as "homeTeam",
+        "wrPlayerOrder" as "playerOrder",
+        "wrTpId" as "tpId",
+        "wrMatchTypeId" as "matchTypeId"
+      FROM "tblTeamPlayers"
+      WHERE "wrRefPlayerId" = $1 AND "wrTeamId" = $2
+      AND "wrIsDeleted" = FALSE`,
+      {
+        bind: [playerId, teamId],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/getTeamPlayersByTeamIdAndPlayerIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const deleteTeamPlayerByTeamAndPlayerIdQuery = async (fastify, request) => {
+  try {
+    const { teamId, playerId } = request.body;
+    return await fastify.db.query(
+      `UPDATE "tblTeamPlayers" SET
+          "wrIsDeleted" = $1,
+          "wrDeletedBy" = $2,
+          "wrDeletedAt" = now()
+      WHERE "wrTeamId" = $3 AND "wrRefPlayerId" = $4
+      RETURNING
+          "wrJerseyPlayerImagePath" AS "jerseyPlayerImagePath"
+    `,
+      {
+        bind: [true, request.userTokenInfo.WrUserId, teamId, playerId],
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/deleteTeamPlayerByTeamAndPlayerIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   insertTeamPlayerQuery,
   getAllTeamPlayersByTeamIdAndPlayerIdQuery,
@@ -666,5 +729,7 @@ module.exports = {
   updateTeamPlayerMatchTypeIdQuery,
   insertTeamPlayerWithHomeTeamQuery,
   deleteTeamPlayerByTeamPlayerIdQuery,
-  updateTeamPlayerHomeTeamByTeamPlayerIdQuery
+  updateTeamPlayerHomeTeamByTeamPlayerIdQuery,
+  getTeamPlayersByTeamIdAndPlayerIdQuery,
+  deleteTeamPlayerByTeamAndPlayerIdQuery
 };
