@@ -528,6 +528,38 @@ const activeInactiveTeamQuery = async (data, request, fastify) => {
   }
 };
 
+const getTeamPlayersByTeamIdAndMatchTypeIdQuery = async (request, fastify) => {
+  try {
+    const { teamId, matchTypeId } = request.body;
+    return await fastify.db.query(
+      `
+        SELECT
+          "wrTeamPlayerId" as "teamPlayerId",
+          "wrJerseyPlayerImage" as "jerseyPlayerImage",
+          "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
+          "wrTpId" as "tpId",
+          "wrPlayerOrder" as "playerOrder",
+          "wrTeamId" as "teamId",
+          "wrHomeTeam" as "homeTeam"
+        FROM "tblTeamPlayers"
+        WHERE "wrIsDeleted" = $1 AND "wrTeamId" = $2 AND "wrMatchTypeId" = $3
+      `,
+      {
+        bind: [false, teamId, matchTypeId],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeams/getTeamPlayersByTeamIdAndMatchTypeIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   allTeamQuery,
   insertTeamQuery,
@@ -541,5 +573,6 @@ module.exports = {
   getTeamsByIds,
   updateExchangeTeamQuery,
   getTeamPlayerTournamentQuery,
-  activeInactiveTeamQuery
+  activeInactiveTeamQuery,
+  getTeamPlayersByTeamIdAndMatchTypeIdQuery
 };
