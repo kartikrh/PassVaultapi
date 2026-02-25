@@ -11647,6 +11647,20 @@ const TeamMatchType = {
         required: ["teamMatchTypeId"]
       }
     }
+  },
+  getplayers: {
+    schema: {
+      tags: ["Team Match Type"],
+      description: "get players for Match Type of Team",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          teamId: { type: "integer" }
+        },
+        required: ["teamId"]
+      }
+    }
   }
 };
 
