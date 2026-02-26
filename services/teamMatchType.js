@@ -66,8 +66,9 @@ const updateTeamMatchTypeDataByTeamService = async (request, fastify) => {
         throw new Error(`Team with id ${teamId} not found`);
     }
 
+    let matchType = null;
     if (matchTypeId !== -1) {
-        const matchType = global.tblMatchTypes.find(tmt => tmt.matchTypeId === matchTypeId);
+        matchType = global.tblMatchTypes.find(tmt => tmt.matchTypeId === matchTypeId);
         if (!matchType) {
             throw new Error(`MatchType with id ${matchTypeId} not found`);
         }
@@ -75,7 +76,7 @@ const updateTeamMatchTypeDataByTeamService = async (request, fastify) => {
 
     if (request.body.image && request.body.image.length) {
         isImage = true;
-        const imgName = generateImageName({ name: team.teamName + matchType.matchType });
+        const imgName = generateImageName({ name: team.teamName + matchType ? matchType.matchType : "" });
         const projectName = global.tblConfigs.find(
             (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
         ).value;
