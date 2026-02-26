@@ -880,7 +880,7 @@ const UpdateTeamFromEntityService = async (data, fastify, request) => {
         }, fastify, request);
         const homeTeam = await updateTeamPlayerHomeTeamQuery({
           refPlayerId: player?.playerId,
-          teamId: checkTeam?.teamId
+          teamId: checkTeamData?.teamId
         }, fastify, request);
 
         if (player?.image && checkTeamData?.jersey && homeTeam?.[0]?.teamPlayerId) {
