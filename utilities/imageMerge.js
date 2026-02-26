@@ -208,6 +208,25 @@ const updateCommPlayerImagePath = async (playerId, teamId, fullPath, imagePath, 
       };
     }
   }
+
+  const commentaryIds = [...new Set(global.tblCommentaryPlayers.map(tcp => tcp.commentaryId))];
+  const commentary = global.tblCommentaries.filter(tc => commentaryIds.includes(tc.commentaryIds));
+  for (const cId of commentaryIds) {
+    const sendDataForSocketUpdate = {
+      commentaryId: cId,
+      eventRefId: commentary.find(c => c.commentaryId === cId)?.eventRefId,
+      dataToUpdate: [
+        {
+          module: "commentaryPlayers",
+          type: "update",
+          data: global.tblCommentaryPlayers.filter(tcp => tcp.commentaryId === cId),
+        },
+      ],
+    };
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+    });
+  }
 };
 
 module.exports = {
