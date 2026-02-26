@@ -9606,6 +9606,7 @@ const updateBallByBallFullCommentaryQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 }
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
