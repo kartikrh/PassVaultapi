@@ -75,7 +75,6 @@ const updateTeamMatchTypeDataByTeamService = async (request, fastify) => {
     }
 
     if (request.body.image && request.body.image.length) {
-        isImage = true;
         const imgName = generateImageName({ name: team.teamName + matchType ? matchType.matchType : "" });
         const projectName = global.tblConfigs.find(
             (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
