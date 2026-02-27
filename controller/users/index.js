@@ -130,9 +130,9 @@ const loadDataInMemory = async (request, reply, fastify) => {
 
 const loadPanelDataInGlobal = async (request, reply, fastify) => {
   try {
-    if (!request.userTokenInfo.WrIsSuperAdmin) {
-      throw new Error("You are not authorized to perform this action");
-    }
+    // if (!request.userTokenInfo.WrIsSuperAdmin) {
+    //   throw new Error("You are not authorized to perform this action");
+    // }
     // check the pass
   
     await panelLoadDataByEnum(request, fastify, reply);

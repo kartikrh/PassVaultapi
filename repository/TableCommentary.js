@@ -3142,7 +3142,34 @@ const updateCommentaryStatusQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
-
+const upComStatusQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `update "tblCommentaries" set
+        "wrDisplayStatus" = $2,
+        "wrModifyDate" = now(),
+        "wrUpdateTime" = now(),
+        "wrCommentaryStatus" = $3,
+        "wrCancelTime" = now(),
+        "wrIsActive" = $4,
+        "wrIsClientShow" = $5
+        where "wrCommentaryId" = $1 and "wrIsDelete" = false
+      `,
+      {
+        bind: [ data.commentaryId , data.displayStatus, data.commentaryStatus, data.isActive || false , data.isClientShow || false],
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/updateCommentaryStatusQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 const updateCommentaryTeamsQuery = async (data, fastify, request) => {
   try {
     return await fastify.db.query(
@@ -9765,4 +9792,5 @@ module.exports = {
   deleteInningWiseCommentaryPlayersQuery,
   getComTeamQuery,
   updateBallByBallFullCommentaryQuery,
+  upComStatusQuery
 };

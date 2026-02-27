@@ -7,6 +7,7 @@ const {
   updateCommentaryStatusQuery, 
   scoringTypeCommentaryQuery,
   updateBallByBallFullCommentaryQuery,
+  upComStatusQuery,
 } = require("../repository/TableCommentary")
 const { getAllTournamentTeamPlayerByIdsQuery } = require("../repository/TableTournamentsTeamPlayers")
 const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService,addSuperOverInEntity} = require("../services/commentry");
@@ -323,21 +324,17 @@ const saveTournamentTeamPlayerService = async (request, fastify) => {
 const setEntityCom2Service = async (request , fastify) =>{
   let matchID = request.body?.response?.match_id
   try {
-        const {response} = request.body
-    // await new Promise((r) => setTimeout(r, 5000));
-    let comDetails = global.tblCommentaries.find((c)=> c.tpId == response?.match_id)
+    const {response} = request.body
+    let comDetails = global.tblCommentaries.find((c)=> c.tpId == response?.match_id && c.commentaryStatus != commentaryStatus.CANCELLED && c.commentaryStatus != commentaryStatus.COMPLETED)
     if(!comDetails){
-        // throw new Error("Commentary with this tp id not found.")
-        return true;
+      return true;
     }
     if(comDetails.scoringType != 2 || comDetails.scoringType == null ){
-      // console.log("scoring not auto")
       return true;
     }
     let tpId = comDetails.tpId;
     if(!tpId){
-        // throw new Error("This commentary not associated with any tpId.")
-        return true;
+      return true;
     }
     const gameState = response?.match_info?.game_state ?? response?.live?.game_state
     const scoreResponse = {};
@@ -345,6 +342,68 @@ const setEntityCom2Service = async (request , fastify) =>{
     sendDataForSocketUpdate.commentaryId = comDetails?.commentaryId;
     sendDataForSocketUpdate.eventRefId = comDetails?.eventRefId;
     sendDataForSocketUpdate.dataToUpdate = [];
+    let statusNote = response?.live?.status_note || null;
+    if(statusNote && statusNote.toLowerCase() == "not covered live"){
+      await upComStatusQuery(
+        {
+          displayStatus: statusNote,
+          commentaryId: comDetails?.commentaryId,
+          commentaryStatus: commentaryStatus.CANCELLED,
+          isClientShow : false,
+          isActive : false
+        },
+        fastify,
+        request   
+      );
+      const index = global.tblCommentaries.findIndex(
+        item => item.commentaryId == comDetails?.commentaryId
+      );
+      if (index !== -1) {
+        global.tblCommentaries[index] = {
+          ...global.tblCommentaries[index],
+          displayStatus: statusNote,
+          commentaryStatus: commentaryStatus.CANCELLED,
+          isClientShow : false,
+          isActive : false,
+          cancelTime : new Date()
+        }
+      }
+      scoreResponse.commentaryDetails = global.tblCommentaries[index]
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module: "commentaryDetails",
+        type: "update",
+        data: scoreResponse.commentaryDetails,
+      }); 
+      const cData = await getMatchDataByCId(
+        {
+          commentaryId: comDetails?.commentaryId,
+        },
+        request,
+        fastify
+      );
+
+      callClientAPI(
+        {
+          serviceType: ServiceType.clientAPI,
+          moduleType: APIEndpointModuleType.commentaryUpdate,
+          data: cData,
+        },
+        request,
+        fastify
+      ).catch((err) => {
+        console.log("call client api in setEntityCom2Service - 2", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/entitysport.js/serEntityCom2Service",
+          request
+        );
+      });
+      global.clientSocketIo.forEach((socket) => {
+        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      });
+      return true;
+    }
     // check the status
     if(gameState == commentaryStatus.TOSSDONE){
       if(comDetails.commentaryStatus == commentaryStatus.OPEN){
