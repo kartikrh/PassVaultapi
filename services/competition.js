@@ -1100,7 +1100,7 @@ const insertTeamPlayersByTeamId = async (teamId, teamTpId, isMen, request, fasti
                 commentaryId: null,
               }, fastify);
               if (homeTeam?.[0]?.homeTeam == true) {
-                await playerImageChangeOnClientAPIService(player, fastify);
+                // await playerImageChangeOnClientAPIService(player, fastify);
               }
             } catch (error) {
 
@@ -1170,7 +1170,7 @@ const insertCommentaryPlayersByTeam = async (i, commentaryId, teamId, teamPlayin
               commentaryId: null,
             }, fastify);
             if (homeTeam?.[0]?.homeTeam == true) {
-              await playerImageChangeOnClientAPIService(player, fastify);
+              // await playerImageChangeOnClientAPIService(player, fastify);
             }
           } catch (error) {
 

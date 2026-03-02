@@ -787,15 +787,15 @@ const getTeamPointService = async (request, fastify) => {
 
 
 const mergeTeamJerseyAndPlayerImageService = async (request, fastify) => {
-  runMergePlayerImageJob(1, request, fastify)
-    .catch(err => {
-      errorLogger(
-        fastify,
-        err.message,
-        "services/teamd.js/mergeTeamJerseyAndPlayerImageService",
-        request
-      );
-    });
+  // runMergePlayerImageJob(1, request, fastify)
+  //   .catch(err => {
+  //     errorLogger(
+  //       fastify,
+  //       err.message,
+  //       "services/teamd.js/mergeTeamJerseyAndPlayerImageService",
+  //       request
+  //     );
+  //   });
   return "Player image(s) and Jersey image(s) merged successfully";
 };
 
@@ -904,7 +904,7 @@ const UpdateTeamFromEntityService = async (data, fastify, request) => {
                 commentaryId: null,
               }, fastify);
               if (upsertedTeamPlayer?.homeTeam == true) {
-                await playerImageChangeOnClientAPIService(p, fastify);
+                // await playerImageChangeOnClientAPIService(p, fastify);
               }
             } catch (error) {
 
@@ -987,7 +987,7 @@ const runMergePlayerImageJob = async (type, request, fastify) => {
             }, fastify);
           }
           if (teamData?.homeTeam == true) {
-            await playerImageChangeOnClientAPIService(teamData.refPlayerId, fastify);
+            // await playerImageChangeOnClientAPIService(teamData.refPlayerId, fastify);
           }
       }
     }
@@ -1004,7 +1004,7 @@ const runMergePlayerImageJob = async (type, request, fastify) => {
     }, fastify);
     const teamData = await getHomeTeamPlayerQuery({ playerId, teamId }, fastify, request);
     if(teamData && teamData?.homeTeam == true) {
-      await playerImageChangeOnClientAPIService(playerId, fastify);
+      // await playerImageChangeOnClientAPIService(playerId, fastify);
     }
   }
 };

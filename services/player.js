@@ -868,15 +868,15 @@ const updatePlayerStatsService = async (request, fastify) => {
 };
 
 const mergePlayerImageAndJerseyService = async (request, fastify) => {
-  runMergePlayerImageJob(1, request, fastify)
-    .catch(err => {
-      errorLogger(
-        fastify,
-        err.message,
-        "services/player.js/mergePlayerImageAndJerseyService",
-        request
-      );
-    });
+  // runMergePlayerImageJob(1, request, fastify)
+  //   .catch(err => {
+  //     errorLogger(
+  //       fastify,
+  //       err.message,
+  //       "services/player.js/mergePlayerImageAndJerseyService",
+  //       request
+  //     );
+  //   });
   return "Player image(s) and Jersey image(s) merged successfully";
 };
 const setTeamPlayerImgService = async (request, fastify) => {
@@ -1253,7 +1253,7 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
       refPlayerId: playerTeams[0].refPlayerId,
       teamId: playerTeams[0]?.teamId
     }, fastify, request);
-    await playerImageChangeOnClientAPIService(playerId, fastify);
+    // await playerImageChangeOnClientAPIService(playerId, fastify);
   }
 
   await updatePlayerBatBowlHistory(playerId, entitySportPlayerResponse?.batting, entitySportPlayerResponse?.bowling, request, fastify);
@@ -1393,7 +1393,7 @@ const updatePlayerHomeTeamService = async (request, fastify) => {
     fastify,
     request
   );
-  await playerImageChangeOnClientAPIService(parseInt(playerId), fastify);
+  // await playerImageChangeOnClientAPIService(parseInt(playerId), fastify);
   return "Player Home Team updated successfully";
 };
 
@@ -1477,7 +1477,7 @@ const runMergePlayerImageJob = async (type, request, fastify) => {
             }, fastify);
           }
           if (playerData?.homeTeam == true) {
-            await playerImageChangeOnClientAPIService(player, fastify);
+            // await playerImageChangeOnClientAPIService(player, fastify);
           }
         }
       }
@@ -1494,7 +1494,7 @@ const runMergePlayerImageJob = async (type, request, fastify) => {
     }, fastify);
 
     if(homeTeamId !== null && homeTeamId !== undefined) {
-      await playerImageChangeOnClientAPIService(playerId, fastify);
+      // await playerImageChangeOnClientAPIService(playerId, fastify);
     }
   }
 };
