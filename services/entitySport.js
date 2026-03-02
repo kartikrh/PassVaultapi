@@ -3557,6 +3557,7 @@ const wideBallUndoService = async (data, fastify, request) => {
   let liveTeamScore = response?.live?.live_score?.runs;
   let live_score_data = response?.live?.live_score;
   let run = commBall?.ballExtraRun ?? 0;
+  run += commBall?.ballRun > 0 ? commBall.ballRun : 0;
   battingTeam["teamScore"] = liveTeamScore;
   let previousBall = tpCurrentBall?.ball - 1;
   battingTeam.teamOver = `${tpCurrentBall?.over}.${previousBall}`
@@ -3611,6 +3612,7 @@ const noballUndoService = async (data, fastify, request) => {
   let liveTeamScore = response?.live?.live_score?.runs;
   let live_score_data = response?.live?.live_score;
   let run = commBall?.ballExtraRun ?? 0;
+  run += commBall?.ballRun > 0 ? commBall.ballRun : 0;
   battingTeam["teamScore"] = liveTeamScore;
   let previousBall = tpCurrentBall?.ball - 1;
   battingTeam.teamOver = `${tpCurrentBall?.over}.${previousBall}`
