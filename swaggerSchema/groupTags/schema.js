@@ -3059,8 +3059,9 @@ const Commentary = {
         type: "object",
         properties: {
           teamId: { type: "integer" },
+          matchTypeId: { type: "integer" }
         },
-        required: ["teamId"],
+        required: ["teamId", "matchTypeId"],
       },
     },
   },
