@@ -317,7 +317,7 @@ const getTournamentTeamPlayersByCompetitionIdForClientService = async (request, 
 
           if (!teamPlayersCache.has(teamId)) {
             const teamPlayers = await newGetAllPlayersByTeamIdQuery(teamId, fastify, request);
-            teamPlayersCache.set(teamId, teamPlayers || []);
+            teamPlayersCache.set(teamId, teamPlayers.filter(tp => tp.matchTypeId === c.matchTypeId) || []);
           }
         }
 

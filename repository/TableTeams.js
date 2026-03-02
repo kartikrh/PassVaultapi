@@ -300,7 +300,8 @@ const getAllPlayersByTeamIdQuery = async (teamId, fastify, request) => {
       "wrBatsmanStrikeRate" as "batsmanStrikeRate",
       "wrIsKipper" as "isKipper",
       pl."wrPlayerTypeId" as "playerTypeId",
-      tpt."wrPlayerType" as "playerType"
+      tpt."wrPlayerType" as "playerType",
+      "wrMatchTypeId" as "matchTypeId"
       FROM "tblTeamPlayers" tp 
       left join "tblPlayers" pl on tp."wrRefPlayerId" = pl."wrPlayerId" AND pl."wrIsDeleted" = false
       LEFT JOIN "tblPlayerTypes" tpt ON pl."wrPlayerTypeId" = tpt."wrPlayerTypeId"
@@ -386,7 +387,8 @@ const getAllPlayersByTeamIdAndMatchTypeIdQuery = async (data, fastify, request) 
       tp."wrHomeTeam" as "homeTeam",
       "wrIsKipper" as "isKipper",
       COALESCE(pbh."wrBallsFacedCount", 0) as "ballsFacedCount",
-      COALESCE(pbh."wr4Count", 0) + COALESCE(pbh."wr6Count", 0) as "boundary"
+      COALESCE(pbh."wr4Count", 0) + COALESCE(pbh."wr6Count", 0) as "boundary",
+      tp."wrMatchTypeId" as "matchTypeId"
       FROM "tblTeamPlayers" tp 
       left join "tblPlayers" pl on tp."wrRefPlayerId" = pl."wrPlayerId" AND pl."wrIsDeleted" = false
       left join "tblPlayerBattingHistory" pbh on tp."wrRefPlayerId" = pbh."wrPlayerId" and pbh."wrMatchTypeId" = $2
@@ -535,6 +537,7 @@ const getTeamPlayersByTeamIdAndMatchTypeIdQuery = async (request, fastify) => {
       `
         SELECT
           "wrTeamPlayerId" as "teamPlayerId",
+          "wrRefPlayerId" as "playerId",
           "wrJerseyPlayerImage" as "jerseyPlayerImage",
           "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
           "wrTpId" as "tpId",

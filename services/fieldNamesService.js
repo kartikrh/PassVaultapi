@@ -1,4 +1,4 @@
-const { getTeamPlayerJerseyByPlayerIdQuery } = require("../repository/TablePlayer");
+const { getTeamPlayerByPlayerIdQuery } = require("../repository/TableTeamPlayer");
 
 const fieldNamesService = async (data, fastify) => {
     let sportName = null,
@@ -28,10 +28,11 @@ const fieldNamesService = async (data, fastify) => {
     }
     if (data.playerId) {
         playerName = global.tblPlayers.find(e => e.playerId == data.playerId)?.playerName || null;
-        const teamPlayer = await getTeamPlayerJerseyByPlayerIdQuery(data.playerId, fastify, data);
-        if (teamPlayer) {
-            jerseyPlayerImage = teamPlayer?.jerseyPlayerImage || null;
-            jerseyPlayerImagePath = teamPlayer?.jerseyPlayerImagePath || null;
+        const playersInTeams = await getTeamPlayerByPlayerIdQuery(data.playerId, fastify, null);
+        const matchTypeTeamPlayer = playersInTeams.find(tp => tp.matchTypeId === data.matchTypeId && tp.teamId === data.teamId);
+        if (playersInTeams) {
+            jerseyPlayerImage =  matchTypeTeamPlayer?.jerseyPlayerImage || null;
+            jerseyPlayerImagePath = matchTypeTeamPlayer?.jerseyPlayerImagePath || null;
         }
     }
     if (data.playerTypeId) {
