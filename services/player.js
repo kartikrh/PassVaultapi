@@ -1247,14 +1247,14 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
     changedValues.birthPlace !== birthPlace
   );
 
-  const playerTeams = await getAllTeamsByPlayerIdQuery(playerId, fastify, request);
-  if (playerTeams && playerTeams.length === 1 && playerTeams.filter(pt => pt.homeTeam)?.length === 0) {
-    await updateTeamPlayerHomeTeamQuery({
-      refPlayerId: playerTeams[0].refPlayerId,
-      teamId: playerTeams[0]?.teamId
-    }, fastify, request);
+  // const playerTeams = await getAllTeamsByPlayerIdQuery(playerId, fastify, request);
+  // if (playerTeams && playerTeams.length === 1 && playerTeams.filter(pt => pt.homeTeam)?.length === 0) {
+  //   await updateTeamPlayerHomeTeamQuery({
+  //     refPlayerId: playerTeams[0].refPlayerId,
+  //     teamId: playerTeams[0]?.teamId
+  //   }, fastify, request);
     // await playerImageChangeOnClientAPIService(playerId, fastify);
-  }
+  // }
 
   await updatePlayerBatBowlHistory(playerId, entitySportPlayerResponse?.batting, entitySportPlayerResponse?.bowling, request, fastify);
 
