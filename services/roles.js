@@ -8,6 +8,9 @@ const {
   permissionByRoleIdQuery,
   permissionByRoleQuery,
   updateRoleStatusQuery,
+  updatePermissionStatusQuery,
+  checkActiveUsersRoleQuery,
+
 } = require("../repository/TableRoles");
 
 const allRolesService = async (request) => {
@@ -207,24 +210,28 @@ const multiRoleService = async (request, fastify, tabName) => {
 
 const updateRoleStatusService = async (request, fastify) => {
   const { roleId, isActive } = request.body;
-
   const index = global.tblRoles.findIndex(
     r => String(r.roleId) === String(roleId)
   );
-
   if (index === -1) {
     throw new Error("Invalid role id");
+  }
+  if (isActive === false) {
+    const roleInUse = await checkActiveUsersRoleQuery(roleId, fastify);
+    if (roleInUse) {
+      throw new Error(
+        "Role cannot be deactivated because active users are assigned to it."
+      );
+    }
   }
   const body = {
     roleId,
     isActive,
     userId: request.userTokenInfo.WrUserId,
   };
-
   await updateRoleStatusQuery(body, fastify, request);
-
+  await updatePermissionStatusQuery(body, fastify, request);
   global.tblRoles[index].isActive = isActive;
-
   return {
     roleId, isActive,
   };

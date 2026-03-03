@@ -314,6 +314,70 @@ const updateRoleStatusQuery = async (data, fastify, request) => {
   }
 };
 
+const updatePermissionStatusQuery = async (data, fastify, request) => {
+  const { roleId, isActive, userId } = data;
+
+  try {
+    return await fastify.db.query(
+      `
+      UPDATE "tblPermissions"
+      SET 
+        "wrIsDeleted" = $1,
+        "wrDeletedBy" = $2,
+        "wrDeletedAt" = now()
+      WHERE "wrRoleId" = (
+        SELECT "wrKey"
+        FROM "tblEncryptedData"
+        WHERE "wrValue" = $3
+      )
+      `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [!isActive, userId, roleId], 
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableRoles/updatePermissionStatusQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const checkActiveUsersRoleQuery = async (roleId, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      SELECT COUNT(*) as "count"
+      FROM "tblUsers"
+      WHERE "WrRoleId" = (
+        SELECT "wrKey"
+        FROM "tblEncryptedData"
+        WHERE "wrValue" = $1
+      )
+      AND "WrIsActive" = true
+      AND "WrIsDelete" = false
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [roleId],
+      }
+    );
+    return Number(result[0].count) > 0;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableRoles/checkActiveUsersRoleQuery",
+      null
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllRolesQuery,
   valideRoleId,
@@ -326,4 +390,6 @@ module.exports = {
   permissionByRoleIdQuery,
   permissionByRoleQuery,
   updateRoleStatusQuery,
+  updatePermissionStatusQuery,
+  checkActiveUsersRoleQuery,
 };
