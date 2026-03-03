@@ -213,7 +213,9 @@ const getTeamPlayerByTeamIdQuery = async (teamId, fastify, request) => {
         "wrJerseyPlayerImage" as "jerseyPlayerImage",
         "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
         "wrHomeTeam" as "homeTeam",
-        "wrTpId" as "tpId"
+        "wrTpId" as "tpId",
+        "wrMatchTypeId" AS "matchTypeId",
+        "wrPlayerOrder" as "playerOrder"
       FROM "tblTeamPlayers"
       WHERE "wrTeamId" = $1 AND "wrIsDeleted" = FALSE`,
       {
@@ -276,7 +278,8 @@ const updateTeamPlayerImageQuery = async (data, fastify) => {
       RETURNING
         "wrTeamId" AS "teamId",
         "wrRefPlayerId" AS "refPlayerId",
-        "wrHomeTeam" AS "homeTeam"`,
+        "wrHomeTeam" AS "homeTeam",
+        "wrMatchTypeId" AS "matchTypeId"`,
       {
         bind: [data.teamPlayerId, data.jerseyPlayerImage, data.jerseyPlayerImagePath],
         type: fastify.db.QueryTypes.UPDATE,
@@ -560,7 +563,9 @@ const insertTeamPlayerWithHomeTeamQuery = async (data, fastify, request) => {
         tp."wrTpId" AS "tpId",
         tp."wrPlayerName" AS "playerName",
         ttp."wrMatchTypeId" AS "matchTypeId",
-        ttp."wrPlayerOrder" AS "playerOrder"
+        ttp."wrPlayerOrder" AS "playerOrder",
+        ttp."wrJerseyPlayerImage" AS "jerseyPlayerImage",
+        ttp."wrJerseyPlayerImagePath" AS "jerseyPlayerImagePath"
       FROM insert_team_player ttp
       LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = ttp."wrTeamId"
       LEFT JOIN "tblPlayers" tp ON tp."wrPlayerId" = ttp."wrRefPlayerId"

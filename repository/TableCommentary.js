@@ -6226,7 +6226,8 @@ const updateCommentaryPlayerJerseyImageQuery = async (data, fastify) => {
         "wrCommentaryPlayerId" = $1 AND "wrIsDelete" = FALSE
         RETURNING
         "wrTeamId" AS "teamId",
-        "wrPlayerId" AS "playerId"`,
+        "wrPlayerId" AS "playerId",
+        "wrCommentaryId" AS "commentaryId"`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [data.commentaryPlayerId, data.jerseyPlayerImage, data.jerseyPlayerImagePath],
