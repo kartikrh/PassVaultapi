@@ -6020,13 +6020,16 @@ const deleteTeamPlayerService = async (request, fastify) => {
 };
 const loadTeamPlayerService = async (request, fastify) => {
   // validate teamId
-  const { teamId } = request.body;
+  const { teamId, matchTypeId } = request.body;
   let team = global.tblTeams.find((item) => item.teamId === teamId);
   if (!team) {
     throw new Error("Team with this id not Found");
   }
   // get all players for this team
-  let teamPlayers = await getAllPlayersByTeamIdQuery(teamId, fastify, request);
+  let teamPlayers = await getAllPlayersByTeamIdAndMatchTypeIdQuery({
+    teamId: teamId,
+    matchTypeId: matchTypeId
+  }, fastify, request);
   return teamPlayers;
 };
 const updateTeamPlayerService = async (request, fastify) => {
@@ -12764,23 +12767,10 @@ const getTeamAndPlayerListServiceV1 = async (request, fastify) => {
     );
 
     if (!teamMap[team.teamId]) {
-      let findInCompPlayer = global.tblTournamentTeamPlayers.find((i)=> i.competitionId == commentaryDetails.competitionId && 
-        i.teamId == team.teamId)
-      let players =[]
-      if(!findInCompPlayer){
-          players = await getAllPlayersByTeamIdAndMatchTypeIdQuery(
-          { matchTypeId: commentaryDetails.matchTypeId, teamId: team.teamId },
-          fastify,
-          request
-        );
-      }
-      else {
-          players = await getTeamPlayerTournamentQuery({ matchTypeId: commentaryDetails.matchTypeId, 
-            competitionId :commentaryDetails.competitionId,teamId: team.teamId },
-          fastify,
-          request
-        );
-      }
+      const players = await getAllPlayersByTeamIdAndMatchTypeIdQuery({
+        teamId: team.teamId,
+        matchTypeId: commentaryDetails.matchTypeId
+      }, fastify, request);
 
       teamMap[team.teamId] = {
         teamId: team.teamId,

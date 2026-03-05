@@ -1406,7 +1406,7 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
             commentaryId: checkCommentary.commentaryId,
             teamId: team.teamId,
             playerId: player.playerId,
-            displayOrder: teamPlayer.playerOrder,
+            displayOrder: matchTypeTeamPlayer ? matchTypeTeamPlayer.playerOrder : teamPlayer.playerOrder,
             matchTypeId: checkCommentary?.matchTypeId,
             tpId: player?.tpId ?? null,
             jerseyPlayerImage: matchTypeTeamPlayer ? matchTypeTeamPlayer?.jerseyPlayerImage : teamPlayer?.jerseyPlayerImage,
