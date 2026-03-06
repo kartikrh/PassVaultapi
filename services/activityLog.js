@@ -52,7 +52,9 @@ const createActivityLogService = async (request, fastify) => {
     await newsViewersCountQuery({ ...request.body },request,fastify);
     if (newsIndex !== -1) {
       global.tblNews[newsIndex].viewerCount = (global.tblNews[newsIndex].viewerCount || 0) + 1;
-      data[0].count = global.tblNews[newsIndex].viewerCount;
+      if (data && data.length === 0) {
+        data[0].count = global.tblNews[newsIndex].viewerCount;
+      }
     }
   } else if(request?.body?.activityType === 2) {
     // const articleIndex = global.tblArticles.findIndex((item)=> item.id === parseInt(request.body.refId));
@@ -64,7 +66,9 @@ const createActivityLogService = async (request, fastify) => {
     await bannerViewersCountQuery({ ...request.body },request,fastify);
     if (bannerIndex !== -1) {
       global.tblBanner[bannerIndex].viewerCount = (global.tblBanner[bannerIndex].viewerCount || 0) + 1;
-      data[0].count = global.tblBanner[bannerIndex].viewerCount;
+      if (data && data.length === 0) {
+        data[0].count = global.tblBanner[bannerIndex].viewerCount;
+      }
     }
   } else {
     // const bannerIndex = global.tblBanner.findIndex((item)=> item.bannerId === parseInt(request.body.refId));
