@@ -7,7 +7,7 @@ const {
   deleteTournamentTeamPlayersByPlayerIdQuery,
 } = require("../repository/TableTournamentsTeamPlayers");
 const { insertCommentaryPlayers, deleteCommentaryPlayersQuery, getCommentariesDataQuery, getAllCommentaryPlayerDataQuery, deleteCommentaryPlayerById } = require("../repository/TableCommentary");
-const { getAllTeamPlayersByTeamIdAndPlayerIdQuery } = require("../repository/TableTeamPlayer");
+const { getAllTeamPlayersByTeamIdAndPlayerIdQuery, getTeamPlayersByTeamMatchTypeIdQuery } = require("../repository/TableTeamPlayer");
 const { getAllPlayersByTeamIdQuery: newGetAllPlayersByTeamIdQuery} = require("../repository/TableTeams");
 const { commentaryStatus } = require("../utilities");
 
@@ -303,7 +303,7 @@ const getTournamentTeamPlayersByCompetitionIdForClientService = async (request, 
   const teamsMap = new Map(global.tblTeams?.filter(tt => tournamentTeam.includes(tt.teamId))?.map(t => [t.teamId, t]));
   const playersMap = new Map(global.tblPlayers?.filter(tp => tournamentPlayers.includes(tp.playerId))?.map(p => [p.playerId, p]));
 
-  tournamentTeamPlayers.forEach((p) => {
+  for (const p of tournamentTeamPlayers) {
     if (!result[p.matchTypeId]) {
       const matchTypeData = matchTypeMap.get(p.matchTypeId);
 
@@ -316,21 +316,44 @@ const getTournamentTeamPlayersByCompetitionIdForClientService = async (request, 
     if (!result[p.matchTypeId].teams[p.teamId]) {
       const teamData = teamsMap.get(p.teamId);
 
+      const teamMatchTypePlayers = await getTeamPlayersByTeamMatchTypeIdQuery(
+        {
+          ...request,
+          body: {
+            teamId: p.teamId,
+            matchTypeId: p.matchTypeId
+          }
+        },
+        fastify
+      );
+
       result[p.matchTypeId].teams[p.teamId] = {
         ...(teamData || { teamId: p.teamId }),
-        players: []
+        players: [],
+        teamMatchTypePlayers
       };
     }
 
     const playerData = playersMap.get(p.playerId);
 
     if (playerData) {
+      const teamMatchPlayer = result[p.matchTypeId]
+        .teams[p.teamId]
+        .teamMatchTypePlayers?.find(
+          tmtp =>
+            tmtp.teamId === p.teamId &&
+            tmtp.refPlayerId === p.playerId &&
+            tmtp.matchTypeId === p.matchTypeId
+        );
+
       result[p.matchTypeId].teams[p.teamId].players.push({
         ...playerData,
-        matchTypeId: p.matchTypeId
+        matchTypeId: p.matchTypeId,
+        jerseyPlayerImage: teamMatchPlayer?.jerseyPlayerImage,
+        jerseyPlayerImagePath: teamMatchPlayer?.jerseyPlayerImagePath
       });
     }
-  });
+  }
 
   const finalResult = Object.values(result).map(mt => ({
     ...mt,
