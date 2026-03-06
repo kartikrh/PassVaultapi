@@ -1524,8 +1524,8 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           item.tpId == c.event_id && item.commentaryId == comDetails.commentaryId
         );
         if (ballByBall && 
-          ballByBall.commentary?.toLowerCase().trim() !==
-          c?.commentary?.toLowerCase().trim() &&
+          (ballByBall?.commentary ?? "").toLowerCase().trim() !==
+          (c?.commentary ?? "").toLowerCase().trim() &&
           c?.text?.trim().length > 0
         ) {
           const fullComm = {
