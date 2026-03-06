@@ -1439,7 +1439,7 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
     }
 
     const removeTournamentTeamPlayerIds = [];
-    for (const cp of tournamentTeamsPlayers) {
+    for (const cp of tournamentTeamsPlayers?.filter(ttp => ttp.teamId === team.teamId && ttp.matchTypeId === matchTypeId)) {
       if (!newTeamSquadTpIds.includes(cp.tpId)) {
         removeTournamentTeamPlayerIds.push(cp.id);
       }
