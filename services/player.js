@@ -154,13 +154,14 @@ const playerByIdService = async (request, fastify) => {
     return null;
   } else {
     const playersInTeams = await getTeamPlayerByPlayerIdQuery(playerId, fastify, request);
+    const teams = playersInTeams?.filter(tp => tp.matchTypeId === -1)?.map(tp => tp.teamId);
 
     const data = {
       ...result,
       bowlingStyle: result.bowlingStyleId === 1 ? "Pace" : (result.bowlingStyleId === 2 ? "Spin" : null),
       birthDate: result.birthDate ? String(result.birthDate).split('T')[0] : result.birthDate,
-      teams: playersInTeams?.filter(tp => tp.matchTypeId === -1),
-      jerseyPlayerImage: playersInTeams?.find(pt => pt.homeTeam)?.jerseyPlayerImage
+      teams: global.tblTeams.filter(tt => teams?.includes(tt.teamId)),
+      teamMatchType: playersInTeams?.filter(tp => tp.matchTypeId !== -1)
     };
 
     return data;
