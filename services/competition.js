@@ -24,7 +24,7 @@ const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
 const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive, matchStatusEntity, error, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, parseUmpires, ScoringTypes, RefType, lowerEntityMatchTypesEnums, EntityCommentaryStatus, getComDataByCId, getCombineFullScore } = require("../utilities");
 const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryPlayers, updateCommentaryPlayerById, isCountInPOintCommentaryChangeQuery, updateCommentaryDateByCommentaryIdQuery, updateCommentaryQuery, insertCommentaryTeamQuery, deleteInningWiseCommentaryPlayersQuery } = require("../repository/TableCommentary")
-const { deleteTournamentTeamPlayersByCompIdQuery, insertTournamentTeamPlayersQuery, deletePlayersByTeamAndPlayerIdQuery, deleteTournamentTeamPlayersByPlayerIdQuery } = require("../repository/TableTournamentsTeamPlayers");
+const { deleteTournamentTeamPlayersByCompIdQuery, insertTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
 const { nullTeamtpIds, autoUpdateCommentaryDataStatus } = require("../utilities/entityConst");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
@@ -1438,13 +1438,6 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
       }
     }
 
-    const removeTournamentTeamPlayerIds = [];
-    for (const cp of tournamentTeamsPlayers?.filter(ttp => ttp.teamId === team.teamId && ttp.matchTypeId === matchTypeId)) {
-      if (!newTeamSquadTpIds.includes(cp.tpId)) {
-        removeTournamentTeamPlayerIds.push(cp.id);
-      }
-    }
-
     if (removeCommentaryPlayerIds.length > 0) {
       await deleteInningWiseCommentaryPlayersQuery({
         commentaryId: checkCommentary.commentaryId,
@@ -1453,15 +1446,6 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
         currentInnings: i
       }, request, fastify);
       global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(tcp => !(tcp.commentaryId === checkCommentary?.commentaryId && tcp.teamId === team.teamId && tcp.currentInnings === i && removeCommentaryPlayerIds.includes(tcp.commentaryPlayerId)));
-    }
-
-    if (removeTournamentTeamPlayerIds.length > 0) {
-      await deleteTournamentTeamPlayersByPlayerIdQuery({
-        competitionId: checkCompetition.competitionId,
-        teamId: team.teamId,
-        playerIds: removeTournamentTeamPlayerIds
-      }, request, fastify);
-      global.tblTournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(ttp => !(ttp.competitionId === checkCompetition.competitionId && ttp.teamId === team.teamId && removeTournamentTeamPlayerIds.includes(ttp.id)));
     }
   } else {
     const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
