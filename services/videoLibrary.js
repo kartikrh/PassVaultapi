@@ -2,6 +2,7 @@ const {
   insertVideoLibraryQuery,
   updateVideoLibraryQuery,
   deleteVideoLibraryQuery,
+  updateVideoLibraryStatusQuery,
 } = require("../repository/TableVideoLibrary");
 const {
   generateImageName,
@@ -170,7 +171,12 @@ const editVideoLibraryService = async (request, fastify, data) => {
 };
 
 const allVideoLibraryService = async (request) => {
-  return global.tblVideoLibrary;
+  const { isActive } = request.body; 
+  let videos = global.tblVideoLibrary;
+  if (isActive !== undefined) {
+    videos = videos.filter(v => v.isActive === Boolean(isActive));
+  }
+  return videos;
 };
 
 const videoLibraryById = async (request) => {
@@ -225,9 +231,26 @@ const deleteVideoLibraryService = async (request, fastify) => {
   return `Video library data deleted successfully`;
 };
 
+const updateVideoStatusService = async (request, fastify) => {
+  const { id, isActive } = request.body;
+  const index = global.tblVideoLibrary.findIndex(v => v.id === id);
+  if (index === -1) {
+    throw new Error("Video not found");
+  }
+  const body = {
+    id,
+    isActive,
+    userId: request.userTokenInfo.WrUserId,
+  };
+  const updatedVideo = await updateVideoLibraryStatusQuery(body, fastify, request);
+  global.tblVideoLibrary[index].isActive = isActive;
+  return updatedVideo[0];
+};
+
 module.exports = {
   allVideoLibraryService,
   videoLibraryById,
   createVideoLibraryService,
   deleteVideoLibraryService,
+  updateVideoStatusService,
 };
