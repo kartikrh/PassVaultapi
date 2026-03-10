@@ -10,6 +10,7 @@ const {
   updateDisplayOrderService,
   updateIsDefultService,
   getAllLibraryImagesService,
+  updatePhotoLibraryStatusService,
 } = require("../../../../services/photoLibrary");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -180,6 +181,21 @@ const updateIsDefault = async (request, reply, fastify) => {
   }
 };
 
+const updatePhotoLibraryStatus = async (request, reply, fastify) => {
+  try {
+    const result = await updatePhotoLibraryStatusService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      commonPath + "/updatePhotoLibraryStatus",
+      request
+    );
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 module.exports = {
   getAllPhotoLibrary,
   getAllLibraryImages,
@@ -192,4 +208,5 @@ module.exports = {
   updateDisplayOrder,
   updateIsDefault,
   allLibraryImages,
+  updatePhotoLibraryStatus,
 };
