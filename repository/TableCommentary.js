@@ -6199,7 +6199,8 @@ const updateCommentaryPlayerJerseyImageQuery = async (data, fastify) => {
         "wrCommentaryPlayerId" = $1 AND "wrIsDelete" = FALSE
         RETURNING
         "wrTeamId" AS "teamId",
-        "wrPlayerId" AS "playerId"`,
+        "wrPlayerId" AS "playerId",
+        "wrCommentaryId" AS "commentaryId"`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [data.commentaryPlayerId, data.jerseyPlayerImage, data.jerseyPlayerImagePath],
@@ -9495,7 +9496,7 @@ const deleteInningWiseCommentaryPlayersQuery = async (data, request, fastify) =>
         "wrDeletedAt" = now()
       WHERE "wrCommentaryId" = $3
       AND "wrTeamId" = $4
-      AND "wrPlayerId" = ANY($5)
+      AND "wrCommentaryPlayerId" = ANY($5)
       AND "wrCurrentInnings" = $6;
     `,
       {
@@ -9505,7 +9506,7 @@ const deleteInningWiseCommentaryPlayersQuery = async (data, request, fastify) =>
           request.userTokenInfo.WrUserId,
           data.commentaryId,
           data.teamId,
-          data.playerIds,
+          data.commentaryPlayerIds,
           data.currentInnings
         ],
       }
@@ -9520,36 +9521,6 @@ const deleteInningWiseCommentaryPlayersQuery = async (data, request, fastify) =>
     throw new Error(err.message);
   }
 };
-
-const updateBallByBallFullCommentaryQuery = async (data, request, fastify) => {
-  try {
-      return await fastify.db.query(
-        `UPDATE "tblCommentaryBallByBalls" SET
-          "wrCommentary" = $1
-        WHERE "wrCommentaryId" = $2
-        AND "wrTpId" = $3
-        AND "wrCommentaryBallByBallId" = $4;`,
-        {
-          type: fastify.db.QueryTypes.UPDATE,
-          bind: [
-            data.commentary,
-            data.commentaryId,
-            data.tpId,
-            data.commentaryBallByBallId
-          ]
-        } 
-      )
-  } catch (err) {
-    errorLogger(
-      fastify,
-      err.message,
-      "DB ERROR --> repository/TableCommentary.js/updateBallByBallFullCommentaryQuery",
-      request
-    );
-    throw new Error(err.message);
-  }
-}
-
 const getComTeamQuery = async (data , request , fastify) => {
   return await fastify.db.query(
     `select 
@@ -9607,6 +9578,36 @@ const getComTeamQuery = async (data , request , fastify) => {
     //         OR "wrCommentaryStatus" != 4 AND "wrIsDelete" = FALSE
   );
 };
+
+const updateBallByBallFullCommentaryQuery = async (data, request, fastify) => {
+  try {
+      return await fastify.db.query(
+        `UPDATE "tblCommentaryBallByBalls" SET
+          "wrCommentary" = $1
+        WHERE "wrCommentaryId" = $2
+        AND "wrTpId" = $3
+        AND "wrCommentaryBallByBallId" = $4;`,
+        {
+          type: fastify.db.QueryTypes.UPDATE,
+          bind: [
+            data.commentary,
+            data.commentaryId,
+            data.tpId,
+            data.commentaryBallByBallId
+          ]
+        } 
+      )
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/updateBallByBallFullCommentaryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -9763,6 +9764,6 @@ module.exports = {
   getAllCommentaryByCompetitionIdForClientQuery,
   insertCommentaryTeamQuery,
   deleteInningWiseCommentaryPlayersQuery,
+  getComTeamQuery,
   updateBallByBallFullCommentaryQuery,
-  getComTeamQuery
 };

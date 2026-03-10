@@ -1,14 +1,13 @@
 const { getTeamMatchTypeByTeamQuery, insertTeamMatchTypeByTeamQuery, updateTeamMatchTypeJerseyImageByTeamQuery, activeInactiveTeamMatchTypeByTeamQuery, deleteTeamMatchTypeByTeamQuery } = require("../repository/TableTeamMatchType");
-const { getTeamPlayersByTeamMatchTypeIdQuery, updateTeamPlayerMatchTypeIdQuery, insertTeamPlayerWithHomeTeamQuery } = require("../repository/TableTeamPlayer");
+const { getTeamPlayersByTeamMatchTypeIdQuery, deleteTeamPlayerByTeamPlayerIdQuery } = require("../repository/TableTeamPlayer");
+const {  getTeamPlayersByTeamIdAndMatchTypeIdQuery } = require("../repository/TableTeams");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
-const { mergeAndSaveImage } = require("../utilities/imageMerge");
-const { generateImageName, storeImageOnServer } = require("../utilities/Images");
-const { playerImageChangeOnClientAPIService } = require("./player");
+const { generateImageName, storeImageOnServer, removeImageFromServer } = require("../utilities/Images");
 
 const getTeamMatchTypeByTeamService = async (request, fastify) => {
-    const teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${request.body.teamId}`);
-
+    let teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${request.body.teamId}`);
+    teamMatchType = teamMatchType?.filter(tmt => tmt.matchTypeId !== -1);
     const response = [];
     for (const tmt of teamMatchType) {
         const players = await getTeamPlayersByTeamMatchTypeIdQuery({
@@ -34,9 +33,11 @@ const saveTeamMatchTypeByTeamService = async (request, fastify) => {
         throw new Error(`Team with id ${teamId} not found`);
     }
 
-    const matchType = global.tblMatchTypes.find(tmt => tmt.matchTypeId === matchTypeId);
-    if (!matchType) {
-        throw new Error(`MatchType with id ${matchTypeId} not found`);
+    if (matchTypeId !== -1) {
+        const matchType = global.tblMatchTypes.find(tmt => tmt.matchTypeId === matchTypeId);
+        if (!matchType) {
+            throw new Error(`MatchType with id ${matchTypeId} not found`);
+        }
     }
 
     const teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${teamId} AND ttmt."wrMatchTypeId" = ${matchTypeId}`);
@@ -51,9 +52,9 @@ const saveTeamMatchTypeByTeamService = async (request, fastify) => {
 }
 
 const updateTeamMatchTypeDataByTeamService = async (request, fastify) => {
+    const { upsertTeamPlayers } = require("./teams");
     const { teamMatchTypeId } = request.body;
-    let isImage = false;
-    const teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamMatchTypeId" = ${teamMatchTypeId}`);
+    let teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamMatchTypeId" = ${teamMatchTypeId}`);
     if (!teamMatchType[0]) {
         throw new Error(`TeamMatchType with team match type id ${teamMatchTypeId} not found`);
     }
@@ -65,14 +66,16 @@ const updateTeamMatchTypeDataByTeamService = async (request, fastify) => {
         throw new Error(`Team with id ${teamId} not found`);
     }
 
-    const matchType = global.tblMatchTypes.find(tmt => tmt.matchTypeId === matchTypeId);
-    if (!matchType) {
-        throw new Error(`MatchType with id ${matchTypeId} not found`);
+    let matchType = null;
+    if (matchTypeId !== -1) {
+        matchType = global.tblMatchTypes.find(tmt => tmt.matchTypeId === matchTypeId);
+        if (!matchType) {
+            throw new Error(`MatchType with id ${matchTypeId} not found`);
+        }
     }
 
     if (request.body.image && request.body.image.length) {
-        isImage = true;
-        const imgName = generateImageName({ name: team.teamName + matchType.matchType });
+        const imgName = generateImageName({ name: `${team.teamName}${matchType?.matchType || ""}` });
         const projectName = global.tblConfigs.find(
             (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
         ).value;
@@ -85,7 +88,7 @@ const updateTeamMatchTypeDataByTeamService = async (request, fastify) => {
         request.body.teamJerseyImage = fullPath;
         request.body.teamJerseyImagePath = imagePath;
         teamJerseyImage = fullPath;
-        await updateTeamMatchTypeJerseyImageByTeamQuery(request, fastify);
+        teamMatchType = await updateTeamMatchTypeJerseyImageByTeamQuery(request, fastify);
     }
 
     if (request.body?.playerIds) {
@@ -105,55 +108,21 @@ const updateTeamMatchTypeDataByTeamService = async (request, fastify) => {
             let teamPlayer = oldTeamPlayers.find(otp => otp.refPlayerId === pId);
             const player = players.find(tp => tp.playerId === pId);
             if (player) {
-                if (!teamPlayer) {
-                    teamPlayer = await insertTeamPlayerWithHomeTeamQuery({
-                        teamId: team.teamId,
-                        refPlayerId: player.playerId,
-                        tpId: player?.tpId ?? null,
-                        userId: request?.userTokenInfo?.WrUserId ?? -2,
-                        jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage ?? null,
-                        jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath ?? null,
-                        matchTypeId: matchTypeId
-                    }, fastify, request);
-                }
-
-                if (teamPlayer) {
-                    if (player?.image && team?.jersey && teamPlayer?.teamPlayerId) {
-                        try {
-                            await mergeAndSaveImage({
-                                playerImage: player.image,
-                                jersey: teamJerseyImage ?? team.jersey,
-                                playerName: player.playerName,
-                                teamName: team.teamName,
-                                teamPlayerId: teamPlayer?.teamPlayerId,
-                                commentaryPlayerId: null,
-                                commentaryId: null,
-                            }, fastify);
-                            if (teamPlayer?.homeTeam == true) {
-                                await playerImageChangeOnClientAPIService(player, fastify);
-                            }
-                        } catch (error) {
-                            console.log("🚀 ~ updateTeamMatchTypeDataByTeamService ~ error:", error)
-                        }
-                    }
-                }
+                await upsertTeamPlayers(teamPlayer, team, player, matchTypeId, teamMatchType[0], entitySocketData, request, fastify);
             }
         }
 
         for (const oldPlayer of oldTeamPlayers) {
             if (!newPlayerIds.includes(oldPlayer.refPlayerId)) {
-                await updateTeamPlayerMatchTypeIdQuery({
-                    ...request,
-                    body: {
-                        teamId,
-                        matchTypeId: -1,
-                        refPlayerId: oldPlayer.refPlayerId,
-                        oldMatchTypeId: oldPlayer?.matchTypeId,
-                        jerseyPlayerImage: entitySocketData?.defaultPlayerJerseyImage ?? null,
-                        jerseyPlayerImagePath: entitySocketData?.defaultPlayerJerseyImagePath ?? null,
-                    }
-                }, fastify);
+                await deleteTeamPlayerByTeamPlayerIdQuery(oldPlayer.teamPlayerId, fastify, request);
+                await removeImageFromServer({
+                    path: oldPlayer.jerseyPlayerImage,
+                });
             }
+        }
+
+        if (newPlayerIds?.length === 0) {
+            await deleteTeamMatchTypeByTeamIdService(request, fastify);
         }
     }
 
@@ -173,13 +142,52 @@ const activeInactiveTeamMatchDataTypeByTeamIdService = async (request, fastify) 
 
 const deleteTeamMatchTypeByTeamIdService = async (request, fastify) => {
     const { teamMatchTypeId } = request.body;
-    const teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamMatchTypeId" = ${teamMatchTypeId}`);
+    let teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamMatchTypeId" = ${teamMatchTypeId}`);
     if (!teamMatchType[0]) {
         throw new Error(`TeamMatchType with team match type id ${teamMatchTypeId} not found`);
     }
+    teamMatchType = teamMatchType[0];
 
     await deleteTeamMatchTypeByTeamQuery(request, fastify);
+    if (teamMatchType?.teamJerseyImagePath) {
+        await removeImageFromServer({
+            path: teamMatchType.teamJerseyImagePath
+        });
+    }
+
+    const players = await getTeamPlayersByTeamMatchTypeIdQuery({
+            ...request,
+            body: {
+                teamId: teamMatchType.teamId,
+                matchTypeId: teamMatchType.matchTypeId
+            }
+    }, fastify);
+    if (players?.length) {
+        for (const player of players) {
+            await deleteTeamPlayerByTeamPlayerIdQuery(player.teamPlayerId, fastify, request);
+            await removeImageFromServer({
+                path: player.jerseyPlayerImage,
+            });
+        }
+    }
+
     return true;
+}
+
+const getPlayersForTeamMatchTypeByTeamIdService = async (request, fastify) => {
+    const { teamId } = request.body;
+
+    const playersInTeams = await getTeamPlayersByTeamIdAndMatchTypeIdQuery({
+      ...request,
+      body: {
+        teamId: teamId,
+        matchTypeId: -1
+      }
+    }, fastify);
+
+    const teamPlayerIds = [...new Set(playersInTeams.map(player => player.playerId))];
+    const players = global.tblPlayers.filter(tp => teamPlayerIds.includes(tp.playerId));
+    return players;
 }
 
 module.exports = {
@@ -187,5 +195,6 @@ module.exports = {
     saveTeamMatchTypeByTeamService,
     updateTeamMatchTypeDataByTeamService,
     activeInactiveTeamMatchDataTypeByTeamIdService,
-    deleteTeamMatchTypeByTeamIdService
+    deleteTeamMatchTypeByTeamIdService,
+    getPlayersForTeamMatchTypeByTeamIdService
 }

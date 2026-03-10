@@ -450,7 +450,8 @@ const getAllTeamsByPlayerIdQuery = async (playerId, fastify, request) => {
       "wrTeamName" as "teamName",
       tt."wrImage" as "teamLogo",
       tp."wrHomeTeam" as "homeTeam",
-      tp."wrJerseyPlayerImage" as "jerseyPlayerImage"
+      tp."wrJerseyPlayerImage" as "jerseyPlayerImage",
+      tp."wrMatchTypeId" as "matchTypeId"
        from "tblTeamPlayers" tp
        left join "tblTeams" tt on tp."wrTeamId" = tt."wrTeamId"
        where "wrRefPlayerId" = $1 and tp."wrIsDeleted" = false and tt."wrIsDeleted" = false`,

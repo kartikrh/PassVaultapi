@@ -2,9 +2,12 @@ const { deleteICCRankingByIdQuery, insertICCRankingQuery, updateICCRankingQuery,
 const { ICCRankingType, callEntitySportAPI, ServiceType, APIEndpointModuleType, callClientAPI, ICCRankingPlayerType, checkEntitySportAPIEndpointIsActive, ICCMatchType, RefType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 const { playerImportService } = require("./player");
-const { teamImportService } = require("./teams");
+const { teamImportService, upsertTeamPlayers } = require("./teams");
 const { fieldNamesService } = require("./fieldNamesService");
 const { insertAutoImportDataService } = require("./autoImportData");
+const { saveTeamMatchTypeByTeamService } = require("./teamMatchType");
+const { getTeamPlayerByPlayerIdQuery } = require("../repository/TableTeamPlayer");
+const { getTeamMatchTypeByTeamQuery } = require("../repository/TableTeamMatchType");
 
 const getAllICCRankingService = async (request) => {
     const { isActive, type, matchTypeId, sportId, playerTypeId, isMen } = request.body;
@@ -89,6 +92,29 @@ const createICCRankingService = async (request, fastify) => {
         }
     }
     const saveData = await insertICCRankingQuery(request.body, fastify, request);
+    if (type === ICCRankingType.Player && playerId && teamId && matchTypeId) {
+        const entitySocketData = global.tblEntitySockets?.[0];
+        const team = global.tblTeams.find(t => t.teamId === teamId);
+        const player = global.tblPlayers.find(p => p.playerId === playerId);
+        const teamPlayers = await getTeamPlayerByPlayerIdQuery(playerId, fastify, request);
+
+        const teamPlayer = teamPlayers.find(tp => tp.matchTypeId === -1 && tp.teamId === teamId);
+        await upsertTeamPlayers(teamPlayer, team, player, -1, null, entitySocketData, request, fastify);
+
+        let teamMatchTypeId = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${team.teamId} AND ttmt."wrMatchTypeId" = ${matchTypeId}`);
+        if (!teamMatchTypeId || teamMatchTypeId.length === 0) {
+            teamMatchTypeId = await saveTeamMatchTypeByTeamService({
+                ...request,
+                body: {
+                    teamId: team.teamId,
+                    matchTypeId: matchTypeId,
+                },
+            }, fastify);
+        }
+
+        const matchTypeTeamPlayer = teamPlayers.find(tp => tp.matchTypeId === matchTypeId && tp.teamId === teamId && tp.refPlayerId === player.playerId);
+        await upsertTeamPlayers(matchTypeTeamPlayer, team, player, matchTypeId, teamMatchTypeId[0], entitySocketData, request, fastify);
+    }
     global.tblICCRanking.push(saveData);
     if (saveData && saveData.isActive == true) {
         const keyNames = await fieldNamesService(saveData, fastify);

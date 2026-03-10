@@ -64,6 +64,9 @@ const resizeImage = async (imageBuffer, width, height, fastify) => {
 
 const mergeAndSaveImage = async (data, fastify) => {
   try {
+    if (!data.playerImage || !data.jersey) {
+      return;
+    }
     let playerBuffer = await convertToPng(data.playerImage, fastify, data);
     let jerseyBuffer =  await convertToPng(data.jersey, fastify, data);
     if (!playerBuffer || !jerseyBuffer) {
@@ -149,19 +152,40 @@ const mergeAndSaveImage = async (data, fastify) => {
     if(data.teamPlayerId){
       const updateData = await updateTeamPlayerImageQuery({ teamPlayerId: data.teamPlayerId, jerseyPlayerImage: fullPath, jerseyPlayerImagePath: imagePath }, fastify);
       if (updateData && updateData.length > 0) {
-        const { refPlayerId, teamId } = updateData[0];
-        await updateCommPlayerImagePath(refPlayerId, teamId, fullPath, imagePath, fastify);
+        const { refPlayerId, teamId, matchTypeId } = updateData[0];
+        if (matchTypeId !== -1) {
+          await updateCommPlayerImagePath(refPlayerId, teamId, fullPath, imagePath, matchTypeId, fastify);
+        }
       }
     }
 
     if(data.commentaryPlayerId){
-      const updateData = await updateCommentaryPlayerJerseyImageQuery(
-        { commentaryPlayerId: data.commentaryPlayerId, jerseyPlayerImage: fullPath, jerseyPlayerImagePath: imagePath },
-        fastify
+      const index = global.tblCommentaryPlayers.findIndex(
+        (item) => item.commentaryPlayerId === data.commentaryPlayerId
       );
-      if (updateData && updateData.length > 0) {
-        const { playerId, teamId } = updateData[0];
-        await updateCommPlayerImagePath(playerId, teamId, fullPath, imagePath, fastify);
+      if (index !== -1) {
+        const updateData = await updateCommentaryPlayerJerseyImageQuery({
+          commentaryPlayerId: data.commentaryPlayerId,
+          jerseyPlayerImage: fullPath,
+          jerseyPlayerImagePath: imagePath
+        }, fastify);
+        if (updateData && updateData.length > 0) {
+          const commentaryId = updateData[0].commentaryId;
+          const sendDataForSocketUpdate = {
+            commentaryId: commentaryId,
+            eventRefId: global.tblCommentaries.find(tc => tc.commentaryId === commentaryId)?.eventRefId,
+            dataToUpdate: [
+              {
+                module: "commentaryPlayers",
+                type: "update",
+                data: global.tblCommentaryPlayers.filter(tcp => tcp.commentaryId === commentaryId),
+              },
+            ],
+          };
+          global.clientSocketIo.forEach((socket) => {
+            socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+          });
+        }
       }
     }
     return { fullPath, imagePath };
@@ -176,24 +200,16 @@ const mergeAndSaveImage = async (data, fastify) => {
   }
 };
 
-const updateCommPlayerImagePath = async (playerId, teamId, fullPath, imagePath, fastify) => {
+const updateCommPlayerImagePath = async (playerId, teamId, fullPath, imagePath, matchTypeId, fastify) => {
   if (!playerId || !teamId || !fullPath || !imagePath) {
     return;
   }
 
-  await updateCommPlayersImagePathQuery(
-    {
-      playerId,
-      teamId,
-      jerseyPlayerImage: fullPath,
-      jerseyPlayerImagePath: imagePath,
-    },
-    fastify
-  );
-
   const commPlayerData = global.tblCommentaryPlayers.filter(
     (item) => item.playerId === playerId && item.teamId === teamId
   );
+
+  const updateCommentaryIds = [];
 
   for (const commPlayer of commPlayerData) {
     const index = global.tblCommentaryPlayers.findIndex(
@@ -201,20 +217,31 @@ const updateCommPlayerImagePath = async (playerId, teamId, fullPath, imagePath, 
     );
 
     if (index !== -1) {
-      global.tblCommentaryPlayers[index] = {
-        ...global.tblCommentaryPlayers[index],
-        jerseyPlayerImage: fullPath,
-        jerseyPlayerImagePath: imagePath,
-      };
+      const commentaryId = commPlayer.commentaryId;
+      const commentary = global.tblCommentaries.find(tc => tc.commentaryId === commentaryId && tc.matchTypeId === matchTypeId);
+      if (commentary?.matchTypeId === matchTypeId) {
+        if (!updateCommentaryIds.includes(commentaryId)) {
+          updateCommentaryIds.push(commentaryId);
+        }
+        await updateCommentaryPlayerJerseyImageQuery({
+          commentaryPlayerId: commPlayer.commentaryPlayerId,
+          jerseyPlayerImage: fullPath,
+          jerseyPlayerImagePath: imagePath
+        }, fastify);
+
+        global.tblCommentaryPlayers[index] = {
+          ...global.tblCommentaryPlayers[index],
+          jerseyPlayerImage: fullPath,
+          jerseyPlayerImagePath: imagePath,
+        };
+      }
     }
   }
 
-  const commentaryIds = [...new Set(global.tblCommentaryPlayers.map(tcp => tcp.commentaryId))];
-  const commentary = global.tblCommentaries.filter(tc => commentaryIds.includes(tc.commentaryIds));
-  for (const cId of commentaryIds) {
+  for (const cId of updateCommentaryIds) {
     const sendDataForSocketUpdate = {
       commentaryId: cId,
-      eventRefId: commentary.find(c => c.commentaryId === cId)?.eventRefId,
+      eventRefId: global.tblCommentaries.find(tc => tc.commentaryId === cId)?.eventRefId,
       dataToUpdate: [
         {
           module: "commentaryPlayers",

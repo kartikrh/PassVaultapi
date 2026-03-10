@@ -17,8 +17,10 @@ const {
   getTeamPlayerByPlayerIdQuery,
   getTeamListByPlayerIdQuery,
   updateTeamPlayerHomeTeamQuery,
+  updateTeamPlayerHomeTeamByTeamPlayerIdQuery,
+  deleteTeamPlayerByTeamAndPlayerIdQuery,
 } = require("../repository/TableTeamPlayer");
-const { getAllPlayersByTeamIdQuery, getAllPlayersByCompetitionIdTeamIdQuery } = require("../repository/TableTeams");
+const { getAllPlayersByTeamIdQuery, getAllPlayersByCompetitionIdTeamIdQuery, getAllPlayersByTeamIdAndMatchTypeIdQuery, getTeamPlayersByTeamIdAndMatchTypeIdQuery } = require("../repository/TableTeams");
 const {
   storeImageOnServer,
   generateImageName,
@@ -39,6 +41,7 @@ const { savePlayerBatHistQuery, savePlayerBallHistQuery, getAllCommentaryBatting
 const { fieldNamesService } = require("../services/fieldNamesService");
 const { getAllPlayersBattingHistory, insertPlayerBattingHistoryQuery, updatePlayerBattingHistoryQuery, getAllPlayerBowlingHistory, updatePlayerBowlingHistoryQuery, insertPlayerBowlingHistoryQuery } = require("../repository/TablePlayerHistory");
 const { insertAutoImportDataService } = require("./autoImportData");
+const { getTeamMatchTypeByTeamQuery } = require("../repository/TableTeamMatchType");
 
 const allPlayerService = async (request,fastify) => {
   const { isActive, eventTypeId, teamId, isMen } = request.body;
@@ -150,18 +153,15 @@ const playerByIdService = async (request, fastify) => {
   if (!result) {
     return null;
   } else {
-    const playersInTeams = await getAllTeamsByPlayerIdQuery(
-      playerId,
-      fastify,
-      request
-    );
+    const playersInTeams = await getTeamPlayerByPlayerIdQuery(playerId, fastify, request);
+    const teams = playersInTeams?.filter(tp => tp.matchTypeId === -1)?.map(tp => tp.teamId);
 
     const data = {
       ...result,
       bowlingStyle: result.bowlingStyleId === 1 ? "Pace" : (result.bowlingStyleId === 2 ? "Spin" : null),
       birthDate: result.birthDate ? String(result.birthDate).split('T')[0] : result.birthDate,
-      teams: playersInTeams,
-      jerseyPlayerImage: playersInTeams?.find(pt => pt.homeTeam)?.jerseyPlayerImage
+      teams: global.tblTeams.filter(tt => teams?.includes(tt.teamId)),
+      teamMatchType: playersInTeams?.filter(tp => tp.matchTypeId !== -1)
     };
 
     return data;
@@ -190,6 +190,45 @@ const getPlayerCreatedDetailsService = async (request, fastify) => {
     ...createdDetails,
   };
 };
+
+const upsertPlayerWithMatchTypeService = async (request, fastify) => {
+  const { upsertTeamPlayers } = require("./teams");
+  const player = request.body.player;
+  const teamIds = request.body.teamId[0]?.split(',').map(Number);
+  const entitySocketData = global.tblEntitySockets[0];
+  let playersInTeams = await getAllTeamsByPlayerIdQuery(
+    player.playerId,
+    fastify,
+    request
+  );
+  playersInTeams = playersInTeams?.filter(tp => tp.matchTypeId === -1);
+  const oldTeamIds = [...new Set(playersInTeams.map(item => item.teamId))];
+  const newlyAdded = teamIds.filter(id => !oldTeamIds.includes(id));
+  const removed = oldTeamIds.filter(id => !teamIds.includes(id));
+  const teams = global.tblTeams.filter(team => teamIds.includes(team.teamId));
+  for (const teamId of newlyAdded) {
+    const getTeamPlayer = playersInTeams.find(p => p.teamId === teamId);
+    const team = teams.find(t => t.teamId === teamId);
+    if (team) {
+      await upsertTeamPlayers(getTeamPlayer, team, player, -1, null, entitySocketData, request, fastify);
+    }
+  }
+
+  for (const teamId of removed) {
+    const removedTeamPlayer = await deleteTeamPlayerByTeamAndPlayerIdQuery(fastify, {
+      ...request,
+      body: {
+        teamId: teamId,
+        playerId: player.playerId
+      }
+    });
+    for (const teamPlayer of removedTeamPlayer?.[0] ?? []) {
+      await removeImageFromServer({
+        path: teamPlayer.jerseyPlayerImagePath
+      });
+    }
+  }
+}
 
 const insertPlayerService = async (request, fastify) => {
   if (request.body.eventTypeId) {
@@ -270,69 +309,74 @@ const insertPlayerService = async (request, fastify) => {
   );
 
   if (request.body.teamId) {
-    const hashString = request.body.teamId;
-    if (typeof hashString === "object") {
-      // Split the string into an array using commas as the delimiter
-      const jsonString = JSON.stringify(hashString);
-      // Convert the string back to an array of values
-      const hashArray = jsonString.split(",");
-      if (hashArray.length) {
-        for (let i = 0; i < hashArray.length; i++) {
-          if (hashArray[i]) {
-            const teamID = hashArray[i].replace(/[\[\]"]/g, "");
-            if(teamID !== "") {
-             const teamPlayerData = await insertTeamPlayerQuery(
-              {
-                teamId: parseInt(teamID),
-                refPlayerId: result.playerId,
-                tpId: result?.tpId ?? null,
-                userId: request.userTokenInfo.WrUserId,
-              },
-              fastify,
-              request
-            );
-            const teamData = global.tblTeams.find((item) => item.teamId == teamID);
-            if(request.body.image && teamData.jersey) {
-              request.body.jersey = teamData.jersey;
-              request.body.playerId = result?.playerId;
-              request.body.teamName = teamData.teamName;
-              request.body.teamPlayerId = teamPlayerData.teamPlayerId;
-              runMergePlayerImageJob(2, request, fastify)
-                .catch(err => {
-                  errorLogger(
-                    fastify,
-                    err.message,
-                    "services/player.js/insertPlayerService",
-                    null
-                  );
-                });
-              // mergeAndSaveImage({
-              //   playerImage: request.body.image,
-              //   jersey: teamData.jersey,
-              //   playerName: request.body.playerName,
-              //   teamName: teamData.teamName,
-              //   teamPlayerId: teamPlayerData.teamPlayerId,
-              //   commentaryPlayerId: null,
-              //   commentaryId: null,
-              // }, fastify);
-            }
-            }
-          }
-        }
-      }
-    }
+    request.body.player = result;
+    await upsertPlayerWithMatchTypeService(request, fastify);
   }
 
-  if(request.body?.homeTeamId !== null && request.body?.homeTeamId !== undefined) {
-    await updateTeamPlayerHomeTeamQuery(
-      {
-        refPlayerId: result?.playerId,
-        teamId: parseInt(request.body.homeTeamId),
-      },
-      fastify,
-      request
-    );
-  }
+  // if (request.body.teamId) {
+  //   const hashString = request.body.teamId;
+  //   if (typeof hashString === "object") {
+  //     // Split the string into an array using commas as the delimiter
+  //     const jsonString = JSON.stringify(hashString);
+  //     // Convert the string back to an array of values
+  //     const hashArray = jsonString.split(",");
+  //     if (hashArray.length) {
+  //       for (let i = 0; i < hashArray.length; i++) {
+  //         if (hashArray[i]) {
+  //           const teamID = hashArray[i].replace(/[\[\]"]/g, "");
+  //           if(teamID !== "") {
+  //            const teamPlayerData = await insertTeamPlayerQuery(
+  //             {
+  //               teamId: parseInt(teamID),
+  //               refPlayerId: result.playerId,
+  //               tpId: result?.tpId ?? null,
+  //               userId: request.userTokenInfo.WrUserId,
+  //             },
+  //             fastify,
+  //             request
+  //           );
+  //           const teamData = global.tblTeams.find((item) => item.teamId == teamID);
+  //           if(request.body.image && teamData.jersey) {
+  //             request.body.jersey = teamData.jersey;
+  //             request.body.playerId = result?.playerId;
+  //             request.body.teamName = teamData.teamName;
+  //             request.body.teamPlayerId = teamPlayerData.teamPlayerId;
+  //             runMergePlayerImageJob(2, request, fastify)
+  //               .catch(err => {
+  //                 errorLogger(
+  //                   fastify,
+  //                   err.message,
+  //                   "services/player.js/insertPlayerService",
+  //                   null
+  //                 );
+  //               });
+  //             // mergeAndSaveImage({
+  //             //   playerImage: request.body.image,
+  //             //   jersey: teamData.jersey,
+  //             //   playerName: request.body.playerName,
+  //             //   teamName: teamData.teamName,
+  //             //   teamPlayerId: teamPlayerData.teamPlayerId,
+  //             //   commentaryPlayerId: null,
+  //             //   commentaryId: null,
+  //             // }, fastify);
+  //           }
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+
+  // if(request.body?.homeTeamId !== null && request.body?.homeTeamId !== undefined) {
+  //   await updateTeamPlayerHomeTeamQuery(
+  //     {
+  //       refPlayerId: result?.playerId,
+  //       teamId: parseInt(request.body.homeTeamId),
+  //     },
+  //     fastify,
+  //     request
+  //   );
+  // }
 
   if (!result) {
     return null;
@@ -346,8 +390,19 @@ const insertPlayerService = async (request, fastify) => {
 
     const data = {
       ...result,
-      teams: playersInTeams,
+      teams: Array.from(
+        playersInTeams.reduce((map, team) => {
+          const existing = map.get(team.teamId);
+
+          if (!existing || team.homeTeam) {
+            map.set(team.teamId, team);
+          }
+
+          return map;
+        }, new Map()).values()
+      )
     };
+
     return data;
   }
 };
@@ -489,6 +544,23 @@ const updatePlayerService = async (request, fastify) => {
     });
     body.image = fullPath;
     body.imagePath = imagePath;
+
+    const teamPlayersData = await getTeamPlayerByPlayerIdQuery(request.body.playerId, fastify, request);
+
+    const entitySocketData = global.tblEntitySockets[0];
+    const { upsertTeamPlayers } = require("./teams");
+    for (const playerData of teamPlayersData) {
+      const teamData = global.tblTeams.find(
+        (item) => item.teamId == playerData.teamId
+      );
+      const getTeamPlayer = teamPlayersData.find(p => p.teamId === playerData.teamId && p.matchTypeId === playerData.matchTypeId);
+      if (teamData) {
+        const teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${playerData.teamId} AND ttmt."wrMatchTypeId" = ${playerData.matchTypeId}`);
+        for (const tmp of teamMatchType) {  
+          await upsertTeamPlayers(getTeamPlayer, teamData, body, playerData.matchTypeId, tmp, entitySocketData, request, fastify);
+        }
+      }
+    }
   }
 
   const result = await updatePlayerQuery(body, fastify, request);
@@ -500,86 +572,91 @@ const updatePlayerService = async (request, fastify) => {
   );
 
   global.tblPlayers[index] = result[0];
+  const player = global.tblPlayers[index];
 
   if (request.body.teamId) {
-    const teamPlayersData = await getTeamPlayerByPlayerIdQuery(request.body.playerId, fastify, request);
-    for (const playerData of teamPlayersData) {
-      if (playerData && playerData?.jerseyPlayerImage) {
-        await removeImageFromServer({
-          path: playerData.jerseyPlayerImage,
-        });
-      }
-    }
-    await deleteTeamPlayerByPlayerIdQuery(
-      request.body.playerId,
-      fastify,
-      request
-    );
-    const hashString = request.body.teamId;
-    if (typeof hashString === "object") {
-      // Split the string into an array using commas as the delimiter
-      const jsonString = JSON.stringify(hashString);
-      // Convert the string back to an array of values
-      const hashArray = jsonString.split(",");
-      if (hashArray.length) {
-        for (let i = 0; i < hashArray.length; i++) {
-          if (hashArray[i]) {
-            const teamID = hashArray[i].replace(/[\[\]"]/g, "");
-            if(teamID !== ""){
-              const playerTpId = global.tblPlayers.find(elem => elem.playerId == request.body.playerId);
-              const teamPlayerData = await insertTeamPlayerQuery(
-                {
-                  teamId: parseInt(teamID),
-                  refPlayerId: request.body.playerId,
-                  userId: request.userTokenInfo.WrUserId,
-                  tpId: playerTpId?.tpId ?? null
-                },
-                fastify,
-                request
-              );
-              const teamData = global.tblTeams.find((item) => item.teamId == teamID);
-              if (body.image && teamData.jersey) {
-                request.body.playerImage = body.image;
-                request.body.playerId = body?.playerId;
-                request.body.jersey = teamData.jersey;
-                request.body.playerName = body.playerName;
-                request.body.teamName = teamData.teamName;
-                request.body.teamPlayerId = teamPlayerData.teamPlayerId;
-                runMergePlayerImageJob(2, request, fastify)
-                  .catch(err => {
-                    errorLogger(
-                      fastify,
-                      err.message,
-                      "services/player.js/updatePlayerService",
-                      null
-                    );
-                  });
-                // mergeAndSaveImage({
-                //   playerImage: body.image,
-                //   jersey: teamData.jersey,
-                //   playerName: body.playerName,
-                //   teamName: teamData.teamName,
-                //   teamPlayerId: teamPlayerData.teamPlayerId,
-                //   commentaryPlayerId: null,
-                //   commentaryId: null,
-                // }, fastify);
-              }
-            }
-          }
-        }
-      }
-    }
+    request.body.player = player;
+    await upsertPlayerWithMatchTypeService(request, fastify);
   }
-  if(request.body?.homeTeamId !== null && request.body?.homeTeamId !== undefined) {
-    await updateTeamPlayerHomeTeamQuery(
-      {
-        refPlayerId: parseInt(request.body.playerId),
-        teamId: parseInt(request.body.homeTeamId),
-      },
-      fastify,
-      request
-    );
-  }
+  // if (request.body.teamId) {
+  //   const teamPlayersData = await getTeamPlayerByPlayerIdQuery(request.body.playerId, fastify, request);
+  //   for (const playerData of teamPlayersData) {
+  //     if (playerData && playerData?.jerseyPlayerImage) {
+  //       await removeImageFromServer({
+  //         path: playerData.jerseyPlayerImage,
+  //       });
+  //     }
+  //   }
+  //   await deleteTeamPlayerByPlayerIdQuery(
+  //     request.body.playerId,
+  //     fastify,
+  //     request
+  //   );
+  //   const hashString = request.body.teamId;
+  //   if (typeof hashString === "object") {
+  //     // Split the string into an array using commas as the delimiter
+  //     const jsonString = JSON.stringify(hashString);
+  //     // Convert the string back to an array of values
+  //     const hashArray = jsonString.split(",");
+  //     if (hashArray.length) {
+  //       for (let i = 0; i < hashArray.length; i++) {
+  //         if (hashArray[i]) {
+  //           const teamID = hashArray[i].replace(/[\[\]"]/g, "");
+  //           if(teamID !== ""){
+  //             const playerTpId = global.tblPlayers.find(elem => elem.playerId == request.body.playerId);
+  //             const teamPlayerData = await insertTeamPlayerQuery(
+  //               {
+  //                 teamId: parseInt(teamID),
+  //                 refPlayerId: request.body.playerId,
+  //                 userId: request.userTokenInfo.WrUserId,
+  //                 tpId: playerTpId?.tpId ?? null
+  //               },
+  //               fastify,
+  //               request
+  //             );
+  //             const teamData = global.tblTeams.find((item) => item.teamId == teamID);
+  //             if (body.image && teamData.jersey) {
+  //               request.body.playerImage = body.image;
+  //               request.body.playerId = body?.playerId;
+  //               request.body.jersey = teamData.jersey;
+  //               request.body.playerName = body.playerName;
+  //               request.body.teamName = teamData.teamName;
+  //               request.body.teamPlayerId = teamPlayerData.teamPlayerId;
+  //               runMergePlayerImageJob(2, request, fastify)
+  //                 .catch(err => {
+  //                   errorLogger(
+  //                     fastify,
+  //                     err.message,
+  //                     "services/player.js/updatePlayerService",
+  //                     null
+  //                   );
+  //                 });
+  //               // mergeAndSaveImage({
+  //               //   playerImage: body.image,
+  //               //   jersey: teamData.jersey,
+  //               //   playerName: body.playerName,
+  //               //   teamName: teamData.teamName,
+  //               //   teamPlayerId: teamPlayerData.teamPlayerId,
+  //               //   commentaryPlayerId: null,
+  //               //   commentaryId: null,
+  //               // }, fastify);
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+  // if(request.body?.homeTeamId !== null && request.body?.homeTeamId !== undefined) {
+  //   await updateTeamPlayerHomeTeamQuery(
+  //     {
+  //       refPlayerId: parseInt(request.body.playerId),
+  //       teamId: parseInt(request.body.homeTeamId),
+  //     },
+  //     fastify,
+  //     request
+  //   );
+  // }
   const openCommentaryIds = global.tblCommentaries.filter(item => item.commentaryStatus == 1)
     .map(item => item.commentaryId);
 
@@ -616,8 +693,19 @@ const updatePlayerService = async (request, fastify) => {
 
   const data = {
     ...body,
-    teams: playersInTeams,
+    teams: Array.from(
+      playersInTeams.reduce((map, team) => {
+        const existing = map.get(team.teamId);
+
+        if (!existing || team.homeTeam) {
+          map.set(team.teamId, team);
+        }
+
+        return map;
+      }, new Map()).values()
+    ),
   };
+
   return data;
   //return body;
 };
@@ -781,15 +869,15 @@ const updatePlayerStatsService = async (request, fastify) => {
 };
 
 const mergePlayerImageAndJerseyService = async (request, fastify) => {
-  runMergePlayerImageJob(1, request, fastify)
-    .catch(err => {
-      errorLogger(
-        fastify,
-        err.message,
-        "services/player.js/mergePlayerImageAndJerseyService",
-        request
-      );
-    });
+  // runMergePlayerImageJob(1, request, fastify)
+  //   .catch(err => {
+  //     errorLogger(
+  //       fastify,
+  //       err.message,
+  //       "services/player.js/mergePlayerImageAndJerseyService",
+  //       request
+  //     );
+  //   });
   return "Player image(s) and Jersey image(s) merged successfully";
 };
 const setTeamPlayerImgService = async (request, fastify) => {
@@ -827,7 +915,8 @@ const setTeamPlayerImgService = async (request, fastify) => {
 
 const getTeamListPlayerIdService = async (request, fastify) => {
   const { playerId } = request.body;
-  const result = await getTeamListByPlayerIdQuery(playerId, fastify, request);
+  let result = await getTeamListByPlayerIdQuery(playerId, fastify, request);
+  result = result.filter(p => p.matchTypeId !== -1);
   return result;
 };
 
@@ -1159,14 +1248,14 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
     changedValues.birthPlace !== birthPlace
   );
 
-  const playerTeams = await getAllTeamsByPlayerIdQuery(playerId, fastify, request);
-  if (playerTeams && playerTeams.length === 1 && playerTeams.filter(pt => pt.homeTeam)?.length === 0) {
-    await updateTeamPlayerHomeTeamQuery({
-      refPlayerId: playerId,
-      teamId: playerTeams[0]?.teamId
-    }, fastify, request);
-    await playerImageChangeOnClientAPIService(playerId, fastify);
-  }
+  // const playerTeams = await getAllTeamsByPlayerIdQuery(playerId, fastify, request);
+  // if (playerTeams && playerTeams.length === 1 && playerTeams.filter(pt => pt.homeTeam)?.length === 0) {
+  //   await updateTeamPlayerHomeTeamQuery({
+  //     refPlayerId: playerTeams[0].refPlayerId,
+  //     teamId: playerTeams[0]?.teamId
+  //   }, fastify, request);
+    // await playerImageChangeOnClientAPIService(playerId, fastify);
+  // }
 
   await updatePlayerBatBowlHistory(playerId, entitySportPlayerResponse?.batting, entitySportPlayerResponse?.bowling, request, fastify);
 
@@ -1295,16 +1384,17 @@ const mergePlayerNullImageService = async (request, fastify) => {
 };
 
 const updatePlayerHomeTeamService = async (request, fastify) => {
-  const { playerId, homeTeamId } = request.body;
-  await updateTeamPlayerHomeTeamQuery(
+  const { teamPlayerId, playerId } = request.body;
+
+  await updateTeamPlayerHomeTeamByTeamPlayerIdQuery(
     {
-      refPlayerId: parseInt(playerId),
-      teamId: parseInt(homeTeamId),
+      teamPlayerId: parseInt(teamPlayerId),
+      playerId: parseInt(playerId)
     },
     fastify,
     request
   );
-  await playerImageChangeOnClientAPIService(playerId, fastify);
+  // await playerImageChangeOnClientAPIService(parseInt(playerId), fastify);
   return "Player Home Team updated successfully";
 };
 
@@ -1374,19 +1464,22 @@ const runMergePlayerImageJob = async (type, request, fastify) => {
           (item) => item.teamId == playerData.teamId
         );
 
-        if (checkPlayerId?.image && teamData?.jersey) {
-          await mergeAndSaveImage({
-            playerImage: checkPlayerId.image,
-            jersey: teamData.jersey,
-            playerName: checkPlayerId.playerName,
-            teamName: teamData.teamName,
-            teamPlayerId: playerData.teamPlayerId,
-            commentaryPlayerId: null,
-            commentaryId: null,
-          }, fastify);
-        }
-        if (playerData?.homeTeam == true) {
-          await playerImageChangeOnClientAPIService(player, fastify);
+        let teamMatchTypeId = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${teamData.teamId} AND ttmt."wrMatchTypeId" = ${playerData.matchTypeId}`);
+        if (teamMatchTypeId.length > 0) {
+          if (checkPlayerId?.image && teamData?.jersey && playerData?.teamPlayerId) {
+            await mergeAndSaveImage({
+              playerImage: checkPlayerId.image,
+              jersey: teamMatchTypeId?.[0]?.teamJerseyImage ?? teamData.jersey,
+              playerName: checkPlayerId.playerName,
+              teamName: teamData.teamName,
+              teamPlayerId: playerData.teamPlayerId,
+              commentaryPlayerId: null,
+              commentaryId: null,
+            }, fastify);
+          }
+          if (playerData?.homeTeam == true) {
+            // await playerImageChangeOnClientAPIService(player, fastify);
+          }
         }
       }
     }
@@ -1402,13 +1495,13 @@ const runMergePlayerImageJob = async (type, request, fastify) => {
     }, fastify);
 
     if(homeTeamId !== null && homeTeamId !== undefined) {
-      await playerImageChangeOnClientAPIService(playerId, fastify);
+      // await playerImageChangeOnClientAPIService(playerId, fastify);
     }
   }
 };
 
-const playerImageChangeOnClientAPIService = async (playerId, fastify) => {
-  const rankingData = global.tblICCRanking.filter(item => item.playerId == playerId && item.isActive == true);
+const playerImageChangeOnClientAPIService = async (playerId, matchTypeId, fastify) => {
+  const rankingData = global.tblICCRanking.filter(item => item.playerId == playerId && item.matchTypeId === matchTypeId && item.isActive == true);
   const updatedData = await Promise.all(
     rankingData
       .map(async item => {

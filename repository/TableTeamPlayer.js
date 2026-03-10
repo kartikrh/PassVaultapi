@@ -58,7 +58,8 @@ const getAllTeamPlayersByTeamIdAndPlayerIdQuery = async (data, fastify, request)
         "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
         "wrHomeTeam" as "homeTeam",
         "wrPlayerOrder" as "playerOrder",
-        "wrTpId" as "tpId"
+        "wrTpId" as "tpId",
+        "wrMatchTypeId" as "matchTypeId"
       FROM "tblTeamPlayers"
       WHERE "wrRefPlayerId" = $1 AND "wrTeamId" = $2
       AND "wrIsDeleted" = FALSE`,
@@ -181,7 +182,8 @@ const getTeamPlayerByPlayerIdQuery = async (refPlayerId, fastify, request) => {
         "wrJerseyPlayerImage" as "jerseyPlayerImage",
         "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
         "wrHomeTeam" as "homeTeam",
-        "wrTpId" as "tpId"
+        "wrTpId" as "tpId",
+        "wrMatchTypeId" as "matchTypeId"
       FROM "tblTeamPlayers"
       WHERE "wrRefPlayerId" = $1 AND "wrIsDeleted" = FALSE`,
       {
@@ -211,7 +213,9 @@ const getTeamPlayerByTeamIdQuery = async (teamId, fastify, request) => {
         "wrJerseyPlayerImage" as "jerseyPlayerImage",
         "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
         "wrHomeTeam" as "homeTeam",
-        "wrTpId" as "tpId"
+        "wrTpId" as "tpId",
+        "wrMatchTypeId" AS "matchTypeId",
+        "wrPlayerOrder" as "playerOrder"
       FROM "tblTeamPlayers"
       WHERE "wrTeamId" = $1 AND "wrIsDeleted" = FALSE`,
       {
@@ -274,7 +278,8 @@ const updateTeamPlayerImageQuery = async (data, fastify) => {
       RETURNING
         "wrTeamId" AS "teamId",
         "wrRefPlayerId" AS "refPlayerId",
-        "wrHomeTeam" AS "homeTeam"`,
+        "wrHomeTeam" AS "homeTeam",
+        "wrMatchTypeId" AS "matchTypeId"`,
       {
         bind: [data.teamPlayerId, data.jerseyPlayerImage, data.jerseyPlayerImagePath],
         type: fastify.db.QueryTypes.UPDATE,
@@ -303,13 +308,16 @@ const getTeamListByPlayerIdQuery = async (refPlayerId, fastify, request) => {
         ttp."wrHomeTeam" as "homeTeam",
         ttp."wrJerseyPlayerImage" AS "jerseyPlayerImage",
         ttp."wrJerseyPlayerImagePath" AS "jerseyPlayerImagePath",
-        ttp."wrTpId" as "tpId"
+        ttp."wrTpId" as "tpId",
+        ttp."wrMatchTypeId" as "matchTypeId",
+        tmt."wrMatchType" AS "matchType"
       FROM "tblTeamPlayers" AS ttp
       LEFT JOIN "tblTeams" AS tt ON tt."wrTeamId" = ttp."wrTeamId"
       LEFT JOIN "tblPlayers" AS tp ON tp."wrPlayerId" = ttp."wrRefPlayerId"
-      WHERE ttp."wrRefPlayerId" = $1 AND ttp."wrIsDeleted" = FALSE AND ttp."wrMatchTypeId" = $2`,
+      LEFT JOIN "tblMatchTypes" AS tmt ON tmt."wrMatchTypeId" = ttp."wrMatchTypeId"
+      WHERE ttp."wrRefPlayerId" = $1 AND ttp."wrIsDeleted" = FALSE`,
       {
-        bind: [refPlayerId, -1],
+        bind: [refPlayerId],
         type: fastify.db.QueryTypes.SELECT,
       }
     );
@@ -335,7 +343,8 @@ const getHomeTeamPlayerByPlayerIdQuery = async (data, fastify, request) => {
         "wrJerseyPlayerImage" as "jerseyPlayerImage",
         "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
         "wrTpId" as "tpId",
-        "wrHomeTeam" as "homeTeam"
+        "wrHomeTeam" as "homeTeam",
+        "wrMatchTypeId" as "matchTypeId"
       FROM "tblTeamPlayers"
       WHERE "wrIsDeleted" = FALSE AND "wrRefPlayerId" = $1 AND "wrHomeTeam" = TRUE`,
       {
@@ -554,7 +563,9 @@ const insertTeamPlayerWithHomeTeamQuery = async (data, fastify, request) => {
         tp."wrTpId" AS "tpId",
         tp."wrPlayerName" AS "playerName",
         ttp."wrMatchTypeId" AS "matchTypeId",
-        ttp."wrPlayerOrder" AS "playerOrder"
+        ttp."wrPlayerOrder" AS "playerOrder",
+        ttp."wrJerseyPlayerImage" AS "jerseyPlayerImage",
+        ttp."wrJerseyPlayerImagePath" AS "jerseyPlayerImagePath"
       FROM insert_team_player ttp
       LEFT JOIN "tblTeams" tt ON tt."wrTeamId" = ttp."wrTeamId"
       LEFT JOIN "tblPlayers" tp ON tp."wrPlayerId" = ttp."wrRefPlayerId"
@@ -588,6 +599,123 @@ const insertTeamPlayerWithHomeTeamQuery = async (data, fastify, request) => {
   }
 };
 
+const deleteTeamPlayerByTeamPlayerIdQuery = async (teamPlayerId, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblTeamPlayers" SET
+          "wrIsDeleted" = $1,
+          "wrDeletedBy" = $2,
+          "wrDeletedAt" = now()
+      WHERE "wrTeamPlayerId" = $3
+    `,
+      {
+        bind: [true, request.userTokenInfo.WrUserId, teamPlayerId],
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/deleteTeamPlayerByTeamPlayerIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const updateTeamPlayerHomeTeamByTeamPlayerIdQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `UPDATE "tblTeamPlayers" SET
+          "wrHomeTeam" = ("wrTeamPlayerId" = $1)
+       WHERE "wrRefPlayerId" = $2
+         AND "wrIsDeleted" = false
+       RETURNING
+          "wrTeamId" AS "teamId",
+          "wrRefPlayerId" AS "refPlayerId",
+          "wrTeamPlayerId" AS "teamPlayerId",
+          "wrHomeTeam" AS "homeTeam"`,
+      {
+        bind: [data.teamPlayerId, data.playerId],
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/updateTeamPlayerHomeTeamByTeamPlayerIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const getTeamPlayersByTeamIdAndPlayerIdQuery = async (request, fastify) => {
+  try {
+    const { teamId, playerId } = request.body;
+    const result = await fastify.db.query(
+      `SELECT 
+        "wrTeamPlayerId" as "teamPlayerId",
+        "wrTeamId" as "teamId",
+        "wrRefPlayerId" as "refPlayerId",
+        "wrJerseyPlayerImage" as "jerseyPlayerImage",
+        "wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
+        "wrHomeTeam" as "homeTeam",
+        "wrPlayerOrder" as "playerOrder",
+        "wrTpId" as "tpId",
+        "wrMatchTypeId" as "matchTypeId"
+      FROM "tblTeamPlayers"
+      WHERE "wrRefPlayerId" = $1 AND "wrTeamId" = $2
+      AND "wrIsDeleted" = FALSE`,
+      {
+        bind: [playerId, teamId],
+        type: fastify.db.QueryTypes.SELECT,
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/getTeamPlayersByTeamIdAndPlayerIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const deleteTeamPlayerByTeamAndPlayerIdQuery = async (fastify, request) => {
+  try {
+    const { teamId, playerId } = request.body;
+    return await fastify.db.query(
+      `UPDATE "tblTeamPlayers" SET
+          "wrIsDeleted" = $1,
+          "wrDeletedBy" = $2,
+          "wrDeletedAt" = now()
+      WHERE "wrTeamId" = $3 AND "wrRefPlayerId" = $4
+      RETURNING
+          "wrJerseyPlayerImagePath" AS "jerseyPlayerImagePath"
+    `,
+      {
+        bind: [true, request.userTokenInfo.WrUserId, teamId, playerId],
+        type: fastify.db.QueryTypes.UPDATE,
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableTeamPlayer/deleteTeamPlayerByTeamAndPlayerIdQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   insertTeamPlayerQuery,
   getAllTeamPlayersByTeamIdAndPlayerIdQuery,
@@ -604,5 +732,9 @@ module.exports = {
   getHomeTeamPlayerQuery,
   getTeamPlayersByTeamMatchTypeIdQuery,
   updateTeamPlayerMatchTypeIdQuery,
-  insertTeamPlayerWithHomeTeamQuery
+  insertTeamPlayerWithHomeTeamQuery,
+  deleteTeamPlayerByTeamPlayerIdQuery,
+  updateTeamPlayerHomeTeamByTeamPlayerIdQuery,
+  getTeamPlayersByTeamIdAndPlayerIdQuery,
+  deleteTeamPlayerByTeamAndPlayerIdQuery
 };

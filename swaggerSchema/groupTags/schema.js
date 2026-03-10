@@ -1949,9 +1949,9 @@ const Player = {
         type: "object",
         properties: {
           playerId: { type: "integer" },
-          homeTeamId: { type: "integer" }
+          teamPlayerId: { type: "integer" }
         },
-        required: ["playerId", "homeTeamId"]
+        required: ["playerId", "teamPlayerId"]
       },
     },
   },
@@ -3059,8 +3059,9 @@ const Commentary = {
         type: "object",
         properties: {
           teamId: { type: "integer" },
+          matchTypeId: { type: "integer" }
         },
-        required: ["teamId"],
+        required: ["teamId", "matchTypeId"],
       },
     },
   },
@@ -11645,6 +11646,20 @@ const TeamMatchType = {
           teamMatchTypeId: { type: "integer" }
         },
         required: ["teamMatchTypeId"]
+      }
+    }
+  },
+  getplayers: {
+    schema: {
+      tags: ["Team Match Type"],
+      description: "get players for Match Type of Team",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          teamId: { type: "integer" }
+        },
+        required: ["teamId"]
       }
     }
   }
