@@ -8,6 +8,7 @@ const {
   deleteLibraryImagesQuery,
   isDefaultChangeQuery,
   isDefaultFalseQuery,
+  updatePhotoLibraryStatusQuery,
 } = require("../repository/TablePhotoLibrary");
 const {
   generateImageName,
@@ -61,6 +62,7 @@ const editPhotoLibraryService = async (request, fastify, data) => {
     isPermanent: request.body.isPermanent ?? validateId.isPermanent,
     startDate: request.body.startDate ?? validateId.startDate,
     endDate: request.body.endDate ?? validateId.endDate,
+    isActive: request.body.isActive ?? validateId.isActive,
     photoLibraryId: parseInt(request.body.photoLibraryId, 10),
   };
 
@@ -249,7 +251,12 @@ const editLibraryImageService = async (request, fastify, data) => {
 };
 
 const allPhotoLibraryService = async (request) => {
-  return global.tblPhotoLibrary;
+  const { isActive } = request.body;
+  let data = global.tblPhotoLibrary;
+  if (isActive !== undefined) {
+    data = data.filter(p => p.isActive === isActive);
+  }
+  return data;
 };
 
 const getAllLibraryImagesService = async (request) => {
@@ -466,6 +473,25 @@ const updateIsDefultService = async (request, fastify) => {
   return `IsDefault updated successfully`;
 };
 
+const updatePhotoLibraryStatusService = async (request, fastify) => {
+  const { photoLibraryId, isActive } = request.body;
+  await updatePhotoLibraryStatusQuery(
+    { photoLibraryId, isActive },
+    fastify,
+    request
+  );
+  const index = global.tblPhotoLibrary.findIndex(
+    p => String(p.photoLibraryId) === String(photoLibraryId)
+  );
+  if (index !== -1) {
+    global.tblPhotoLibrary[index].isActive = isActive;
+  }
+  return {
+    photoLibraryId,
+    isActive
+  };
+};
+
 module.exports = {
   allPhotoLibraryService,
   getAllLibraryImagesService,
@@ -478,4 +504,5 @@ module.exports = {
   deleteLibraryImagesService,
   updateDisplayOrderService,
   updateIsDefultService,
+  updatePhotoLibraryStatusService,
 };

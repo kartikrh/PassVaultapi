@@ -4,6 +4,7 @@ const {
   getVideoLibraryById,
   saveVideoLibrary,
   deleteVideoLibrary,
+  updateVideoStatus,
 } = require("../../../controller/users/admin/videoLibrary");
 const { VideoLibrary } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -29,5 +30,10 @@ module.exports = async (fastify, opts) => {
     schema: VideoLibrary.deleteVideoLibrary.schema,
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => deleteVideoLibrary(request, reply, fastify),
+  });
+
+  fastify.post("/updateStatus", {
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) => updateVideoStatus(request, reply, fastify)
   });
 };
