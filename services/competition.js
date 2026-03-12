@@ -2274,7 +2274,26 @@ const competitionImportService = async (data, fastify, request) => {
         }, fastify);
       }
 
-      await getComDataByCId({ commentaryId: commentaryId }, request, fastify)
+      const cData = await getComDataByCId({ commentaryId: commentaryId }, request, fastify);
+      if (cData.isActive && !cData.isTest) {
+        callClientAPI(
+          {
+            serviceType: ServiceType.clientAPI,
+            moduleType: APIEndpointModuleType.commentaryUpdate,
+            data: cData,
+          },
+          request,
+          fastify
+        ).catch((err) => {
+          console.log("call client api console", err);
+          errorLogger(
+            fastify,
+            err.message,
+            "ERROR --> services/competition.js/competitionImportService",
+            request
+          );
+        });
+      }
 
       if (newCommentaryImport && 
         EntitlyLiveStates.includes(entitySportMatchResponse?.match_info?.game_state)
