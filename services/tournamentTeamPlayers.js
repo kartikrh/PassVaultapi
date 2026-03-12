@@ -292,16 +292,19 @@ const getTournamentTeamPlayersByCompetitionIdForClientService = async (request, 
   );
   if (!competition) throw new Error(`Competition with this id ${competitionId} not found`);
 
-  const tournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(tttp => tttp.competitionId === competitionId);
+  let tournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(tttp => tttp.competitionId === competitionId);
+  if (tournamentTeamPlayers.find(ttp => ttp.matchTypeId !== -1)) {
+    tournamentTeamPlayers = tournamentTeamPlayers.filter(ttp => ttp.matchTypeId !== -1)
+  }
   const result = {};
 
   const tournamentTeamPlayerMatchType = [...new Set(tournamentTeamPlayers.map(ttp => ttp.matchTypeId))];
   const tournamentTeam = [...new Set(tournamentTeamPlayers.map(ttp => ttp.teamId))];
   const tournamentPlayers = [...new Set(tournamentTeamPlayers.map(ttp => ttp.playerId))];
 
-  const matchTypeMap = new Map(global.tblMatchTypes?.filter(tmt => tournamentTeamPlayerMatchType.includes(tmt.matchTypeId))?.map(mt => [mt.matchTypeId, mt]));
-  const teamsMap = new Map(global.tblTeams?.filter(tt => tournamentTeam.includes(tt.teamId))?.map(t => [t.teamId, t]));
-  const playersMap = new Map(global.tblPlayers?.filter(tp => tournamentPlayers.includes(tp.playerId))?.map(p => [p.playerId, p]));
+  const matchTypeMap = new Map(global.tblMatchTypes?.filter(tmt => tournamentTeamPlayerMatchType.includes(tmt.matchTypeId))?.map(mt => [mt.matchTypeId, mt.matchTypeId === -1 ? mt : { matchTypeId: mt.matchTypeId, matchType: mt.matchType }]));
+  const teamsMap = new Map(global.tblTeams?.filter(tt => tournamentTeam.includes(tt.teamId))?.map(t => [t.teamId, { teamId: t.teamId, teamName: t.teamName, teamShortName: t.teamShortName, image: t.image, imagePath: t.imagePath }]));
+  const playersMap = new Map(global.tblPlayers?.filter(tp => tournamentPlayers.includes(tp.playerId))?.map(p => [p.playerId, { playerId: p.playerId, playerType: p.playerType, playerName: p.playerName, displayName: p.displayName }]));
 
   for (const p of tournamentTeamPlayers) {
     if (!result[p.matchTypeId]) {
@@ -316,16 +319,13 @@ const getTournamentTeamPlayersByCompetitionIdForClientService = async (request, 
     if (!result[p.matchTypeId].teams[p.teamId]) {
       const teamData = teamsMap.get(p.teamId);
 
-      const teamMatchTypePlayers = await getTeamPlayersByTeamMatchTypeIdQuery(
-        {
-          ...request,
-          body: {
-            teamId: p.teamId,
-            matchTypeId: p.matchTypeId
-          }
-        },
-        fastify
-      );
+      const teamMatchTypePlayers = await getTeamPlayersByTeamMatchTypeIdQuery({
+        ...request,
+        body: {
+          teamId: p.teamId,
+          matchTypeId: p.matchTypeId
+        }
+      }, fastify);
 
       result[p.matchTypeId].teams[p.teamId] = {
         ...(teamData || { teamId: p.teamId }),
@@ -357,7 +357,10 @@ const getTournamentTeamPlayersByCompetitionIdForClientService = async (request, 
 
   const finalResult = Object.values(result).map(mt => ({
     ...mt,
-    teams: Object.values(mt.teams)
+    teams: Object.values(mt.teams).map(team => {
+      const { teamMatchTypePlayers, ...rest } = team;
+      return rest;
+    })
   }));
 
   return finalResult;
