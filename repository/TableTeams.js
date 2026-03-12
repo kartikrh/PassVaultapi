@@ -392,7 +392,7 @@ const getAllPlayersByTeamIdAndMatchTypeIdQuery = async (data, fastify, request) 
       FROM "tblTeamPlayers" tp 
       left join "tblPlayers" pl on tp."wrRefPlayerId" = pl."wrPlayerId" AND pl."wrIsDeleted" = false
       left join "tblPlayerBattingHistory" pbh on tp."wrRefPlayerId" = pbh."wrPlayerId" and pbh."wrMatchTypeId" = $2
-      where tp."wrTeamId" = $1 and tp."wrIsDeleted" = false`,
+      where tp."wrTeamId" = $1 and tp."wrIsDeleted" = false AND tp."wrMatchTypeId" = $2`,
       {
         bind: [data.teamId, data.matchTypeId],
         type: fastify.db.QueryTypes.SELECT,

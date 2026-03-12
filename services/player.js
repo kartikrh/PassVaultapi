@@ -19,6 +19,7 @@ const {
   updateTeamPlayerHomeTeamQuery,
   updateTeamPlayerHomeTeamByTeamPlayerIdQuery,
   deleteTeamPlayerByTeamAndPlayerIdQuery,
+  getTeamPlayersByTeamIdAndPlayerIdQuery,
 } = require("../repository/TableTeamPlayer");
 const { getAllPlayersByTeamIdQuery, getAllPlayersByCompetitionIdTeamIdQuery, getAllPlayersByTeamIdAndMatchTypeIdQuery, getTeamPlayersByTeamIdAndMatchTypeIdQuery } = require("../repository/TableTeams");
 const {
@@ -154,13 +155,14 @@ const playerByIdService = async (request, fastify) => {
     return null;
   } else {
     const playersInTeams = await getTeamPlayerByPlayerIdQuery(playerId, fastify, request);
+    const teams = playersInTeams?.filter(tp => tp.matchTypeId === -1)?.map(tp => tp.teamId);
 
     const data = {
       ...result,
       bowlingStyle: result.bowlingStyleId === 1 ? "Pace" : (result.bowlingStyleId === 2 ? "Spin" : null),
       birthDate: result.birthDate ? String(result.birthDate).split('T')[0] : result.birthDate,
-      teams: playersInTeams?.filter(tp => tp.matchTypeId === -1),
-      jerseyPlayerImage: playersInTeams?.find(pt => pt.homeTeam)?.jerseyPlayerImage
+      teams: global.tblTeams.filter(tt => teams?.includes(tt.teamId)),
+      teamMatchType: playersInTeams?.filter(tp => tp.matchTypeId === -1)
     };
 
     return data;
@@ -576,6 +578,22 @@ const updatePlayerService = async (request, fastify) => {
   if (request.body.teamId) {
     request.body.player = player;
     await upsertPlayerWithMatchTypeService(request, fastify);
+    if (request.body.homeTeamId) {
+      const teamPlayers = await getTeamPlayersByTeamIdAndPlayerIdQuery({
+        ...request,
+        body: {
+          teamId: Number(request.body.homeTeamId),
+          playerId: player.playerId
+        }
+      }, fastify);
+      const teamPlayer = teamPlayers.find(tp => tp.matchTypeId === -1);
+      if (teamPlayer) {
+        await updateTeamPlayerHomeTeamByTeamPlayerIdQuery({
+          teamPlayerId: teamPlayer.teamPlayerId,
+          playerId: player.playerId
+        }, fastify, request);
+      }
+    }
   }
   // if (request.body.teamId) {
   //   const teamPlayersData = await getTeamPlayerByPlayerIdQuery(request.body.playerId, fastify, request);
@@ -915,7 +933,6 @@ const setTeamPlayerImgService = async (request, fastify) => {
 const getTeamListPlayerIdService = async (request, fastify) => {
   const { playerId } = request.body;
   let result = await getTeamListByPlayerIdQuery(playerId, fastify, request);
-  result = result.filter(p => p.matchTypeId !== -1);
   return result;
 };
 

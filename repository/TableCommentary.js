@@ -9523,7 +9523,7 @@ const deleteInningWiseCommentaryPlayersQuery = async (data, request, fastify) =>
         "wrDeletedAt" = now()
       WHERE "wrCommentaryId" = $3
       AND "wrTeamId" = $4
-      AND "wrPlayerId" = ANY($5)
+      AND "wrCommentaryPlayerId" = ANY($5)
       AND "wrCurrentInnings" = $6;
     `,
       {
@@ -9533,7 +9533,7 @@ const deleteInningWiseCommentaryPlayersQuery = async (data, request, fastify) =>
           request.userTokenInfo.WrUserId,
           data.commentaryId,
           data.teamId,
-          data.playerIds,
+          data.commentaryPlayerIds,
           data.currentInnings
         ],
       }

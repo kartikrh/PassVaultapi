@@ -34,6 +34,10 @@ module.exports = (sequelize) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      wrMatchTypeId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      }
     },
     {
       timestamps: false,

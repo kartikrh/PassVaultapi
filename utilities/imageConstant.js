@@ -62,6 +62,13 @@ const ImgModuleConfig = {
     height: 0,
     width: 0,
   },
+  Advertise: { 
+    type: "advertise",
+    formate: ".jpg,.png,.jpeg,.avif,.webp",
+    size: 0,
+    height: 0,
+    width: 0,
+  },
   Notification: {
     type: "notification",
     formate: ".jpg,.png,.jpeg,.avif,.webp",

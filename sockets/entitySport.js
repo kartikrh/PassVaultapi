@@ -68,7 +68,7 @@ async function processQueue() {
       // Chain new processing to the lock
       const newLock = currentLock.then(async () => {
         try {
-          const request = { body: payload };
+          const request = { body: payload, userTokenInfo: { WrUserId: -2 } };
           await setEntityCom2Service(request, fastify);
           // console.log(`✓ Processed matchId ${matchId}`);
         } catch (err) {
