@@ -64,6 +64,7 @@ const { getAllVendorIpsQuery } = require("../repository/TableVendorIp");
 const { allDisplayStatusesQuery } = require("../repository/TableDisplayStatus");
 const { getAllClientSocketQuery } = require("../repository/TableClientSocket");
 const { getAllBannerQuery } = require("../repository/TableBanner");
+const { getAllAdvertiseQuery } = require("../repository/TableAdvertise");
 const { getAllActivityLogQuery } = require("../repository/TableActivityLog");
 const { getAllAPI } = require("../repository/TableAPI");
 const { getAllAPIEndPoint } = require("../repository/TableAPIEndPoint");
@@ -151,6 +152,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     );
     const getAllNews = await getAllNewsQuery(fastify);
     const getAllBanners = await getAllBannerQuery(fastify);
+    const getAllAdvertise = await getAllAdvertiseQuery(fastify);
     const getAllActivityLog = await getAllActivityLogQuery(fastify);
     const getAllsubScribesDomain = await getAllSubScribesDomainQuery(fastify);
     const getAllsubScribesSubDomain = await getAllSubScribesSubDomainQuery(
@@ -286,6 +288,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblClientSocket = getAllClientSocket;
     global.tblActivityLogs = getAllActivityLog;
     global.tblBanner = getAllBanners;
+    global.tblAdvertise = getAllAdvertise;
     global.tblAPIs = getAllAPIs;
     global.tblAPIEndpoints = getAllAPIEndpoints;
     global.tblTeamCompetition = getAllTeamCompetition;

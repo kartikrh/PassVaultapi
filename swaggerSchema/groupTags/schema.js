@@ -7045,6 +7045,96 @@ const Banner = {
     },
   },
 };
+
+const Advertise = {
+  getAll: {
+    schema: {
+      tags: ["Advertise"],
+      description: "get all Advertise",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+  getById: {
+    schema: {
+      tags: ["Advertise"],
+      description: "get Advertise by id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          advertiseId: { type: "integer" },
+        },
+        required: ["advertiseId"],
+      },
+    },
+  },
+  save: {
+    schema: {
+      tags: ["Advertise"],
+      description: "save Advertise",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          advertiseId: { type: "integer" },
+          title: { type: "string" },
+          image: {
+            type: "array",
+            items: {
+              type: "object"
+            }
+          },
+          link: { type: "string" },
+          isPermanent: { type: "boolean" },
+          isActive: { type: "boolean" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
+        },
+        required: ["advertiseId"],
+      },
+    },
+  },
+  delete: {
+    schema: {
+      tags: ["Advertise"],
+      description: "delete Advertise",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          advertiseId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["advertiseId"],
+      },
+    },
+  },
+  activeInactiveAdvertise: {
+    schema: {
+      tags: ["Advertise"],
+      description: "active inactive advertise",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          advertiseId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["advertiseId", "isActive"],
+      },
+    },
+  },
+};
+
 const ApiEndpoints = {
   getAll: {
     schema: {
@@ -11700,6 +11790,7 @@ module.exports = {
   ClientSocket,
   ActivityLog,
   Banner,
+  Advertise,
   ApiEndpoints,
   Api,
   Notification,

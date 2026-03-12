@@ -292,75 +292,149 @@ const getTournamentTeamPlayersByCompetitionIdForClientService = async (request, 
   );
   if (!competition) throw new Error(`Competition with this id ${competitionId} not found`);
 
-  const tournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(tttp => tttp.competitionId === competitionId);
-  const result = {};
+  let tournamentTeamPlayers = global.tblTournamentTeamPlayers.filter(tttp => tttp.competitionId === competitionId);
+  if (tournamentTeamPlayers.find(ttp => ttp.matchTypeId == -1)) {
+    const commentaries = await getCommentariesDataQuery(fastify, `tc."wrCompetitionId" = ${competitionId}`);
+    if (!commentaries.length) return [];
 
-  const tournamentTeamPlayerMatchType = [...new Set(tournamentTeamPlayers.map(ttp => ttp.matchTypeId))];
-  const tournamentTeam = [...new Set(tournamentTeamPlayers.map(ttp => ttp.teamId))];
-  const tournamentPlayers = [...new Set(tournamentTeamPlayers.map(ttp => ttp.playerId))];
+    const matchTypeMap = new Map(global.tblMatchTypes.map(mt => [mt.matchTypeId, { matchTypeId: mt.matchTypeId, matchType: mt.matchType }]));
+    const playersMap = new Map(global.tblPlayers.map(p => [p.playerId, { playerId: p.playerId, playerType: p.playerType, playerName: p.playerName, displayName: p.displayName }]));
+    const teamsMap = new Map(global.tblTeams.map(t => [t.teamId, { teamId: t.teamId, teamName: t.teamName, teamShortName: t.teamShortName, image: t.image, imagePath: t.imagePath }]));
 
-  const matchTypeMap = new Map(global.tblMatchTypes?.filter(tmt => tournamentTeamPlayerMatchType.includes(tmt.matchTypeId))?.map(mt => [mt.matchTypeId, mt]));
-  const teamsMap = new Map(global.tblTeams?.filter(tt => tournamentTeam.includes(tt.teamId))?.map(t => [t.teamId, t]));
-  const playersMap = new Map(global.tblPlayers?.filter(tp => tournamentPlayers.includes(tp.playerId))?.map(p => [p.playerId, p]));
-
-  for (const p of tournamentTeamPlayers) {
-    if (!result[p.matchTypeId]) {
-      const matchTypeData = matchTypeMap.get(p.matchTypeId);
-
-      result[p.matchTypeId] = {
-        matchTypeData: matchTypeData || { matchTypeId: p.matchTypeId },
-        teams: {}
-      };
+    const commentaryPlayersByCommentary = new Map();
+    const commentaryIds = commentaries.map(c => c.commentaryId);
+    const commentaryPlayers = await getAllCommentaryPlayerDataQuery(`tcp."wrCommentaryId" IN (${commentaryIds})`, fastify);
+    for (const cp of commentaryPlayers) {
+      const cid = cp.commentaryId;
+      if (!commentaryPlayersByCommentary.has(cid)) commentaryPlayersByCommentary.set(cid, []);
+      commentaryPlayersByCommentary.get(cid).push(cp);
     }
 
-    if (!result[p.matchTypeId].teams[p.teamId]) {
-      const teamData = teamsMap.get(p.teamId);
+    const commentariesByMatchType = new Map();
+    for (const c of commentaries) {
+      const mtId = c.matchTypeId;
+      if (!commentariesByMatchType.has(mtId)) commentariesByMatchType.set(mtId, []);
+      commentariesByMatchType.get(mtId).push(c);
+    }
 
-      const teamMatchTypePlayers = await getTeamPlayersByTeamMatchTypeIdQuery(
-        {
+    const teamPlayersCache = new Map();
+
+    const result = [];
+
+    for (const [matchTypeId, mtCommentaries] of commentariesByMatchType.entries()) {
+      const teamsInMatch = new Map();
+
+      for (const c of mtCommentaries) {
+        const cps = commentaryPlayersByCommentary.get(c.commentaryId) || [];
+
+        for (const cp of cps) {
+          const teamId = cp.teamId;
+
+          if (!teamsInMatch.has(teamId)) {
+            const teamData = teamsMap.get(teamId) || {};
+            teamsInMatch.set(teamId, { ...teamData, players: [] });
+
+            if (!teamPlayersCache.has(teamId)) {
+              const teamPlayers = await newGetAllPlayersByTeamIdQuery(teamId, fastify, request);
+              teamPlayersCache.set(teamId, teamPlayers?.filter(tp => tp.matchTypeId === -1) || []);
+            }
+          }
+
+          const teamPlayers = teamPlayersCache.get(teamId);
+          const player = playersMap.get(cp.playerId);
+          if (!player) continue;
+
+          const fullPlayer = teamPlayers.find(tp => tp.playerId === player.playerId);
+          if (fullPlayer) {
+            teamsInMatch.get(teamId).players.push(fullPlayer);
+          }
+        }
+      }
+
+      for (const team of teamsInMatch.values()) {
+        team.players = [
+          ...new Map(team.players.map(p => [p.playerId, p])).values()
+        ];
+      }
+
+      result.push({
+        matchTypeData: matchTypeMap.get(matchTypeId) || null,
+        teams: [...teamsInMatch.values()]
+      });
+    }
+
+    return result;
+  } else {
+    const result = {};
+    tournamentTeamPlayers = tournamentTeamPlayers.filter(ttp => ttp.matchTypeId !== -1);
+
+    const tournamentTeamPlayerMatchType = [...new Set(tournamentTeamPlayers.map(ttp => ttp.matchTypeId))];
+    const tournamentTeam = [...new Set(tournamentTeamPlayers.map(ttp => ttp.teamId))];
+    const tournamentPlayers = [...new Set(tournamentTeamPlayers.map(ttp => ttp.playerId))];
+
+    const matchTypeMap = new Map(global.tblMatchTypes?.filter(tmt => tournamentTeamPlayerMatchType.includes(tmt.matchTypeId))?.map(mt => [mt.matchTypeId, { matchTypeId: mt.matchTypeId, matchType: mt.matchType }]));
+    const teamsMap = new Map(global.tblTeams?.filter(tt => tournamentTeam.includes(tt.teamId))?.map(t => [t.teamId, { teamId: t.teamId, teamName: t.teamName, teamShortName: t.teamShortName, image: t.image, imagePath: t.imagePath }]));
+    const playersMap = new Map(global.tblPlayers?.filter(tp => tournamentPlayers.includes(tp.playerId))?.map(p => [p.playerId, { playerId: p.playerId, playerType: p.playerType, playerName: p.playerName, displayName: p.displayName }]));
+
+    for (const p of tournamentTeamPlayers) {
+      if (!result[p.matchTypeId]) {
+        const matchTypeData = matchTypeMap.get(p.matchTypeId);
+
+        result[p.matchTypeId] = {
+          matchTypeData: matchTypeData || { matchTypeId: p.matchTypeId },
+          teams: {}
+        };
+      }
+
+      if (!result[p.matchTypeId].teams[p.teamId]) {
+        const teamData = teamsMap.get(p.teamId);
+
+        const teamMatchTypePlayers = await getTeamPlayersByTeamMatchTypeIdQuery({
           ...request,
           body: {
             teamId: p.teamId,
             matchTypeId: p.matchTypeId
           }
-        },
-        fastify
-      );
+        }, fastify);
 
-      result[p.matchTypeId].teams[p.teamId] = {
-        ...(teamData || { teamId: p.teamId }),
-        players: [],
-        teamMatchTypePlayers
-      };
+        result[p.matchTypeId].teams[p.teamId] = {
+          ...(teamData || { teamId: p.teamId }),
+          players: [],
+          teamMatchTypePlayers
+        };
+      }
+
+      const playerData = playersMap.get(p.playerId);
+
+      if (playerData) {
+        const teamMatchPlayer = result[p.matchTypeId]
+          .teams[p.teamId]
+          .teamMatchTypePlayers?.find(
+            tmtp =>
+              tmtp.teamId === p.teamId &&
+              tmtp.refPlayerId === p.playerId &&
+              tmtp.matchTypeId === p.matchTypeId
+          );
+
+        result[p.matchTypeId].teams[p.teamId].players.push({
+          ...playerData,
+          matchTypeId: p.matchTypeId,
+          jerseyPlayerImage: teamMatchPlayer?.jerseyPlayerImage,
+          jerseyPlayerImagePath: teamMatchPlayer?.jerseyPlayerImagePath
+        });
+      }
     }
 
-    const playerData = playersMap.get(p.playerId);
+    const finalResult = Object.values(result).map(mt => ({
+      ...mt,
+      teams: Object.values(mt.teams).map(team => {
+        const { teamMatchTypePlayers, ...rest } = team;
+        return rest;
+      })
+    }));
 
-    if (playerData) {
-      const teamMatchPlayer = result[p.matchTypeId]
-        .teams[p.teamId]
-        .teamMatchTypePlayers?.find(
-          tmtp =>
-            tmtp.teamId === p.teamId &&
-            tmtp.refPlayerId === p.playerId &&
-            tmtp.matchTypeId === p.matchTypeId
-        );
-
-      result[p.matchTypeId].teams[p.teamId].players.push({
-        ...playerData,
-        matchTypeId: p.matchTypeId,
-        jerseyPlayerImage: teamMatchPlayer?.jerseyPlayerImage,
-        jerseyPlayerImagePath: teamMatchPlayer?.jerseyPlayerImagePath
-      });
-    }
+    return finalResult;
   }
-
-  const finalResult = Object.values(result).map(mt => ({
-    ...mt,
-    teams: Object.values(mt.teams)
-  }));
-
-  return finalResult;
 };
 
 const removeCommentaryPlayersFromTournamentTeamPlayerService = async (data, request, fastify) => {
