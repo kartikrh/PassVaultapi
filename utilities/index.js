@@ -19,7 +19,6 @@ const {
   AllTeamPlayersQuery,
   AllTeamPlayersNullImageQuery,
 } = require("../repository/TableTeamPlayer");
-const { Advertise } = require("../swaggerSchema/groupTags/schema");
 const ERROR_CODES = {
   INVALID_INPUT: "INVALID_INPUT",
   SERVER_ERROR: "SERVER_ERROR",

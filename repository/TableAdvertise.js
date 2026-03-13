@@ -46,15 +46,16 @@ const createAdvertiseQuery = async (data, request, fastify) => {
         "wrStartDate" as "startDate",
         "wrEndDate" as "endDate"
       `,
-      {
+       {
+        type: fastify.db.QueryTypes.INSERT,
         bind: [
-          data.title,
-          data.image,
-          data.link,
-          data.isPermanent,
-          data.isActive,
-          data.startDate,
-          data.endDate,
+          data.title || null,
+          data.image || null,
+          data.link || null,
+          data.isPermanent || false,
+          data.isActive || false,
+          data.startDate ? new Date(data.startDate) : null,
+          data.endDate ? new Date(data.endDate) : null,
           request.userTokenInfo.WrUserId,
         ],
       }
@@ -88,12 +89,13 @@ const updateAdvertiseQuery = async (data, request, fastify) => {
       WHERE "wrId"=$9
       `,
       {
+        type: fastify.db.QueryTypes.UPDATE,
         bind: [
-          data.title,
+          data.title || null,
           data.image,
-          data.link,
-          data.isPermanent,
-          data.isActive,
+          data.link || null,
+          data.isPermanent || false,
+          data.isActive || false,
           data.startDate,
           data.endDate,
           request.userTokenInfo.WrUserId,
