@@ -911,6 +911,13 @@ const MarketTypeCategories = {
   MIDSESSION: 39,
 };
 
+const EntityInningsStatus = {
+  Scheduled: 1,
+  Completed: 2,
+  Live: 3,
+  Abandoned: 4,
+};
+
 const ModuleTypes = {
   Commentary: 1,
   Players: 2,
@@ -2399,6 +2406,12 @@ const getCombineFullScore = (score = null, overs = null) => {
   return `${newScore[0]}-${newScore[1]} (${overs})`;
 }
 
+const oversToBalls = (overs) => {
+  const [over, balls] = String(overs || "0").split(".").map(Number);
+  const validBalls = (balls >= 0 && balls <= 6) ? balls : 0; // safety check
+  return (over * 6) + validBalls;
+};
+
 module.exports = {    
   ERROR_CODES,
   error,
@@ -2523,5 +2536,7 @@ module.exports = {
   lowerEntityMatchTypesEnums,
   getInningWiseDataFromEntity,
   getComDataByCId,
-  getCombineFullScore
+  getCombineFullScore,
+  EntityInningsStatus,
+  oversToBalls,
 };
