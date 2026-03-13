@@ -501,6 +501,15 @@ const updateTeamService = async (request, fastify) => {
     body.jersey = fullPath;
     body.jerseyPath = imagePath;
 
+    const entitySocketData = global.tblEntitySockets[0];
+    const teamPlayers = await getTeamPlayerByTeamIdQuery(request.body.teamId, fastify, request);
+    const teamMatchTypePlayers = teamPlayers.filter(tp => tp.matchTypeId === -1);
+    const allPlayers = global.tblPlayers.filter(tp => teamMatchTypePlayers.map(tmp => tmp.refPlayerId).includes(tp.playerId));
+    for (const teamPlayer of teamMatchTypePlayers) {
+      const player = allPlayers.find(p => p.playerId === teamPlayer.refPlayerId);
+      await upsertTeamPlayers(teamPlayer, body, player, -1, null, entitySocketData, request, fastify);
+    }
+
     callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
