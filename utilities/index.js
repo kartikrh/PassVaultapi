@@ -19,6 +19,7 @@ const {
   AllTeamPlayersQuery,
   AllTeamPlayersNullImageQuery,
 } = require("../repository/TableTeamPlayer");
+const { Advertise } = require("../swaggerSchema/groupTags/schema");
 const ERROR_CODES = {
   INVALID_INPUT: "INVALID_INPUT",
   SERVER_ERROR: "SERVER_ERROR",
@@ -957,7 +958,8 @@ const ModuleTypes = {
   PythonAPI: 43,
   EntitySocket: 44,
   CompetitionStatisticsType: 45,
-  CompetitionStatistics: 46
+  CompetitionStatistics: 46,
+  Advertise: 47
 };
 const callTPAPI = async (data, fastify) => {
   try {
