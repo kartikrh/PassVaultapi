@@ -957,7 +957,8 @@ const ModuleTypes = {
   PythonAPI: 43,
   EntitySocket: 44,
   CompetitionStatisticsType: 45,
-  CompetitionStatistics: 46
+  CompetitionStatistics: 46,
+  Advertise: 47
 };
 const callTPAPI = async (data, fastify) => {
   try {
