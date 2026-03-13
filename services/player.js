@@ -162,7 +162,8 @@ const playerByIdService = async (request, fastify) => {
       bowlingStyle: result.bowlingStyleId === 1 ? "Pace" : (result.bowlingStyleId === 2 ? "Spin" : null),
       birthDate: result.birthDate ? String(result.birthDate).split('T')[0] : result.birthDate,
       teams: global.tblTeams.filter(tt => teams?.includes(tt.teamId)),
-      teamMatchType: playersInTeams?.filter(tp => tp.matchTypeId === -1)
+      teamMatchType: playersInTeams?.filter(tp => tp.matchTypeId === -1),
+      teamMatchTypeForClient: playersInTeams?.filter(tp => tp.matchTypeId !== -1)
     };
 
     return data;
