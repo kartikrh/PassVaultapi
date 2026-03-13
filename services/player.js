@@ -162,7 +162,8 @@ const playerByIdService = async (request, fastify) => {
       bowlingStyle: result.bowlingStyleId === 1 ? "Pace" : (result.bowlingStyleId === 2 ? "Spin" : null),
       birthDate: result.birthDate ? String(result.birthDate).split('T')[0] : result.birthDate,
       teams: global.tblTeams.filter(tt => teams?.includes(tt.teamId)),
-      teamMatchType: playersInTeams?.filter(tp => tp.matchTypeId === -1)
+      teamMatchType: playersInTeams?.filter(tp => tp.matchTypeId === -1),
+      teamMatchTypeForClient: playersInTeams?.filter(tp => tp.matchTypeId !== -1)
     };
 
     return data;
@@ -554,11 +555,14 @@ const updatePlayerService = async (request, fastify) => {
       const teamData = global.tblTeams.find(
         (item) => item.teamId == playerData.teamId
       );
-      const getTeamPlayer = teamPlayersData.find(p => p.teamId === playerData.teamId && p.matchTypeId === playerData.matchTypeId);
       if (teamData) {
-        const teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${playerData.teamId} AND ttmt."wrMatchTypeId" = ${playerData.matchTypeId}`);
-        for (const tmp of teamMatchType) {  
-          await upsertTeamPlayers(getTeamPlayer, teamData, body, playerData.matchTypeId, tmp, entitySocketData, request, fastify);
+        if (playerData.matchTypeId === -1) {
+          await upsertTeamPlayers(playerData, teamData, body, playerData.matchTypeId, null, entitySocketData, request, fastify);
+        } else {
+          const teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${playerData.teamId} AND ttmt."wrMatchTypeId" = ${playerData.matchTypeId}`);
+          for (const tmp of teamMatchType) {
+            await upsertTeamPlayers(playerData, teamData, body, playerData.matchTypeId, tmp, entitySocketData, request, fastify);
+          }
         }
       }
     }
