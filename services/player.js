@@ -554,11 +554,14 @@ const updatePlayerService = async (request, fastify) => {
       const teamData = global.tblTeams.find(
         (item) => item.teamId == playerData.teamId
       );
-      const getTeamPlayer = teamPlayersData.find(p => p.teamId === playerData.teamId && p.matchTypeId === playerData.matchTypeId);
       if (teamData) {
-        const teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${playerData.teamId} AND ttmt."wrMatchTypeId" = ${playerData.matchTypeId}`);
-        for (const tmp of teamMatchType) {  
-          await upsertTeamPlayers(getTeamPlayer, teamData, body, playerData.matchTypeId, tmp, entitySocketData, request, fastify);
+        if (playerData.matchTypeId === -1) {
+          await upsertTeamPlayers(playerData, teamData, body, playerData.matchTypeId, null, entitySocketData, request, fastify);
+        } else {
+          const teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${playerData.teamId} AND ttmt."wrMatchTypeId" = ${playerData.matchTypeId}`);
+          for (const tmp of teamMatchType) {
+            await upsertTeamPlayers(playerData, teamData, body, playerData.matchTypeId, tmp, entitySocketData, request, fastify);
+          }
         }
       }
     }
