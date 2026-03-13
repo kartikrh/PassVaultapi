@@ -22962,6 +22962,8 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                 rmk: commentaryDetails.rmk,
                 winRmk: commentaryDetails.winRmk,
                 tossRmk: commentaryDetails.tossRmk,
+                pitchAge: commentaryDetails.pitchAge,
+                session: commentaryDetails.session,
             };
             const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
             response.commentaryDetails = {
