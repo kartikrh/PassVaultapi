@@ -5246,7 +5246,7 @@ const updateBowlerIdService = async (playerTpData, response, eData, undoType, co
     // Temperarly added this errorLogger here to know this function called or not
     errorLogger(
       fastify,
-      "BowerId change function called on entity auto scoring",
+      `BowerId change function called on entity auto scoring (over:${eData?.over ?? 0}.${eData?.ball ?? 0}) - ${response?.match_id ?? comDetails?.commentaryId}`,
       "To Know function called or not --> services/entitySport.js/updateBowlerIdService",
       request
     );
