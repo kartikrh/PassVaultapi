@@ -99,6 +99,8 @@ const updateAdvertiseService = async (request, fastify) => {
       : validateAdvertise.isActive,
     startDate: request.body.startDate || validateAdvertise.startDate,
     endDate: request.body.endDate || validateAdvertise.endDate,
+    viewerCount: validateAdvertise.viewerCount,
+    whitelabelId: Number(request.body.whitelabelId) || validateAdvertise.whitelabelId,
   };
 
   if (request.body.image && request.body.image.length) {
