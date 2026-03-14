@@ -631,7 +631,9 @@ const updateTeamPlayerHomeTeamByTeamPlayerIdQuery = async (data, fastify, reques
   try {
     const result = await fastify.db.query(
       `UPDATE "tblTeamPlayers" SET
-          "wrHomeTeam" = ("wrTeamPlayerId" = $1)
+          "wrHomeTeam" = ("wrTeamPlayerId" = $1),
+          "wrModifyBy" = $3,
+          "wrModifyDate" = $4
        WHERE "wrRefPlayerId" = $2
          AND "wrIsDeleted" = false
        RETURNING
@@ -640,7 +642,7 @@ const updateTeamPlayerHomeTeamByTeamPlayerIdQuery = async (data, fastify, reques
           "wrTeamPlayerId" AS "teamPlayerId",
           "wrHomeTeam" AS "homeTeam"`,
       {
-        bind: [data.teamPlayerId, data.playerId],
+        bind: [data.teamPlayerId, data.playerId, request?.userTokenInfo?.WrUserId || -2],
         type: fastify.db.QueryTypes.UPDATE,
       }
     );
