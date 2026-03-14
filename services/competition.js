@@ -22,7 +22,7 @@ const {
 const {storeImageOnServer, removeImageFromServer, generateImageName, getImageFromUrl } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
-const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive, matchStatusEntity, error, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, parseUmpires, ScoringTypes, RefType, lowerEntityMatchTypesEnums, EntityCommentaryStatus, getComDataByCId, getCombineFullScore } = require("../utilities");
+const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive, matchStatusEntity, error, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, parseUmpires, ScoringTypes, RefType, lowerEntityMatchTypesEnums, EntityCommentaryStatus, getComDataByCId, getCombineFullScore, EntityMatchStatus } = require("../utilities");
 const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryPlayers, updateCommentaryPlayerById, isCountInPOintCommentaryChangeQuery, updateCommentaryDateByCommentaryIdQuery, updateCommentaryQuery, insertCommentaryTeamQuery, deleteInningWiseCommentaryPlayersQuery } = require("../repository/TableCommentary")
 const { deleteTournamentTeamPlayersByCompIdQuery, insertTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
@@ -38,7 +38,7 @@ const { updatePitchConditionQuery, insertPitchConditionQuery } = require("../rep
 const { insertAutoImportDataService } = require("./autoImportData");
 const { insertAutoUpdateCommentaryDataQuery, getAllAutoUpdateCommentaryDataQuery, updateAutoUpdateCommentaryDataQuery } = require("../repository/TableAutoUpdateCommentaryData");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
-const { playerImageChangeOnClientAPIService, upsertPlayerOnImportService } = require("./player");
+const { playerImageChangeOnClientAPIService, upsertPlayerOnImportService, playerImportService } = require("./player");
 const { upsertTeamOnImportService, insertTeamAndPlayers, upsertTeamPlayers } = require("./teams");
 const { saveTeamMatchTypeByTeamService } = require("./teamMatchType");
 const { getTeamMatchTypeByTeamQuery } = require("../repository/TableTeamMatchType");
@@ -1374,32 +1374,36 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
           const esPlayer = entitySportMatchResponsePlayers?.find(p => p.pid === pId);
           if (esPlayer) {
             player = await upsertPlayerOnImportService(esPlayer, entitySocketData, checkCompetition.isMen, fastify, request);
+          } else {
+            player = await playerImportService({
+              pid: pId
+            }, fastify, request);
           }
         }
-        let teamPlayer = teamPlayers.find(tp => tp.matchTypeId === -1 && (tp.refPlayerId === player.playerId || tp.tpId === player.tpId));
-        teamPlayer = await upsertTeamPlayers(teamPlayer, team, player, -1, teamMatchTypeId, entitySocketData, request, fastify);
-
-        let matchTypeTeamPlayer = null;
-        if (matchTypeId) {
-          matchTypeTeamPlayer = teamPlayers.find(tp => tp.matchTypeId === matchTypeId && tp.refPlayerId === player.playerId || tp.tpId === player?.tpId);
-          matchTypeTeamPlayer = await upsertTeamPlayers(matchTypeTeamPlayer, team, player, matchTypeId, teamMatchTypeId, entitySocketData, request, fastify);
-        }
-
-        let tournamentTeamPlayer = tournamentTeamsPlayers.find(ttp => ttp.teamId === team.teamId && ttp.matchTypeId === matchTypeId && (ttp.playerId === player.playerId || ttp.tpId === player?.tpId));
-        if (!tournamentTeamPlayer) {
-          tournamentTeamPlayer = await insertTournamentTeamPlayersQuery({
-            competitionId: checkCompetition.competitionId,
-            teamId: team.teamId,
-            playerId: player.playerId,
-            playerName: player.playerName,
-            userId: request?.userTokenInfo?.WrUserId ?? -2,
-            tpId: player?.tpId ?? null,
-            matchTypeId: matchTypeId
-          }, request, fastify);
-          global.tblTournamentTeamPlayers.push(tournamentTeamPlayer[0]);
-          tournamentTeamsPlayers.push(tournamentTeamPlayer[0]);
-        }
         if (player) {
+          let teamPlayer = teamPlayers.find(tp => tp.matchTypeId === -1 && (tp.refPlayerId === player.playerId || tp.tpId === player.tpId));
+          teamPlayer = await upsertTeamPlayers(teamPlayer, team, player, -1, teamMatchTypeId, entitySocketData, request, fastify);
+
+          let matchTypeTeamPlayer = null;
+          if (matchTypeId) {
+            matchTypeTeamPlayer = teamPlayers.find(tp => tp.matchTypeId === matchTypeId && tp.refPlayerId === player.playerId || tp.tpId === player?.tpId);
+            matchTypeTeamPlayer = await upsertTeamPlayers(matchTypeTeamPlayer, team, player, matchTypeId, teamMatchTypeId, entitySocketData, request, fastify);
+          }
+
+          let tournamentTeamPlayer = tournamentTeamsPlayers.find(ttp => ttp.teamId === team.teamId && ttp.matchTypeId === matchTypeId && (ttp.playerId === player.playerId || ttp.tpId === player?.tpId));
+          if (!tournamentTeamPlayer) {
+            tournamentTeamPlayer = await insertTournamentTeamPlayersQuery({
+              competitionId: checkCompetition.competitionId,
+              teamId: team.teamId,
+              playerId: player.playerId,
+              playerName: player.playerName,
+              userId: request?.userTokenInfo?.WrUserId ?? -2,
+              tpId: player?.tpId ?? null,
+              matchTypeId: matchTypeId
+            }, request, fastify);
+            global.tblTournamentTeamPlayers.push(tournamentTeamPlayer[0]);
+            tournamentTeamsPlayers.push(tournamentTeamPlayer[0]);
+          }
           const newCommentaryPlayer = await insertCommentaryPlayers({
             commentaryId: checkCommentary.commentaryId,
             teamId: team.teamId,
@@ -1414,6 +1418,8 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
           global.tblCommentaryPlayers.push(newCommentaryPlayer[0]);
           commentaryTeamPlayers.push(newCommentaryPlayer[0]);
           comPlayers.push({ ...newCommentaryPlayer[0], type: "create" })
+        } else {
+          errorLogger(fastify, `player is in team squad but not found in competition squad. playerTpId: ${pId}, commentaryId: ${checkCommentary.commentaryId}`, "/services/competition.js/upsertCommentaryTeamsAndPlayersService", request);
         }
       } else {
         const updatedData = {
@@ -1590,27 +1596,27 @@ const competitionImportService = async (data, fastify, request) => {
     return false;
   }
 
-  if (entitySportCompetitionResponse?.status === "result") {
-    const checkCompetitionResult = global.tblCompetitions.find(item => item.tpId === data.cid);
-    if (checkCompetitionResult) {
-      const competitionStatus = checkCompetitionResult?.commStatus
-        ? checkCompetitionResult?.commStatus
-        : null;
+  // if (entitySportCompetitionResponse?.status === "result") {
+  //   const checkCompetitionResult = global.tblCompetitions.find(item => item.tpId === data.cid);
+  //   if (checkCompetitionResult) {
+  //     const competitionStatus = checkCompetitionResult?.commStatus
+  //       ? checkCompetitionResult?.commStatus
+  //       : null;
 
-      const esCompetitionStatus = compStatus[entitySportCompetitionResponse?.status];
-      if (esCompetitionStatus && (!competitionStatus || esCompetitionStatus !== competitionStatus)) {
-        await insertAutoImportDataService({
-          ...request,
-          body: {
-            refId: checkCompetitionResult?.tpId || data.cid,
-            refType: RefType.tournamentTeamPointUpdate,
-            sourceId: 3
-          }
-        }, fastify);
-      }
-    }
-    return true;
-  }
+  //     const esCompetitionStatus = compStatus[entitySportCompetitionResponse?.status];
+  //     if (esCompetitionStatus && (!competitionStatus || esCompetitionStatus !== competitionStatus)) {
+  //       await insertAutoImportDataService({
+  //         ...request,
+  //         body: {
+  //           refId: checkCompetitionResult?.tpId || data.cid,
+  //           refType: RefType.tournamentTeamPointUpdate,
+  //           sourceId: 3
+  //         }
+  //       }, fastify);
+  //     }
+  //   }
+  //   return true;
+  // }
 
   const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
   const entityMatchTypeEnums = lowerEntityMatchTypesEnums();
@@ -1731,7 +1737,8 @@ const competitionImportService = async (data, fastify, request) => {
     return true;
   }
 
-  allCompetitionMatch = allCompetitionMatch.filter(m => (m.status === matchStatusEntity.Live || m.status === matchStatusEntity.Scheduled) && nullTeamtpIds.includes(Number(m?.teama?.team_id)) === false && nullTeamtpIds.includes(Number(m?.teamb?.team_id)) === false);
+  // allCompetitionMatch = allCompetitionMatch.filter(m => (m.status === matchStatusEntity.Live || m.status === matchStatusEntity.Scheduled) && nullTeamtpIds.includes(Number(m?.teama?.team_id)) === false && nullTeamtpIds.includes(Number(m?.teamb?.team_id)) === false);
+  allCompetitionMatch = allCompetitionMatch.filter(m => nullTeamtpIds.includes(Number(m?.teama?.team_id)) === false && nullTeamtpIds.includes(Number(m?.teamb?.team_id)) === false);
   if (allCompetitionMatch.length === 0) {
     return true;
   }
@@ -2295,12 +2302,14 @@ const competitionImportService = async (data, fastify, request) => {
         });
       }
 
+      const commentaryCompletedStatus = [EntityMatchStatus.ABANDONED, EntityMatchStatus.COMPLETED];
       if (newCommentaryImport && 
-        EntitlyLiveStates.includes(entitySportMatchResponse?.match_info?.game_state)
+        (EntitlyLiveStates.includes(entitySportMatchResponse?.match_info?.game_state) || commentaryCompletedStatus.includes(entitySportMatchResponse?.match_info?.status))
       ) {
         const { storeInningWiseEntityDataService } = require("./entitySport")
         request.body = {
           matchId: match?.match_id,
+          isOldCommentary: commentaryCompletedStatus.includes(entitySportMatchResponse?.match_info?.status) ? true : false
         };
         await storeInningWiseEntityDataService(request, fastify);
       }

@@ -2768,7 +2768,7 @@ const onInningChangeService = async (data, fastify, comDetails , superOver = fal
 
 }
 const matchCompleteService = async (data , fastify,comDetails) =>{
-  const {response} = data;
+  const {response, isOldCommentary} = data;
   const teams = global.tblCommentaryTeams.filter((i) =>i.commentaryId == comDetails.commentaryId &&
   i.currentInnings == comDetails.currentInnings)  
   let batTeam = teams.find((i) => i.teamStatus ==1)
@@ -2861,7 +2861,7 @@ const matchCompleteService = async (data , fastify,comDetails) =>{
   },fastify)
 
 
-   if (comDetails && comDetails?.isTest === false) {
+   if (comDetails && comDetails?.isTest === false && !isOldCommentary) {
     try {
       const result = await fastify.db.query(
         `SELECT * FROM fn_insert_auto_update_player_statistics_by_commentary(:commentaryId, :createdBy)`,
@@ -5106,7 +5106,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
     }
     if (gameState == EntityCommentaryStatus.DEFAULT && entityStatus != EntityMatchStatus.SCHEDULED &&
       comDetails.commentaryStatus != commentaryStatus.COMPLETED) {
-      await matchCompleteService({ response: matchInfoData }, fastify, comDetails)
+      await matchCompleteService({ response: matchInfoData, isOldCommentary: request?.body?.isOldCommentary }, fastify, comDetails)
     }
     const scoreTypeData = {
       commentaryId: comDetails.commentaryId,
