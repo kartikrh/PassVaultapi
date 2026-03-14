@@ -163,7 +163,8 @@ const playerByIdService = async (request, fastify) => {
       birthDate: result.birthDate ? String(result.birthDate).split('T')[0] : result.birthDate,
       teams: global.tblTeams.filter(tt => teams?.includes(tt.teamId)),
       teamMatchType: playersInTeams?.filter(tp => tp.matchTypeId === -1),
-      teamMatchTypeForClient: playersInTeams?.filter(tp => tp.matchTypeId !== -1)
+      teamMatchTypeForClient: playersInTeams?.filter(tp => tp.matchTypeId !== -1),
+      countryData: result?.countryId ? (global.tblCountryCodes.find(tcc => tcc.id === result.countryId) || null) : null
     };
 
     return data;
