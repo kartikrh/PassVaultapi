@@ -129,7 +129,7 @@ const deleteTeamPlayerByTeamIdQuery = async (teamId, fastify, request) => {
           "wrIsDeleted" = $1,
           "wrDeletedBy" = $2,
           "wrDeletedAt" = now(),
-          "wrIsHomeTeam" = $4
+          "wrHomeTeam" = $4
       where "wrTeamId" = $3
     `,
       {
@@ -155,7 +155,7 @@ const deleteTeamPlayerByPlayerIdQuery = async (playerId, fastify, request) => {
           "wrIsDeleted" = $1,
           "wrDeletedBy" = $2,
           "wrDeletedAt" = now(),
-          "wrIsHomeTeam" = $4
+          "wrHomeTeam" = $4
       WHERE "wrRefPlayerId" = $3
     `,
       {
@@ -608,7 +608,7 @@ const deleteTeamPlayerByTeamPlayerIdQuery = async (teamPlayerId, fastify, reques
           "wrIsDeleted" = $1,
           "wrDeletedBy" = $2,
           "wrDeletedAt" = now(),
-          "wrIsHomeTeam" = $4
+          "wrHomeTeam" = $4
       WHERE "wrTeamPlayerId" = $3
     `,
       {
@@ -701,7 +701,7 @@ const deleteTeamPlayerByTeamAndPlayerIdQuery = async (fastify, request) => {
           "wrIsDeleted" = $1,
           "wrDeletedBy" = $2,
           "wrDeletedAt" = now(),
-          "wrIsHomeTeam" = $5
+          "wrHomeTeam" = $5
       WHERE "wrTeamId" = $3 AND "wrRefPlayerId" = $4
       RETURNING
           "wrJerseyPlayerImagePath" AS "jerseyPlayerImagePath"
