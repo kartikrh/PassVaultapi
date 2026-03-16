@@ -642,7 +642,7 @@ const updateTeamPlayerHomeTeamByTeamPlayerIdQuery = async (data, fastify, reques
           "wrTeamPlayerId" AS "teamPlayerId",
           "wrHomeTeam" AS "homeTeam"`,
       {
-        bind: [data.teamPlayerId, data.playerId, request?.userTokenInfo?.WrUserId || -2],
+        bind: [data.teamPlayerId, data.playerId, request?.userTokenInfo?.WrUserId || -2, new Date()],
         type: fastify.db.QueryTypes.UPDATE,
       }
     );
