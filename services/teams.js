@@ -796,15 +796,11 @@ const getTeamPointService = async (request, fastify) => {
 
 
 const mergeTeamJerseyAndPlayerImageService = async (request, fastify) => {
-  // runMergePlayerImageJob(1, request, fastify)
-  //   .catch(err => {
-  //     errorLogger(
-  //       fastify,
-  //       err.message,
-  //       "services/teamd.js/mergeTeamJerseyAndPlayerImageService",
-  //       request
-  //     );
-  //   });
+  if (request?.body?.teamId?.length > 0) {
+    for (const teamId of request?.body?.teamId) {
+      await runMergePlayerImageJob(teamId, request, fastify);
+    }
+  }
   return "Player image(s) and Jersey image(s) merged successfully";
 };
 
@@ -960,60 +956,51 @@ const activeInactiveTeamService = async (request, fastify) => {
   return `Team data updated successfully`;
 };
 
-const runMergePlayerImageJob = async (type, request, fastify) => {
-  const {
-    playerImage,
-    jersey,
-    playerName,
-    teamName,
-    teamPlayerId,
-    teamId,
-    playerId,
-  } = request.body;
-
-  if (type === 1) {
-    for(const team of request.body.teamId){
-    const checkTeamId = global.tblTeams.find(
-      (item) => item.teamId === team
+const runMergePlayerImageJob = async (teamId, request, fastify) => {
+  const team = global.tblTeams.find(tp => tp.teamId === teamId);
+  if (!team) {
+    errorLogger(
+      fastify,
+      `Team with this id ${teamId} not found`,
+      "ERROR --> services/teams.js/runMergePlayerImageJob",
+      request
     );
-  
-    if (!checkTeamId) {
-      continue;
-    }
-    const teamPlayersData = await getTeamPlayerByTeamIdQuery(team, fastify, request);
-    if (teamPlayersData.length > 0) {
-        for (const teamData of teamPlayersData) {
-          const playerData = global.tblPlayers.find((item) => item.playerId == teamData.refPlayerId);
-          if(checkTeamId?.jersey && playerData?.image) {
-            await mergeAndSaveImage({
-              jersey: checkTeamId.jersey,
-              playerImage: playerData.image,
-              playerName: playerData.playerName,
-              teamName: checkTeamId.teamName,
-              teamPlayerId: teamData.teamPlayerId,
-              commentaryPlayerId: null,
-              commentaryId: null,
-            }, fastify);
-          }
-          if (teamData?.homeTeam == true) {
-            // await playerImageChangeOnClientAPIService(teamData.refPlayerId, fastify);
-          }
-      }
-    }
+    return true;
   }
-  } else {
-    await mergeAndSaveImage({
-      playerImage,
-      jersey,
-      playerName,
-      teamName,
-      teamPlayerId,
-      commentaryPlayerId: null,
-      commentaryId: null,
-    }, fastify);
-    const teamData = await getHomeTeamPlayerQuery({ playerId, teamId }, fastify, request);
-    if(teamData && teamData?.homeTeam == true) {
-      // await playerImageChangeOnClientAPIService(playerId, fastify);
+
+  const teamPlayers = await getTeamPlayerByTeamIdQuery(teamId, fastify, request);
+  if (teamPlayers?.length < 1) {
+    return true;
+  }
+
+  const uniqueMatchTypeIds = [...new Set(teamPlayers.map(item => item.matchTypeId))];
+  const teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${teamId} AND ttmt."wrMatchTypeId" IN (${uniqueMatchTypeIds})`);
+  const uniquePlayerIds = [...new Set(teamPlayers.map(item => item.refPlayerId))];
+  const players = global.tblPlayers.filter(tp => uniquePlayerIds.includes(tp.playerId));
+
+  for (const teamPlayer of teamPlayers) {
+    const player = players.find(p => p.playerId === teamPlayer.refPlayerId);
+    if (player || player?.image) {
+      let jersey = null;
+      if (teamPlayer?.matchTypeId === -1) {
+        jersey = team?.jersey;
+      } else {
+        jersey = teamMatchType?.find(tmt => tmt.teamId === teamPlayer.teamId && tmt.matchTypeId === teamPlayer.matchTypeId)?.teamJerseyImage;
+      }
+
+      if (jersey) {
+        await mergeAndSaveImage({
+          playerImage: player.image,
+          jersey: jersey,
+          playerName: player.playerName,
+          teamName: team.teamName,
+          teamPlayerId: teamPlayer.teamPlayerId,
+          commentaryPlayerId: null,
+          commentaryId: null,
+        }, fastify);
+
+        await removeImageFromServer({ path: teamPlayer.jerseyPlayerImage });
+      }
     }
   }
 };
