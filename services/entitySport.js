@@ -2986,10 +2986,10 @@ const multiInningChangeService = async (data, fastify, comDetails) => {
       };
       await upActivePartQuery(partnership, fastify);
       let partIndex = global.tblCommentaryPartnership.findIndex(
-        (item) => item.commentaryPartnershipId == part.commentaryPartnershipId
+        (item) => item.commentaryPartnershipId == partnership.commentaryPartnershipId
       );
       if(partIndex != -1){
-        global.tblCommentaryPartnership[partIndex].isActive = part.isActive
+        global.tblCommentaryPartnership[partIndex].isActive = partnership.isActive
       }
     }
 
