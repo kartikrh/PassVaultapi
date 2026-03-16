@@ -528,6 +528,11 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           global.tblBanner = getAllBanners;
           break;
         }
+         case ModuleTypes.Advertise: {
+          const getAllAdvertise = await getAllAdvertiseQuery(fastify);
+          global.tblAdvertise = getAllAdvertise;
+          break;
+        }
         case ModuleTypes.Awards: {
           const getAllAward = await getAllAwardQuery(fastify);
           global.tblAwards = getAllAward;

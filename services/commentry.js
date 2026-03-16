@@ -22962,6 +22962,8 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                 rmk: commentaryDetails.rmk,
                 winRmk: commentaryDetails.winRmk,
                 tossRmk: commentaryDetails.tossRmk,
+                pitchAge: commentaryDetails.pitchAge,
+                session: commentaryDetails.session,
             };
             const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
             response.commentaryDetails = {
@@ -23986,12 +23988,14 @@ const matchImportService = async (data, fastify, request = null) => {
         }, fastify);
       }
 
-      if (newCommentaryImport && 
-        EntitlyLiveStates.includes(matchInfoResponse?.game_state)
+      const commentaryCompletedStatus = [EntityMatchStatus.ABANDONED, EntityMatchStatus.COMPLETED];
+      if (newCommentaryImport &&
+        (EntitlyLiveStates.includes(matchInfoResponse?.game_state) || commentaryCompletedStatus.includes(matchInfoResponse?.status))
       ) {
         const { storeInningWiseEntityDataService } = require("./entitySport")
         request.body = {
           matchId: entitySportMatchResponse?.match_id,
+          isOldCommentary: commentaryCompletedStatus.includes(matchInfoResponse?.status) ? true : false
         };
         await storeInningWiseEntityDataService(request, fastify);
       }

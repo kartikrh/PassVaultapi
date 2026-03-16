@@ -128,11 +128,12 @@ const deleteTeamPlayerByTeamIdQuery = async (teamId, fastify, request) => {
       `UPDATE "tblTeamPlayers" SET
           "wrIsDeleted" = $1,
           "wrDeletedBy" = $2,
-          "wrDeletedAt" = now()
+          "wrDeletedAt" = now(),
+          "wrIsHomeTeam" = $4
       where "wrTeamId" = $3
     `,
       {
-        bind: [true, request.userTokenInfo.WrUserId, teamId],
+        bind: [true, request.userTokenInfo.WrUserId, teamId, false],
         type: fastify.db.QueryTypes.UPDATE,
       }
     );
@@ -153,11 +154,12 @@ const deleteTeamPlayerByPlayerIdQuery = async (playerId, fastify, request) => {
       `UPDATE "tblTeamPlayers" SET
           "wrIsDeleted" = $1,
           "wrDeletedBy" = $2,
-          "wrDeletedAt" = now()
+          "wrDeletedAt" = now(),
+          "wrIsHomeTeam" = $4
       WHERE "wrRefPlayerId" = $3
     `,
       {
-        bind: [true, request.userTokenInfo.WrUserId, playerId],
+        bind: [true, request.userTokenInfo.WrUserId, playerId, false],
         type: fastify.db.QueryTypes.UPDATE,
       }
     );
@@ -605,11 +607,12 @@ const deleteTeamPlayerByTeamPlayerIdQuery = async (teamPlayerId, fastify, reques
       `UPDATE "tblTeamPlayers" SET
           "wrIsDeleted" = $1,
           "wrDeletedBy" = $2,
-          "wrDeletedAt" = now()
+          "wrDeletedAt" = now(),
+          "wrIsHomeTeam" = $4
       WHERE "wrTeamPlayerId" = $3
     `,
       {
-        bind: [true, request.userTokenInfo.WrUserId, teamPlayerId],
+        bind: [true, request.userTokenInfo.WrUserId, teamPlayerId, false],
         type: fastify.db.QueryTypes.UPDATE,
       }
     );
@@ -628,7 +631,9 @@ const updateTeamPlayerHomeTeamByTeamPlayerIdQuery = async (data, fastify, reques
   try {
     const result = await fastify.db.query(
       `UPDATE "tblTeamPlayers" SET
-          "wrHomeTeam" = ("wrTeamPlayerId" = $1)
+          "wrHomeTeam" = ("wrTeamPlayerId" = $1),
+          "wrModifyBy" = $3,
+          "wrModifyDate" = $4
        WHERE "wrRefPlayerId" = $2
          AND "wrIsDeleted" = false
        RETURNING
@@ -637,7 +642,7 @@ const updateTeamPlayerHomeTeamByTeamPlayerIdQuery = async (data, fastify, reques
           "wrTeamPlayerId" AS "teamPlayerId",
           "wrHomeTeam" AS "homeTeam"`,
       {
-        bind: [data.teamPlayerId, data.playerId],
+        bind: [data.teamPlayerId, data.playerId, request?.userTokenInfo?.WrUserId || -2],
         type: fastify.db.QueryTypes.UPDATE,
       }
     );
@@ -695,13 +700,14 @@ const deleteTeamPlayerByTeamAndPlayerIdQuery = async (fastify, request) => {
       `UPDATE "tblTeamPlayers" SET
           "wrIsDeleted" = $1,
           "wrDeletedBy" = $2,
-          "wrDeletedAt" = now()
+          "wrDeletedAt" = now(),
+          "wrIsHomeTeam" = $5
       WHERE "wrTeamId" = $3 AND "wrRefPlayerId" = $4
       RETURNING
           "wrJerseyPlayerImagePath" AS "jerseyPlayerImagePath"
     `,
       {
-        bind: [true, request.userTokenInfo.WrUserId, teamId, playerId],
+        bind: [true, request.userTokenInfo.WrUserId, teamId, playerId, false],
         type: fastify.db.QueryTypes.UPDATE,
       }
     );

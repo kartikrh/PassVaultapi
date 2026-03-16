@@ -3,16 +3,24 @@ const { errorLogger } = require("../utilities/logger");
 const getAllAdvertiseQuery = async (fastify) => {
   return await fastify.db.query(`
         SELECT
-            "wrId" as "advertiseId",
-            "wrTitle" as "title",
-            "wrImage" as "image",
-            "wrLink" as "link",
-            "wrIsPermanent" as "isPermanent",
-            "wrIsActive" as "isActive",
-            "wrStartDate" as "startDate",
-            "wrEndDate" as "endDate"
-        FROM "tblAdvertise"
-        WHERE "wrIsDeleted" = false
+            ta."wrId" as "advertiseId",
+            ta."wrTitle" as "title",
+            ta."wrImage" as "image",
+            ta."wrLink" as "link",
+            ta."wrIsPermanent" as "isPermanent",
+            ta."wrIsActive" as "isActive",
+            ta."wrStartDate" as "startDate",
+            ta."wrEndDate" as "endDate",
+            ta."wrViewerCount" as "viewerCount",
+            ta."wrWhitelabelId" as "whitelabelId",
+            ed."wrValue" as "encryptWhitelabelId",
+            twl."wrDomain" as "domain"
+        FROM "tblAdvertise" ta
+        LEFT JOIN "tblWhitelabel" twl 
+            ON ta."wrWhitelabelId" = twl."wrId"
+        LEFT JOIN "tblEncryptedData" ed 
+            ON ta."wrWhitelabelId" = ed."wrKey"
+        WHERE ta."wrIsDeleted" = false
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -22,43 +30,62 @@ const getAllAdvertiseQuery = async (fastify) => {
 
 const createAdvertiseQuery = async (data, request, fastify) => {
   try {
-    return await fastify.db.query(
+    const result = await fastify.db.query(
       `
-      INSERT INTO "tblAdvertise"
-      (
-        "wrTitle",
-        "wrImage",
-        "wrLink",
-        "wrIsPermanent",
-        "wrIsActive",
-        "wrStartDate",
-        "wrEndDate",
-        "wrCreatedBy"
+      WITH insert_data AS (
+        INSERT INTO "tblAdvertise"
+        (
+          "wrTitle",
+          "wrImage",
+          "wrLink",
+          "wrIsPermanent",
+          "wrIsActive",
+          "wrStartDate",
+          "wrEndDate",
+          "wrCreatedBy",
+          "wrViewerCount",
+          "wrWhitelabelId"
+        )
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+        RETURNING *
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-      RETURNING
-        "wrId" as "advertiseId",
-        "wrTitle" as "title",
-        "wrImage" as "image",
-        "wrLink" as "link",
-        "wrIsPermanent" as "isPermanent",
-        "wrIsActive" as "isActive",
-        "wrStartDate" as "startDate",
-        "wrEndDate" as "endDate"
+      SELECT
+        ta."wrId" as "advertiseId",
+        ta."wrTitle" as "title",
+        ta."wrImage" as "image",
+        ta."wrLink" as "link",
+        ta."wrIsPermanent" as "isPermanent",
+        ta."wrIsActive" as "isActive",
+        ta."wrStartDate" as "startDate",
+        ta."wrEndDate" as "endDate",
+        ta."wrViewerCount" as "viewerCount",
+        ta."wrWhitelabelId" as "whitelabelId",
+        ed."wrValue" as "encryptWhitelabelId",
+        twl."wrDomain" as "domain"
+      FROM insert_data ta
+      LEFT JOIN "tblWhitelabel" twl 
+        ON ta."wrWhitelabelId" = twl."wrId"
+      LEFT JOIN "tblEncryptedData" ed 
+        ON ta."wrWhitelabelId" = ed."wrKey"
       `,
       {
+        type: fastify.db.QueryTypes.INSERT,
         bind: [
-          data.title,
-          data.image,
-          data.link,
-          data.isPermanent,
-          data.isActive,
-          data.startDate,
-          data.endDate,
+          data.title || null,
+          data.image || null,
+          data.link || null,
+          data.isPermanent || false,
+          data.isActive || false,
+          data.startDate ? new Date(data.startDate) : null,
+          data.endDate ? new Date(data.endDate) : null,
           request.userTokenInfo.WrUserId,
+          data?.viewerCount || null,
+          data?.whitelabelId ?? null
         ],
       }
     );
+
+    return result[0];
   } catch (err) {
     errorLogger(
       fastify,
@@ -84,20 +111,25 @@ const updateAdvertiseQuery = async (data, request, fastify) => {
         "wrStartDate"=$6,
         "wrEndDate"=$7,
         "wrUpdatedBy"=$8,
-        "wrUpdatedAt"=now()
+        "wrUpdatedAt"=now(),
+        "wrViewerCount"=$10,
+        "wrWhitelabelId"=$11
       WHERE "wrId"=$9
       `,
       {
+        type: fastify.db.QueryTypes.UPDATE,
         bind: [
-          data.title,
+          data.title || null,
           data.image,
-          data.link,
-          data.isPermanent,
-          data.isActive,
+          data.link || null,
+          data.isPermanent || false,
+          data.isActive || false,
           data.startDate,
           data.endDate,
           request.userTokenInfo.WrUserId,
           data.advertiseId,
+          data?.viewerCount || null,
+          data?.whitelabelId ?? null
         ],
       }
     );
@@ -151,10 +183,34 @@ const activeInactiveAdvertiseQuery = async (data, request, fastify) => {
   );
 };
 
+const advertiseViewersCountQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+        update "tblAdvertise" set
+        "wrViewerCount" = COALESCE("wrViewerCount", 0) + 1
+        where "wrId" = $1
+      `,
+      {
+        bind: [data.refId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableAdvertise/advertiseViewersCountQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllAdvertiseQuery,
   createAdvertiseQuery,
   updateAdvertiseQuery,
   deleteAdvertiseQuery,
   activeInactiveAdvertiseQuery,
+  advertiseViewersCountQuery,
 };

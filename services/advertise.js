@@ -69,7 +69,7 @@ const createAdvertiseService = async (request, fastify) => {
       request,
       fastify
     );
-    const newAdvertise = data[0][0];
+    const newAdvertise = data[0];
     global.tblAdvertise.push(newAdvertise);
     return newAdvertise;
   } catch (err) {
@@ -99,6 +99,8 @@ const updateAdvertiseService = async (request, fastify) => {
       : validateAdvertise.isActive,
     startDate: request.body.startDate || validateAdvertise.startDate,
     endDate: request.body.endDate || validateAdvertise.endDate,
+    viewerCount: validateAdvertise.viewerCount,
+    whitelabelId: Number(request.body.whitelabelId) || validateAdvertise.whitelabelId,
   };
 
   if (request.body.image && request.body.image.length) {
@@ -129,6 +131,29 @@ const updateAdvertiseService = async (request, fastify) => {
   }
 
   await updateAdvertiseQuery(body, request, fastify);
+
+    const whiteLabelData = global.tblWhitelabels.find(
+    (item) => item.id == body.whitelabelId
+  );
+  body.domain = whiteLabelData?.domain ?? null;
+  body.encryptWhitelabelId = whiteLabelData?.whitelabelId ?? null;
+
+//   callClientAPI(
+//   {
+//     serviceType: ServiceType.clientAPI,
+//     moduleType: APIEndpointModuleType.updateAdvertise,
+//     data: body,
+//   },
+//   request,
+//   fastify
+// ).catch((err) => {
+//   errorLogger(
+//     fastify,
+//     err.message,
+//     "API ERROR --> services/advertise/updateAdvertiseService",
+//     request
+//   );
+// });
 
   const index = global.tblAdvertise.findIndex(
     (item) => item.advertiseId == body.advertiseId
