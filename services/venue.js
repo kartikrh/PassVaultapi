@@ -47,12 +47,14 @@ const editVenueService = async (request, fastify) => {
       throw new Error("Venue with this tpId already exist");
     }
   }
-  const validateName = global.tblVenues.find(
-    (item) => item.name.toLowerCase() === request.body.name.toLowerCase() && item.id !== request.body.id
-  );
+  if (request.body.name) {
+    const validateName = global.tblVenues.find(
+      (item) => item.name.toLowerCase() === request.body.name.toLowerCase() && item.id !== request.body.id
+    );
 
-  if (validateName) {
-    throw new Error("Venue with this name already exist");
+    if (validateName) {
+      throw new Error("Venue with this name already exist");
+    }
   }
   const updateData = {
     countryId: request.body.countryId ?? validateId.countryId,
