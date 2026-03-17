@@ -150,7 +150,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                 }
 
                                 if (venue?.venue_id) {
-                                    let existingVenue = global.tblVenues.find(item => item.tpId && item.tpId === venue?.venue_id);
+                                    let existingVenue = global.tblVenues.find(item => item.tpId && item.tpId == venue?.venue_id);
                                     if (!existingVenue) {
                                         existingVenue = global.tblVenues.find(item => item.countryId === changedValues?.countryId && item.city === venue?.location && item.name === venue?.name);
                                         if (!existingVenue) {
@@ -166,7 +166,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                             const insertedVenue = await insertVenueQuery(newVenueData, fastify, request);
                                             global.tblVenues.push(insertedVenue);
                                             changedValues.venueId = insertedVenue.id;
-                                        } else if (existingVenue?.tpId === null || !existingVenue?.tpId || existingVenue?.tpId !== venue?.venue_id) {
+                                        } else if (existingVenue?.tpId === null || !existingVenue?.tpId || existingVenue?.tpId != venue?.venue_id) {
                                             existingVenue = await createVenueService({
                                                 ...request,
                                                 body: {

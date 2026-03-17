@@ -1653,7 +1653,7 @@ const competitionImportService = async (data, fastify, request) => {
       }
 
       if (venue.city && venue.name) {
-        let checkVenue = global.tblVenues.find(item => item.tpId && item.tpId === venue?.venue_id);
+        let checkVenue = global.tblVenues.find(item => item.tpId && item.tpId == venue?.venue_id);
         if (!checkVenue) {
           checkVenue = global.tblVenues.find(item => item.countryId === checkCountry?.id && item.city === venue?.city && item.name === venue?.name);
           if (!checkVenue) {
@@ -1668,7 +1668,7 @@ const competitionImportService = async (data, fastify, request) => {
 
             checkVenue = await insertVenueQuery(insertVenueData, fastify, request);
             global.tblVenues.push(checkVenue);
-          } else if (checkVenue?.tpId === null || !checkVenue?.tpId || checkVenue?.tpId !== venue?.venue_id) {
+          } else if (checkVenue?.tpId === null || !checkVenue?.tpId || checkVenue?.tpId != venue?.venue_id) {
             checkVenue = await createVenueService({
               ...request,
               body: {

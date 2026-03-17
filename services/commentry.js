@@ -23665,7 +23665,7 @@ const matchImportService = async (data, fastify, request = null) => {
       checkCountry = insertCountryCode;
     }
 
-    checkVenue = global.tblVenues.find(item => item.tpId && item.tpId === matchInfoResponse?.venue?.venue_id);
+    checkVenue = global.tblVenues.find(item => item.tpId && item.tpId == matchInfoResponse?.venue?.venue_id);
     if (!checkVenue) {
       checkVenue = global.tblVenues.find(item => item.countryId === checkCountry?.id && item.city === matchInfoResponse?.venue?.location && item.name === matchInfoResponse?.venue?.name);
       if (!checkVenue) {
@@ -23680,7 +23680,7 @@ const matchImportService = async (data, fastify, request = null) => {
 
         checkVenue = await insertVenueQuery(venueData, fastify, request);
         global.tblVenues.push(checkVenue);
-      } else if (checkVenue?.tpId === null || !checkVenue?.tpId || checkVenue?.tpId !== matchInfoResponse?.venue?.venue_id) {
+      } else if (checkVenue?.tpId === null || !checkVenue?.tpId || checkVenue?.tpId != matchInfoResponse?.venue?.venue_id) {
         checkVenue = await createVenueService({
           ...request,
           body: {
