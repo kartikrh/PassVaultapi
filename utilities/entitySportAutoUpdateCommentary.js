@@ -149,33 +149,33 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                 }
 
                                 if (venue?.venue_id) {
-                                    const existingVenue = global.tblVenues.find(item =>
-                                        item.countryId === changedValues?.countryId &&
-                                        item.city === venue?.location &&
-                                        item.name === venue?.name
-                                    );
+                                    let existingVenue = global.tblVenues.find(item => item.tpId && item.tpId === venue?.venue_id);
+                                    if (!existingVenue) {
+                                        existingVenue = global.tblVenues.find(item => item.countryId === changedValues?.countryId && item.city === venue?.location && item.name === venue?.name);
+                                        if (!existingVenue) {
+                                            const newVenueData = {
+                                                countryId: changedValues?.countryId || null,
+                                                city: venue?.location || null,
+                                                name: venue?.name || null,
+                                                tpId: venue?.venue_id || null,
+                                                isActive: true,
+                                                capacity: venue?.capacity || null,
+                                            };
 
-                                    if (existingVenue) {
-                                        if (existingVenue.id !== venueId) {
-                                            changedValues.venueId = existingVenue.id;
+                                            const insertedVenue = await insertVenueQuery(newVenueData, fastify, request);
+                                            global.tblVenues.push(insertedVenue);
+                                            changedValues.venueId = insertedVenue.id;
+                                        } else if (existingVenue?.tpId === null || !existingVenue?.tpId || existingVenue?.tpId !== venue?.venue_id) {
+                                            const venueData = {
+                                                tpId: venue?.venue_id || null,
+                                                venueId: existingVenue.id,
+                                            };
+
+                                            existingVenue = await updateVenueQuery(venueData, fastify, request);
+                                            existingVenue = existingVenue[0];
+                                            const index = global.tblVenues.findIndex(item => item.id === existingVenue.id);
+                                            global.tblVenues[index] = existingVenue;
                                         }
-                                    } else {
-                                        const newVenueData = {
-                                            countryId: changedValues?.countryId || null,
-                                            city: venue?.location || null,
-                                            name: venue?.name || null,
-                                            tpId: venue?.venue_id || null,
-                                            isActive: true,
-                                            capacity: venue?.capacity || null,
-                                        };
-
-                                        const insertedVenue = await insertVenueQuery(newVenueData, fastify, {
-                                            userTokenInfo: {
-                                                WrUserId: -2
-                                            }
-                                        });
-                                        global.tblVenues.push(insertedVenue);
-                                        changedValues.venueId = insertedVenue.id;
                                     }
                                 }
 
