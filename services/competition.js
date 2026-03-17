@@ -1386,7 +1386,7 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
 
           let matchTypeTeamPlayer = null;
           if (matchTypeId) {
-            matchTypeTeamPlayer = teamPlayers.find(tp => tp.matchTypeId === matchTypeId && tp.refPlayerId === player.playerId || tp.tpId === player?.tpId);
+            matchTypeTeamPlayer = teamPlayers.find(tp => tp.matchTypeId === matchTypeId && (tp.refPlayerId === player.playerId || tp.tpId === player?.tpId));
             matchTypeTeamPlayer = await upsertTeamPlayers(matchTypeTeamPlayer, team, player, matchTypeId, teamMatchTypeId, entitySocketData, request, fastify);
           }
 
