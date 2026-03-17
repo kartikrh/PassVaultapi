@@ -1648,34 +1648,42 @@ const competitionImportService = async (data, fastify, request) => {
         global.tblCountryCodes.push(insertCountryCode);
         checkCountry = insertCountryCode;
       }
-      countryData.push(checkCountry);
+      if (!countryData.some(c => c.id === checkCountry.id)) {
+        countryData.push(checkCountry);
+      }
 
       if (venue.city && venue.name) {
-        let checkVenue = global.tblVenues.find(item => item.countryId === checkCountry?.id && item.city === venue?.city && item.name === venue?.name);
+        let checkVenue = global.tblVenues.find(item => item.tpId && item.tpId === venue?.venue_id);
         if (!checkVenue) {
-          const insertVenueData = {
-            countryId: checkCountry?.id,
-            city: venue?.city || null,
-            name: venue?.name || null,
-            tpId: venue?.venue_id || null,
-            isActive: true,
-            capacity: venue?.capacity || null,
-          };
+          checkVenue = global.tblVenues.find(item => item.countryId === checkCountry?.id && item.city === venue?.city && item.name === venue?.name);
+          if (!checkVenue) {
+            const insertVenueData = {
+              countryId: checkCountry?.id,
+              city: venue?.city || null,
+              name: venue?.name || null,
+              tpId: venue?.venue_id || null,
+              isActive: true,
+              capacity: venue?.capacity || null,
+            };
 
-          checkVenue = await insertVenueQuery(insertVenueData, fastify, request);
-          global.tblVenues.push(checkVenue);
-        } else if (checkVenue?.tpId === null || !checkVenue?.tpId) {
-          const updateVenueData = {
-            tpId: venue?.venue_id || null,
-            venueId: checkVenue.id,
-          };
+            checkVenue = await insertVenueQuery(insertVenueData, fastify, request);
+            global.tblVenues.push(checkVenue);
+          } else if (checkVenue?.tpId === null || !checkVenue?.tpId || checkVenue?.tpId !== venue?.venue_id) {
+            const updateVenueData = {
+              tpId: venue?.venue_id || null,
+              venueId: checkVenue.id,
+            };
 
-          checkVenue = await updateVenueQuery(updateVenueData, fastify, request);
-          checkVenue = checkVenue[0];
-          const index = global.tblVenues.findIndex(item => item.id === checkVenue.id);
-          global.tblVenues[index] = checkVenue;
+            checkVenue = await updateVenueQuery(updateVenueData, fastify, request);
+            checkVenue = checkVenue[0];
+            const index = global.tblVenues.findIndex(item => item.id === checkVenue.id);
+            global.tblVenues[index] = checkVenue;
+          }
         }
-        venueData.push(checkVenue);
+
+        if (!venueData.some(v => v.id === checkVenue.id)) {
+          venueData.push(checkVenue);
+        }
       }
     }
   }
