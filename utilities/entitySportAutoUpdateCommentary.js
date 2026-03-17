@@ -7,7 +7,7 @@ const { esGetMatchNumberFromCompetitionMatchAPI, upsertCommentaryTeamsAndPlayers
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { updateWeatherQuery, insertWeatherQuery } = require("../repository/TableWeather");
 const { updatePitchConditionQuery, insertPitchConditionQuery } = require("../repository/TablePitchCondition");
-const { insertVenueQuery } = require("../repository/TableVenue");
+const { insertVenueQuery, updateVenueQuery } = require("../repository/TableVenue");
 const { getMatchDataByCId } = require("../services/commentry");
 
 const entitySportAutoUpdateCommentary = async (fastify) => {
