@@ -32,7 +32,7 @@ const { insertPlayerQuery, updateExchangePlayerQuery } = require("../repository/
 const { insertTeamPlayerQuery, updateTeamPlayerHomeTeamQuery, getTeamPlayersByTeamMatchTypeIdQuery, getTeamPlayerByTeamIdQuery } = require("../repository/TableTeamPlayer");
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { errorLogger, commActionLogger } = require("../utilities/logger");
-const { insertVenueQuery, updateVenueQuery } = require("../repository/TableVenue");
+const { insertVenueQuery } = require("../repository/TableVenue");
 const { insertWeatherQuery, updateWeatherQuery } = require("../repository/TableWeather");
 const { updatePitchConditionQuery, insertPitchConditionQuery } = require("../repository/TablePitchCondition");
 const { insertAutoImportDataService } = require("./autoImportData");
@@ -1669,13 +1669,13 @@ const competitionImportService = async (data, fastify, request) => {
             checkVenue = await insertVenueQuery(insertVenueData, fastify, request);
             global.tblVenues.push(checkVenue);
           } else if (checkVenue?.tpId === null || !checkVenue?.tpId || checkVenue?.tpId !== venue?.venue_id) {
-            const updateVenueData = {
-              tpId: venue?.venue_id || null,
-              venueId: checkVenue.id,
-            };
-
-            checkVenue = await updateVenueQuery(updateVenueData, fastify, request);
-            checkVenue = checkVenue[0];
+            checkVenue = await createVenueService({
+              ...request,
+              body: {
+                id: checkVenue.id,
+                tpId: venue?.venue_id || null
+              }
+            }, fastify);
             const index = global.tblVenues.findIndex(item => item.id === checkVenue.id);
             global.tblVenues[index] = checkVenue;
           }
