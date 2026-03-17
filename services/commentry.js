@@ -242,6 +242,7 @@ const { generateOverEt, generateBallET, getBowlerOnlyRuns, generateWicket } = re
 const { virtualOverQuery, virtualBallByBallQuery, createCommWicketQuery } = require("../repository/TableVirtual")
 const { insertAutoImportDataQuery, updateAutoImportDataQuery } = require("../repository/TableAutoImportData");
 const { createVenueService } = require("./venue");
+const { playerImportService } = require("../services/player");
 
 const allCommentaryService = async (request, fastify) => {
   // return global.tblCommentaries;
@@ -25905,6 +25906,108 @@ const addSuperOverInEntity = async (data, request , fastify,comDetails = null) =
     throw new Error(error.message)
   }
 } 
+const insertComPlayerEntityService = async (entityData, playerTpId, teamData, request, fastify) => {
+  try {
+    let checkCommentary = global.tblCommentaries.find(item => item.tpId == entityData?.match_id);
+    if (!checkCommentary) return
+
+    const checkCompetition = global.tblCompetitions.find(item => item.competitionId == checkCommentary.competitionId);
+    if (!checkCompetition) return
+
+    const commentaryPlayer = global.tblCommentaryPlayers.find(item =>
+      item.commentaryId == checkCommentary.commentaryId &&
+      item.currentInnings == checkCommentary.currentInnings &&
+      item.tpId == playerTpId
+    )
+    if (commentaryPlayer) return
+
+    let player = global.tblPlayers.find(tp => tp.tpId == playerTpId);
+    if (!player) {
+      player = await playerImportService({ pid: playerTpId }, fastify, request);
+    }
+    if (!player) return;
+
+    const tournamentTeamsPlayers = global.tblTournamentTeamPlayers.filter(tttp => tttp.competitionId == checkCommentary.competitionId);
+    const matchType = global.tblMatchTypes.find(mt => mt.matchTypeId == checkCommentary.matchTypeId);
+    const matchTypeId = matchType?.matchTypeId || null;
+    const eventType = global.tblEventTypes.find(et => et.eventType.toLowerCase() === 'cricket');
+
+    await insertTeamAndPlayers({
+      tid: teamData.tpId,
+      playerImport: true,
+      matchTypeId: [matchTypeId]
+    },
+      eventType,
+      request,
+      fastify
+    );
+
+    let tournamentTeamPlayer = tournamentTeamsPlayers.find(ttp => ttp.teamId == teamData.teamId && ttp.matchTypeId == matchTypeId && (ttp.playerId == player.refPlayerId || ttp.tpId == player?.tpId));
+    if (!tournamentTeamPlayer) {
+      tournamentTeamPlayer = await insertTournamentTeamPlayersQuery({
+        competitionId: checkCompetition.competitionId,
+        teamId: teamData.teamId,
+        playerId: player.refPlayerId,
+        playerName: player.playerName,
+        userId: request?.userTokenInfo?.WrUserId ?? -2,
+        tpId: player?.tpId ?? null,
+        matchTypeId: matchTypeId
+      }, request, fastify);
+      global.tblTournamentTeamPlayers.push(tournamentTeamPlayer[0]);
+    }
+
+    const newCommentaryPlayer = await insertCommentaryPlayers({
+      commentaryId: checkCommentary.commentaryId,
+      teamId: teamData.teamId,
+      playerId: player.playerId ?? player.refPlayerId,
+      displayOrder: player?.playerOrder ?? null,
+      matchTypeId: checkCommentary?.matchTypeId,
+      tpId: player?.tpId ?? null,
+      jerseyPlayerImage: player?.jerseyPlayerImage ?? null,
+      jerseyPlayerImagePath: player?.jerseyPlayerImagePath ?? null,
+      isInPlayingEleven: true
+    },
+      checkCommentary.currentInnings,
+      fastify,
+      request
+    );
+    global.tblCommentaryPlayers.push(newCommentaryPlayer[0]);
+
+    const sendDataForSocketUpdate = {
+      commentaryId: checkCommentary.commentaryId,
+      eventRefId: checkCommentary.eventRefId,
+      dataToUpdate: [],
+    };
+
+    if (newCommentaryPlayer.length > 0) {
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module: "commentaryPlayers",
+        type: "create",
+        data: newCommentaryPlayer[0],
+      });
+    }
+
+    if (
+      global?.clientSocketIo !== undefined &&
+      global?.clientSocketIo.length > 0 &&
+      newCommentaryPlayer.length > 0
+    ) {
+      global.clientSocketIo.forEach((socket) => {
+        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      });
+    }
+
+    return;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> services/commentary.js/inserComPlayerEntityService",
+      request
+    )
+    return
+  }
+}
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -26032,5 +26135,6 @@ module.exports = {
   getAllCommentaryByCompetitionIdForClientService,
   importCompetitionMatchService,
   insertCompletedCommentaryForTournamentTeamPointUpdateService,
-  addSuperOverInEntity
+  addSuperOverInEntity,
+  insertComPlayerEntityService,
 };
