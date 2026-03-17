@@ -290,7 +290,9 @@ const insertCommentaryPlayerBattingHistoryQuery = async (data, fastify) => {
             fastify,
             err.message,
             "DB ERROR --> repository/TableAutoUpdatePlayerStatisticsData.js/insertCommentaryPlayerBattingHistoryQuery",
-            null
+            {
+                body: data
+            }
         );
         throw new Error(err.message);
     }
@@ -509,7 +511,9 @@ const insertCommentaryPlayerBowlingHistoryQuery = async (data, fastify) => {
             fastify,
             err.message,
             "DB ERROR --> repository/TableAutoUpdatePlayerStatisticsData.js/insertCommentaryPlayerBowlingHistoryQuery",
-            null
+            {
+                body: data
+            }
         );
         throw new Error(err.message);
     }
