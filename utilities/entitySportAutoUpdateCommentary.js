@@ -7,8 +7,9 @@ const { esGetMatchNumberFromCompetitionMatchAPI, upsertCommentaryTeamsAndPlayers
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { updateWeatherQuery, insertWeatherQuery } = require("../repository/TableWeather");
 const { updatePitchConditionQuery, insertPitchConditionQuery } = require("../repository/TablePitchCondition");
-const { insertVenueQuery, updateVenueQuery } = require("../repository/TableVenue");
+const { insertVenueQuery } = require("../repository/TableVenue");
 const { getMatchDataByCId } = require("../services/commentry");
+const { createVenueService } = require("../services/venue");
 
 const entitySportAutoUpdateCommentary = async (fastify) => {
     try {
@@ -166,13 +167,13 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                             global.tblVenues.push(insertedVenue);
                                             changedValues.venueId = insertedVenue.id;
                                         } else if (existingVenue?.tpId === null || !existingVenue?.tpId || existingVenue?.tpId !== venue?.venue_id) {
-                                            const venueData = {
-                                                tpId: venue?.venue_id || null,
-                                                venueId: existingVenue.id,
-                                            };
-
-                                            existingVenue = await updateVenueQuery(venueData, fastify, request);
-                                            existingVenue = existingVenue[0];
+                                            existingVenue = await createVenueService({
+                                                ...request,
+                                                body: {
+                                                    id: existingVenue.id,
+                                                    tpId: venue?.venue_id || null
+                                                }
+                                            }, fastify);
                                             const index = global.tblVenues.findIndex(item => item.id === existingVenue.id);
                                             global.tblVenues[index] = existingVenue;
                                         }
