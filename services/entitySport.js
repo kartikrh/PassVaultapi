@@ -4133,8 +4133,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
         displayStatus: `Toss won by ${team1.teamName} and chose to ${teamChoseTo}.`,
       }
       let commentaryId = comDetails.commentaryId;
-
-      let updatedData = await fastify.db.query(
+      await fastify.db.query(
         `CALL proc_commentary_toss($1, $2, $3)`,
         {
           bind: [
@@ -4145,7 +4144,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
           type: fastify.db.QueryTypes.SELECT,
         }
       );
-      updatedData = updatedData[0];
+
       if (upComDetails) {
         let comI = global.tblCommentaries.findIndex((c) => c.commentaryId == upComDetails.commentaryId)
         global.tblCommentaries[comI] = {
@@ -4157,6 +4156,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
           tossRmk: upComDetails.tossRmk,
           displayStatus: upComDetails.displayStatus,
         };
+        comDetails = global.tblCommentaries[comI]
         scoreResponse.commentaryDetails = global.tblCommentaries[comI]
         sendDataForSocketUpdate.dataToUpdate.push({
           module: "commentaryDetails",
