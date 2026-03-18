@@ -4,6 +4,7 @@ const {
   deleteAdvertiseQuery,
   activeInactiveAdvertiseQuery,
 } = require("../repository/TableAdvertise");
+const { ServiceType, APIEndpointModuleType, callClientAPI, ClientAPIType } = require("../utilities");
 
 const {
   generateImageName,
@@ -14,7 +15,7 @@ const {
   const { ImgModuleConfig } = require("../utilities/imageConstant");
 
 const getAllAdvertiseService = async (request, fastify) => {
-  const { isActive } = request.body;
+  const isActive = request.body?.isActive;
 
   if (isActive === undefined) {
     return global.tblAdvertise;
@@ -71,6 +72,28 @@ const createAdvertiseService = async (request, fastify) => {
     );
     const newAdvertise = data[0];
     global.tblAdvertise.push(newAdvertise);
+
+    callClientAPI(
+      {
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
+        data: {
+          type: ClientAPIType.Insert,
+          advertise: newAdvertise
+        }
+      },
+      request,
+      fastify
+    ).catch((err) => {
+      console.log("call client api console", err);
+      errorLogger(
+        fastify,
+        err.message,
+        "ERROR --> services/advertise.js/createAdvertiseService",
+        request
+      );
+    });
+
     return newAdvertise;
   } catch (err) {
     throw new Error(`Failed to create advertise: ${err.message}`);
@@ -162,6 +185,27 @@ const updateAdvertiseService = async (request, fastify) => {
     global.tblAdvertise[index] = { ...global.tblAdvertise[index], ...body };
   }
 
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
+      data: {
+        type: ClientAPIType.Update,
+        advertise: global.tblAdvertise[index]
+      }
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("call client api console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/advertise.js/updateAdvertiseService",
+      request
+    );
+  });
+
   return body;
 };
 
@@ -181,6 +225,28 @@ const deleteAdvertiseService = async (request, fastify) => {
   global.tblAdvertise = global.tblAdvertise.filter(
     (item) => !advertiseId.includes(item.advertiseId)
   );
+
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
+      data: {
+        type: ClientAPIType.Delete,
+        advertise: global.tblAdvertise[index]
+      }
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("call client api console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/advertise.js/deleteAdvertiseService",
+      request
+    );
+  });
+
   return "Advertise deleted successfully";
 };
 
@@ -198,6 +264,27 @@ const activeInactiveAdvertiseService = async (request, fastify) => {
   );
 
   global.tblAdvertise[index].isActive = isActive;
+
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
+      data: {
+        type: ClientAPIType.Update,
+        advertise: global.tblAdvertise[index]
+      }
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("call client api console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/advertise.js/activeInactiveAdvertiseService",
+      request
+    );
+  });
 
   return "Advertise updated successfully";
 };

@@ -89,6 +89,7 @@ const { getCompetitionStatisticsByCompetitionId } = require("../../../controller
 const { getPlayerHistoryByPlayerIdForClient } = require("../../../controller/users/admin/playerHistory");
 const { getCommentaryPlayerHistoryByPlayerIdForClient } = require("../../../controller/users/admin/commPlayerHistory");
 const { getTournamentTeamPlayersByCompetitionIdForClient } = require("../../../controller/users/admin/tournamentTeamPlayers");
+const { getAllAdvertise } = require("../../../controller/users/admin/advertise");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/getscore", {
@@ -487,6 +488,9 @@ module.exports = async (fastify, opts) => {
   fastify.post("/insertDomain", {
     // schema: Score.getAllCommentaryByCompetitionId.schema,
     handler: (request , reply) => insertDomains(request, reply, fastify)
+  });
+  fastify.post("/getAllAdvertise", {
+    handler: (request , reply) => getAllAdvertise(request, reply, fastify)
   });
 };
 
