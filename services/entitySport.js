@@ -10,7 +10,7 @@ const {
   upComStatusQuery,
 } = require("../repository/TableCommentary")
 const { getAllTournamentTeamPlayerByIdsQuery } = require("../repository/TableTournamentsTeamPlayers")
-const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService,addSuperOverInEntity} = require("../services/commentry");
+const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService,addSuperOverInEntity, insertComPlayerEntityService } = require("../services/commentry");
 const {
     callClientAPI,
     ServiceType,
@@ -323,6 +323,43 @@ const saveTournamentTeamPlayerService = async (request, fastify) => {
 
     return "Tournament Team Players Data Updated successfully."
 }
+
+const assignAwards = async (comDetails, response, request, fastify) => {
+  const awardData = global.tblAwards.find(aw => aw.id === awardTypes.MAN_OF_THE_MATCH);
+  const playerData = global.tblPlayers.find(p => p.tpId === response?.man_of_the_match?.pid);
+  if (awardData && playerData) {
+    await assignAwardService({
+      ...request,
+      body: {
+        comAwards: [
+          {
+            awardId: awardData.id,
+            awardName: awardData.name,
+            commentaryId: comDetails.commentaryId,
+            playerId: playerData.playerId,
+            playerName: playerData.playerName
+          }
+        ]
+      },
+      userTokenInfo: { WrUserId: -2 }
+    }, fastify);
+  } else {
+    errorLogger(
+      fastify,
+      `Failed to update player of the match for commentary id: ${comDetails.commentaryId}`,
+      "Error --> services/entitySport.js/assignAwards - playerOfTheMatch",
+      null,
+      {
+        commentary: comDetails,
+        entityCommentaryStatus: response?.match_info?.status,
+        response: request?.body,
+        awardType: awardTypes.MAN_OF_THE_MATCH,
+        playerId: response?.man_of_the_match?.pid
+      }
+    )
+  }
+}
+
 const setEntityCom2Service = async (request , fastify) =>{
   let matchID = request.body?.response?.match_id
   try {
@@ -1129,39 +1166,7 @@ const setEntityCom2Service = async (request , fastify) =>{
 
     if (comDetails.commentaryStatus == commentaryStatus.COMPLETED && entityStatus == EntityMatchStatus.COMPLETED) {
       if (response?.man_of_the_match?.pid) {
-        const awardData = global.tblAwards.find(aw => aw.id === awardTypes.MAN_OF_THE_MATCH);
-        const playerData = global.tblPlayers.find(p => p.tpId === response?.man_of_the_match?.pid);
-        if (awardData && playerData) {
-          await assignAwardService({
-            ...request,
-            body: {
-              comAwards: [
-                {
-                  awardId: awardData.id,
-                  awardName: awardData.name,
-                  commentaryId: comDetails.commentaryId,
-                  playerId: playerData.playerId,
-                  playerName: playerData.playerName
-                }
-              ]
-            },
-            userTokenInfo: { WrUserId: -2 }
-          }, fastify);
-        } else {
-          errorLogger(
-            fastify,
-            `Failed to update player of the match for commentary id: ${comDetails.commentaryId}`,
-            "Error --> services/entitySport.js/setEntityCom2servie - playerOfTheMatch",
-            null,
-            {
-              commentary: comDetails,
-              entityCommentaryStatus: entityStatus,
-              response: request?.body,
-              awardType: awardTypes.MAN_OF_THE_MATCH,
-              playerId: response?.man_of_the_match?.pid
-            }
-          )
-        }
+        await assignAwards(comDetails, response, request, fastify);
       }
     }
 
@@ -1380,21 +1385,53 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
         if (!playerTpIdObj[p.batsman_id]) {
           request.body.response = response; 
           await updateCommentaryPlayersFromEntityService(request, fastify);
-          let latestPlayers = global.tblCommentaryPlayers.filter(
+          let latestPlayers = global.tblCommentaryPlayers.find(
             (cp) =>
               cp.commentaryId == comDetails.commentaryId &&
-              cp.currentInnings == comDetails.currentInnings
+              cp.currentInnings == comDetails.currentInnings &&
+              cp.tpId == p.batsman_id
           );
 
-          for (let cp of latestPlayers) {
-            if (!playerTpIdObj[cp.tpId]) {
-              playerTpIdObj[cp.tpId] = {
-                ...cp,
-                playerName: cp.playerName,
-                playerId: cp.playerId,
+          if (latestPlayers) {
+            if (!playerTpIdObj[latestPlayers.tpId]) {
+              playerTpIdObj[latestPlayers.tpId] = {
+                ...latestPlayers,
+                playerName: latestPlayers.playerName,
+                playerId: latestPlayers.playerId,
+              };
+            }
+          } else {
+            await insertComPlayerEntityService(
+              response,
+              p.batsman_id,
+              battingTeam,
+              request,
+              fastify
+            );
+            latestPlayers = global.tblCommentaryPlayers.find(
+              (cp) =>
+                cp.commentaryId == comDetails.commentaryId &&
+                cp.currentInnings == comDetails.currentInnings &&
+                cp.tpId == p.batsman_id
+            );
+            if (latestPlayers && !playerTpIdObj[latestPlayers.tpId]) {
+              playerTpIdObj[latestPlayers.tpId] = {
+                ...latestPlayers,
+                playerName: latestPlayers.playerName,
+                playerId: latestPlayers.playerId,
               };
             }
           }
+
+          // for (let cp of latestPlayers) {
+          //   if (!playerTpIdObj[cp.tpId]) {
+          //     playerTpIdObj[cp.tpId] = {
+          //       ...cp,
+          //       playerName: cp.playerName,
+          //       playerId: cp.playerId,
+          //     };
+          //   }
+          // }
         }
         let comP = playerTpIdObj[p.batsman_id];
         let batterData = response?.scorecard?.innings
@@ -1436,21 +1473,52 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
         if (!playerTpIdObj[p.bowler_id]) {
           request.body.response = response; 
           await updateCommentaryPlayersFromEntityService(request, fastify);
-          let latestPlayers = global.tblCommentaryPlayers.filter(
+          let latestPlayers = global.tblCommentaryPlayers.find(
             (cp) =>
               cp.commentaryId == comDetails.commentaryId &&
-              cp.currentInnings == comDetails.currentInnings
+              cp.currentInnings == comDetails.currentInnings &&
+              cp.tpId == p.bowler_id
           );
-
-          for (let cp of latestPlayers) {
-            if (!playerTpIdObj[cp.tpId]) {
-              playerTpIdObj[cp.tpId] = {
-                ...cp,
-                playerName: cp.playerName,
-                playerId: cp.playerId,
+          if (latestPlayers) {
+            if (!playerTpIdObj[latestPlayers.tpId]) {
+              playerTpIdObj[latestPlayers.tpId] = {
+                ...latestPlayers,
+                playerName: latestPlayers.playerName,
+                playerId: latestPlayers.playerId,
+              };
+            }
+          } else {
+            await insertComPlayerEntityService(
+              response,
+              p.bowler_id,
+              bowlingTeam,
+              request,
+              fastify
+            );
+            latestPlayers = global.tblCommentaryPlayers.find(
+              (cp) =>
+                cp.commentaryId == comDetails.commentaryId &&
+                cp.currentInnings == comDetails.currentInnings &&
+                cp.tpId == p.bowler_id
+            );
+            if (latestPlayers && !playerTpIdObj[latestPlayers.tpId]) {
+              playerTpIdObj[latestPlayers.tpId] = {
+                ...latestPlayers,
+                playerName: latestPlayers.playerName,
+                playerId: latestPlayers.playerId,
               };
             }
           }
+
+          // for (let cp of latestPlayers) {
+          //   if (!playerTpIdObj[cp.tpId]) {
+          //     playerTpIdObj[cp.tpId] = {
+          //       ...cp,
+          //       playerName: cp.playerName,
+          //       playerId: cp.playerId,
+          //     };
+          //   }
+          // }
         }
       }
     }
@@ -4070,8 +4138,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
         displayStatus: `Toss won by ${team1.teamName} and chose to ${teamChoseTo}.`,
       }
       let commentaryId = comDetails.commentaryId;
-
-      let updatedData = await fastify.db.query(
+      await fastify.db.query(
         `CALL proc_commentary_toss($1, $2, $3)`,
         {
           bind: [
@@ -4082,7 +4149,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
           type: fastify.db.QueryTypes.SELECT,
         }
       );
-      updatedData = updatedData[0];
+
       if (upComDetails) {
         let comI = global.tblCommentaries.findIndex((c) => c.commentaryId == upComDetails.commentaryId)
         global.tblCommentaries[comI] = {
@@ -4094,6 +4161,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
           tossRmk: upComDetails.tossRmk,
           displayStatus: upComDetails.displayStatus,
         };
+        comDetails = global.tblCommentaries[comI]
         scoreResponse.commentaryDetails = global.tblCommentaries[comI]
         sendDataForSocketUpdate.dataToUpdate.push({
           module: "commentaryDetails",
@@ -4256,6 +4324,191 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
         ? Math.max(...existingBatters?.map(i => i.batterOrder))
         : 0;
 
+      if (batsmen.length > 0) {
+        for (let p of batsmen) {
+          if (!playerTpIdObj[p.batsman_id]) {
+            request.body.response = { match_id: matchId };
+            await updateCommentaryPlayersFromEntityService(request, fastify);
+            let latestPlayers = global.tblCommentaryPlayers.find(
+              (cp) =>
+                cp.commentaryId == comDetails.commentaryId &&
+                cp.currentInnings == comDetails.currentInnings &&
+                cp.tpId == p.batsman_id
+            );
+            if (latestPlayers) {
+              if (!playerTpIdObj[latestPlayers.tpId]) {
+                playerTpIdObj[latestPlayers.tpId] = {
+                  ...latestPlayers,
+                  playerName: latestPlayers.playerName,
+                  playerId: latestPlayers.playerId,
+                };
+              }
+            } else {
+              await insertComPlayerEntityService(
+                matchInfoData,
+                p.batsman_id,
+                battingTeam,
+                request,
+                fastify
+              );
+              latestPlayers = global.tblCommentaryPlayers.find(
+                (cp) =>
+                  cp.commentaryId == comDetails.commentaryId &&
+                  cp.currentInnings == comDetails.currentInnings &&
+                  cp.tpId == p.batsman_id
+              );
+              if (latestPlayers && !playerTpIdObj[latestPlayers.tpId]) {
+                playerTpIdObj[latestPlayers.tpId] = {
+                  ...latestPlayers,
+                  playerName: latestPlayers.playerName,
+                  playerId: latestPlayers.playerId,
+                };
+              }
+            }
+
+            // for (let cp of latestPlayers) {
+            //   if (!playerTpIdObj[cp.tpId]) {
+            //     playerTpIdObj[cp.tpId] = {
+            //       ...cp,
+            //       playerName: cp.playerName,
+            //       playerId: cp.playerId,
+            //     };
+            //   }
+            // }
+          }
+          let comP = playerTpIdObj[p.batsman_id];
+          let onStrikeData = p?.position === "striker";
+          let isPlayData = p?.batting === "true";
+          if (comP) {
+            let batterOrder = comP.batterOrder;
+
+            if (batterOrder == null) {
+              ltSetOrder += 1;
+              batterOrder = ltSetOrder;
+            }
+
+            playersMap[p.batsman_id] = {
+              ...comP,
+              // isPlay: isPlayData,
+              isPlay: isPlayData ? true : null,
+              onStrike: onStrikeData,
+              batRun: p.runs,
+              batBall: p.balls_faced,
+              batDotBall: p.run0,
+              batFour: p.fours,
+              batSix: p.sixes,
+              batterOrder,
+              batsmanStrikeRate: parseFloat(p.strike_rate) ?? "0",
+            };
+            currentPlayers.push(comP.commentaryPlayerId);
+          }
+        }
+      }
+      let ltSetBowlerOrder = 0;
+      // find the latest bowler order already stored for this innings/team
+      const existingBowlers = global.tblCommentaryPlayers.filter(i =>
+        i.commentaryId === comDetails.commentaryId &&
+        i.currentInnings === comDetails.currentInnings &&
+        i.teamId === bowlingTeam?.teamId &&
+        i.bowlerOrder != null
+      ) || []
+
+      ltSetBowlerOrder = existingBowlers.length
+        ? Math.max(...existingBowlers?.map(i => i.bowlerOrder))
+        : 0;
+
+      if (bowlers.length > 0) {
+        for (let b of bowlers) {
+          if (!playerTpIdObj[b.bowler_id]) {
+            request.body.response = { match_id: matchId };
+            await updateCommentaryPlayersFromEntityService(request, fastify);
+            let latestPlayers = global.tblCommentaryPlayers.find(
+              (cp) =>
+                cp.commentaryId == comDetails.commentaryId &&
+                cp.currentInnings == comDetails.currentInnings &&
+                cp.tpId == p.bowler_id
+            );
+
+            if (latestPlayers) {
+              if (!playerTpIdObj[latestPlayers.tpId]) {
+                playerTpIdObj[latestPlayers.tpId] = {
+                  ...latestPlayers,
+                  playerName: latestPlayers.playerName,
+                  playerId: latestPlayers.playerId,
+                };
+              }
+            } else {
+              await insertComPlayerEntityService(
+                matchInfoData,
+                p.bowler_id,
+                bowlingTeam,
+                request,
+                fastify
+              );
+              latestPlayers = global.tblCommentaryPlayers.find(
+                (cp) =>
+                  cp.commentaryId == comDetails.commentaryId &&
+                  cp.currentInnings == comDetails.currentInnings &&
+                  cp.tpId == p.bowler_id
+              );
+              if (latestPlayers && !playerTpIdObj[latestPlayers.tpId]) {
+                playerTpIdObj[latestPlayers.tpId] = {
+                  ...latestPlayers,
+                  playerName: latestPlayers.playerName,
+                  playerId: latestPlayers.playerId,
+                };
+              }
+            }
+
+            // for (let cp of latestPlayers) {
+            //   if (!playerTpIdObj[cp.tpId]) {
+            //     playerTpIdObj[cp.tpId] = {
+            //       ...cp,
+            //       playerName: cp.playerName,
+            //       playerId: cp.playerId,
+            //     };
+            //   }
+            // }
+          }
+          let currentBowler = b?.bowling == "true"
+          let comP = playerTpIdObj[b.bowler_id];
+          if (comP) {
+            let bowlerOrder = comP.bowlerOrder;
+            if (bowlerOrder == null) {
+              ltSetBowlerOrder += 1;
+              bowlerOrder = ltSetBowlerOrder;
+            }
+            playersMap[b.bowler_id] = {
+              ...comP,
+              // isPlay: currentBowler,
+              isPlay: currentBowler ? true : null,
+              onStrike: false,
+              bowlerOver: b.overs,
+              bowlerRun: b.runs_conceded,
+              bowlerTotalWicket: b.wickets,
+              bowlerEconomy: parseFloat(b.econ) ?? "0",
+              bowlerOrder,
+              bowlerMaidenOver: b?.maidens ?? 0,
+              bowlerWideBall: b.wides,
+              bowlerNoBall: b.noballs,
+              bowlerDotBall: b.run0,
+              bowlerTotalBall: oversToBalls(b?.overs),
+            };
+            currentPlayers.push(comP.commentaryPlayerId);
+          }
+
+        }
+      }
+
+      // find nonplaying player and set isPlay null
+      let nonPlayingPlayers = comPlayers.filter((i) => i.isPlay == true && !currentPlayers.includes(i.commentaryPlayerId));
+      for (let npp of nonPlayingPlayers) {
+        playersMap[npp.tpId] = {
+          ...npp,
+          isPlay: null,
+        }
+      }
+
       // partnership create and update
       let statsURL = `/match/${matchId}/statistics`;
       const entitySportMatchStats = await callEntitySportAPI(statsURL, request, fastify);
@@ -4281,20 +4534,58 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
           let batter2 = b2?.batsman_id;
           if (!playerTpIdObj[batter1] || !playerTpIdObj[batter2]) {
             request.body.response = { match_id: matchId };
+
             await updateCommentaryPlayersFromEntityService(request, fastify);
+
             let latestPlayers = global.tblCommentaryPlayers.filter(
               (cp) =>
                 cp.commentaryId == comDetails.commentaryId &&
-                cp.currentInnings == comDetails.currentInnings
+                cp.currentInnings == comDetails.currentInnings &&
+                (cp.tpId == batter1 || cp.tpId == batter2)
             );
 
-            for (let cp of latestPlayers) {
-              if (!playerTpIdObj[cp.tpId]) {
-                playerTpIdObj[cp.tpId] = {
-                  ...cp,
-                  playerName: cp.playerName,
-                  playerId: cp.playerId,
-                };
+            if (latestPlayers.length > 0) {
+              for (let cp of latestPlayers) {
+                if (!playerTpIdObj[cp.tpId]) {
+                  playerTpIdObj[cp.tpId] = {
+                    ...cp,
+                    playerName: cp.playerName,
+                    playerId: cp.playerId,
+                  };
+                }
+              }
+            } else {
+              await insertComPlayerEntityService(
+                matchInfoData,
+                batter1,
+                battingTeam,
+                request,
+                fastify
+              );
+
+              await insertComPlayerEntityService(
+                matchInfoData,
+                batter2,
+                battingTeam,
+                request,
+                fastify
+              );
+
+              latestPlayers = global.tblCommentaryPlayers.filter(
+                (cp) =>
+                  cp.commentaryId == comDetails.commentaryId &&
+                  cp.currentInnings == comDetails.currentInnings &&
+                  (cp.tpId == batter1 || cp.tpId == batter2)
+              );
+
+              for (let cp of latestPlayers) {
+                if (!playerTpIdObj[cp.tpId]) {
+                  playerTpIdObj[cp.tpId] = {
+                    ...cp,
+                    playerName: cp.playerName,
+                    playerId: cp.playerId,
+                  };
+                }
               }
             }
           }
@@ -4362,128 +4653,6 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
               type: "create"
             })
           }
-        }
-      }
-
-      if (batsmen.length > 0) {
-        for (let p of batsmen) {
-          if (!playerTpIdObj[p.batsman_id]) {
-            request.body.response = { match_id: matchId };
-            await updateCommentaryPlayersFromEntityService(request, fastify);
-            let latestPlayers = global.tblCommentaryPlayers.filter(
-              (cp) =>
-                cp.commentaryId == comDetails.commentaryId &&
-                cp.currentInnings == comDetails.currentInnings
-            );
-
-            for (let cp of latestPlayers) {
-              if (!playerTpIdObj[cp.tpId]) {
-                playerTpIdObj[cp.tpId] = {
-                  ...cp,
-                  playerName: cp.playerName,
-                  playerId: cp.playerId,
-                };
-              }
-            }
-          }
-          let comP = playerTpIdObj[p.batsman_id];
-          let onStrikeData = p?.position === "striker";
-          let isPlayData = p?.batting === "true";
-          if (comP) {
-            let batterOrder = comP.batterOrder;
-
-            if (batterOrder == null) {
-              ltSetOrder += 1;
-              batterOrder = ltSetOrder;
-            }
-
-            playersMap[p.batsman_id] = {
-              ...comP,
-              // isPlay: isPlayData,
-              isPlay: isPlayData ? true : null,
-              onStrike: onStrikeData,
-              batRun: p.runs,
-              batBall: p.balls_faced,
-              batDotBall: p.run0,
-              batFour: p.fours,
-              batSix: p.sixes,
-              batterOrder,
-              batsmanStrikeRate: parseFloat(p.strike_rate) ?? "0",
-            };
-            currentPlayers.push(comP.commentaryPlayerId);
-          }
-        }
-      }
-      let ltSetBowlerOrder = 0;
-      // find the latest bowler order already stored for this innings/team
-      const existingBowlers = global.tblCommentaryPlayers.filter(i =>
-        i.commentaryId === comDetails.commentaryId &&
-        i.currentInnings === comDetails.currentInnings &&
-        i.teamId === bowlingTeam?.teamId &&
-        i.bowlerOrder != null
-      ) || []
-
-      ltSetBowlerOrder = existingBowlers.length
-        ? Math.max(...existingBowlers?.map(i => i.bowlerOrder))
-        : 0;
-
-      if (bowlers.length > 0) {
-        for (let b of bowlers) {
-          if (!playerTpIdObj[b.bowler_id]) {
-            request.body.response = { match_id: matchId };
-            await updateCommentaryPlayersFromEntityService(request, fastify);
-            let latestPlayers = global.tblCommentaryPlayers.filter(
-              (cp) =>
-                cp.commentaryId == comDetails.commentaryId &&
-                cp.currentInnings == comDetails.currentInnings
-            );
-
-            for (let cp of latestPlayers) {
-              if (!playerTpIdObj[cp.tpId]) {
-                playerTpIdObj[cp.tpId] = {
-                  ...cp,
-                  playerName: cp.playerName,
-                  playerId: cp.playerId,
-                };
-              }
-            }
-          }
-          let currentBowler = b?.bowling == "true"
-          let comP = playerTpIdObj[b.bowler_id];
-          if (comP) {
-            let bowlerOrder = comP.bowlerOrder;
-            if (bowlerOrder == null) {
-              ltSetBowlerOrder += 1;
-              bowlerOrder = ltSetBowlerOrder;
-            }
-            playersMap[b.bowler_id] = {
-              ...comP,
-              // isPlay: currentBowler,
-              isPlay: currentBowler ? true : null,
-              onStrike: false,
-              bowlerOver: b.overs,
-              bowlerRun: b.runs_conceded,
-              bowlerTotalWicket: b.wickets,
-              bowlerEconomy: parseFloat(b.econ) ?? "0",
-              bowlerOrder,
-              bowlerMaidenOver: b?.maidens ?? 0,
-              bowlerWideBall: b.wides,
-              bowlerNoBall: b.noballs,
-              bowlerDotBall: b.run0,
-              bowlerTotalBall: oversToBalls(b?.overs),
-            };
-            currentPlayers.push(comP.commentaryPlayerId);
-          }
-
-        }
-      }
-
-      // find nonplaying player and set isPlay null
-      let nonPlayingPlayers = comPlayers.filter((i) => i.isPlay == true && !currentPlayers.includes(i.commentaryPlayerId));
-      for (let npp of nonPlayingPlayers) {
-        playersMap[npp.tpId] = {
-          ...npp,
-          isPlay: null,
         }
       }
 
@@ -5121,6 +5290,14 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
         ...scoreTypeData,
       }
     }
+
+    const updatedCommentaryData = global.tblCommentaries[index];
+    if (updatedCommentaryData.commentaryStatus == commentaryStatus.COMPLETED && entityStatus == EntityMatchStatus.COMPLETED) {
+      if (matchInfoData?.man_of_the_match?.pid) {
+        await assignAwards(updatedCommentaryData, matchInfoData, request, fastify);
+      }
+    }
+
     importData.importEndTime = new Date();
     importData.isImported = false;
     importData.esApiResponseData = {
