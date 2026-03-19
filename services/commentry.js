@@ -101,7 +101,8 @@ const {
   getHeadToHeadCommentaryQuery,
   getCommentaryStatisticsQuery,
   getAllCommentaryByCompetitionIdForClientQuery,
-  getComTeamQuery
+  getComTeamQuery,
+  getAllCommentaryByCompetitionIdQuery
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const {
@@ -283,7 +284,27 @@ const allCommentaryService = async (request, fastify) => {
   }
 
   if (competitionId) {
-    result = result.filter((item) => item.competitionId === competitionId);
+    result = await getAllCommentaryByCompetitionIdQuery(competitionId, request, fastify);
+    if (commentaryStatus === undefined) {
+      result = result.filter(
+        (item) => ![4, 10].includes(item.commentaryStatus)
+      );
+    }
+    if (commentaryStatus && commentaryStatus != 0) {
+      result = result.filter(
+        (item) => item.commentaryStatus === commentaryStatus
+      );
+    }
+    if (commentaryStatus == 0) {
+      result = result;
+    }
+    if (eventTypeId) {
+      result = result.filter((item) => item.eventTypeId === eventTypeId);
+    }
+
+    if (isVirtual === true || isVirtual === false) {
+      result = result.filter((item) => item.isVirtual === isVirtual);
+    }
   }
 
   if (matchTypeId) {
