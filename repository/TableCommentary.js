@@ -9635,6 +9635,118 @@ const updateBallByBallFullCommentaryQuery = async (data, request, fastify) => {
   }
 }
 
+const getAllCommentaryByCompetitionIdQuery = async (competitionId, request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT
+        "wrCommentaryId" as "commentaryId",
+        tc."wrMatchTypeId" as "matchTypeId",
+        mt."wrMatchType" AS "matchType",
+        tc."wrEventTypeId" as "eventTypeId",
+        tet."wrEventType" as "eventType",
+        tc."wrTeam1Id" as "team1Id",
+        tc."wrTeam2Id" as "team2Id",
+        tt1."wrTeamName" as "team1Name",
+        tt2."wrTeamName" as "team2Name",
+        tc."wrCompetitionId" as "competitionId",
+	      co."wrCompetition" as "competition",
+        tc."wrEventId" as "eventId",
+        "wrEventDate" as "eventDate",
+        "wrEventName" as "eventName",
+        "wrEventRefId" as "eventRefId",
+        "wrLocation" as "location",
+        "wrWeather" as "weather",
+        "wrPitchCracks" as "pitchCracks",
+        "wrTossWonBy" as "tossWonBy",
+        "wrChoseTo" as "choseTo",
+        "wrWinnerId" as "winnerId",
+        "wrWinnerName" as "winnerName",
+        "wrIsClientShow" as "isClientShow",
+        "wrDisplayStatus" as "displayStatus",
+        "wrRmk" as "rmk",
+        "wrWinRmk" as "winRmk",
+        "wrCardType" as "cardType",
+        "wrTossRmk" as "tossRmk",
+        "wrCommentaryStatus" as "commentaryStatus",
+        "wrUpdateTime" as "updateTime",
+        "wrIsMatchDraw" as "isMatchDraw",
+        "wrTarget" as "target",
+        "wrMarketID" as "marketId",
+        tc."wrTpId" as "tpId",
+        "isSignalROn" as "isSignalROn",
+        "wrCurrentInnings" as "currentInnings",
+        "wrSystemPlayerCount" as "systemPlayerCount",
+        "wrIsPlayersShow" as "isPlayersShow",
+        "wrIsPredictMarket" as "isPredictMarket",
+        tc."wrIsActive"  as "isActive",
+        "wrDelay" as "delay",
+        "wrLineRatio" as "lineRatio",
+        tc."wrCommentaryResult" as "result",
+        tc."wrCommentaryCloseTime" as "commentaryCloseTime",
+        tc."wrIsTeamPredictionOn" as "isTeamPredictionOn",
+        tu."WrName" as "createdBy",
+        tc."wrHistoryMatchTypeId" as "historyMatchTypeId",
+        mt2."wrMatchType" AS "historyMatchType",
+        tc."wrIsCountInPoint" as "isCountInPoint",
+        "wrShotType" as "shotType",
+        "wrIsWheelShow" as "isWheelShow",
+        tc."wrIsTest" as "isTest",
+        tc."wrEventNo" as "eventNo",
+        tc."wrIsEventStart" as "isEventStart",
+        tc."wrDifficulty" as "difficulty",
+        tc."wrPitchHardness" as "pitchHardness",
+        tc."wrPitchWareSpeed" as "pitchWareSpeed",
+        tc."wrPitchType" as "pitchType",
+        tc."wrLawnStriping" as "lawnStriping",
+        tc."wrPitchAge" as "pitchAge",
+        tc."wrIsVirtual" as "isVirtual",
+        tc."wrTestDayCount" as "testDayCount",
+        tc."wrOnfieldUmpires" as "onfieldUmpires",
+        tc."wrThirdUmpire" as "thirdUmpire",
+        tc."wrMatchReferee" as "matchReferee",
+        tc."wrSession" as "session",
+        tc."wrBallDelay" as "ballDelay",
+        tc."wrOverDelay" as "overDelay",
+        tc."wrInningDelay" as "inningDelay",
+        tc."wrCountryId" as "countryId",
+        tc."wrVenueId" as "venueId",
+        tc."wrTossDelay" as "tossDelay",
+        tc."wrPythonId" as "pythonId",
+        tc."wrScoringType" as "scoringType",
+        tc."wrPythonURI" as "pythonURI",
+        tc."wrCancelTime" as "cancelTime",
+        tc."wrViews" as "views",
+        tc."wrStreamingUrl" as "streamingUrl",
+        tc."wrStreamingType" as "streamingType",
+        tc."wrShuffle" as "shuffle",
+        tc."wrSetOfRules" as "setOfRules"
+        from "tblCommentaries" tc
+        left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
+        left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
+        LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
+        LEFT JOIN "tblMatchTypes" mt2 ON tc."wrHistoryMatchTypeId" = mt2."wrMatchTypeId"
+        LEFT JOIN "tblEventTypes" tet ON tc."wrEventTypeId" = tet."wrEventTypeId"
+	      LEFT JOIN "tblCompetitions" co ON tc."wrCompetitionId" = co."wrCompetitionId"
+        LEFT JOIN "tblUsers" tu ON tc."wrCreatedBy" = tu."WrUserId"
+      WHERE "wrIsDelete" = FALSE
+      AND tc."wrCompetitionId" = $1`,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [competitionId]
+      }
+    );
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary.js/getAllCommentaryByCompetitionIdQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -9793,5 +9905,6 @@ module.exports = {
   deleteInningWiseCommentaryPlayersQuery,
   getComTeamQuery,
   updateBallByBallFullCommentaryQuery,
-  upComStatusQuery
+  upComStatusQuery,
+  getAllCommentaryByCompetitionIdQuery
 };
