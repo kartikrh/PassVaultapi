@@ -9747,6 +9747,80 @@ const getAllCommentaryByCompetitionIdQuery = async (competitionId, request, fast
   }
 };
 
+const updateCommentaryTeamColorQuery = async (request, fastify) => {
+  try {
+    const { teamColor, backgroundColor, commentaryTeamId } = request.body;
+    const result = await fastify.db.query(
+      `
+        WITH update_data AS (
+          UPDATE "tblCommentaryTeams"
+          SET
+            "wrTeamColor" = $1,
+            "wrBackgroundColor" = $2
+          WHERE "wrCommentaryTeamId" = $3
+          RETURNING *
+        )
+        SELECT
+          "wrCommentaryTeamId" as "commentaryTeamId",
+          "wrCommentaryId" AS "commentaryId",
+          "wrTeamId" AS "teamId",
+          "wrShortName" AS "shortName",
+          "wrTeamName" AS "teamName",
+          "wrTeamCaptain" AS "teamCaptain",	
+          "wrTeamKipper" AS "teamKipper",
+          "wrTeamScore" AS "teamScore",
+          "wrTeamOver" AS "teamOver",
+          "wrTeamWicket" AS "teamWicket",
+          COALESCE(CAST("wrCrr" AS FLOAT), 0) AS "crr",
+          COALESCE(CAST("wrRrr" AS FLOAT), 0) AS "rrr",
+          "wrTeamStatus" AS "teamStatus",
+          "wrTeamTrialRuns" AS "teamTrialRuns",
+          "wrTeamLeadRuns" AS "teamLeadRuns",
+          "wrTeamWideRuns" AS "teamWideRuns",
+          "wrTeamByRuns" AS "teamByRuns",
+          "wrTeamLegByRuns" AS "teamLegByRuns",
+          "wrTeamNoBallRuns" AS "teamNoBallRuns",
+          "wrTeamPenaltyRuns" AS "teamPenaltyRuns",
+          "wrIsWin" AS "isWin",
+          "wrTeamBattingOrder" AS "teamBattingOrder",
+          "wrCurrentInnings" AS "currentInnings", 
+          "wrIsBattingComplete" AS "isBattingComplete",
+          "wrCommentaryPlayerTeamCaptain" AS "commentaryPlayerTeamCaptain",
+          "wrCommentaryPlayerTeamKipper" AS "commentaryPlayerTeamKipper",
+          "wrTeamColor" AS "teamColor",
+          "wrBackgroundColor" AS "backgroundColor",
+          "wrTeamMaxOver" AS "teamMaxOver",
+          "wrIsSuperOver" AS "isSuperOver",
+          "wrTeamPredictionPercentage" AS "teamPredictionPercentage",
+          "wrDrsCount" AS "drsCount",
+          "wrNoOfAttempt" AS "drsAttempt",
+          "wrGroupId" AS "groupId",
+          "wrNoOfFail" AS "drsFail",
+          "wrSubInning" AS "subInning",
+          "wrTpId" AS "tpId"
+        FROM "update_data";
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          teamColor,
+          backgroundColor,
+          commentaryTeamId
+        ]
+      }
+    );
+    return result?.[0];
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/updateCommentaryTeamColorQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -9906,5 +9980,6 @@ module.exports = {
   getComTeamQuery,
   updateBallByBallFullCommentaryQuery,
   upComStatusQuery,
-  getAllCommentaryByCompetitionIdQuery
+  getAllCommentaryByCompetitionIdQuery,
+  updateCommentaryTeamColorQuery
 };
