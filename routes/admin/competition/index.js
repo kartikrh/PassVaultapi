@@ -25,6 +25,7 @@ const {
   allPythonAPIs,
   getMatchTypeTemplateByCompetitionId,
   changeIsCompetitionStatisticsCalculationStatus,
+  getAllSeasonOfCompetitions,
 } = require("../../../controller/users/admin/competition");
 const { getEventTypeList } = require("../../../controller/users/admin/eventTypes");
 const { Compitition } = require("../../../swaggerSchema/groupTags/schema");
@@ -321,5 +322,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => changeIsCompetitionStatisticsCalculationStatus(request, reply, fastify),
+  });
+  fastify.post("/getAllSeasonOfCompetitions", {
+    schema: Compitition.getAllSeasonOfCompetitions.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "competition",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => getAllSeasonOfCompetitions(request, reply, fastify),
   });
 };

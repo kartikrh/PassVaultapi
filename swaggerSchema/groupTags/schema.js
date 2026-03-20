@@ -4529,6 +4529,20 @@ const Compitition = {
         required: ["competitionId", "isCompetitionStatisticsCalculation"],
       },
     },
+  },
+  getAllSeasonOfCompetitions: {
+    schema: {
+      tags: ["Compitition"],
+      description: "Get All Season Of Competitions",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" }
+        },
+        required: ["competitionId"]
+      }
+    }
   }
 };
 
@@ -5407,6 +5421,20 @@ const Score = {
     schema: {
       tags: ["Score"],
       description: "get all commentary by competition id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" }
+        },
+        required: ["competitionId"]
+      }
+    }
+  },
+  getAllSeasonOfCompetitions: {
+    schema: {
+      tags: ["Score"],
+      description: "Get all Season Of Competitions",
       security: [{ bearerAuth: [] }],
       body: {
         type: "object",

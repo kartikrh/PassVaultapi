@@ -52,7 +52,7 @@ const {
 const { allCongifService } = require("../../../services/config");
 const { getAllBanners } = require("../../../controller/users/admin/banner");
 const { getMarketTypeAndCategoryByMarketType } = require("../../../controller/users/admin/marketTemplate");
-const { getAllCompetitions } = require("../../../controller/users/admin/competition");
+const { getAllCompetitions, getAllSeasonOfCompetitions } = require("../../../controller/users/admin/competition");
 const { getAllVideoLibrary } = require("../../../controller/users/admin/videoLibrary/index");
 const { getAllPhotoLibrary, allLibraryImages } = require("../../../controller/users/admin/photoLibrary/index");
 const { getAllTipsClientAPI } = require("../../../controller/users/admin/tips/index");
@@ -491,6 +491,10 @@ module.exports = async (fastify, opts) => {
   });
   fastify.post("/getAllAdvertise", {
     handler: (request , reply) => getAllAdvertise(request, reply, fastify)
+  });
+  fastify.post("/getAllSeasonOfCompetitions", {
+    schema: Score.getAllSeasonOfCompetitions.schema,
+    handler: (request , reply) => getAllSeasonOfCompetitions(request, reply, fastify)
   });
 };
 

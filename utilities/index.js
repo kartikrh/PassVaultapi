@@ -2419,6 +2419,14 @@ const ClientAPIType = {
   Delete: 3
 }
 
+const normalizeText = (value) => {
+  return (value || "")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " "); // collapse multiple spaces
+};
+
 module.exports = {    
   ERROR_CODES,
   error,
@@ -2546,5 +2554,6 @@ module.exports = {
   getCombineFullScore,
   EntityInningsStatus,
   oversToBalls,
-  ClientAPIType
+  ClientAPIType,
+  normalizeText
 };
