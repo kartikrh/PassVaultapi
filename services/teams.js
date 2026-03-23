@@ -35,7 +35,7 @@ const { insertPlayerQuery, updateExchangePlayerQuery } = require("../repository/
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { insertAutoImportDataService } = require("./autoImportData");
 const { errorLogger } = require("../utilities/logger");
-const { upTeamNameInComQuery } = require("../repository/TableCommentary");
+const { upTeamNameInComQuery, updateCommentaryTeamColorQuery } = require("../repository/TableCommentary");
 const { playerImageChangeOnClientAPIService, upsertPlayerOnImportService } = require("../services/player");
 const { saveTeamMatchTypeByTeamService, deleteTeamMatchTypeByTeamIdService } = require("./teamMatchType");
 const { getTeamMatchTypeByTeamQuery } = require("../repository/TableTeamMatchType");
@@ -534,6 +534,64 @@ const updateTeamService = async (request, fastify) => {
   }
 
   await updateTeamQuery(body, fastify, request);
+
+  let newTeamColor = null, newBackgroundColor = null;
+  if (request.body.teamColor !== checkTeamId.teamColor) {
+    newTeamColor = request.body.teamColor;
+  }
+  if (request.body.backgroundColor !== checkTeamId.backgroundColor) {
+    newBackgroundColor = request.body.backgroundColor;
+  }
+
+  if (newTeamColor || newBackgroundColor) {
+    const commentaryTeams = global.tblCommentaryTeams.filter(tct => tct.teamId === checkTeamId.teamId);
+    const commentaryIds = [...new Set(commentaryTeams.map(item => item.commentaryId))];
+    for (const ct of commentaryTeams) {
+      const teamIndex = global.tblCommentaryTeams.findIndex(tct => tct.commentaryTeamId === ct.commentaryTeamId);
+      if (teamIndex !== -1) {
+        const updateCommentaryTeam = await updateCommentaryTeamColorQuery({
+          ...request,
+          body: {
+            teamColor: newTeamColor || checkTeamId.teamColor,
+            backgroundColor: newBackgroundColor || checkTeamId.backgroundColor,
+            commentaryTeamId: ct.commentaryTeamId
+          }
+        }, fastify);
+        global.tblCommentaryTeams[teamIndex] = updateCommentaryTeam;
+      }
+    }
+
+    if (commentaryIds.length > 0) {
+      const commentaries = global.tblCommentaries.filter(tc => commentaryIds.includes(tc.commentaryId));
+      for (const c of commentaryIds) {
+        if (
+          global?.clientSocketIo !== undefined &&
+          global?.clientSocketIo.length > 0
+        ) {
+          const { commentaryDetailsByEventIdService } = require("./commentry");
+          commentaryDetailsByEventIdService(
+            {
+              ...request,
+              body: {
+                eventId: commentaries.find(tc => tc.commentaryId === c)?.eventRefId,
+                commentaryId: c
+              },
+            },
+            fastify,
+            "callFromSocket"
+          ).catch((err) => {
+            console.log(new Date(), "err in commentaryDetailsByEventIdService", err);
+            errorLogger(
+              fastify,
+              err.message,
+              "ERROR --> services/teams.js/updateTeamService",
+              request
+            );
+          });
+        }
+      }
+    }
+  }
 
   delete body.userId;
 

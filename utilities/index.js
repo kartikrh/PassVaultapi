@@ -735,6 +735,7 @@ const APIEndpointModuleType = {
   getCompetitionSquadDataByIdFromEntity: 18,
   searchPlayerDataFromEntity: 19,
   getCommentaryInningDataFromEntity: 20,
+  upsertAdvertiseDataToClient: 21
 }
 
 const NotificationSendType = {
@@ -2412,6 +2413,20 @@ const oversToBalls = (overs) => {
   return (over * 6) + validBalls;
 };
 
+const ClientAPIType = {
+  Insert: 1,
+  Update: 2,
+  Delete: 3
+}
+
+const normalizeText = (value) => {
+  return (value || "")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " "); // collapse multiple spaces
+};
+
 module.exports = {    
   ERROR_CODES,
   error,
@@ -2539,4 +2554,6 @@ module.exports = {
   getCombineFullScore,
   EntityInningsStatus,
   oversToBalls,
+  ClientAPIType,
+  normalizeText
 };

@@ -19,6 +19,7 @@ const {
   getMatchTypeTemplateByCompetitionIdService,
   changeIsCompetitionStatisticsCalculationStatusService,
   getAllCompetitionsService,
+  getAllSeasonOfCompetitionsService,
 } = require("../../../../services/competition");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -297,6 +298,16 @@ const getAllCompetitions = async (request, reply, fastify) => {
   }
 };
 
+const getAllSeasonOfCompetitions = async (request, reply, fastify) => {
+  try {
+    const result = await getAllSeasonOfCompetitionsService(request);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getAllSeasonOfCompetitions", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 module.exports = {
   getAllCompetition,
   getCompetitionById,
@@ -323,4 +334,5 @@ module.exports = {
   getMatchTypeTemplateByCompetitionId,
   changeIsCompetitionStatisticsCalculationStatus,
   getAllCompetitions,
+  getAllSeasonOfCompetitions
 };
