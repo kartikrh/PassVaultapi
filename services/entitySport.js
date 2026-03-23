@@ -31,6 +31,7 @@ const {
     callEntitySportAPI,
     EntityInningsStatus,
     oversToBalls,
+    callDataProvider,
 } = require("../utilities/index");
 const { getCountryByIds } = require("../repository/TableCountryCodes")
 const { getVenueByIds } = require("../repository/TableVenue")
