@@ -367,6 +367,20 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                             null
                                         );
                                     });
+
+                                    if (global?.clientSocketIo !== undefined && global?.clientSocketIo.length > 0) {
+                                        global.clientSocketIo.forEach((socket) => {
+                                            socket.client.emit("updateFullscore", {
+                                                commentaryId: commentaryId,
+                                                eventRefId: commentary?.eventRefId,
+                                                dataToUpdate: [{
+                                                    module: "commentaryDetails",
+                                                    type: "update",
+                                                    data: commentaryData
+                                                }]
+                                            });
+                                        });
+                                    }
                                 }
 
                                 if (insertAutoUpdateCommentaryData?.id) {
