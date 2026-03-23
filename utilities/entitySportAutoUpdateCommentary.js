@@ -79,7 +79,6 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                 let commentaryData = commentary;
                                 const { commentaryId, eventDate, eventName, eventNo, team1Id, team2Id, onfieldUmpires, thirdUmpire: cThirdUmpire, matchReferee, venueId, location, countryId, matchTypeId } = commentary;
                                 let changedValues = {
-                                    id: commentaryId,
                                     team1Id: team1Id,
                                     team2Id: team2Id,
                                     eventDate: new Date(eventDate),
@@ -211,7 +210,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                         }
                                     }, fastify);
 
-                                    let index = global.tblCommentaries.findIndex((i) => i.commentaryId == commentary?.commentaryId);
+                                    let index = global.tblCommentaries.findIndex((i) => i.commentaryId == commentaryId);
                                     if (index !== -1) {
                                         global.tblCommentaries[index] = updatedCommentaryData[0][0];
                                         commentaryData = global.tblCommentaries[index];
@@ -265,12 +264,12 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
 
                                 const matchWeather = entitySportMatchResponse?.match_info?.weather;
                                 if (matchWeather && typeof matchWeather === "object") {
-                                    const checkWeather = global.tblWeather.find(item => item.commentaryId === commentary.commentaryId);
+                                    const checkWeather = global.tblWeather.find(item => item.commentaryId === commentaryId);
                                     if (checkWeather) {
                                         const weatherData = {
                                             weatherCondition: matchWeather?.weather || checkWeather?.weatherCondition,
                                             description: matchWeather?.weather_desc || checkWeather?.description,
-                                            commentaryId: commentary.commentaryId || checkWeather?.commentaryId,
+                                            commentaryId: commentaryId || checkWeather?.commentaryId,
                                             temp: matchWeather?.temp || checkWeather?.temp,
                                             humidity: matchWeather?.humidity || checkWeather?.humidity,
                                             visibility: matchWeather?.visibility || checkWeather?.visibility,
@@ -279,7 +278,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                             id: checkWeather?.id
                                         };
                                         const updateWeather = await updateWeatherQuery(weatherData, fastify, null);
-                                        const index = global.tblWeather.findIndex(item => item?.commentaryId === commentary.commentaryId);
+                                        const index = global.tblWeather.findIndex(item => item?.commentaryId === commentaryId);
                                         if (index !== -1) {
                                             global.tblWeather[index] = updateWeather[0]
                                             isChanged = true;
@@ -290,7 +289,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                         const weatherData = {
                                             weatherCondition: matchWeather?.weather || null,
                                             description: matchWeather?.weather_desc || null,
-                                            commentaryId: commentary.commentaryId,
+                                            commentaryId: commentaryId,
                                             temp: matchWeather?.temp || null,
                                             humidity: matchWeather?.humidity || null,
                                             visibility: matchWeather?.visibility || null,
@@ -305,18 +304,18 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
 
                                 const matchPitch = entitySportMatchResponse?.match_info?.pitch;
                                 if (matchPitch && (matchPitch?.pitch_condition != "" || matchPitch?.batting_condition != "" || matchPitch?.pace_bowling_condition != "" || matchPitch?.spine_bowling_condition != "")) {
-                                    const checkPitchDetails = global.tblPitchConditions.find(item => item?.commentaryId === commentary.commentaryId);
+                                    const checkPitchDetails = global.tblPitchConditions.find(item => item?.commentaryId === commentaryId);
                                     if (checkPitchDetails) {
                                         const pitchConditionData = {
                                             pitchCondition: matchPitch?.pitch_condition ?? checkPitchDetails?.pitchCondition,
                                             battingCondition: matchPitch?.batting_condition ?? checkPitchDetails?.battingCondition,
                                             paceBowlingCondition: matchPitch?.pace_bowling_condition ?? checkPitchDetails?.paceBowlingCondition,
                                             spineBowlingConniton: matchPitch?.spine_bowling_condition ?? checkPitchDetails?.spineBowlingCondition,
-                                            commentaryId: commentary.commentaryId,
+                                            commentaryId: commentaryId,
                                             id: checkPitchDetails?.id
                                         };
                                         const updatePitch = await updatePitchConditionQuery(pitchConditionData, fastify, null);
-                                        const index = global.tblPitchConditions.findIndex(item => item?.commentaryId === commentary.commentaryId);
+                                        const index = global.tblPitchConditions.findIndex(item => item?.commentaryId === commentaryId);
                                         if (index !== -1) {
                                             global.tblPitchConditions[index] = updatePitch[0]
                                             isChanged = true;
@@ -329,7 +328,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                             battingCondition: matchPitch?.batting_condition,
                                             paceBowlingCondition: matchPitch?.pace_bowling_condition,
                                             spineBowlingConniton: matchPitch?.spine_bowling_condition,
-                                            commentaryId: commentary.commentaryId
+                                            commentaryId: commentaryId
                                         };
 
                                         const insertPitchDetails = await insertPitchConditionQuery(pitchConditionData, fastify, null);
