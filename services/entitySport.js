@@ -4426,7 +4426,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
               (cp) =>
                 cp.commentaryId == comDetails.commentaryId &&
                 cp.currentInnings == comDetails.currentInnings &&
-                cp.tpId == p.bowler_id
+                cp.tpId == b.bowler_id
             );
 
             if (latestPlayers) {
@@ -4440,7 +4440,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
             } else {
               await insertComPlayerEntityService(
                 matchInfoData,
-                p.bowler_id,
+                b.bowler_id,
                 bowlingTeam,
                 request,
                 fastify
@@ -4449,7 +4449,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
                 (cp) =>
                   cp.commentaryId == comDetails.commentaryId &&
                   cp.currentInnings == comDetails.currentInnings &&
-                  cp.tpId == p.bowler_id
+                  cp.tpId == b.bowler_id
               );
               if (latestPlayers && !playerTpIdObj[latestPlayers.tpId]) {
                 playerTpIdObj[latestPlayers.tpId] = {
