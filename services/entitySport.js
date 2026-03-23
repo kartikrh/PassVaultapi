@@ -8,6 +8,7 @@ const {
   scoringTypeCommentaryQuery,
   updateBallByBallFullCommentaryQuery,
   upComStatusQuery,
+  cancelCommentaryQuery,
 } = require("../repository/TableCommentary")
 const { getAllTournamentTeamPlayerByIdsQuery } = require("../repository/TableTournamentsTeamPlayers")
 const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService,addSuperOverInEntity, insertComPlayerEntityService } = require("../services/commentry");
@@ -4102,8 +4103,16 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
     const entityStatus = matchInfoData?.match_info?.status;
 
     if (comDetails?.commentaryStatus == commentaryStatus.OPEN) {
+      let matchStatus = matchInfoData?.match_info?.status ?? null;
       const tossInfo = matchInfoData?.match_info?.toss;
-      if (!tossInfo || tossInfo.winner == 0) throw new Error("Toss not done");
+      if (!tossInfo || tossInfo.winner == 0) {
+        if (matchStatus == EntityInningsStatus.Abandoned) {
+          await cancelCommentaryOnInningService(comDetails?.commentaryId, request, fastify);
+          return `Inning data inserted successfully`
+        } else {
+          throw new Error("Toss not done");
+        }
+      }
 
       const scoreResponse = {};
       const sendDataForSocketUpdate = {
@@ -5259,6 +5268,12 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
       let plyArr = Object.values(playersMap);
       let overArr = Object.values(oversMap)
 
+      let matchStatus = matchInfoData?.match_info?.status ?? null;
+      if (matchStatus == EntityInningsStatus.Abandoned && liveInningNumber == i) {
+        upComDetails.commentaryStatus = commentaryStatus.CANCELLED;
+        upComDetails.result = "Abandoned";
+      }
+
       await syncEntitySportCommentaryService({
         commentaryId: comDetails.commentaryId,
         commentaryDetails: {
@@ -5615,6 +5630,70 @@ const updateBowlerIdService = async (playerTpData, response, eData, undoType, co
     );
   }
 };
+
+const cancelCommentaryOnInningService  = async (commentaryId, request, fastify) => {
+  try {
+    const index = global.tblCommentaries.findIndex(
+      (item) => item.commentaryId === commentaryId
+    );
+    if (index !== -1) {
+      await cancelCommentaryQuery({ commentaryId: [commentaryId] }, fastify, request);
+      global.tblCommentaries[index] = {
+        ...global.tblCommentaries[index],
+        commentaryStatus: commentaryStatus.CANCELLED,
+        result: "Abandoned",
+      }
+      await callDataProvider(
+        {
+          commentaryId,
+          serviceType: ServiceType.dataProviderAPI,
+          moduleType: APIEndpointModuleType.commentaryUpdate,
+          type: "close",
+        },
+        fastify
+      ).catch((err) => {
+        console.log("call data provider console in entitySport.js", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/entitySport.js/cancelCommentaryOnInningService",
+          request
+        );
+      });
+      const cData = await getMatchDataByCId(
+        {commentaryId},
+        request,
+        fastify
+      );
+
+      await callClientAPI(
+        {
+          serviceType: ServiceType.clientAPI,
+          moduleType: APIEndpointModuleType.commentaryUpdate,
+          data: cData,
+        },
+        request,
+        fastify
+      ).catch((err) => {
+        console.log("call client api console in entitySport", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/entitySport.js/cancelCommentaryOnInningService",
+          request
+        );
+      });
+    }
+    return true;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> services/entitySport.js/cancelCommentaryOnInningService",
+      request
+    );
+  }
+}
 
 module.exports = {
     saveTeamsService,
