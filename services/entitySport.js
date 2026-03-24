@@ -1386,7 +1386,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
       for (let p of response.live?.batsmen) {
         if (!playerTpIdObj[p.batsman_id]) {
           request.body.response = response; 
-          await updateCommentaryPlayersFromEntityService(request, fastify);
+          // await updateCommentaryPlayersFromEntityService(request, fastify);
           let latestPlayers = global.tblCommentaryPlayers.find(
             (cp) =>
               cp.commentaryId == comDetails.commentaryId &&
@@ -1474,7 +1474,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
       for (let p of response.live?.bowlers) {
         if (!playerTpIdObj[p.bowler_id]) {
           request.body.response = response; 
-          await updateCommentaryPlayersFromEntityService(request, fastify);
+          // await updateCommentaryPlayersFromEntityService(request, fastify);
           let latestPlayers = global.tblCommentaryPlayers.find(
             (cp) =>
               cp.commentaryId == comDetails.commentaryId &&
@@ -4103,12 +4103,18 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
     const gameState = matchInfoData?.match_info?.game_state ?? matchInfoData?.live?.game_state;
     const entityStatus = matchInfoData?.match_info?.status;
 
+    let matchStatus = matchInfoData?.match_info?.status ?? null;
     if (comDetails?.commentaryStatus == commentaryStatus.OPEN) {
-      let matchStatus = matchInfoData?.match_info?.status ?? null;
       const tossInfo = matchInfoData?.match_info?.toss;
       if (!tossInfo || tossInfo.winner == 0) {
         if (matchStatus == EntityInningsStatus.Abandoned) {
           await cancelCommentaryOnInningService(comDetails?.commentaryId, request, fastify);
+          importData.importEndTime = new Date();
+          importData.isImported = false;
+          importData.esApiResponseData = {
+            matchInfoRes: matchInfoData,
+          }
+          await updateAutoImportDataQuery(importData, fastify, request);
           return `Inning data inserted successfully`
         } else {
           throw new Error("Toss not done");
@@ -4243,6 +4249,18 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       });
     }
+    let teama = matchInfoData?.match_info?.teama?.scores_full?.trim() || "";
+    let teamb = matchInfoData?.match_info?.teamb?.scores_full?.trim() || "";
+    if (matchStatus == EntityInningsStatus.Abandoned && !teama && !teamb) {
+      await cancelCommentaryOnInningService(comDetails?.commentaryId, request, fastify);
+      importData.importEndTime = new Date();
+      importData.isImported = false;
+      importData.esApiResponseData = {
+        matchInfoRes: matchInfoData,
+      }
+      await updateAutoImportDataQuery(importData, fastify, request);
+      return `Inning data inserted successfully`
+    } 
     if (!liveInningNumber || liveInningNumber == 0) return;
 
     for (let i = 1; i <= liveInningNumber; i++) {
@@ -4338,7 +4356,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
         for (let p of batsmen) {
           if (!playerTpIdObj[p.batsman_id]) {
             request.body.response = { match_id: matchId };
-            await updateCommentaryPlayersFromEntityService(request, fastify);
+            // await updateCommentaryPlayersFromEntityService(request, fastify);
             let latestPlayers = global.tblCommentaryPlayers.find(
               (cp) =>
                 cp.commentaryId == comDetails.commentaryId &&
@@ -4431,7 +4449,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
         for (let b of bowlers) {
           if (!playerTpIdObj[b.bowler_id]) {
             request.body.response = { match_id: matchId };
-            await updateCommentaryPlayersFromEntityService(request, fastify);
+            // await updateCommentaryPlayersFromEntityService(request, fastify);
             let latestPlayers = global.tblCommentaryPlayers.find(
               (cp) =>
                 cp.commentaryId == comDetails.commentaryId &&
@@ -4545,7 +4563,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
           if (!playerTpIdObj[batter1] || !playerTpIdObj[batter2]) {
             request.body.response = { match_id: matchId };
 
-            await updateCommentaryPlayersFromEntityService(request, fastify);
+            // await updateCommentaryPlayersFromEntityService(request, fastify);
 
             let latestPlayers = global.tblCommentaryPlayers.filter(
               (cp) =>
