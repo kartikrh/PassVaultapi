@@ -2283,7 +2283,7 @@ const competitionImportService = async (data, fastify, request) => {
         await createVenueService({
           ...request,
           body: {
-            ...global.tblVenues[venueIndex],
+            id: checkCommentary.venueId,
             ...updateVenueReportData
           }
         }, fastify);
