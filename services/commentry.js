@@ -25963,12 +25963,12 @@ const insertComPlayerEntityService = async (entityData, playerTpId, teamData, re
       fastify
     );
 
-    let tournamentTeamPlayer = tournamentTeamsPlayers.find(ttp => ttp.teamId == teamData.teamId && ttp.matchTypeId == matchTypeId && (ttp.playerId == player.refPlayerId || ttp.tpId == player?.tpId));
+    let tournamentTeamPlayer = tournamentTeamsPlayers.find(ttp => ttp.teamId == teamData.teamId && ttp.matchTypeId == matchTypeId && (ttp.playerId == player.playerId || ttp.tpId == player?.tpId));
     if (!tournamentTeamPlayer) {
       tournamentTeamPlayer = await insertTournamentTeamPlayersQuery({
         competitionId: checkCompetition.competitionId,
         teamId: teamData.teamId,
-        playerId: player.refPlayerId,
+        playerId: player.playerId,
         playerName: player.playerName,
         userId: request?.userTokenInfo?.WrUserId ?? -2,
         tpId: player?.tpId ?? null,
@@ -25980,7 +25980,7 @@ const insertComPlayerEntityService = async (entityData, playerTpId, teamData, re
     const newCommentaryPlayer = await insertCommentaryPlayers({
       commentaryId: checkCommentary.commentaryId,
       teamId: teamData.teamId,
-      playerId: player.playerId ?? player.refPlayerId,
+      playerId: player.playerId,
       displayOrder: player?.playerOrder ?? null,
       matchTypeId: checkCommentary?.matchTypeId,
       tpId: player?.tpId ?? null,
