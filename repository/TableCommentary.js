@@ -2314,6 +2314,7 @@ const getAllCommentaryBallByBallDataQuery = async (whereCondition = null, fastif
     "wrCardType" as "cardType"
     from "tblCommentaryBallByBalls"
     ${whereCondition ? `WHERE ${whereCondition}` : ""}
+    ORDER BY "wrCommentaryBallByBallId" DESC
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -2474,6 +2475,7 @@ const getAllOversDataQuery = async (whereCondition = null, fastify) => {
       "wrPowerPlayName" as "powerPlayName"
       from "tblOvers" 
       ${whereCondition ? `WHERE ${whereCondition}` : ""}
+      ORDER BY "wrOverId" DESC
       `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -2620,6 +2622,7 @@ const getAllCommentaryWicketDataQuery = async (whereCondition = null, fastify) =
     "wrCreatedDate" as "createdDate"
     from "tblCommentaryWickets" 
     ${whereCondition ? `WHERE ${whereCondition}` : ""}
+    ORDER BY "wrCommentaryWicketId" DESC
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -2765,6 +2768,7 @@ const getAllCommentaryPartnershipDataQuery = async (whereCondition = null, fasti
       "wrTeamWicket" as "teamWicket"
       from "tblCommentaryPartnerships"
       ${whereCondition ? `WHERE ${whereCondition}` : ""}
+      ORDER BY "wrCommentaryPartnershipId" DESC
       `,
     {
       type: fastify.db.QueryTypes.SELECT,

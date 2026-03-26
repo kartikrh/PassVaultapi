@@ -425,6 +425,9 @@ async function asyncFilter(array, predicate, chunkSize = 100) {
     processChunk();
   });
 }
+function sortDesc(arr, key) {
+  return arr.sort((a, b) => (b[key] || 0) - (a[key] || 0));
+}
 const getAllCommentariesDataV2Service = async (request,fastify) => {
     try {
         let commentaries = {};
@@ -482,10 +485,10 @@ const getAllCommentariesDataV2Service = async (request,fastify) => {
             } else {
                teams = await asyncFilter(global.tblCommentaryTeams, item => item.commentaryId == c.commentaryId);
                 players = await asyncFilter(global.tblCommentaryPlayers, item => item.commentaryId == c.commentaryId);
-                overs = await asyncFilter(global.tblOvers, item => item?.commentaryId == c.commentaryId);
-                ballByBall = await asyncFilter(global.tblCommentaryBallByBall, item => item?.commentaryId == c.commentaryId);
-                wickets = await asyncFilter(global.tblCommentaryWicket, item => item?.commentaryId == c.commentaryId);
-                partnerships = await asyncFilter(global.tblCommentaryPartnership, item => item?.commentaryId == c.commentaryId);
+                overs = sortDesc(await asyncFilter(global.tblOvers, item => item?.commentaryId == c.commentaryId), "overId");
+                ballByBall = sortDesc(await asyncFilter(global.tblCommentaryBallByBall, item => item?.commentaryId == c.commentaryId), "commentaryBallByBallId");
+                wickets = sortDesc(await asyncFilter(global.tblCommentaryWicket, item => item?.commentaryId == c.commentaryId), "commentaryWicketId");
+                partnerships = sortDesc(await asyncFilter(global.tblCommentaryPartnership, item => item?.commentaryId == c.commentaryId), "commentaryPartnershipId");
                 marketOddsBallByBall = await asyncFilter(global.tblMarketOddsBallByBall, item => item?.commentaryId == c.commentaryId) || [];
 
             }
