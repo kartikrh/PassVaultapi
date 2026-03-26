@@ -47,7 +47,9 @@ const getAllCompetitionStatisticsQuery = async (fastify, request = null) => {
                     ttp."wrJerseyPlayerImage"
                 FROM "tblTeamPlayers" ttp
                 WHERE ttp."wrRefPlayerId" = tcs."wrPlayerId"
-                  AND ttp."wrIsDeleted" = FALSE
+                    AND ttp."wrIsDeleted" = FALSE
+                    AND ttp."wrTeamId" = tcs."wrTeamId"
+                    AND ttp."wrMatchTypeId" = tcs."wrMatchTypeId"
                 ORDER BY ttp."wrTeamPlayerId" DESC
                 LIMIT 1
             ) ttp ON TRUE
@@ -120,7 +122,9 @@ const insertCompetitionStatisticsQuery = async (data, fastify, request) => {
                         ttp."wrJerseyPlayerImage"
                     FROM "tblTeamPlayers" ttp
                     WHERE ttp."wrRefPlayerId" = tcs."wrPlayerId"
-                      AND ttp."wrIsDeleted" = FALSE
+                        AND ttp."wrIsDeleted" = FALSE
+                        AND ttp."wrTeamId" = tcs."wrTeamId"
+                        AND ttp."wrMatchTypeId" = tcs."wrMatchTypeId"
                     ORDER BY ttp."wrTeamPlayerId" DESC
                     LIMIT 1
                 ) ttp ON TRUE
@@ -211,7 +215,9 @@ const updateCompetitionStatisticsByIdQuery = async (data, fastify, request) => {
                         ttp."wrJerseyPlayerImage"
                     FROM "tblTeamPlayers" ttp
                     WHERE ttp."wrRefPlayerId" = tcs."wrPlayerId"
-                      AND ttp."wrIsDeleted" = FALSE
+                        AND ttp."wrIsDeleted" = FALSE
+                        AND ttp."wrTeamId" = tcs."wrTeamId"
+                        AND ttp."wrMatchTypeId" = tcs."wrMatchTypeId"
                     ORDER BY ttp."wrTeamPlayerId" DESC
                     LIMIT 1
                 ) ttp ON TRUE
