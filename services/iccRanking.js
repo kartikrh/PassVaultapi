@@ -6,7 +6,7 @@ const { teamImportService, upsertTeamPlayers } = require("./teams");
 const { fieldNamesService } = require("./fieldNamesService");
 const { insertAutoImportDataService } = require("./autoImportData");
 const { saveTeamMatchTypeByTeamService } = require("./teamMatchType");
-const { getTeamPlayerByPlayerIdQuery } = require("../repository/TableTeamPlayer");
+const { getTeamPlayersByTeamIdAndPlayerIdQuery } = require("../repository/TableTeamPlayer");
 const { getTeamMatchTypeByTeamQuery } = require("../repository/TableTeamMatchType");
 
 const getAllICCRankingService = async (request) => {
@@ -96,9 +96,15 @@ const createICCRankingService = async (request, fastify) => {
         const entitySocketData = global.tblEntitySockets?.[0];
         const team = global.tblTeams.find(t => t.teamId === teamId);
         const player = global.tblPlayers.find(p => p.playerId === playerId);
-        const teamPlayers = await getTeamPlayerByPlayerIdQuery(playerId, fastify, request);
+        const teamPlayers = await getTeamPlayersByTeamIdAndPlayerIdQuery({
+            ...request,
+            body: {
+                teamId: teamId,
+                playerId: playerId
+            }
+        }, fastify);
 
-        const teamPlayer = teamPlayers.find(tp => tp.matchTypeId === -1 && tp.teamId === teamId);
+        const teamPlayer = teamPlayers.find(tp => tp.matchTypeId === -1);
         await upsertTeamPlayers(teamPlayer, team, player, -1, null, entitySocketData, request, fastify);
 
         let teamMatchTypeId = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${team.teamId} AND ttmt."wrMatchTypeId" = ${matchTypeId}`);
