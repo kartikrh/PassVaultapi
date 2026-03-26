@@ -1261,7 +1261,7 @@ const upsertTeamPlayers = async (teamPlayer, team, player, matchTypeId, teamMatc
       }
     }
 
-    await playerImageChangeOnClientAPIService(teamPlayer.refPlayerId, matchTypeId, fastify);
+    await playerImageChangeOnClientAPIService(teamPlayer, matchTypeId, fastify);
     return teamPlayer;
   } catch (error) {
     console.log("🚀 ~ upsertTeamPlayers ~ error:", error)
