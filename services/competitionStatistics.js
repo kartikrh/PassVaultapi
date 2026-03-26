@@ -378,7 +378,11 @@ const getCompetitionStatisticsByCompetitionIdService = async (request, fastify) 
     );
 
     if (!competition) {
-        throw new Error(`Competition id ${competitionId} not found`);
+        throw new Error(`Competition with this id ${competitionId} not found`);
+    }
+
+    if (!competition.isCompetitionStatisticsCalculation) {
+        throw new Error(`Competition with this id ${competitionId} is not available for client.`);
     }
 
     const competitionStatistics = global.tblCompetitionStatistics.filter(
