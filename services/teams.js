@@ -1250,6 +1250,17 @@ const upsertTeamPlayers = async (teamPlayer, team, player, matchTypeId, teamMatc
         matchTypeId: matchTypeId
       }, fastify, request);
     }
+
+    if (teamMatchTypeId && matchTypeId) {
+      const competitionStatisticsPlayers = global.tblCompetitionStatistics.filter(tcs => tcs.teamId === team.teamId && tcs.playerId === player.playerId && tcs.matchTypeId === matchTypeId);
+      for (const cp of competitionStatisticsPlayers) {
+        const index = global.tblCompetitionStatistics.findIndex(tcs => tcs.competitionStatisticsId === cp.competitionStatisticsId);
+        if (index !== -1) {
+          global.tblCompetitionStatistics[index].jerseyPlayerImage = mergeImage ? mergeImage.fullPath : entitySocketData?.defaultPlayerJerseyImage;
+        }
+      }
+    }
+
     await playerImageChangeOnClientAPIService(teamPlayer.refPlayerId, matchTypeId, fastify);
     return teamPlayer;
   } catch (error) {
