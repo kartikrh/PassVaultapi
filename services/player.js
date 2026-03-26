@@ -1512,8 +1512,8 @@ const runMergePlayerImageJob = async (playerId, request, fastify) => {
 };
 
 const playerImageChangeOnClientAPIService = async (teamPlayer, matchTypeId, fastify) => {
-  const { teamId, playerId } = teamPlayer;
-  const rankingData = global.tblICCRanking.filter(item => item.teamId === teamId && item.playerId == playerId && item.matchTypeId === matchTypeId && item.isActive == true);
+  const { teamId, refPlayerId } = teamPlayer;
+  const rankingData = global.tblICCRanking.filter(item => item.teamId === teamId && item.playerId == refPlayerId && item.matchTypeId === matchTypeId && item.isActive == true);
   const updatedData = await Promise.all(
     rankingData
       .map(async item => {
