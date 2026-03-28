@@ -5782,8 +5782,8 @@ const updateBatterIdService = async (data, request, fastify) => {
     ) {
       let playerData = {
         ...oldBatterData,
-        isPlay: null,
-        onStrike: null,
+        isPlay: entityBatterData?.batting == "true" ? true : null,
+        onStrike: entityBatterData?.position == "striker" ? true : entityBatterData?.position == "non striker" ? false : null,
         batRun: null,
         batBall: null,
         batFour: null,
@@ -5812,26 +5812,33 @@ const updateBatterIdService = async (data, request, fastify) => {
       };
       commPlayers.push(playerData);
     }
-    let checkNonStrikeId = ballData.batNonStrikeId == oldBatterData.commentaryPlayerId
-
+    const oldId = oldBatterData.commentaryPlayerId;
+    const newId = newBatterData.commentaryPlayerId;
     // Update commentary ballbyball
-    let updateBallData = {
-      ...ballData,
-      batStrikeId: newBatterData.commentaryPlayerId,
-      batNonStrikeId: checkNonStrikeId ? newBatterData.commentaryPlayerId : ballData.batNonStrikeId,
-      type: "update",
+    let updateBallData = { ...ballData };
+    // both same → shuffle
+    if (ballData.batNonStrikeId == newId) {
+      updateBallData.batStrikeId = newId;
+      updateBallData.batNonStrikeId = ballData.batStrikeId;
+    } else {
+      // only strike is old → update strike only
+      updateBallData.batStrikeId = newId;
     }
+    updateBallData.type = "update";
+
     commBallByBall.push(updateBallData);
     let overCreatedBallId;
-    if (updateBallData.overCount == "0.1") {
+    // check 0th ball in over when the 1st ball update
+    if (/\.10*$/.test(String(updateBallData.overCount))) {
       let over0thBall = global.tblCommentaryBallByBall.filter(item => 
         item.commentaryId == comDetails.commentaryId &&
         item.overId == updateBallData.overId
       ).sort((a,b) => a.overCount - b.overCount)[0];
+
       commBallByBall.push({
         ...over0thBall,
-        batStrikeId: newBatterData.commentaryPlayerId,
-        batNonStrikeId: checkNonStrikeId ? newBatterData.commentaryPlayerId : ballData.batNonStrikeId,
+        batStrikeId: updateBallData.batStrikeId,
+        batNonStrikeId: updateBallData.batNonStrikeId,
         type: "update",
       });
       overCreatedBallId = over0thBall.commentaryBallByBallId;
@@ -5847,15 +5854,21 @@ const updateBatterIdService = async (data, request, fastify) => {
     );
 
     if (comPart) {
-      let batter1Check = comPart.batter1Id == oldBatterData.commentaryPlayerId
-      comPartnership = {
-        ...comPart,
-        batter1Id: batter1Check ? newBatterData.commentaryPlayerId : comPart.batter1Id,
-        batter1Name: batter1Check ? newBatterData.playerName : comPart.batter1Name,
-        batter2Id: batter1Check ? comPart.batter2Id : newBatterData.commentaryPlayerId,
-        batter2Name: batter1Check ? comPart.batter2Name : newBatterData.playerName,
-        type: "update"
+      const newName = newBatterData.playerName;
+
+      comPartnership = { ...comPart };
+
+      // old batter is batter1 → replace batter1
+      if (comPart.batter1Id == oldId && comPart.batter2Id != newId) {
+        comPartnership.batter1Id = newId;
+        comPartnership.batter1Name = newName;
       }
+      // old batter is batter2 → replace batter2
+      else if (comPart.batter2Id == oldId && comPart.batter1Id != newId) {
+        comPartnership.batter2Id = newId;
+        comPartnership.batter2Name = newName;
+      }
+      comPartnership.type = "update";
     }
 
     // Update Wicket (Only if undoType = 1)
