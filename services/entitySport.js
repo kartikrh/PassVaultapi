@@ -5835,13 +5835,22 @@ const updateBatterIdService = async (data, request, fastify) => {
         item.overId == updateBallData.overId
       ).sort((a,b) => a.overCount - b.overCount)[0];
 
-      commBallByBall.push({
-        ...over0thBall,
-        batStrikeId: updateBallData.batStrikeId,
-        batNonStrikeId: updateBallData.batNonStrikeId,
-        type: "update",
-      });
-      overCreatedBallId = over0thBall.commentaryBallByBallId;
+      const ballExistsBetween = global.tblCommentaryBallByBall.some(item =>
+        item.commentaryId == comDetails.commentaryId &&
+        item.currentInnings == comDetails.currentInnings &&
+        item.commentaryBallByBallId < updateBallData.commentaryBallByBallId &&
+        item.commentaryBallByBallId > over0thBall.commentaryBallByBallId
+      );
+
+      if (!ballExistsBetween) {
+        commBallByBall.push({
+          ...over0thBall,
+          batStrikeId: updateBallData.batStrikeId,
+          batNonStrikeId: updateBallData.batNonStrikeId,
+          type: "update",
+        });
+        overCreatedBallId = over0thBall.commentaryBallByBallId;
+      }
     }
 
     // Update Partnership data
