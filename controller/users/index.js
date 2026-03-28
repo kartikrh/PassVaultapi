@@ -119,9 +119,9 @@ async function validateUser(request, reply, fastify) {
 
 const loadDataInMemory = async (request, reply, fastify) => {
   try {
-    if (!request.userTokenInfo.WrIsSuperAdmin) {
-      throw new Error("You are not authorized to perform this action");
-    }
+    // if (!request.userTokenInfo.WrIsSuperAdmin) {
+    //   throw new Error("You are not authorized to perform this action");
+    // }
     await fetchAllDataFromDb(fastify, reply);
   } catch (err) {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
@@ -143,9 +143,9 @@ const loadPanelDataInGlobal = async (request, reply, fastify) => {
 
 const loadClientDataInMemory = async (request, reply, fastify) => {
   try {
-    if (!request.userTokenInfo.WrIsSuperAdmin) {
-      throw new Error("You are not authorized to perform this action");
-    }
+    // if (!request.userTokenInfo.WrIsSuperAdmin) {
+    //   throw new Error("You are not authorized to perform this action");
+    // }
     return await fetchDataForClient(fastify, reply);
   } catch (err) {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
