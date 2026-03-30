@@ -5596,6 +5596,7 @@ const updateBowlerIdService = async (data, request, fastify) => {
       ...ballData,
       bowlerId: newBowlerData.commentaryPlayerId,
       ballBowlerId: newBowlerData.commentaryPlayerId,
+      commentary: eData.commentary,
       type: "update",
     }
     commBallByBall.push(updateBallData);
@@ -5817,9 +5818,11 @@ const updateBatterIdService = async (data, request, fastify) => {
     if (ballData.batNonStrikeId == newId) {
       updateBallData.batStrikeId = newId;
       updateBallData.batNonStrikeId = ballData.batStrikeId;
+      updateBallData.commentary = eData.commentary;
     } else {
       // only strike is old → update strike only
       updateBallData.batStrikeId = newId;
+      updateBallData.commentary = eData.commentary;
     }
     updateBallData.type = "update";
 
