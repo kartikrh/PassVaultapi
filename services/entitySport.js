@@ -350,13 +350,14 @@ const assignAwards = async (comDetails, response, request, fastify) => {
       fastify,
       `Failed to update player of the match for commentary id: ${comDetails.commentaryId}`,
       "Error --> services/entitySport.js/assignAwards - playerOfTheMatch",
-      null,
       {
-        commentary: comDetails,
-        entityCommentaryStatus: response?.match_info?.status,
-        response: request?.body,
-        awardType: awardTypes.MAN_OF_THE_MATCH,
-        playerId: response?.man_of_the_match?.pid
+        body: {
+          commentary: comDetails,
+          entityCommentaryStatus: response?.match_info?.status,
+          response: request?.body,
+          awardType: awardTypes.MAN_OF_THE_MATCH,
+          playerId: response?.man_of_the_match?.pid
+        }
       }
     )
   }
