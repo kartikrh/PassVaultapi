@@ -1220,10 +1220,8 @@ const setEntityCom2Service = async (request , fastify) =>{
       });
     }
 
-    if (comDetails.commentaryStatus == commentaryStatus.COMPLETED && entityStatus == EntityMatchStatus.COMPLETED) {
-      if (response?.man_of_the_match?.pid) {
-        await assignAwards(comDetails, response, request, fastify);
-      }
+    if (response?.man_of_the_match?.pid) {
+      await assignAwards(comDetails, response, request, fastify);
     }
 
     return true;
@@ -5391,11 +5389,9 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
       }
     }
 
-    const updatedCommentaryData = global.tblCommentaries[index];
-    if (updatedCommentaryData.commentaryStatus == commentaryStatus.COMPLETED && entityStatus == EntityMatchStatus.COMPLETED) {
-      if (matchInfoData?.man_of_the_match?.pid) {
-        await assignAwards(updatedCommentaryData, matchInfoData, request, fastify);
-      }
+    if (matchInfoData?.man_of_the_match?.pid) {
+      const updatedCommentaryData = global.tblCommentaries[index];
+      await assignAwards(updatedCommentaryData, matchInfoData, request, fastify);
     }
 
     importData.importEndTime = new Date();
