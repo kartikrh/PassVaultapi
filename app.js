@@ -177,36 +177,45 @@ module.exports = async function (fastify, opts) {
     }
   });
 
-  let isAutoImportProcessEnded = true;
+  let isAutoImportProcessRunning = false;
   cron.schedule('0,30 * * * * *', async () => {
     try {
-      if (isAutoImportProcessEnded && global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
-        isAutoImportProcessEnded = false;
+      if (!isAutoImportProcessRunning && global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
+        isAutoImportProcessRunning = true;
         await entitySportAutoImportProcess(fastify);
-        isAutoImportProcessEnded = true;
       }
     } catch (error) {
       console.error("Error during scheduled task - entitySportAutoImportProcess:", error);
+    } finally {
+      isAutoImportProcessRunning = false;
     }
   });
 
+  let isAutoUpdateCommentaryProcessRunning = false;
   cron.schedule(`*/${entitySportAutoUpdateCommentaryTime} * * * *`, async () => {
     try {
-      if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive && global.tblEntitySockets?.[0]?.isAutoUpdateCommentary) {
+      if (!isAutoUpdateCommentaryProcessRunning && global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive && global.tblEntitySockets?.[0]?.isAutoUpdateCommentary) {
+        isAutoUpdateCommentaryProcessRunning = true;
         await entitySportAutoUpdateCommentary(fastify);
       }
     } catch (error) {
       console.error("Error during scheduled task - entitySportAutoUpdateCommentary:", error);
+    } finally {
+      isAutoUpdateCommentaryProcessRunning = false;
     }
   });
 
+  let isAutoUpdatePlayerStatisticsProcessRunning = false;
   cron.schedule(`*/30 * * * * *`, async () => {
     try {
-      if (global.isAllDataLoadedInGlobal && global.tblConfigs.find((item) => item.key === ISPLAYERCALCULATIONON).value === "true") {
+      if (!isAutoUpdatePlayerStatisticsProcessRunning && global.isAllDataLoadedInGlobal && global.tblConfigs.find((item) => item.key === ISPLAYERCALCULATIONON).value === "true") {
+        isAutoUpdatePlayerStatisticsProcessRunning = true;
         await autoUpdatePlayerStatisticsDataProcess(fastify);
       }
     } catch (error) {
       console.error("Error during scheduled task - autoUpdatePlayerStatisticsDataProcess:", error);
+    } finally {
+      isAutoUpdatePlayerStatisticsProcessRunning = false;
     }
   });
 

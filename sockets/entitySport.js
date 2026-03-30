@@ -39,13 +39,13 @@ function addToQueue(payload, fastify) {
   const matchId = payload.response.match_id;
 
   // Replace existing queued item with latest data (avoid duplicates)
-  commentaryQueue.set(matchId, { payload, fastify });
+  commentaryQueue.set(matchId, { payload });
 
   // Schedule processing if not already scheduled
   if (!processTimeout) {
     processTimeout = setTimeout(() => {
       processTimeout = null;
-      processQueue();
+      processQueue(fastify);
     }, 500); // 300ms debounce to batch updates
   }
 }
@@ -54,52 +54,37 @@ function addToQueue(payload, fastify) {
  * Process queue - multiple matchIds in parallel, but serialized per matchId
  * Each matchId processes one at a time via locks
  */
-async function processQueue() {
+async function processQueue(fastify) {
   if (commentaryQueue.size === 0) return;
+  const processPromises = [];
+  for (const [matchId, { payload }] of commentaryQueue) {
+    commentaryQueue.delete(matchId); // Remove from queue immediately
+    const currentLock = getOrCreateLock(matchId); // Get existing lock for this matchId (creates new if doesn't exist)
+    const newLock = currentLock.then(async () => {
+      try {
+        const request = { body: payload, userTokenInfo: { WrUserId: -2 } };
+        await setEntityCom2Service(request, fastify);
+      } catch (err) {
+        errorLogger(
+          fastify,
+          err.message,
+          "Sockets/entitySports.js/processQueue",
+          null,
+          payload
+        );
+      }
+      await new Promise((r) => setTimeout(r, 50)); // Small delay to ease DB load
+    })
+    setLock(matchId, newLock);
 
-  const processPromises = Array.from(commentaryQueue.entries()).map(
-    ([matchId, { payload, fastify }]) => {
-      // Remove from queue immediately
-      commentaryQueue.delete(matchId);
-
-      // Get existing lock for this matchId (creates new if doesn't exist)
-      const currentLock = getOrCreateLock(matchId);
-
-      // Chain new processing to the lock
-      const newLock = currentLock.then(async () => {
-        try {
-          const request = { body: payload, userTokenInfo: { WrUserId: -2 } };
-          await setEntityCom2Service(request, fastify);
-          // console.log(`✓ Processed matchId ${matchId}`);
-        } catch (err) {
-          errorLogger(
-            fastify,
-            err.message,
-            "Sockets/entitySports.js/processQueue",
-            null,
-            payload
-          );
-          // console.error(`✗ Error processing matchId ${matchId}:`, err.message);
-        }
-        // Small delay to ease DB load
-        await new Promise((r) => setTimeout(r, 50));
-      });
-
-      // Update lock for this matchId
-      setLock(matchId, newLock);
-
-      // Cleanup: Delete lock after processing completes (prevents memory leak)
-      newLock.finally(() => {
-        // Only delete if no newer lock replaced it
-        if (matchIdLocks.get(matchId) === newLock) {
-          matchIdLocks.delete(matchId);
-          // console.log(`🗑 Cleaned up lock for matchId ${matchId}`);
-        }
-      });
-
-      return newLock;
-    }
-  );
+    newLock.finally(() => {
+      if (matchIdLocks.get(matchId) === newLock) {
+        matchIdLocks.delete(matchId);
+      }
+    });
+    processPromises.push(newLock);
+    // return newLock;
+  }
 
   // Wait for all matchIds to complete their processing
   await Promise.all(processPromises);
@@ -259,6 +244,10 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
           // console.log("Received entity data from Backend A:", payload);
           const request = { body: payload };
           if (payload.api_type && payload.api_type == "match_push_obj") {
+            let exist = global.tblCommentaries?.some(c => c.tpId == payload.response.match_id) || null;
+            if(!exist) {
+              return true;
+            }
             let isLog = global.tblConfigs.find((c) => c.key == configConstants.ISENTITYDATALOG)?.value || "false";
             if (isLog == "false") { return true; }
             await createDataQuery({ data: payload, matchId: payload.response.match_id }, fastify);
