@@ -62,16 +62,16 @@ const autoUpdatePlayerStatisticsDataProcess = async (fastify) => {
 
             if (getCommentaryPlayerBattingHistoryCount === 0) {
                 const batInningCount = batPlayer.filter(it => it.isInPlayingEleven).length;
-                const totalRuns = batPlayer.reduce((acc, it) => acc + (it.batRun || 0), 0);
-                const ballsFaced = batPlayer.reduce((acc, it) => acc + (it.batBall || 0), 0);
+                const totalRuns = batPlayer.reduce((acc, it) => acc + (Number(it.batRun) || 0), 0);
+                const ballsFaced = batPlayer.reduce((acc, it) => acc + (Number(it.batBall) || 0), 0);
                 const notOut = batPlayer.filter(it => !it.isBatterOut).length;
                 const outs = Math.max(batInningCount - notOut, 0);
 
                 const average = outs > 0 ? totalRuns / outs : totalRuns;
                 const strikeRate = ballsFaced > 0 ? (totalRuns / ballsFaced) * 100 : 0;
 
-                const countOf4 = batPlayer.reduce((acc, it) => acc + (it.batFour || 0), 0);
-                const countOf6 = batPlayer.reduce((acc, it) => acc + (it.batSix || 0), 0);
+                const countOf4 = batPlayer.reduce((acc, it) => acc + (Number(it.batFour) || 0), 0);
+                const countOf6 = batPlayer.reduce((acc, it) => acc + (Number(it.batSix) || 0), 0);
                 const countOf50 = totalRuns >= 50 && totalRuns < 100 ? 1 : 0;
                 const countOf100 = totalRuns >= 100 ? 1 : 0;
 
@@ -147,15 +147,15 @@ const autoUpdatePlayerStatisticsDataProcess = async (fastify) => {
                     o => o.commentaryId === commentaryId && comPlayerIds.includes(o.bowlerId)
                 );
 
-                const totalWickets = overs.reduce((a, o) => a + (o.totalWicket || 0), 0);
-                const totalRuns = overs.reduce((a, o) => a + (o.totalRun || 0), 0);
-                const totalBalls = overs.reduce((a, o) => a + (o.ballCount || 0), 0);
+                const totalWickets = overs.reduce((a, o) => a + (Number(o.totalWicket) || 0), 0);
+                const totalRuns = overs.reduce((a, o) => a + (Number(o.totalRun) || 0), 0);
+                const totalBalls = overs.reduce((a, o) => a + (Number(o.ballCount) || 0), 0);
 
                 const oversCount = totalBalls > 0 ? Math.floor(totalBalls / 6) + ((totalBalls % 6) / 10) : 0;
                 const economy = oversCount > 0 ? totalRuns / oversCount : 0;
                 const average = totalWickets > 0 ? totalRuns / totalWickets : 0;
                 const strikeRate = totalWickets > 0 ? totalBalls / totalWickets : 0;
-                const expensiveOverRuns = overs.length > 0 ? Math.max(...overs.map(o => o.totalRun || 0)) : 0;
+                const expensiveOverRuns = overs.length > 0 ? Math.max(...overs.map(o => Number(o.totalRun) || 0)) : 0;
 
                 const getCommentaryOverDetail = global.tblCommentaryBallByBall.filter(item => item.commentaryId === commentaryId && comPlayerIds.includes(item.bowlerId));
                 let hattrickCount = 0;
@@ -176,10 +176,10 @@ const autoUpdatePlayerStatisticsDataProcess = async (fastify) => {
                 });
 
                 const innings = [1, 2].map(inn => {
-                    const filtered = overs.filter(o => o.currentInnings === inn);
+                    const filtered = overs.filter(o => Number(o.currentInnings) === Number(inn));
                     return {
-                        wickets: filtered.reduce((a, o) => a + (o.totalWicket || 0), 0),
-                        runs: filtered.reduce((a, o) => a + (o.totalRun || 0), 0),
+                        wickets: filtered.reduce((a, o) => a + (Number(o.totalWicket) || 0), 0),
+                        runs: filtered.reduce((a, o) => a + (Number(o.totalRun) || 0), 0),
                     };
                 });
 
