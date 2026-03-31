@@ -367,6 +367,10 @@ const setEntityCom2Service = async (request , fastify) =>{
   let matchID = request.body?.response?.match_id
   try {
     const {response} = request.body
+    if (response?.man_of_the_match?.pid) {
+      const commentaryData = global.tblCommentaries.find(tc => tc.tpId === matchID);
+      await assignAwards(commentaryData, response, request, fastify);
+    }
     let comDetails = global.tblCommentaries.find((c)=> c.tpId == response?.match_id && c.commentaryStatus != commentaryStatus.CANCELLED && c.commentaryStatus != commentaryStatus.COMPLETED)
     if(!comDetails){
       return true;
@@ -5596,6 +5600,7 @@ const updateBowlerIdService = async (data, request, fastify) => {
       ...ballData,
       bowlerId: newBowlerData.commentaryPlayerId,
       ballBowlerId: newBowlerData.commentaryPlayerId,
+      commentary: eData.commentary,
       type: "update",
     }
     commBallByBall.push(updateBallData);
@@ -5817,9 +5822,11 @@ const updateBatterIdService = async (data, request, fastify) => {
     if (ballData.batNonStrikeId == newId) {
       updateBallData.batStrikeId = newId;
       updateBallData.batNonStrikeId = ballData.batStrikeId;
+      updateBallData.commentary = eData.commentary;
     } else {
       // only strike is old → update strike only
       updateBallData.batStrikeId = newId;
+      updateBallData.commentary = eData.commentary;
     }
     updateBallData.type = "update";
 
