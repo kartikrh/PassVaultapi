@@ -965,6 +965,11 @@ const saveDeviceDataService = async (request, fastify) => {
     }
     return true;
 }
+
+const checkPanelLoadDataService = () => {
+  return global?.isAllDataLoadedInGlobal ?? false;
+}
+
 module.exports = { 
     getAllCommentariesDataService,
     getMarketsByCommentaryIdService,
@@ -974,5 +979,6 @@ module.exports = {
     getAllCommentariesDataServiceV1,
     getMarketsByCommentaryIdServiceV1,
     saveDeviceDataService,
-    getAllCommentariesDataV2Service
+    getAllCommentariesDataV2Service,
+    checkPanelLoadDataService
  };

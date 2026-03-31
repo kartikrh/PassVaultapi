@@ -41,6 +41,7 @@ const {
   getMarketsByCommentaryIdV1,
   saveDeviceData,
   allCommentaryAwards,
+  checkPanelLoadData,
 } = require("../../../controller/users/admin/score");
 const {
   saveSubScribeDomain,
@@ -495,6 +496,9 @@ module.exports = async (fastify, opts) => {
   fastify.post("/getAllSeasonOfCompetitions", {
     schema: Score.getAllSeasonOfCompetitions.schema,
     handler: (request , reply) => getAllSeasonOfCompetitions(request, reply, fastify)
+  });
+  fastify.get("/checkPanelLoadData", {
+    handler: (request , reply) => checkPanelLoadData(request, reply, fastify)
   });
 };
 
