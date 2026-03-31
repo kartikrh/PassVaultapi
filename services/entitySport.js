@@ -5394,10 +5394,10 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
       }
     }
 
-    // if (matchInfoData?.man_of_the_match?.pid) {
-    //   const updatedCommentaryData = global.tblCommentaries[index];
-    //   await assignAwards(updatedCommentaryData, matchInfoData, request, fastify);
-    // }
+    if (matchInfoData?.man_of_the_match?.pid) {
+      const updatedCommentaryData = global.tblCommentaries[index];
+      await assignAwards(updatedCommentaryData, matchInfoData, request, fastify);
+    }
 
     importData.importEndTime = new Date();
     importData.isImported = false;
