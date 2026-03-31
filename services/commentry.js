@@ -8570,13 +8570,13 @@ const getMatchListByStatus = async (body, request, fastify) => {
       if (commentaryTeamsOne?.teamStatus == 1) {
         crr = parseFloat(commentaryTeamsOne?.crr);
         rrr = parseFloat(commentaryTeamsOne?.rrr);
-        batid = commentaryTeamsOne.teamId;
-        ballid = commentaryTeamsTwo.teamId;
+        batid = commentaryTeamsOne?.teamId;
+        ballid = commentaryTeamsTwo?.teamId;
       } else {
         crr = parseFloat(commentaryTeamsOne?.crr);
         rrr = parseFloat(commentaryTeamsOne?.rrr);
-        batid = commentaryTeamsTwo.teamId;
-        ballid = commentaryTeamsOne.teamId;
+        batid = commentaryTeamsTwo?.teamId;
+        ballid = commentaryTeamsOne?.teamId;
       }
     }
     //Tossteam Name
