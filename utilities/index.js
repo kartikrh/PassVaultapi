@@ -2427,6 +2427,10 @@ const normalizeText = (value) => {
     .replace(/\s+/g, " "); // collapse multiple spaces
 };
 
+const normalizeCompetitionSeasonName = (competitionName) => {
+    return normalizeText(competitionName).replace(/\s*\(?\d{4}([-/]\d{2,4})?\)?$/, "");
+  };
+
 module.exports = {    
   ERROR_CODES,
   error,
@@ -2555,5 +2559,6 @@ module.exports = {
   EntityInningsStatus,
   oversToBalls,
   ClientAPIType,
-  normalizeText
+  normalizeText,
+  normalizeCompetitionSeasonName
 };
