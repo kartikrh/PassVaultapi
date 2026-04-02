@@ -232,7 +232,7 @@ const { insertVenueQuery } = require("../repository/TableVenue");
 const { insertCompetitionQuery } = require("../repository/TableCompitition");
 const { getImageFromUrl } = require("../utilities/Images");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
-const { insertTeamPlayersByTeamId, insertCommentaryPlayersByTeam, esGetMatchNumberFromCompetitionMatchAPI, upsertCommentaryTeamsAndPlayersService } = require("./competition");
+const { insertTeamPlayersByTeamId, insertCommentaryPlayersByTeam, esGetMatchNumberFromCompetitionMatchAPI, upsertCommentaryTeamsAndPlayersService, upsertComPlayerService } = require("./competition");
 const cron = require('node-cron');
 const { insertAutoImportDataService } = require("./autoImportData");
 const { insertTournamentTeamPlayersQuery, deleteTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
@@ -25940,14 +25940,22 @@ const insertComPlayerEntityService = async (entityData, playerTpId, teamData, re
       item.currentInnings == checkCommentary.currentInnings &&
       item.tpId == playerTpId
     )
-    if (commentaryPlayer) return
+    if (commentaryPlayer) return;
+    const tournamentTeamsPlayers = global.tblTournamentTeamPlayers.filter(tttp => tttp.competitionId === checkCompetition.competitionId);
+    const entitySocketData = global.tblEntitySockets[0];
 
-    let player = global.tblPlayers.find(tp => tp.tpId == playerTpId);
-    if (!player) {
-      player = await playerImportService({ pid: playerTpId }, fastify, request);
-    }
-    if (!player) return;
+    await upsertComPlayerService (
+      playerTpId,
+      tournamentTeamsPlayers,
+      checkCommentary,
+      teamData,
+      checkCommentary.currentInnings,
+      entitySocketData,
+      request,
+      fastify,
+    )
 
+/*
     const tournamentTeamsPlayers = global.tblTournamentTeamPlayers.filter(tttp => tttp.competitionId == checkCommentary.competitionId);
     const matchType = global.tblMatchTypes.find(mt => mt.matchTypeId == checkCommentary.matchTypeId);
     const matchTypeId = matchType?.matchTypeId || null;
@@ -26017,7 +26025,7 @@ const insertComPlayerEntityService = async (entityData, playerTpId, teamData, re
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       });
     }
-
+*/
     return;
   } catch (error) {
     errorLogger(
