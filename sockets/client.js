@@ -37,7 +37,7 @@ const connectClients = async (fastify, clientSocketId) => {
         global.clientSocketIo.push(socketObj);
         errorLogger(
           fastify,
-          `Client socket connected to ${config.url}`,
+          `Client socket connected to ${config.serverName}`,
           "Client Socket --> sockets/client.js/connectClients - connect",
           null
         );
@@ -101,7 +101,7 @@ const connectClients = async (fastify, clientSocketId) => {
       client.on("disconnect", async (reason) => {
         errorLogger(
           fastify,
-          `Client socket disconnected to ${config.url}. reason: ${reason}`,
+          `Client socket disconnected to ${config.serverName}. reason: ${reason}`,
           "Client Socket --> sockets/client.js/connectClients - disconnect",
           null
         );
@@ -152,7 +152,7 @@ const connectClients = async (fastify, clientSocketId) => {
       client.io.on("reconnect_error", (error) => {
         errorLogger(
           fastify,
-          error.message,
+          `${config.serverName} Error: ${error.message}`,
           "Client Socket --> sockets/client.js/connectClients - reconnect_error",
           null
         );
