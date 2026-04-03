@@ -24007,7 +24007,7 @@ const matchImportService = async (data, fastify, request = null) => {
         await createVenueService({
           ...request,
           body: {
-            ...global.tblVenues[venueIndex],
+            id: checkCommentary?.venueId,
             ...updateVenueReportData
           }
         }, fastify);
