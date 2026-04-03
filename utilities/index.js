@@ -1,4 +1,3 @@
-const os = require('os');
 const uaParser = require("ua-parser-js");
 const crypto = require("crypto");
 const moment = require("moment");
@@ -2432,29 +2431,6 @@ const normalizeCompetitionSeasonName = (competitionName) => {
   return normalizeText(competitionName).replace(/\s*\(?\d{4}([-/]\d{2,4})?\)?$/, "");
 };
 
-const toMB = bytes => (bytes / 1024 / 1024).toFixed(2);
-
-const getMemoryStats = () => {
-  const mem = process.memoryUsage();
-
-  const systemTotal = os.totalmem();
-  const systemFree = os.freemem();
-  const systemUsed = systemTotal - systemFree;
-
-  console.log("Status:", {
-    process: {
-      rss: `${toMB(mem.rss)} MB`,
-      heapTotal: `${toMB(mem.heapTotal)} MB`,
-      heapUsed: `${toMB(mem.heapUsed)} MB`,
-    },
-    system: {
-      total: `${toMB(systemTotal)} MB`,
-      used: `${toMB(systemUsed)} MB`,
-      free: `${toMB(systemFree)} MB`,
-    }
-  });
-}
-
 module.exports = {    
   ERROR_CODES,
   error,
@@ -2584,7 +2560,5 @@ module.exports = {
   oversToBalls,
   ClientAPIType,
   normalizeText,
-  normalizeCompetitionSeasonName,
-  toMB,
-  getMemoryStats
+  normalizeCompetitionSeasonName
 };
