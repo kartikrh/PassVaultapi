@@ -107,7 +107,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       if (urlConfig.status === clientSocketStatus.connected) {
         errorLogger(
           fastify,
-          `Entity connection to ${urlConfig.url} already connected, skipping reconnection`,
+          `Entity connection to ${urlConfig.serverName} already connected, skipping reconnection`,
           "Entity Socket --> sockets/entitySports.js/connectEntitySport - status - connected",
           null
         );
@@ -117,7 +117,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       if (urlConfig.isAutoScoreUpdate === false) {
         errorLogger(
           fastify,
-          `Auto score update is not active for ${urlConfig.url}`,
+          `Auto score update is not active for ${urlConfig.serverName}`,
           "Entity Socket --> sockets/entitySports.js/connectEntitySport - isAutoScoreUpdate - false",
           null
         );
@@ -127,7 +127,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       if (urlConfig.actionType === clientSocketStatus.disconnected) {
         errorLogger(
           fastify,
-          `Entity sport action type is not connect for ${urlConfig.url}`,
+          `Entity sport action type is not connect for ${urlConfig.serverName}`,
           "Entity Socket --> sockets/entitySports.js/connectEntitySport - actionType - false",
           null
         );
@@ -152,7 +152,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
           client,
           connectedAt: new Date()
         });
-        global.socketIo.emit("entitysocketconnect", `Connected to entitySport - ${urlConfig.url} at ${new Date().toISOString()}`);
+        global.socketIo.emit("entitysocketconnect", `Connected to entitySport - ${urlConfig.serverName} at ${new Date().toISOString()}`);
 
         try {
           await updateEntitySocketStatusQuery(
@@ -174,7 +174,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
 
       client.on("disconnect", async (reason) => {
         global.connectedEntitySocketClients = global.connectedEntitySocketClients.filter(item => item.urlConfig.entitySocketId !== urlConfig.entitySocketId);
-        global.socketIo.emit("entitysocketdisconnect", `Entity socket disconnected from ${urlConfig.url}, reason: ${reason} at ${new Date().toISOString()}`);
+        global.socketIo.emit("entitysocketdisconnect", `Entity socket disconnected from ${urlConfig.serverName}, reason: ${reason} at ${new Date().toISOString()}`);
 
         try {
           await updateEntitySocketStatusQuery(
@@ -223,7 +223,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       client.io.on("reconnect_error", (error) => {
         errorLogger(
           fastify,
-          error.message,
+          `${urlConfig.serverName} Error: ${error.message}`,
           "Entity Socket --> sockets/entitySports.js/connectEntitySport - reconnect_error",
           null
         );

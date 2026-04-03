@@ -2561,7 +2561,32 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             .find((i1) => i1.batsman_id == c?.wicket_batsman_id)
           const commFielder = Number(fielders?.first_fielder_id) || Number(c?.bowler_id);
           const commFielder2 = Number(fielders?.second_fielder_id) || Number(c?.bowler_id);
-
+          // insert fielder if not exist
+          const checkFelders = [commFielder, commFielder2];
+          for (const fielder of checkFelders) {
+            if (fielder && !playerTpIdObj[fielder]) {
+              await insertComPlayerEntityService(
+                response,
+                fielder,
+                bowlingTeam,
+                request,
+                fastify
+              );
+              latestPlayers = global.tblCommentaryPlayers.find(
+                (cp) =>
+                  cp.commentaryId == comDetails.commentaryId &&
+                  cp.currentInnings == comDetails.currentInnings &&
+                  cp.tpId == fielder
+              );
+              if (latestPlayers && !playerTpIdObj[latestPlayers.tpId]) {
+                playerTpIdObj[latestPlayers.tpId] = {
+                  ...latestPlayers,
+                  playerName: latestPlayers.playerName,
+                  playerId: latestPlayers.playerId,
+                };
+              }
+            }
+          }
           const commFielder1Id = playerTpIdObj[commFielder]?.commentaryPlayerId;
           const commFielder2Id = playerTpIdObj[commFielder2]?.commentaryPlayerId;
           
@@ -5152,6 +5177,34 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
           const entityWicketCount = battingTeam.teamWicket;
           const commFielder = Number(fielders?.first_fielder_id) || Number(c?.bowler_id);
           const commFielder2 = Number(fielders?.second_fielder_id) || Number(c?.bowler_id);
+          // insert fielder if not exist
+          const checkFelders = [commFielder, commFielder2];
+          for (const fielder of checkFelders) {
+            if (fielder && !playerTpIdObj[fielder]) {
+              await insertComPlayerEntityService(
+                matchInfoData,
+                fielder,
+                bowlingTeam,
+                request,
+                fastify
+              );
+
+              let latestPlayer = global.tblCommentaryPlayers.find(
+                (cp) =>
+                  cp.commentaryId == comDetails.commentaryId &&
+                  cp.currentInnings == comDetails.currentInnings &&
+                  cp.tpId == fielder
+              );
+
+              if (latestPlayer && !playerTpIdObj[latestPlayer.tpId]) {
+                playerTpIdObj[latestPlayer.tpId] = {
+                  ...latestPlayer,
+                  playerName: latestPlayer.playerName,
+                  playerId: latestPlayer.playerId,
+                };
+              }
+            }
+          }
 
           const commFielder1Id = playerTpIdObj[commFielder]?.commentaryPlayerId;
           const commFielder2Id = playerTpIdObj[commFielder2]?.commentaryPlayerId;

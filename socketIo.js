@@ -9,10 +9,14 @@ const { getAllMarketRunnersV2ByIdQuery } = require("./repository/TableMarketRunn
 
 global.sessionData = []
 const connection = (socket , fastify) => {
+  if (socket.isInternal) {
+    console.log("🐍 Python connected socket:", socket.id, new Date());
+  }   
   const { userId, allowMultipleLogin, wrToken } = socket;
   if (userId) {
     const user = global.tblUsers.find((user) => user.userId === userId);
-
+    // console.log("New client connected:", socket.id, new Date(), "UserId:", userId);
+      
     // Check if token is not of latest login and multiple login is false
     if (wrToken !== user?.loginToken && !allowMultipleLogin) {
       global.socketIo
@@ -436,6 +440,12 @@ const connection = (socket , fastify) => {
     }
   });
   socket.on("disconnect", () => {
+    if(socket.isInternal) {
+      console.log("❌ Python disconnected:", socket.id, new Date());
+    }
+    else {
+      // console.log("Client disconnected:", socket.id, new Date());
+    }
   });
 };
 
@@ -448,6 +458,12 @@ const socketMiddleware = async (socket, next) => {
       return next(new Error("Token Not Found"));
     }
     const PYTHONSOCKETKEY = global.tblConfigs.find(config => config.key === "PYTHONSOCKETKEY")?.value;
+    if (PYTHONSOCKETKEY && PYTHONSOCKETKEY === token) {
+      // console.log("🐍 Python socket connected:", socket.id , new Date());
+      socket.isInternal = true; // optional flag
+      return next();
+    }
+
 
     if (!PYTHONSOCKETKEY || PYTHONSOCKETKEY !== token) {
       const verifyToken = jwt.verify(

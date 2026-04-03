@@ -69,26 +69,6 @@ const createConfigService = async (request, fastify) => {
         request
       )
     });
-    callEntitySportAPI(
-      {
-        serviceType: ServiceType.entitySport,
-        moduleType: APIEndpointModuleType.configUpdate,
-        data: {
-          module : "config",
-          type : "add",
-          data : data
-        }
-      },
-      request,
-      fastify
-    ).catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "API ERROR --> services/config/createConfigService - callEntitySportAPI",
-        request
-      )
-    });
   
   return data;
 };
@@ -157,27 +137,6 @@ const updateConfigService = async (request, fastify) => {
       )
     });
 
-    callEntitySportAPI(
-      {
-        serviceType: ServiceType.entitySport,
-        moduleType: APIEndpointModuleType.configUpdate,
-        data: {
-          module : "config",
-          type : "update",
-          data : data
-        }
-      },
-      request,
-      fastify
-    ).catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "API ERROR --> services/config/createConfigService - callEntitySportAPI",
-        request
-      )
-    });
-
   return data;
 };
 
@@ -217,26 +176,6 @@ const deleteConfigService = async (request, fastify) => {
       request
     )
   });
-  callEntitySportAPI(
-      {
-        serviceType: ServiceType.entitySport,
-        moduleType: APIEndpointModuleType.configUpdate,
-        data: {
-          module : "config",
-          type : "delete",
-          data : configId
-        }
-      },
-      request,
-      fastify
-    ).catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "API ERROR --> services/config/createConfigService - callEntitySportAPI",
-        request
-      )
-    });
 
   return `Config(s) deleted successfully`;
 };

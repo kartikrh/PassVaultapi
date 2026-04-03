@@ -2466,6 +2466,103 @@ const getAllSeasonOfCompetitionsService = async (request) => {
   return result || [];
 };
 
+const upsertComPlayerService = async (playerTpId, tournamentTeamsPlayers, checkCommentary, team, i, entitySocketData, request, fastify) => {
+  try {
+    let teamMatchTypeId = null;
+    let newPlayer = [];
+
+    let checkCompetition = global.tblCompetitions.find(c => c.competitionId === checkCommentary.competitionId);
+    const matchTypeId = global.tblMatchTypes.find(mt => mt.matchTypeId === checkCommentary.matchTypeId)?.matchTypeId || null;
+    if (matchTypeId) {
+      teamMatchTypeId = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${team.teamId} AND ttmt."wrMatchTypeId" = ${matchTypeId}`);
+      if (!teamMatchTypeId || teamMatchTypeId.length === 0) {
+        teamMatchTypeId = await saveTeamMatchTypeByTeamService({
+          ...request,
+          body: {
+            teamId: team.teamId,
+            matchTypeId: matchTypeId,
+          },
+        }, fastify);
+      }
+    }
+
+    let player = global.tblPlayers.find(tp => tp.tpId == playerTpId);
+    if (!player) {
+      player = await playerImportService({ pid: playerTpId }, fastify, request);
+    }
+    if (!player) return;
+    const teamPlayers = await getTeamPlayerByTeamIdQuery(team.teamId, fastify, request);
+
+    let teamPlayer = teamPlayers.find(tp => tp.matchTypeId === -1 && (tp.refPlayerId === player.playerId || tp.tpId === player.tpId));
+    teamPlayer = await upsertTeamPlayers(teamPlayer, team, player, -1, teamMatchTypeId, entitySocketData, request, fastify);
+
+    let matchTypeTeamPlayer = null;
+    if (matchTypeId) {
+      matchTypeTeamPlayer = teamPlayers.find(tp => tp.matchTypeId === matchTypeId && (tp.refPlayerId === player.playerId || tp.tpId === player?.tpId));
+      matchTypeTeamPlayer = await upsertTeamPlayers(matchTypeTeamPlayer, team, player, matchTypeId, teamMatchTypeId, entitySocketData, request, fastify);
+    }
+
+    let tournamentTeamPlayer = tournamentTeamsPlayers.find(ttp => ttp.teamId === team.teamId && ttp.matchTypeId === matchTypeId && (ttp.playerId === player.playerId || ttp.tpId === player?.tpId));
+    if (!tournamentTeamPlayer) {
+      tournamentTeamPlayer = await insertTournamentTeamPlayersQuery({
+        competitionId: checkCompetition.competitionId,
+        teamId: team.teamId,
+        playerId: player.playerId,
+        playerName: player.playerName,
+        userId: request?.userTokenInfo?.WrUserId ?? -2,
+        tpId: player?.tpId ?? null,
+        matchTypeId: matchTypeId
+      }, request, fastify);
+      global.tblTournamentTeamPlayers.push(tournamentTeamPlayer[0]);
+    }
+    const newCommentaryPlayer = await insertCommentaryPlayers({
+      commentaryId: checkCommentary.commentaryId,
+      teamId: team.teamId,
+      playerId: player.playerId,
+      displayOrder: matchTypeTeamPlayer ? matchTypeTeamPlayer.playerOrder : teamPlayer.playerOrder,
+      matchTypeId: checkCommentary?.matchTypeId,
+      tpId: player?.tpId ?? null,
+      jerseyPlayerImage: matchTypeTeamPlayer ? matchTypeTeamPlayer?.jerseyPlayerImage : teamPlayer?.jerseyPlayerImage,
+      jerseyPlayerImagePath: matchTypeTeamPlayer ? matchTypeTeamPlayer?.jerseyPlayerImagePath : teamPlayer?.jerseyPlayerImage,
+      isInPlayingEleven: true
+    }, i, fastify, request);
+    global.tblCommentaryPlayers.push(newCommentaryPlayer[0]);
+    newPlayer.push({ ...newCommentaryPlayer[0], type: "create" });
+
+    const sendDataForSocketUpdate = {
+      commentaryId: checkCommentary.commentaryId,
+      eventRefId: checkCommentary.eventRefId,
+      dataToUpdate: [],
+    };
+
+    if (newPlayer.length > 0) {
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module: "commentaryPlayers",
+        type: "create",
+        data: newPlayer,
+      });
+    }
+
+    if (
+      global?.clientSocketIo !== undefined &&
+      global?.clientSocketIo.length > 0
+    ) {
+      global.clientSocketIo.forEach((socket) => {
+        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      });
+    }
+    return
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/competition.js/upsertComPlayerService.",
+      request
+    )
+  }
+
+}
+
 module.exports = {
   allCompetitionService,
   competitionByIdService,
@@ -2493,5 +2590,6 @@ module.exports = {
   esGetMatchNumberFromCompetitionMatchAPI,
   upsertCommentaryTeamsAndPlayersService,
   insertCompletedCompetitionsInAutoImportService,
-  getAllSeasonOfCompetitionsService
+  getAllSeasonOfCompetitionsService,
+  upsertComPlayerService,
 };

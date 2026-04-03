@@ -21,6 +21,7 @@ const {
   getTitle,
   ERROR_CODES,
   error,
+  getMemoryStats,
 } = require("./utilities");
 const Sentry = require("@sentry/node");
 const { instrument } = require("@socket.io/admin-ui");
@@ -168,6 +169,7 @@ module.exports = async function (fastify, opts) {
 
   cron.schedule('* * * * *', async () => {
     try {
+      getMemoryStats();
       await upcomingCommentaries(fastify);
       if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
         await insertCompletedCommentaryForTournamentTeamPointUpdateService(fastify);
