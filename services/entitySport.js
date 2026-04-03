@@ -846,7 +846,7 @@ const setEntityCom2Service = async (request , fastify) =>{
               if (!playerTpIdObj[b.bowler_id]) {
                 await insertComPlayerEntityService(
                   response,
-                  p.bowler_id,
+                  b.bowler_id,
                   bowlingTeam,
                   request,
                   fastify
