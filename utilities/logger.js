@@ -1,3 +1,4 @@
+const os = require('os');
 const ResponseLog = require("../database/schema/responseLogger");
 const configConstants = require("./configConstants");
 const { ISCOMMENTARYLOGGER } = require("./configConstants");
@@ -546,7 +547,31 @@ console.log = createLogPrefix(originalLog);
 console.error = createLogPrefix(originalLogError);
 console.warn = createLogPrefix(originalLogWarn);
 
+const getMemoryStatus = () => {
+  const toMB = bytes => (bytes / 1024 / 1024).toFixed(2);
+  const mem = process.memoryUsage();
+
+  const systemTotal = os.totalmem();
+  const systemFree = os.freemem();
+  const systemUsed = systemTotal - systemFree;
+
+  return {
+    process: {
+      rss: `${toMB(mem.rss)} MB`,
+      heapTotal: `${toMB(mem.heapTotal)} MB`,
+      heapUsed: `${toMB(mem.heapUsed)} MB`,
+    },
+    system: {
+      total: `${toMB(systemTotal)} MB`,
+      used: `${toMB(systemUsed)} MB`,
+      free: `${toMB(systemFree)} MB`,
+    }
+  }
+}
+
 module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,
   marketDataLogger,tblPredictorAPILogger,tblThirdPartyAPILogger,commentaryLogger,updateWebRequestLogs,
   eventMarketLogger, marektResultLogger,pythonSocketLogger,
-disMissalLogger, commActionLogger,cardLogger};
+disMissalLogger, commActionLogger,cardLogger,
+  getMemoryStatus
+};
