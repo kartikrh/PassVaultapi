@@ -756,6 +756,12 @@ const connectClients2 = async (fastify, clientSocketId = undefined)=>{
           );
         });
 
+        // Clean up any existing reconnect listeners to prevent accumulation during reconnection
+        client.io.removeAllListeners("reconnect_attempt");
+        client.io.removeAllListeners("reconnect");
+        client.io.removeAllListeners("reconnect_failed");
+        client.io.removeAllListeners("reconnect_error");
+
         client.io.on("reconnect_attempt", (attempt) => {
           console.log(`Reconnect attempt ${attempt} → ${urlConfig.url}`);
 
@@ -777,6 +783,8 @@ const connectClients2 = async (fastify, clientSocketId = undefined)=>{
         });
         client.io.on("reconnect_error", (error) => {
           console.log(`Reconnect error ${urlConfig.url}: ${error.message || error} at ${new Date().toISOString()}`);
+          // Stop heartbeat on reconnect error to prevent timer leaks
+          stopHeartbeat();
         });
       })
     )

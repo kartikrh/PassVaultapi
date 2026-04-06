@@ -446,6 +446,26 @@ const connection = (socket , fastify) => {
     else {
       // console.log("Client disconnected:", socket.id, new Date());
     }
+    
+    // Clean up all event listeners to prevent memory leaks
+    try {
+      socket.removeAllListeners("updatedEventMarket");
+      socket.removeAllListeners("marketRunnerConnection");
+      socket.removeAllListeners("marketRunnerUpdate");
+      socket.removeAllListeners("marketRunnerDisconnect");
+      socket.removeAllListeners("isInningsConnection");
+      socket.removeAllListeners("conMnMarket");
+      socket.removeAllListeners("disConMnMarket");
+      socket.removeAllListeners("ping");
+      socket.removeAllListeners("connectEventMarket");
+      socket.removeAllListeners("conCommentary");
+      socket.removeAllListeners("betAllow");
+      socket.removeAllListeners("comUpdate");
+      socket.removeAllListeners("disconnectCom");
+      socket.removeAllListeners("updateMarketDisconnect");
+    } catch (error) {
+      console.error("Error cleaning up socket listeners:", error);
+    }
   });
 };
 
