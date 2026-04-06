@@ -139,11 +139,8 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
               existingInArray.cronJob.stop();
             }
             global.clientSocketIo = global.clientSocketIo.filter(c => c.url !== urlConfig.url);
-            global.clientSocketIo.push({
-              ...urlConfig,
-              client,
-            });
             const socketObj = { ...urlConfig, client };
+            global.clientSocketIo.push(socketObj);
             // update status in global.tblClientSocket
             let index = global.tblClientSocket.findIndex((c) => c.clientSocketId === urlConfig.clientSocketId);
             if (index !== -1) {
