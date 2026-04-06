@@ -146,6 +146,13 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
         pingTimeout: 10000,
       });
 
+      // Clean up any existing socket listeners to prevent accumulation
+      client.removeAllListeners("connect");
+      client.removeAllListeners("disconnect");
+      client.removeAllListeners("entitywebsocketconnect");
+      client.removeAllListeners("entitywebsocketdisconnect");
+      client.removeAllListeners("entityScoreData");
+
       client.on("connect", async () => {
         global.connectedEntitySocketClients.push({
           urlConfig,
@@ -201,6 +208,11 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       client.on("entitywebsocketdisconnect", (message) => {
         global.socketIo.emit("entitywebsocketdisconnect", `Entity web socket disconnected, code: ${message.code} ${message?.reason !== "" ? `reason: ${message.reason}` : ""} at ${new Date().toISOString()}`);
       });
+
+      // Clean up any existing reconnect listeners to prevent accumulation during reconnection
+      client.io.removeAllListeners("reconnect_attempt");
+      client.io.removeAllListeners("reconnect_error");
+      client.io.removeAllListeners("reconnect_failed");
 
       client.io.on("reconnect_attempt", (attemptNumber) => {
         const reconnectCounts = global.tblEntitySockets.find(c => c.entitySocketId === urlConfig.entitySocketId)?.reconnectCount;
