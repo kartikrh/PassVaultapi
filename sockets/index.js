@@ -719,8 +719,18 @@ const connectClients2 = async (fastify, clientSocketId = undefined)=>{
 
           stopHeartbeat();
 
+          const disconnected = global.clientSocketIo.find(
+            (c) => c.url === urlConfig.url
+          );
+          if (disconnected?.cronJob) {
+            try {
+              disconnected.cronJob.stop();
+            } catch (_) {}
+            disconnected.cronJob = null;
+          }
+
           global.clientSocketIo = global.clientSocketIo.filter(
-            c => c.url !== urlConfig.url
+            (c) => c.url !== urlConfig.url
           );
 
           updateClientSocketStatusQuery(
@@ -734,9 +744,6 @@ const connectClients2 = async (fastify, clientSocketId = undefined)=>{
           if (index !== -1) {
             global.tblClientSocket[index].status = clientSocketStatus.disconnected;
           }
-          const existing = global.clientSocketIo.find(
-            c => c.clientSocketId === urlConfig.clientSocketId
-          );
 
           const message = `Client socket disconnected from ${urlConfig.url}, reason: ${reason} at ${new Date().toISOString()}`;
           // global.socketIo.emit("clientsocketdisconnect", message);
@@ -746,11 +753,6 @@ const connectClients2 = async (fastify, clientSocketId = undefined)=>{
             "Client Socket --> sockets/index.js/connectClients2 - disconnected",
             null
           );
-
-          if (existing?.cronJob) {
-            existing.cronJob.stop();
-            existing.cronJob = null;
-          }
         });
 
         client.io.on("reconnect_attempt", (attempt) => {
