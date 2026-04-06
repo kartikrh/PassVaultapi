@@ -6,8 +6,6 @@ const { updateClientSocketStatusQuery, updateReconnectCountQuery } = require("..
 const { errorLogger } = require("../utilities/logger");
 const { updateCommentaryViewsQuery } = require("../repository/TableCommentary");
 const cron = require('node-cron');
-const { clientSocketCountService } = require("../services/commentry")
-
 const connectClients = async (fastify, clientSocketId = undefined) => {
   try {
     // const clientUrls = global.tblClientSocket.filter(
@@ -634,6 +632,21 @@ const connectClients2 = async (fastify, clientSocketId = undefined)=>{
             null
           );
 
+          const prior = global.clientSocketIo.filter(
+            (item) => item.clientSocketId === urlConfig.clientSocketId
+          );
+          for (const p of prior) {
+            if (p.cronJob) {
+              try {
+                p.cronJob.stop();
+              } catch (_) {}
+              p.cronJob = null;
+            }
+          }
+          global.clientSocketIo = global.clientSocketIo.filter(
+            (item) => item.clientSocketId !== urlConfig.clientSocketId
+          );
+
           lastPongAt = Date.now();
           startHeartbeat();
 
@@ -642,7 +655,8 @@ const connectClients2 = async (fastify, clientSocketId = undefined)=>{
             fastify
           ).catch(() => {});
 
-          global.clientSocketIo.push({ ...urlConfig, client });
+          const socketObj = { ...urlConfig, client };
+          global.clientSocketIo.push(socketObj);
 
           const index = global.tblClientSocket.findIndex(
             c => c.clientSocketId === urlConfig.clientSocketId
@@ -650,11 +664,7 @@ const connectClients2 = async (fastify, clientSocketId = undefined)=>{
           if (index !== -1) {
             global.tblClientSocket[index].status = clientSocketStatus.connected;
           }
-          const socketObj = { ...urlConfig, client };
-          if (socketObj.cronJob) {
-            socketObj.cronJob.stop();
-          }
-          if (socketObj && socketObj?.isUpdateView == true) {
+          if (socketObj?.isUpdateView == true) {
             const intervalMinutes = Number(socketObj.updateInterval) || 5;
             const cronExpression = `*/${intervalMinutes} * * * *`;
 
@@ -694,12 +704,6 @@ const connectClients2 = async (fastify, clientSocketId = undefined)=>{
                 console.error(new Date(), "Error during scheduled task:", error);
               }
             });
-            const existing = global.clientSocketIo.find(
-              c => c.clientSocketId === urlConfig.clientSocketId
-            );
-            if (existing) {
-              existing.cronJob = socketObj.cronJob;
-            }
           }
         });
 
