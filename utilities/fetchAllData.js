@@ -389,6 +389,17 @@ const FetchingCommentariesDataFromCron = async (fastify) => {
     const marketIds = new Set(global.tblEventMarketsV2.map((elem) => elem.eventMarketId));
     global.tblMarketRunnerV2 = global.tblMarketRunnerV2.filter((item) => marketIds.has(item.eventMarketId));
 
+    // Fix: Purge processedUpcomingCommentaries of IDs no longer in active commentaries.
+    // Without this the Set grows forever since commentary IDs are only ever added, never removed.
+    if (global.processedUpcomingCommentaries?.size > 0) {
+      const commentaryIdSet = new Set(commentaryIds);
+      for (const id of global.processedUpcomingCommentaries) {
+        if (!commentaryIdSet.has(id)) {
+          global.processedUpcomingCommentaries.delete(id);
+        }
+      }
+    }
+
     console.log(new Date(), "Commentary data updated in via node-cron successfully");
 
   } catch (error) {
