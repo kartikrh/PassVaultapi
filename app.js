@@ -11,7 +11,7 @@ const { fetchAllDataFromDb, FetchingCommentariesDataFromCron, upcomingCommentari
 const { Server } = require("socket.io"); // Import Socket.IO
 const { connection, socketMiddleware } = require("./socketIo");
 const { fastifyRateLimit } = require("@fastify/rate-limit");
-const { responseLogger, responseLogInDB, getMemoryStatus } = require("./utilities/logger");
+const { responseLogger, responseLogInDB } = require("./utilities/logger");
 const fastifyMultipart = require("@fastify/multipart");
 const fastifyStatic = require("@fastify/static");
 const { generateToken } = require("./utilities/tokenization");
@@ -168,7 +168,6 @@ module.exports = async function (fastify, opts) {
 
   cron.schedule('* * * * *', async () => {
     try {
-      console.log("Status", getMemoryStatus());
       await upcomingCommentaries(fastify);
       if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
         await insertCompletedCommentaryForTournamentTeamPointUpdateService(fastify);
