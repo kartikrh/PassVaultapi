@@ -22974,8 +22974,10 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                 updateTime: commentaryDetails.updateTime,
                 modifyDate: commentaryDetails.modifyDate,
                 commentaryStatus: commentaryDetails.commentaryStatus,
-                commentaryCloseTime:
-                    commentaryDetails.commentaryStatus == 4 ? new Date() : null,
+                // commentaryCloseTime:
+                //     commentaryDetails.commentaryStatus == 4 ? new Date() : null,
+                commentaryCloseTime: 
+                  [4, 10].includes(Number(commentaryDetails?.commentaryStatus)) ? new Date() : null,
                 tossWonBy: commentaryDetails.tossWonBy,
                 choseTo: commentaryDetails.choseTo,
                 winnerId: commentaryDetails.winnerId,
@@ -22995,8 +22997,10 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                 updateTime: commentaryDetails.updateTime,
                 modifyDate: commentaryDetails.modifyDate,
                 commentaryStatus: commentaryDetails.commentaryStatus,
-                commentaryCloseTime:
-                    commentaryDetails.commentaryStatus == 4 ? new Date() : null,
+                // commentaryCloseTime:
+                //     commentaryDetails.commentaryStatus == 4 ? new Date() : null,
+                commentaryCloseTime: 
+                  [4, 10].includes(Number(commentaryDetails?.commentaryStatus)) ? new Date() : null,
                 tossWonBy: commentaryDetails.tossWonBy,
                 choseTo: commentaryDetails.choseTo,
                 winnerId: commentaryDetails.winnerId,
