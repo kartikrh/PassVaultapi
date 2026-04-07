@@ -177,7 +177,7 @@ const {
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const { commentaryLogger, errorLogger, commActionLogger } = require("../utilities/logger");
-const { setCompEventSnapSerice } = require("./competitionEventSnap");
+const { setCompEventSnapSerice, updateEventSnapByComService } = require("./competitionEventSnap");
 const { setTeamPointService } = require("./tournamentTeamPoints");
 const { setPlayerHistoryService } = require("./playerHistory");
 const { now } = require("mongoose");
@@ -23413,6 +23413,24 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
             data: { overId: deleteOverIds },
           });
         }
+
+      if (global.tblCommentaries[commentaryIndex].commentaryStatus == 4) {
+        try {
+          await updateEventSnapByComService({
+            body: {
+              commentaryId: commentaryId
+            }
+          }, fastify);
+        } catch (error) {
+          errorLogger(
+            fastify,
+            `Error in updateEventSnapByComService for CommentaryId: ${commentaryId} => ${error.message}`,
+            "ERROR --> services/commentary.js/syncEntitySportCommentaryService - updateEventSnapByComService",
+            null
+          );
+        }
+      }
+
         // call the getscore and emit the event data
         if (
             global?.clientSocketIo !== undefined &&
