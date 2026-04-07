@@ -307,6 +307,16 @@ module.exports = async function (fastify, opts) {
   fastify.addHook("preClose", async () => {
     console.log("preClose hook executed");
     try {
+      // Stop all cron jobs to prevent memory leaks
+      cron.getTasks().forEach(task => {
+        try {
+          task.stop();
+        } catch (e) {
+          console.error("Error stopping cron task:", e);
+        }
+      });
+
+      // Disconnect sockets
       await disConnectClientSocketQuery(fastify);
       await disConnectEntitySocketQuery(fastify);
       console.log("Cleanup task executed successfully");

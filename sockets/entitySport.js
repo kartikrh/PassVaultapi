@@ -10,9 +10,36 @@ const { setEntityCom2Service } = require("../services/entitySport");
 const { updateCommentaryPlayersFromEntityService } = require("../services/commentry");
 const configConstants = require("../utilities/configConstants");
 const { createDataQuery } = require("../repository/TableEntityDataLog");
+const { default: pLimit } = require("p-limit");
 const commentaryQueue = new Map(); // {matchId: {payload, fastify}}
-const matchIdLocks = new Map(); // {matchId: Promise} - ensures serial processing per matchId
+const matchIdLocks = new Map(); // {matchId: {promise, lastActivity}} - combined lock + activity tracking
 let processTimeout = null;
+
+// Memory management constants
+const MAX_QUEUE_SIZE = 200; // Prevent unbounded queue growth
+const LOCK_CLEANUP_INTERVAL = 60000; // Clean stale locks every 60s
+const LOCK_IDLE_TIMEOUT = 30000; // Remove locks idle for 30s
+const CONCURRENCY_LIMIT = 10;
+const limit = pLimit(CONCURRENCY_LIMIT);
+
+
+/**
+ * Cleanup stale locks periodically to prevent memory leak
+ * Uses single Map instead of separate activity tracking
+ */
+setInterval(() => {
+  const now = Date.now();
+  let removedCount = 0;
+  for (const [matchId, lockData] of matchIdLocks.entries()) {
+    if (now - lockData.lastActivity > LOCK_IDLE_TIMEOUT) {
+      matchIdLocks.delete(matchId);
+      removedCount++;
+    }
+  }
+  if (removedCount > 0) {
+    console.log(`Cleaned up ${removedCount} stale locks. Current locks: ${matchIdLocks.size}, Queue size: ${commentaryQueue.size}`);
+  }
+}, LOCK_CLEANUP_INTERVAL);
 
 /**
  * Per-matchId lock mechanism
@@ -21,13 +48,22 @@ let processTimeout = null;
  */
 function getOrCreateLock(matchId) {
   if (!matchIdLocks.has(matchId)) {
-    matchIdLocks.set(matchId, Promise.resolve()); // Start with resolved promise
+    matchIdLocks.set(matchId, {
+      promise: Promise.resolve(),
+      lastActivity: Date.now()
+    });
+  } else {
+    // Update activity time
+    matchIdLocks.get(matchId).lastActivity = Date.now();
   }
-  return matchIdLocks.get(matchId);
+  return matchIdLocks.get(matchId).promise;
 }
 
 function setLock(matchId, promise) {
-  matchIdLocks.set(matchId, promise);
+  matchIdLocks.set(matchId, {
+    promise: promise,
+    lastActivity: Date.now()
+  });
 }
 
 /**
@@ -38,7 +74,17 @@ function addToQueue(payload, fastify) {
   if (!payload?.response?.match_id) return;
   const matchId = payload.response.match_id;
 
-  // Replace existing queued item with latest data (avoid duplicates)
+  // Prevent unbounded queue growth
+  if (commentaryQueue.size >= MAX_QUEUE_SIZE) {
+    console.warn(`Queue size exceeded ${MAX_QUEUE_SIZE}. Dropping oldest items.`);
+    // Drop first item to make room
+    const firstKey = commentaryQueue.keys().next().value;
+    if (firstKey) {
+      commentaryQueue.delete(firstKey);
+    }
+  }
+
+  // Replace existing queued item with latest data (avoid duplicates per matchId)
   commentaryQueue.set(matchId, { payload });
 
   // Schedule processing if not already scheduled
@@ -56,38 +102,63 @@ function addToQueue(payload, fastify) {
  */
 async function processQueue(fastify) {
   if (commentaryQueue.size === 0) return;
-  const processPromises = [];
-  for (const [matchId, { payload }] of commentaryQueue) {
-    commentaryQueue.delete(matchId); // Remove from queue immediately
-    const currentLock = getOrCreateLock(matchId); // Get existing lock for this matchId (creates new if doesn't exist)
-    const newLock = currentLock.then(async () => {
-      try {
-        const request = { body: payload, userTokenInfo: { WrUserId: -2 } };
-        await setEntityCom2Service(request, fastify);
-      } catch (err) {
+
+  const entries = Array.from(commentaryQueue.entries());
+  commentaryQueue.clear(); // clear immediately to free memory
+
+  for (const [matchId, { payload }] of entries) {
+    const currentLock = getOrCreateLock(matchId);
+
+    const newLock = currentLock
+      .then(() =>
+        limit(async () => {
+          try {
+            const request = {
+              body: payload,
+              userTokenInfo: { WrUserId: -2 },
+            };
+
+            await setEntityCom2Service(request, fastify);
+
+          } catch (err) {
+            errorLogger(
+              fastify,
+              err.message,
+              "Sockets/entitySports.js/processQueue",
+              null,
+              payload
+            );
+          }
+
+          // small delay (reduced)
+          await new Promise((r) => setTimeout(r, 5));
+        })
+      )
+      .catch((err) => {
         errorLogger(
           fastify,
           err.message,
-          "Sockets/entitySports.js/processQueue",
-          null,
-          payload
+          "Lock processing error",
+          null
         );
-      }
-      await new Promise((r) => setTimeout(r, 50)); // Small delay to ease DB load
-    })
+      });
+
     setLock(matchId, newLock);
 
-    newLock.finally(() => {
-      if (matchIdLocks.get(matchId) === newLock) {
+    // IMPORTANT: no Promise.all → prevents memory spike
+    newLock
+    .catch(() => {})
+    .finally(() => {
+      // cleanup lock safely
+      if (matchIdLocks.get(matchId)?.promise === newLock) {
         matchIdLocks.delete(matchId);
       }
     });
-    processPromises.push(newLock);
-    // return newLock;
   }
 
-  // Wait for all matchIds to complete their processing
-  await Promise.all(processPromises);
+  console.log(
+    `Processed batch. Active locks: ${matchIdLocks.size}, Queue: ${commentaryQueue.size}`
+  );
 }
 
 const connectEntitySport = async (fastify, entitySocketId = undefined) => {
@@ -146,6 +217,13 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
         pingTimeout: 10000,
       });
 
+      // Clean up any existing socket listeners to prevent accumulation
+      client.removeAllListeners("connect");
+      client.removeAllListeners("disconnect");
+      client.removeAllListeners("entitywebsocketconnect");
+      client.removeAllListeners("entitywebsocketdisconnect");
+      client.removeAllListeners("entityScoreData");
+
       client.on("connect", async () => {
         global.connectedEntitySocketClients.push({
           urlConfig,
@@ -201,6 +279,11 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       client.on("entitywebsocketdisconnect", (message) => {
         global.socketIo.emit("entitywebsocketdisconnect", `Entity web socket disconnected, code: ${message.code} ${message?.reason !== "" ? `reason: ${message.reason}` : ""} at ${new Date().toISOString()}`);
       });
+
+      // Clean up any existing reconnect listeners to prevent accumulation during reconnection
+      client.io.removeAllListeners("reconnect_attempt");
+      client.io.removeAllListeners("reconnect_error");
+      client.io.removeAllListeners("reconnect_failed");
 
       client.io.on("reconnect_attempt", (attemptNumber) => {
         const reconnectCounts = global.tblEntitySockets.find(c => c.entitySocketId === urlConfig.entitySocketId)?.reconnectCount;

@@ -33,6 +33,21 @@ const connectClients = async (fastify, clientSocketId) => {
       });
 
       client.on("connect", async () => {
+        const prior = global.clientSocketIo.filter(
+          (item) => item.clientSocketId === config.clientSocketId
+        );
+        for (const p of prior) {
+          if (p.cronJob) {
+            try {
+              p.cronJob.stop();
+            } catch (_) {}
+            p.cronJob = null;
+          }
+        }
+        global.clientSocketIo = global.clientSocketIo.filter(
+          (item) => item.clientSocketId !== config.clientSocketId
+        );
+
         const socketObj = { ...config, client, cronJob: null };
         global.clientSocketIo.push(socketObj);
         errorLogger(
@@ -106,12 +121,19 @@ const connectClients = async (fastify, clientSocketId) => {
           null
         );
 
-        const socket = global.clientSocketIo.find(item => item.clientSocketId !== config.clientSocketId);
-        if (socket || socket?.cronJob) {
-          socket.cronJob?.stop();
+        const socket = global.clientSocketIo.find(
+          (item) => item.clientSocketId === config.clientSocketId
+        );
+        if (socket?.cronJob) {
+          try {
+            socket.cronJob.stop();
+          } catch (_) {}
+          socket.cronJob = null;
         }
 
-        global.clientSocketIo = global.clientSocketIo.filter(item => item.clientSocketId !== config.clientSocketId);
+        global.clientSocketIo = global.clientSocketIo.filter(
+          (item) => item.clientSocketId !== config.clientSocketId
+        );
 
         try {
           await updateClientSocketStatusQuery(
@@ -182,11 +204,23 @@ const disconnectClientSockets = async (fastify, clientSocketId) => {
     }
 
     const promises = clientConfigs?.map(async (client) => {
-      const clientSocket = global.clientSocketIo.find(item => item.clientSocketId === client.clientSocketId);
+      const clientSocket = global.clientSocketIo.find(
+        (item) => item.clientSocketId === client.clientSocketId
+      );
       if (clientSocket) {
-        clientSocket?.cronJob?.stop();
-        clientSocket?.client?.disconnect(true);
-        clientSocket?.client?.removeAllListeners();
+        if (clientSocket.cronJob) {
+          try {
+            clientSocket.cronJob.stop();
+          } catch (_) {}
+          clientSocket.cronJob = null;
+        }
+        try {
+          clientSocket.client?.removeAllListeners();
+          clientSocket.client?.disconnect(true);
+        } catch (_) {}
+        global.clientSocketIo = global.clientSocketIo.filter(
+          (item) => item.clientSocketId !== client.clientSocketId
+        );
       }
 
       try {

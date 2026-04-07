@@ -24088,32 +24088,62 @@ const matchImportService = async (data, fastify, request = null) => {
 
   return checkCommentary;
 }
+
+/** One node-cron task per clientSocketId; replaced on each service run; stale ids stopped when no longer eligible. */
+const clientSocketViewCountCronById = new Map();
+
 const clientSocketCountService = async (fastify) => {
-  const clientScoketIo = global.clientSocketIo.filter(item => item.isUpdateView == true && 
-    item.actionType == 1 && item.isActive == true
+  const eligible = global.clientSocketIo.filter(
+    (item) =>
+      item.isUpdateView == true &&
+      item.actionType == 1 &&
+      item.isActive == true
   );
-  for (const socket of clientScoketIo) {
+  const eligibleIds = new Set(eligible.map((s) => s.clientSocketId));
+
+  for (const [id, task] of [...clientSocketViewCountCronById]) {
+    if (!eligibleIds.has(id)) {
+      try {
+        task.stop();
+      } catch (_) {}
+      clientSocketViewCountCronById.delete(id);
+    }
+  }
+
+  for (const socket of eligible) {
+    const id = socket.clientSocketId;
     const intervalMinutes = Number(socket.updateInterval) || 5;
     const cronExpression = `*/${intervalMinutes} * * * *`;
-  
-    cron.schedule(cronExpression, async () => {
+
+    const prev = clientSocketViewCountCronById.get(id);
+    if (prev) {
       try {
-        if (!global.clientSocketIo.includes(socket)) {
-          if (socket.cronJob && typeof socket.cronJob.stop === 'function') {
-            socket.cronJob.stop();
-          }
+        prev.stop();
+      } catch (_) {}
+      clientSocketViewCountCronById.delete(id);
+    }
+
+    const task = cron.schedule(cronExpression, async () => {
+      try {
+        const live = global.clientSocketIo.find((s) => s.clientSocketId === id);
+        if (!live?.client?.connected) {
           return;
         }
-        socket.client.emit("updateRoomUserCount", { message: "Send me user counts" });
-        socket.client.once("countData", async (data) => {
+        live.client.emit("updateRoomUserCount", { message: "Send me user counts" });
+        live.client.once("countData", async (data) => {
           for (const elem of data) {
             const currentCount = Number(elem.count) || 0;
-            if(elem.commentaryId) {
-              await updateCommentaryViewsQuery({
-                views: currentCount,
-                commentaryId: elem.commentaryId,
-              }, fastify);
-              const index = global.tblCommentaries.findIndex(item => item.commentaryId == elem.commentaryId);
+            if (elem.commentaryId) {
+              await updateCommentaryViewsQuery(
+                {
+                  views: currentCount,
+                  commentaryId: elem.commentaryId,
+                },
+                fastify
+              );
+              const index = global.tblCommentaries.findIndex(
+                (item) => item.commentaryId == elem.commentaryId
+              );
               if (index !== -1) {
                 const oldCount = Number(global.tblCommentaries[index].views) || 0;
                 global.tblCommentaries[index].views = oldCount + currentCount;
@@ -24121,14 +24151,16 @@ const clientSocketCountService = async (fastify) => {
             }
           }
 
-          socket.client.emit("updateCommentaryCounts", data);
+          const current = global.clientSocketIo.find((s) => s.clientSocketId === id);
+          current?.client?.emit("updateCommentaryCounts", data);
         });
       } catch (error) {
         console.error(new Date(), "Error during scheduled task:", error);
       }
     });
-  };
-}
+    clientSocketViewCountCronById.set(id, task);
+  }
+};
 
 const undoCommentaryInningService = async (request, fastify) => {
   const startTime = new Date();
