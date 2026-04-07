@@ -4,6 +4,7 @@ const { clientSocketStatus, clientSocketActionType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 const { updateClientSocketStatusQuery, updateReconnectCountQuery } = require("../repository/TableClientSocket");
 const { updateCommentaryViewsQuery } = require("../repository/TableCommentary");
+const { withSentryCronProfiling } = require("../utilities/sentryCron");
 
 const connectClients = async (fastify, clientSocketId) => {
   try {
@@ -75,10 +76,11 @@ const connectClients = async (fastify, clientSocketId) => {
 
         if (socketObj.isUpdateView && !socketObj.cronJob) {
           const interval = Number(socketObj.updateInterval) || 5;
-          socketObj.cronJob = cron.schedule(`*/${interval} * * * *`, () => {
+          const cronExpression = `*/${interval} * * * *`;
+          socketObj.cronJob = cron.schedule(cronExpression, withSentryCronProfiling(`client-socket-view-refresh-${config.clientSocketId}`, cronExpression, () => {
             if (!client.connected) return;
             client.emit("updateRoomUserCount", { message: "Send me user counts" });
-          });
+          }));
         }
       });
 
