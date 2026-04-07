@@ -6,6 +6,7 @@ const { updateClientSocketStatusQuery, updateReconnectCountQuery } = require("..
 const { errorLogger } = require("../utilities/logger");
 const { updateCommentaryViewsQuery } = require("../repository/TableCommentary");
 const cron = require('node-cron');
+const { withSentryCronProfiling } = require("../utilities/sentryCron");
 const connectClients = async (fastify, clientSocketId = undefined) => {
   try {
     // const clientUrls = global.tblClientSocket.filter(
@@ -150,7 +151,7 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
               const intervalMinutes = Number(socketObj.updateInterval) || 5;
               const cronExpression = `*/${intervalMinutes} * * * *`;
 
-              socketObj.cronJob = cron.schedule(cronExpression, async () => {
+              socketObj.cronJob = cron.schedule(cronExpression, withSentryCronProfiling(`socket-view-refresh-${socketObj.clientSocketId}`, cronExpression, async () => {
                 try {
                   if (!socketObj.client || !socketObj.client.connected) {
                     return;
@@ -185,7 +186,7 @@ const connectClients = async (fastify, clientSocketId = undefined) => {
                 } catch (error) {
                   console.error(new Date(), "Error during scheduled task:", error);
                 }
-              });
+              }));
             }
           });
           client.on("connect_error", (error) => {
@@ -665,7 +666,7 @@ const connectClients2 = async (fastify, clientSocketId = undefined)=>{
             const intervalMinutes = Number(socketObj.updateInterval) || 5;
             const cronExpression = `*/${intervalMinutes} * * * *`;
 
-            socketObj.cronJob = cron.schedule(cronExpression, async () => {
+            socketObj.cronJob = cron.schedule(cronExpression, withSentryCronProfiling(`socket-view-refresh-${socketObj.clientSocketId}`, cronExpression, async () => {
               try {
                 if (!socketObj.client || !socketObj.client.connected) {
                   return;
@@ -700,7 +701,7 @@ const connectClients2 = async (fastify, clientSocketId = undefined)=>{
               } catch (error) {
                 console.error(new Date(), "Error during scheduled task:", error);
               }
-            });
+            }));
           }
         });
 
@@ -876,4 +877,3 @@ const disconnectInactiveClients = async (fastify) => {
   }
 }
 module.exports = { connectClients, disconnectClients, disconnectInactiveClients ,connectClients2};
-

@@ -105,6 +105,7 @@ const {
   getAllCommentaryByCompetitionIdQuery
 } = require("../repository/TableCommentary");
 const moment = require("moment");
+const { withSentryCronProfiling } = require("../utilities/sentryCron");
 const {
   convertDate,
   wicketType,
@@ -24123,7 +24124,7 @@ const clientSocketCountService = async (fastify) => {
       clientSocketViewCountCronById.delete(id);
     }
 
-    const task = cron.schedule(cronExpression, async () => {
+    const task = cron.schedule(cronExpression, withSentryCronProfiling(`commentary-view-count-${id}`, cronExpression, async () => {
       try {
         const live = global.clientSocketIo.find((s) => s.clientSocketId === id);
         if (!live?.client?.connected) {
@@ -24157,7 +24158,7 @@ const clientSocketCountService = async (fastify) => {
       } catch (error) {
         console.error(new Date(), "Error during scheduled task:", error);
       }
-    });
+    }));
     clientSocketViewCountCronById.set(id, task);
   }
 };
