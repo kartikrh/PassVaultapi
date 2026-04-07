@@ -177,6 +177,7 @@ const virtualBallByBallQuery = async (data, request, fastify) => {
             "wrCardKey" AS "cardKey",
             "wrCardType" AS "cardType",
             "wrTpId" AS "tpId",
+            "wrCreatedDate" as "createdDate",
             "wrCommentary" AS "commentary"
             ;`;
 
