@@ -22975,6 +22975,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                 commentaryStatus: commentaryDetails.commentaryStatus,
                 commentaryCloseTime:
                     commentaryDetails.commentaryStatus == 4 ? new Date() : null,
+                cancelTime : commentaryDetails.commentaryStatus == 10 ? new Date() : null,
                 tossWonBy: commentaryDetails.tossWonBy,
                 choseTo: commentaryDetails.choseTo,
                 winnerId: commentaryDetails.winnerId,

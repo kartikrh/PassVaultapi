@@ -383,18 +383,18 @@ module.exports = async function (fastify, opts) {
     //   request.errId = result[0]?.errId;
     // }
 
-    if (process.env.ENABLE_SENTRY === "TRUE") {
-      Sentry.startSpan(
-        {
-          name: `${request.method} ${request.url}`,
-          op: "http.server",
-          description: "Incoming HTTP request",
-        },
-        (span) => {
-          request.sentrySpan = span;
-        }
-      );
-    }
+    // if (process.env.ENABLE_SENTRY === "TRUE") {
+    //   Sentry.startSpan(
+    //     {
+    //       name: `${request.method} ${request.url}`,
+    //       op: "http.server",
+    //       description: "Incoming HTTP request",
+    //     },
+    //     (span) => {
+    //       request.sentrySpan = span;
+    //     }
+    //   );
+    // }
 
     // done();
   });
@@ -442,31 +442,31 @@ module.exports = async function (fastify, opts) {
       newPayload = JSON.stringify(newPayload);
     }
 
-    if (process.env.ENABLE_SENTRY === "TRUE") {
-      // const transaction = Sentry.startTransaction({
-      //   name: `${request.method} ${request.url}`,
-      //   op: "http.server",
-      //   description: "HTTP request",
-      // });
-      // request.sentryTx = transaction;
-      Sentry.startSpan(
-        {
-          name: `${request.method} ${request.url}`,
-          op: "http.server",
-          description: "Incoming HTTP request",
-        },
-        (span) => {
-          request.sentrySpan = span;
-        }
-      );
-      // const span = Sentry.startSpan({
-      //   name: `${request.method} ${request.url}`,
-      //   op: "http.server",
-      //   description: "HTTP request",
-      // });
+    // if (process.env.ENABLE_SENTRY === "TRUE") {
+    //   // const transaction = Sentry.startTransaction({
+    //   //   name: `${request.method} ${request.url}`,
+    //   //   op: "http.server",
+    //   //   description: "HTTP request",
+    //   // });
+    //   // request.sentryTx = transaction;
+    //   Sentry.startSpan(
+    //     {
+    //       name: `${request.method} ${request.url}`,
+    //       op: "http.server",
+    //       description: "Incoming HTTP request",
+    //     },
+    //     (span) => {
+    //       request.sentrySpan = span;
+    //     }
+    //   );
+    //   // const span = Sentry.startSpan({
+    //   //   name: `${request.method} ${request.url}`,
+    //   //   op: "http.server",
+    //   //   description: "HTTP request",
+    //   // });
 
-      // request.sentrySpan = span;
-    }
+    //   // request.sentrySpan = span;
+    // }
 
     done(null, newPayload);
   });
@@ -488,10 +488,10 @@ module.exports = async function (fastify, opts) {
       responseLogger(request);
     }
 
-    if (process.env.ENABLE_SENTRY === "TRUE") {
-      request.sentryTx.setHttpStatus(reply.statusCode);
-      request.sentryTx.finish();
-    }
+    // if (process.env.ENABLE_SENTRY === "TRUE") {
+    //   request.sentryTx.setHttpStatus(reply.statusCode);
+    //   request.sentryTx.finish();
+    // }
 
     done();
   });
