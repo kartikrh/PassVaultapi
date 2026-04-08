@@ -28,7 +28,32 @@ const updateEventSnapByComService = async (request , fastify) =>{
         competitionId :com.competitionId,
         eventTypeId : com.eventTypeId,
     }]
-    let setSnap = await setEventSnapQuery(data,request,fastify);
+    await setEventSnapQuery(data,request,fastify);
+
+    const getSnapData = await getEventSnapByComService({
+        ...request,
+        body: {
+            commentaryId: request.body.commentaryId
+        }
+    }, fastify);
+
+    if (
+        global?.clientSocketIo !== undefined &&
+        global?.clientSocketIo.length > 0
+    ) {
+        global.clientSocketIo.forEach((socket) => {
+            socket.client.emit("updateFullscore", {
+                commentaryId: request.body.commentaryId,
+                eventRefId: com?.eventRefId,
+                dataToUpdate: [{
+                    module: "commentaryEventSnapData",
+                    type: "update",
+                    data: getSnapData
+                }]
+            });
+        });
+    }
+
     // console.log("setSnap", setSnap);
     return "Eventsnap Updated successfully";
 }
