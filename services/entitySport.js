@@ -5591,13 +5591,13 @@ const updateBowlerIdService = async (data, request, fastify) => {
     const bowlers = cInning?.bowlers;
     if (!bowlers?.length) return;
 
-    // Temperarly added this errorLogger here to know this function called or not
-    errorLogger(
-      fastify,
-      `BowerId change function called on entity auto scoring (over:${eData?.over ?? 0}.${eData?.ball ?? 0}) - ${response?.match_id ?? comDetails?.commentaryId}`,
-      "To Know function called or not --> services/entitySport.js/updateBowlerIdService",
-      request
-    );
+    // // Temperarly added this errorLogger here to know this function called or not
+    // errorLogger(
+    //   fastify,
+    //   `BowerId change function called on entity auto scoring (over:${eData?.over ?? 0}.${eData?.ball ?? 0}) - ${response?.match_id ?? comDetails?.commentaryId}`,
+    //   "To Know function called or not --> services/entitySport.js/updateBowlerIdService",
+    //   request
+    // );
 
     const entityBowlerData = bowlers.find(
       (b) => b.bowler_id == oldBowlerData?.tpId
@@ -5826,13 +5826,13 @@ const updateBatterIdService = async (data, request, fastify) => {
     const batsmen = cInning?.batsmen;
     if (!batsmen?.length) return;
 
-    // Temperarly added this errorLogger here to know this function called or not
-    errorLogger(
-      fastify,
-      `BatterId change function called on entity auto scoring (over:${eData?.over ?? 0}.${eData?.ball ?? 0}) - ${response?.match_id ?? comDetails?.commentaryId}`,
-      "To Know function called or not --> services/entitySport.js/updateBatterIdService",
-      request
-    );
+    // // Temperarly added this errorLogger here to know this function called or not
+    // errorLogger(
+    //   fastify,
+    //   `BatterId change function called on entity auto scoring (over:${eData?.over ?? 0}.${eData?.ball ?? 0}) - ${response?.match_id ?? comDetails?.commentaryId}`,
+    //   "To Know function called or not --> services/entitySport.js/updateBatterIdService",
+    //   request
+    // );
 
     const entityBatterData = batsmen.find(
       (b) => b.batsman_id == oldBatterData?.tpId

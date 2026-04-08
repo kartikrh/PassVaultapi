@@ -206,6 +206,29 @@ const advertiseViewersCountQuery = async (data, request, fastify) => {
   }
 };
 
+const updateAdvertiseViewCountQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+        update "tblAdvertise" set
+        "wrViewerCount" = COALESCE("wrViewerCount", 0) + 1
+        where "wrId" = $1
+      `,
+      {
+        bind: [data.refId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableAdvertise/updateAdvertiseViewCountQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
+
 module.exports = {
   getAllAdvertiseQuery,
   createAdvertiseQuery,
@@ -213,4 +236,5 @@ module.exports = {
   deleteAdvertiseQuery,
   activeInactiveAdvertiseQuery,
   advertiseViewersCountQuery,
+  updateAdvertiseViewCountQuery
 };

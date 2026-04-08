@@ -45,6 +45,7 @@ const { entitySportAutoUpdateCommentary } = require("./utilities/entitySportAuto
 const { entitySportAutoUpdateCommentaryTime } = require("./utilities/entityConst.js");
 const { autoUpdatePlayerStatisticsDataProcess } = require("./utilities/autoUpdatePlayerStatisticsData.js");
 const { ISPLAYERCALCULATIONON } = require("./utilities/configConstants.js");
+const { withSentryCronProfiling } = require("./utilities/sentryCron.js");
 const { insertCompetitionstatisticsInAutoImportService } = require("./services/competitionStatistics.js");
 const { insertICCRankingInAutoImportService } = require("./services/iccRanking.js");
 const { importCompetitionMatchService, insertCompletedCommentaryForTournamentTeamPointUpdateService } = require("./services/commentry.js");
@@ -62,7 +63,7 @@ global.connectedEntitySocketClients = global.connectedEntitySocketClients || [];
 if (process.env.ENABLE_SENTRY === "TRUE") {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
-    tracesSampleRate: 0.1,
+    tracesSampleRate: 1.0,
     integrations: [
       nodeProfilingIntegration(),
       Sentry.postgresIntegration(),
@@ -157,16 +158,16 @@ module.exports = async function (fastify, opts) {
         }
       });
     });
-  cron.schedule('0 0 * * *', async () => {
+  cron.schedule('0 0 * * *', withSentryCronProfiling("fetch-commentaries-data", '0 0 * * *', async () => {
     try {
       // Fetching data from db every 24 hrs once(at midnight)
       await FetchingCommentariesDataFromCron(fastify);
     } catch (error) {
       console.error(new Date(), "Error during scheduled task:", error);
     }
-  });
+  }));
 
-  cron.schedule('* * * * *', async () => {
+  cron.schedule('* * * * *', withSentryCronProfiling("upcoming-commentaries", '* * * * *', async () => {
     try {
       await upcomingCommentaries(fastify);
       if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
@@ -175,10 +176,10 @@ module.exports = async function (fastify, opts) {
     } catch (error) {
       console.error(new Date(), "Error during scheduled task:", error);
     }
-  });
+  }));
 
   let isAutoImportProcessRunning = false;
-  cron.schedule('0,30 * * * * *', async () => {
+  cron.schedule('0,30 * * * * *', withSentryCronProfiling("entitysport-auto-import", '0,30 * * * * *', async () => {
     try {
       if (!isAutoImportProcessRunning && global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
         isAutoImportProcessRunning = true;
@@ -189,10 +190,15 @@ module.exports = async function (fastify, opts) {
     } finally {
       isAutoImportProcessRunning = false;
     }
-  });
+  }));
 
   let isAutoUpdateCommentaryProcessRunning = false;
-  cron.schedule(`*/${entitySportAutoUpdateCommentaryTime} * * * *`, async () => {
+  cron.schedule(
+    `*/${entitySportAutoUpdateCommentaryTime} * * * *`,
+    withSentryCronProfiling(
+      "entitysport-auto-update-commentary",
+      `*/${entitySportAutoUpdateCommentaryTime} * * * *`,
+      async () => {
     try {
       if (!isAutoUpdateCommentaryProcessRunning && global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive && global.tblEntitySockets?.[0]?.isAutoUpdateCommentary) {
         isAutoUpdateCommentaryProcessRunning = true;
@@ -203,10 +209,12 @@ module.exports = async function (fastify, opts) {
     } finally {
       isAutoUpdateCommentaryProcessRunning = false;
     }
-  });
+      }
+    )
+  );
 
   let isAutoUpdatePlayerStatisticsProcessRunning = false;
-  cron.schedule(`*/30 * * * * *`, async () => {
+  cron.schedule(`*/30 * * * * *`, withSentryCronProfiling("auto-update-player-statistics", `*/30 * * * * *`, async () => {
     try {
       if (!isAutoUpdatePlayerStatisticsProcessRunning && global.isAllDataLoadedInGlobal && global.tblConfigs.find((item) => item.key === ISPLAYERCALCULATIONON).value === "true") {
         isAutoUpdatePlayerStatisticsProcessRunning = true;
@@ -217,9 +225,9 @@ module.exports = async function (fastify, opts) {
     } finally {
       isAutoUpdatePlayerStatisticsProcessRunning = false;
     }
-  });
+  }));
 
-  cron.schedule('30 0 * * *', async () => {
+  cron.schedule('30 0 * * *', withSentryCronProfiling("daily-competition-imports", '30 0 * * *', async () => {
     try {
       if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
         await insertCompletedCompetitionsInAutoImportService(fastify);
@@ -230,7 +238,7 @@ module.exports = async function (fastify, opts) {
     } catch (error) {
       console.error("Error during scheduled task:", error);
     }
-  });
+  }));
 
   // .after(async () => {
   //   require("./sequelize/tables/userModel")(fastify.db);

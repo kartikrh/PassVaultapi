@@ -105,6 +105,7 @@ const {
   getAllCommentaryByCompetitionIdQuery
 } = require("../repository/TableCommentary");
 const moment = require("moment");
+const { withSentryCronProfiling } = require("../utilities/sentryCron");
 const {
   convertDate,
   wicketType,
@@ -176,7 +177,7 @@ const {
 } = require("../repository/TableEventMarkets");
 const configConstants = require("../utilities/configConstants");
 const { commentaryLogger, errorLogger, commActionLogger } = require("../utilities/logger");
-const { setCompEventSnapSerice } = require("./competitionEventSnap");
+const { setCompEventSnapSerice, updateEventSnapByComService } = require("./competitionEventSnap");
 const { setTeamPointService } = require("./tournamentTeamPoints");
 const { setPlayerHistoryService } = require("./playerHistory");
 const { now } = require("mongoose");
@@ -22976,6 +22977,10 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                 commentaryCloseTime:
                     commentaryDetails.commentaryStatus == 4 ? new Date() : null,
                 cancelTime : commentaryDetails.commentaryStatus == 10 ? new Date() : null,
+                // commentaryCloseTime:
+                //     commentaryDetails.commentaryStatus == 4 ? new Date() : null,
+                commentaryCloseTime: 
+                  [4, 10].includes(Number(commentaryDetails?.commentaryStatus)) ? new Date() : null,
                 tossWonBy: commentaryDetails.tossWonBy,
                 choseTo: commentaryDetails.choseTo,
                 winnerId: commentaryDetails.winnerId,
@@ -22995,8 +23000,10 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                 updateTime: commentaryDetails.updateTime,
                 modifyDate: commentaryDetails.modifyDate,
                 commentaryStatus: commentaryDetails.commentaryStatus,
-                commentaryCloseTime:
-                    commentaryDetails.commentaryStatus == 4 ? new Date() : null,
+                // commentaryCloseTime:
+                //     commentaryDetails.commentaryStatus == 4 ? new Date() : null,
+                commentaryCloseTime: 
+                  [4, 10].includes(Number(commentaryDetails?.commentaryStatus)) ? new Date() : null,
                 tossWonBy: commentaryDetails.tossWonBy,
                 choseTo: commentaryDetails.choseTo,
                 winnerId: commentaryDetails.winnerId,
@@ -23413,6 +23420,24 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
             data: { overId: deleteOverIds },
           });
         }
+
+      if (global.tblCommentaries[commentaryIndex].commentaryStatus == 4) {
+        try {
+          await updateEventSnapByComService({
+            body: {
+              commentaryId: commentaryId
+            }
+          }, fastify);
+        } catch (error) {
+          errorLogger(
+            fastify,
+            `Error in updateEventSnapByComService for CommentaryId: ${commentaryId} => ${error.message}`,
+            "ERROR --> services/commentary.js/syncEntitySportCommentaryService - updateEventSnapByComService",
+            null
+          );
+        }
+      }
+
         // call the getscore and emit the event data
         if (
             global?.clientSocketIo !== undefined &&
@@ -24124,7 +24149,7 @@ const clientSocketCountService = async (fastify) => {
       clientSocketViewCountCronById.delete(id);
     }
 
-    const task = cron.schedule(cronExpression, async () => {
+    const task = cron.schedule(cronExpression, withSentryCronProfiling(`commentary-view-count-${id}`, cronExpression, async () => {
       try {
         const live = global.clientSocketIo.find((s) => s.clientSocketId === id);
         if (!live?.client?.connected) {
@@ -24158,7 +24183,7 @@ const clientSocketCountService = async (fastify) => {
       } catch (error) {
         console.error(new Date(), "Error during scheduled task:", error);
       }
-    });
+    }));
     clientSocketViewCountCronById.set(id, task);
   }
 };
