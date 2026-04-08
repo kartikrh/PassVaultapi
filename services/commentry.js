@@ -23421,7 +23421,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
           });
         }
 
-      if (global.tblCommentaries[commentaryIndex].commentaryStatus == 4) {
+      if (global.tblCommentaries[commentaryIndex]?.commentaryStatus == 4) {
         try {
           await updateEventSnapByComService({
             body: {
