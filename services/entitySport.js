@@ -3571,6 +3571,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
   if (deleteBallByBallIds.length > 0 || deleteOverIds.length > 0) {
     await syncEntitySportCommentaryService({
       commentaryId: comDetails.commentaryId,
+      commentaryDetails: comDetails,
       commentaryPlayers: plyArr,
       deleteBallByBallIds: deleteBallByBallIds,
       commentaryOvers: overArr,
