@@ -22974,6 +22974,9 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                 updateTime: commentaryDetails.updateTime,
                 modifyDate: commentaryDetails.modifyDate,
                 commentaryStatus: commentaryDetails.commentaryStatus,
+                commentaryCloseTime:
+                    commentaryDetails.commentaryStatus == 4 ? new Date() : null,
+                cancelTime : commentaryDetails.commentaryStatus == 10 ? new Date() : null,
                 // commentaryCloseTime:
                 //     commentaryDetails.commentaryStatus == 4 ? new Date() : null,
                 commentaryCloseTime: 
