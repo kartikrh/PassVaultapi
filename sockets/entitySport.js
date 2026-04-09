@@ -196,9 +196,9 @@ async function processQueue(fastify) {
     });
   }
 
-  console.log(
-    `Processed batch. Active locks: ${matchIdLocks.size}, Queue: ${commentaryQueue.size}`
-  );
+  // console.log(
+  //   `Processed batch. Active locks: ${matchIdLocks.size}, Queue: ${commentaryQueue.size}`
+  // );
 }
 
 const connectEntitySport = async (fastify, entitySocketId = undefined) => {
