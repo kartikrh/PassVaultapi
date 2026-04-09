@@ -362,16 +362,16 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       });
 
       client.on("entityScoreData", async (payload) => {
-        let transaction;
-        if (process.env.ENABLE_SENTRY === "TRUE") {
-          transaction = Sentry.startTransaction({
-            name: `entityScoreData:event:${payload.response?.match_id || 'unknown'}`,
-            op: "socket.event",
-            description: "Handle entityScoreData socket event",
-          });
-          transaction.setData("api_type", payload?.api_type);
-          transaction.setData("matchId", payload.response?.match_id);
-        }
+        // let transaction;
+        // if (process.env.ENABLE_SENTRY === "TRUE") {
+        //   transaction = Sentry.startTransaction({
+        //     name: `entityScoreData:event:${payload.response?.match_id || 'unknown'}`,
+        //     op: "socket.event",
+        //     description: "Handle entityScoreData socket event",
+        //   });
+        //   transaction.setData("api_type", payload?.api_type);
+        //   transaction.setData("matchId", payload.response?.match_id);
+        // }
 
         try {
           // console.log("🚀 ~ connectEntitySport ~ payload")
@@ -401,15 +401,15 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
             return true;
           }
 
-          if (transaction) {
-            transaction.setStatus("ok");
-          }
+          // if (transaction) {
+          //   transaction.setStatus("ok");
+          // }
         } catch (err) {
           console.error("Error saving entity data:", err);
-          if (transaction) {
-            transaction.setStatus("internal_error");
-            Sentry.captureException(err);
-          }
+          // if (transaction) {
+          //   transaction.setStatus("internal_error");
+          //   Sentry.captureException(err);
+          // }
           errorLogger(
             fastify,
             err.message,
@@ -418,9 +418,9 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
             payload
           );
         } finally {
-          if (transaction) {
-            transaction.finish();
-          }
+          // if (transaction) {
+          //   transaction.finish();
+          // }
         }
       });
     });
