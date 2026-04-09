@@ -11,6 +11,7 @@ const { updateCommentaryPlayersFromEntityService } = require("../services/commen
 const configConstants = require("../utilities/configConstants");
 const { createDataQuery } = require("../repository/TableEntityDataLog");
 const { default: pLimit } = require("p-limit");
+const Sentry = require("@sentry/node");
 const commentaryQueue = new Map(); // {matchId: {payload, fastify}}
 const matchIdLocks = new Map(); // {matchId: {promise, lastActivity}} - combined lock + activity tracking
 let processTimeout = null;
@@ -84,8 +85,10 @@ function addToQueue(payload, fastify) {
     }
   }
 
-  // Replace existing queued item with latest data (avoid duplicates per matchId)
-  commentaryQueue.set(matchId, { payload });
+  commentaryQueue.set(matchId, {
+    payload,
+    enqueuedAt: Date.now(),
+  });
 
   // Schedule processing if not already scheduled
   if (!processTimeout) {
@@ -106,13 +109,31 @@ async function processQueue(fastify) {
   const entries = Array.from(commentaryQueue.entries());
   commentaryQueue.clear(); // clear immediately to free memory
 
-  for (const [matchId, { payload }] of entries) {
+  for (const [matchId, { payload, enqueuedAt }] of entries) {
     const currentLock = getOrCreateLock(matchId);
 
     const newLock = currentLock
       .then(() =>
         limit(async () => {
+          let transaction;
+          let processSpan;
           try {
+            if (process.env.ENABLE_SENTRY === "TRUE") {
+              transaction = Sentry.startTransaction({
+                name: `entityScoreData:${matchId}`,
+                op: "queue.process",
+                description: "Process entityScoreData payload from queue",
+              });
+              transaction.setData("matchId", matchId);
+              transaction.setData("api_type", payload?.api_type || null);
+              transaction.setData("queueDelayMs", Date.now() - enqueuedAt);
+
+              processSpan = transaction.startChild({
+                op: "service.call",
+                description: "Execute setEntityCom2Service",
+              });
+            }
+
             const request = {
               body: payload,
               userTokenInfo: { WrUserId: -2 },
@@ -120,7 +141,22 @@ async function processQueue(fastify) {
 
             await setEntityCom2Service(request, fastify);
 
+            if (processSpan) {
+              processSpan.setStatus("ok");
+              processSpan.finish();
+            }
+            if (transaction) {
+              transaction.setStatus("ok");
+            }
           } catch (err) {
+            if (processSpan) {
+              processSpan.setStatus("internal_error");
+              processSpan.finish();
+            }
+            if (transaction) {
+              transaction.setStatus("internal_error");
+              Sentry.captureException(err);
+            }
             errorLogger(
               fastify,
               err.message,
@@ -128,6 +164,10 @@ async function processQueue(fastify) {
               null,
               payload
             );
+          } finally {
+            if (transaction) {
+              transaction.finish();
+            }
           }
 
           // small delay (reduced)
@@ -322,8 +362,19 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       });
 
       client.on("entityScoreData", async (payload) => {
-        // console.log("🚀 ~ connectEntitySport ~ payload")
+        let transaction;
+        if (process.env.ENABLE_SENTRY === "TRUE") {
+          transaction = Sentry.startTransaction({
+            name: `entityScoreData:event:${payload.response?.match_id || 'unknown'}`,
+            op: "socket.event",
+            description: "Handle entityScoreData socket event",
+          });
+          transaction.setData("api_type", payload?.api_type);
+          transaction.setData("matchId", payload.response?.match_id);
+        }
+
         try {
+          // console.log("🚀 ~ connectEntitySport ~ payload")
           // console.log("Received entity data from Backend A:", payload);
           const request = { body: payload };
           if (payload.api_type && payload.api_type == "match_push_obj") {
@@ -349,8 +400,16 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
           } else {
             return true;
           }
+
+          if (transaction) {
+            transaction.setStatus("ok");
+          }
         } catch (err) {
           console.error("Error saving entity data:", err);
+          if (transaction) {
+            transaction.setStatus("internal_error");
+            Sentry.captureException(err);
+          }
           errorLogger(
             fastify,
             err.message,
@@ -358,6 +417,10 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
             null,
             payload
           );
+        } finally {
+          if (transaction) {
+            transaction.finish();
+          }
         }
       });
     });

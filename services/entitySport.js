@@ -48,6 +48,8 @@ const { assignAwardService } = require("./commentaryAward")
 const { insertAutoImportDataQuery, updateAutoImportDataQuery } = require("../repository/TableAutoImportData");
 const { insertTeamPlayersByTeamId, insertCommentaryPlayersByTeam } = require("./competition");
 const { insertTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers")
+const Sentry = require("@sentry/node");
+
 
 
 const saveTeamsService = async (request , fastify)=>{
@@ -364,8 +366,13 @@ const assignAwards = async (comDetails, response, request, fastify) => {
 }
 
 const setEntityCom2Service = async (request , fastify) =>{
+  const transaction = process.env.ENABLE_SENTRY === 'true' ? Sentry.startTransaction({
+    name: `setEntityCom2Service:${request.body?.response?.match_id || 'unknown'}`,
+    op: 'service.execution'
+  }) : null;
   let matchID = request.body?.response?.match_id
   try {
+    transaction?.setStatus('ok');
     const {response} = request.body
     if (response?.man_of_the_match?.pid) {
       const commentaryData = global.tblCommentaries.find(tc => tc.tpId === matchID);
@@ -1231,6 +1238,7 @@ const setEntityCom2Service = async (request , fastify) =>{
 
     return true;
   } catch (error) {
+    transaction?.setStatus('internal_error');
     console.log("error", error);
     errorLogger(
       fastify,
@@ -1241,6 +1249,8 @@ const setEntityCom2Service = async (request , fastify) =>{
       request.body
     )
     return true;
+  } finally {
+    transaction?.finish();
   }
 }
 
@@ -3561,6 +3571,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
   if (deleteBallByBallIds.length > 0 || deleteOverIds.length > 0) {
     await syncEntitySportCommentaryService({
       commentaryId: comDetails.commentaryId,
+      commentaryDetails: comDetails,
       commentaryPlayers: plyArr,
       deleteBallByBallIds: deleteBallByBallIds,
       commentaryOvers: overArr,

@@ -22974,6 +22974,9 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                 updateTime: commentaryDetails.updateTime,
                 modifyDate: commentaryDetails.modifyDate,
                 commentaryStatus: commentaryDetails.commentaryStatus,
+                commentaryCloseTime:
+                    commentaryDetails.commentaryStatus == 4 ? new Date() : null,
+                cancelTime : commentaryDetails.commentaryStatus == 10 ? new Date() : null,
                 // commentaryCloseTime:
                 //     commentaryDetails.commentaryStatus == 4 ? new Date() : null,
                 commentaryCloseTime: 
@@ -23418,7 +23421,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
           });
         }
 
-      if (global.tblCommentaries[commentaryIndex].commentaryStatus == 4) {
+      if (global.tblCommentaries[commentaryIndex]?.commentaryStatus == 4) {
         try {
           await updateEventSnapByComService({
             body: {

@@ -6,7 +6,8 @@ const fsequelize = require("fastify-sequelize");
 const dbPg = require("./sequelize/config/config")();
 const swagger = require("@fastify/swagger");
 const swaggerUi = require("@fastify/swagger-ui");
-const { fetchAllDataFromDb, FetchingCommentariesDataFromCron, upcomingCommentaries } = require("./utilities/fetchAllData");
+const { fetchAllDataFromDb } = require("./utilities/fetchAllData");
+const { registerCronJobs } = require("./utilities/cronJobs");
 // const fetchAllData = require("./utilities/fetchAllData");
 const { Server } = require("socket.io"); // Import Socket.IO
 const { connection, socketMiddleware } = require("./socketIo");
@@ -40,18 +41,8 @@ const webPush = require("web-push");
 const { webPushset } = require("./WebPushHandler/index.js");
 const { updateMarket } = require("./utilities/marketUpdate.js");
 const cron = require('node-cron');
-const { entitySportAutoImportProcess } = require("./utilities/entitySportAutoImport.js");
-const { entitySportAutoUpdateCommentary } = require("./utilities/entitySportAutoUpdateCommentary.js");
-const { entitySportAutoUpdateCommentaryTime } = require("./utilities/entityConst.js");
-const { autoUpdatePlayerStatisticsDataProcess } = require("./utilities/autoUpdatePlayerStatisticsData.js");
-const { ISPLAYERCALCULATIONON } = require("./utilities/configConstants.js");
-const { withSentryCronProfiling } = require("./utilities/sentryCron.js");
-const { insertCompetitionstatisticsInAutoImportService } = require("./services/competitionStatistics.js");
-const { insertICCRankingInAutoImportService } = require("./services/iccRanking.js");
-const { importCompetitionMatchService, insertCompletedCommentaryForTournamentTeamPointUpdateService } = require("./services/commentry.js");
 const { resetAllClientSocketReconnectCountService, disconnectAllClientSocketService } = require("./services/clientSocket.js");
 const { connectClients: newConnectClients } = require("./sockets/client.js");
-const { insertCompletedCompetitionsInAutoImportService } = require("./services/competition.js");
 // const { nodeProfilingIntegration } = require('@sentry/profiling-node');
 // const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 // Pass --options via CLI arguments in command to enable these options.
@@ -63,7 +54,7 @@ global.connectedEntitySocketClients = global.connectedEntitySocketClients || [];
 if (process.env.ENABLE_SENTRY === "TRUE") {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
-    tracesSampleRate: 1.0,
+    tracesSampleRate: 0.2,
     integrations: [
       nodeProfilingIntegration(),
       Sentry.postgresIntegration(),
@@ -158,87 +149,10 @@ module.exports = async function (fastify, opts) {
         }
       });
     });
-  cron.schedule('0 0 * * *', withSentryCronProfiling("fetch-commentaries-data", '0 0 * * *', async () => {
-    try {
-      // Fetching data from db every 24 hrs once(at midnight)
-      await FetchingCommentariesDataFromCron(fastify);
-    } catch (error) {
-      console.error(new Date(), "Error during scheduled task:", error);
-    }
-  }));
 
-  cron.schedule('* * * * *', withSentryCronProfiling("upcoming-commentaries", '* * * * *', async () => {
-    try {
-      await upcomingCommentaries(fastify);
-      if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
-        await insertCompletedCommentaryForTournamentTeamPointUpdateService(fastify);
-      }
-    } catch (error) {
-      console.error(new Date(), "Error during scheduled task:", error);
-    }
-  }));
-
-  let isAutoImportProcessRunning = false;
-  cron.schedule('0,30 * * * * *', withSentryCronProfiling("entitysport-auto-import", '0,30 * * * * *', async () => {
-    try {
-      if (!isAutoImportProcessRunning && global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
-        isAutoImportProcessRunning = true;
-        await entitySportAutoImportProcess(fastify);
-      }
-    } catch (error) {
-      console.error("Error during scheduled task - entitySportAutoImportProcess:", error);
-    } finally {
-      isAutoImportProcessRunning = false;
-    }
-  }));
-
-  let isAutoUpdateCommentaryProcessRunning = false;
-  cron.schedule(
-    `*/${entitySportAutoUpdateCommentaryTime} * * * *`,
-    withSentryCronProfiling(
-      "entitysport-auto-update-commentary",
-      `*/${entitySportAutoUpdateCommentaryTime} * * * *`,
-      async () => {
-    try {
-      if (!isAutoUpdateCommentaryProcessRunning && global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive && global.tblEntitySockets?.[0]?.isAutoUpdateCommentary) {
-        isAutoUpdateCommentaryProcessRunning = true;
-        await entitySportAutoUpdateCommentary(fastify);
-      }
-    } catch (error) {
-      console.error("Error during scheduled task - entitySportAutoUpdateCommentary:", error);
-    } finally {
-      isAutoUpdateCommentaryProcessRunning = false;
-    }
-      }
-    )
-  );
-
-  let isAutoUpdatePlayerStatisticsProcessRunning = false;
-  cron.schedule(`*/30 * * * * *`, withSentryCronProfiling("auto-update-player-statistics", `*/30 * * * * *`, async () => {
-    try {
-      if (!isAutoUpdatePlayerStatisticsProcessRunning && global.isAllDataLoadedInGlobal && global.tblConfigs.find((item) => item.key === ISPLAYERCALCULATIONON).value === "true") {
-        isAutoUpdatePlayerStatisticsProcessRunning = true;
-        await autoUpdatePlayerStatisticsDataProcess(fastify);
-      }
-    } catch (error) {
-      console.error("Error during scheduled task - autoUpdatePlayerStatisticsDataProcess:", error);
-    } finally {
-      isAutoUpdatePlayerStatisticsProcessRunning = false;
-    }
-  }));
-
-  cron.schedule('30 0 * * *', withSentryCronProfiling("daily-competition-imports", '30 0 * * *', async () => {
-    try {
-      if (global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
-        await insertCompletedCompetitionsInAutoImportService(fastify);
-        await insertCompetitionstatisticsInAutoImportService(fastify);
-        await insertICCRankingInAutoImportService(fastify);
-        await importCompetitionMatchService(fastify);
-      }
-    } catch (error) {
-      console.error("Error during scheduled task:", error);
-    }
-  }));
+  if (process.env.IS_CRON_ENABLE && process.env.IS_CRON_ENABLE === "true") {
+    registerCronJobs(fastify);
+  }
 
   // .after(async () => {
   //   require("./sequelize/tables/userModel")(fastify.db);
@@ -391,18 +305,18 @@ module.exports = async function (fastify, opts) {
     //   request.errId = result[0]?.errId;
     // }
 
-    if (process.env.ENABLE_SENTRY === "TRUE") {
-      Sentry.startSpan(
-        {
-          name: `${request.method} ${request.url}`,
-          op: "http.server",
-          description: "Incoming HTTP request",
-        },
-        (span) => {
-          request.sentrySpan = span;
-        }
-      );
-    }
+    // if (process.env.ENABLE_SENTRY === "TRUE") {
+    //   Sentry.startSpan(
+    //     {
+    //       name: `${request.method} ${request.url}`,
+    //       op: "http.server",
+    //       description: "Incoming HTTP request",
+    //     },
+    //     (span) => {
+    //       request.sentrySpan = span;
+    //     }
+    //   );
+    // }
 
     // done();
   });
@@ -450,31 +364,31 @@ module.exports = async function (fastify, opts) {
       newPayload = JSON.stringify(newPayload);
     }
 
-    if (process.env.ENABLE_SENTRY === "TRUE") {
-      // const transaction = Sentry.startTransaction({
-      //   name: `${request.method} ${request.url}`,
-      //   op: "http.server",
-      //   description: "HTTP request",
-      // });
-      // request.sentryTx = transaction;
-      Sentry.startSpan(
-        {
-          name: `${request.method} ${request.url}`,
-          op: "http.server",
-          description: "Incoming HTTP request",
-        },
-        (span) => {
-          request.sentrySpan = span;
-        }
-      );
-      // const span = Sentry.startSpan({
-      //   name: `${request.method} ${request.url}`,
-      //   op: "http.server",
-      //   description: "HTTP request",
-      // });
+    // if (process.env.ENABLE_SENTRY === "TRUE") {
+    //   // const transaction = Sentry.startTransaction({
+    //   //   name: `${request.method} ${request.url}`,
+    //   //   op: "http.server",
+    //   //   description: "HTTP request",
+    //   // });
+    //   // request.sentryTx = transaction;
+    //   Sentry.startSpan(
+    //     {
+    //       name: `${request.method} ${request.url}`,
+    //       op: "http.server",
+    //       description: "Incoming HTTP request",
+    //     },
+    //     (span) => {
+    //       request.sentrySpan = span;
+    //     }
+    //   );
+    //   // const span = Sentry.startSpan({
+    //   //   name: `${request.method} ${request.url}`,
+    //   //   op: "http.server",
+    //   //   description: "HTTP request",
+    //   // });
 
-      // request.sentrySpan = span;
-    }
+    //   // request.sentrySpan = span;
+    // }
 
     done(null, newPayload);
   });
@@ -496,10 +410,10 @@ module.exports = async function (fastify, opts) {
       responseLogger(request);
     }
 
-    if (process.env.ENABLE_SENTRY === "TRUE") {
-      request.sentryTx.setHttpStatus(reply.statusCode);
-      request.sentryTx.finish();
-    }
+    // if (process.env.ENABLE_SENTRY === "TRUE") {
+    //   request.sentryTx.setHttpStatus(reply.statusCode);
+    //   request.sentryTx.finish();
+    // }
 
     done();
   });
