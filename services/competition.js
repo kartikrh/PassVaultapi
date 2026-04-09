@@ -23,7 +23,7 @@ const {storeImageOnServer, removeImageFromServer, generateImageName, getImageFro
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
 const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, checkEntitySportAPIEndpointIsActive, matchStatusEntity, error, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, parseUmpires, ScoringTypes, RefType, lowerEntityMatchTypesEnums, EntityCommentaryStatus, getComDataByCId, getCombineFullScore, EntityMatchStatus, normalizeCompetitionSeasonName } = require("../utilities");
-const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryPlayers, updateCommentaryPlayerById, isCountInPOintCommentaryChangeQuery, updateCommentaryDateByCommentaryIdQuery, updateCommentaryQuery, insertCommentaryTeamQuery, deleteInningWiseCommentaryPlayersQuery } = require("../repository/TableCommentary")
+const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryPlayers, updateCommentaryPlayerById, isCountInPOintCommentaryChangeQuery, updateCommentaryDateByCommentaryIdQuery, updateCommentaryQuery, insertCommentaryTeamQuery, deleteInningWiseCommentaryPlayersQuery, deleteCommentaryTeamQuery } = require("../repository/TableCommentary")
 const { deleteTournamentTeamPlayersByCompIdQuery, insertTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
 const { nullTeamtpIds, autoUpdateCommentaryDataStatus } = require("../utilities/entityConst");
@@ -2070,6 +2070,16 @@ const competitionImportService = async (data, fastify, request) => {
           global.tblCommentaries[index] = updateCommentaryData[0][0];
           checkCommentary = global.tblCommentaries[index];
         }
+
+        await deleteCommentaryTeamQuery({
+          ...request,
+          body: {
+            commentaryId: commentaryId,
+            teamId: checkCommentary.team1Id
+          }
+        }, fastify);
+
+        global.tblCommentaryTeams = global.tblCommentaryTeams.filter(item => !(item.commentaryId === commentaryId && item.teamId === checkCommentary.team1Id));
       }
 
       if (checkCommentary.team2Id !== teamB?.teamId) {
@@ -2085,6 +2095,16 @@ const competitionImportService = async (data, fastify, request) => {
           global.tblCommentaries[index] = updateCommentaryData[0][0];
           checkCommentary = global.tblCommentaries[index];
         }
+
+        await deleteCommentaryTeamQuery({
+          ...request,
+          body: {
+            commentaryId: commentaryId,
+            teamId: checkCommentary.team2Id
+          }
+        }, fastify);
+
+        global.tblCommentaryTeams = global.tblCommentaryTeams.filter(item => !(item.commentaryId === commentaryId && item.teamId === checkCommentary.team2Id));
       }
 
       const esStart = match?.date_start
