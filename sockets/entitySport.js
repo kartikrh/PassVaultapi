@@ -118,21 +118,21 @@ async function processQueue(fastify) {
           let transaction;
           let processSpan;
           try {
-            if (process.env.ENABLE_SENTRY === "TRUE") {
-              transaction = Sentry.startTransaction({
-                name: `entityScoreData:${matchId}`,
-                op: "queue.process",
-                description: "Process entityScoreData payload from queue",
-              });
-              transaction.setData("matchId", matchId);
-              transaction.setData("api_type", payload?.api_type || null);
-              transaction.setData("queueDelayMs", Date.now() - enqueuedAt);
+            // if (process.env.ENABLE_SENTRY === "TRUE") {
+            //   transaction = Sentry.startTransaction({
+            //     name: `entityScoreData:${matchId}`,
+            //     op: "queue.process",
+            //     description: "Process entityScoreData payload from queue",
+            //   });
+            //   transaction.setData("matchId", matchId);
+            //   transaction.setData("api_type", payload?.api_type || null);
+            //   transaction.setData("queueDelayMs", Date.now() - enqueuedAt);
 
-              processSpan = transaction.startChild({
-                op: "service.call",
-                description: "Execute setEntityCom2Service",
-              });
-            }
+            //   processSpan = transaction.startChild({
+            //     op: "service.call",
+            //     description: "Execute setEntityCom2Service",
+            //   });
+            // }
 
             const request = {
               body: payload,
@@ -141,22 +141,22 @@ async function processQueue(fastify) {
 
             await setEntityCom2Service(request, fastify);
 
-            if (processSpan) {
-              processSpan.setStatus("ok");
-              processSpan.finish();
-            }
-            if (transaction) {
-              transaction.setStatus("ok");
-            }
+            // if (processSpan) {
+            //   processSpan.setStatus("ok");
+            //   processSpan.finish();
+            // }
+            // if (transaction) {
+            //   // transaction.setStatus("ok");
+            // }
           } catch (err) {
-            if (processSpan) {
-              processSpan.setStatus("internal_error");
-              processSpan.finish();
-            }
-            if (transaction) {
-              transaction.setStatus("internal_error");
-              Sentry.captureException(err);
-            }
+            // if (processSpan) {
+            //   processSpan.setStatus("internal_error");
+            //   processSpan.finish();
+            // }
+            // if (transaction) {
+            //   transaction.setStatus("internal_error");
+            //   Sentry.captureException(err);
+            // }
             errorLogger(
               fastify,
               err.message,
@@ -165,9 +165,9 @@ async function processQueue(fastify) {
               payload
             );
           } finally {
-            if (transaction) {
-              transaction.finish();
-            }
+            // if (transaction) {
+            //   transaction.finish();
+            // }
           }
 
           // small delay (reduced)
@@ -196,9 +196,9 @@ async function processQueue(fastify) {
     });
   }
 
-  console.log(
-    `Processed batch. Active locks: ${matchIdLocks.size}, Queue: ${commentaryQueue.size}`
-  );
+  // console.log(
+  //   `Processed batch. Active locks: ${matchIdLocks.size}, Queue: ${commentaryQueue.size}`
+  // );
 }
 
 const connectEntitySport = async (fastify, entitySocketId = undefined) => {
