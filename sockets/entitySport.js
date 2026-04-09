@@ -362,7 +362,7 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
       });
 
       client.on("entityScoreData", async (payload) => {
-        let transaction;
+        // let transaction;
         // if (process.env.ENABLE_SENTRY === "TRUE") {
         //   transaction = Sentry.startTransaction({
         //     name: `entityScoreData:event:${payload.response?.match_id || 'unknown'}`,
