@@ -102,7 +102,8 @@ const {
   getCommentaryStatisticsQuery,
   getAllCommentaryByCompetitionIdForClientQuery,
   getComTeamQuery,
-  getAllCommentaryByCompetitionIdQuery
+  getAllCommentaryByCompetitionIdQuery,
+  deleteCommentaryTeamQuery
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const { withSentryCronProfiling } = require("../utilities/sentryCron");
@@ -23860,6 +23861,16 @@ const matchImportService = async (data, fastify, request = null) => {
           global.tblCommentaries[index] = updateCommentaryData[0][0];
           checkCommentary = global.tblCommentaries[index];
         }
+
+        await deleteCommentaryTeamQuery({
+          ...request,
+          body: {
+            commentaryId: upsertedCommentaryId,
+            teamId: checkCommentary.team1Id
+          }
+        }, fastify);
+
+        global.tblCommentaryTeams = global.tblCommentaryTeams.filter(item => !(item.commentaryId === upsertedCommentaryId && item.teamId === checkCommentary.team1Id));
       }
 
       if (checkCommentary.team2Id !== teamBData?.teamId) {
@@ -23875,6 +23886,16 @@ const matchImportService = async (data, fastify, request = null) => {
           global.tblCommentaries[index] = updateCommentaryData[0][0];
           checkCommentary = global.tblCommentaries[index];
         }
+
+        await deleteCommentaryTeamQuery({
+          ...request,
+          body: {
+            commentaryId: upsertedCommentaryId,
+            teamId: checkCommentary.team2Id
+          }
+        }, fastify);
+
+        global.tblCommentaryTeams = global.tblCommentaryTeams.filter(item => !(item.commentaryId === upsertedCommentaryId && item.teamId === checkCommentary.team2Id));
       }
 
       const esStart = matchInfoResponse?.date_start

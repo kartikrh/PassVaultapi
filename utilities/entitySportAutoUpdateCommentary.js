@@ -2,7 +2,7 @@ const { checkEntitySportAPIEndpointIsActive, APIEndpointModuleType, callEntitySp
 const { errorLogger } = require("./logger");
 const { autoUpdateCommentaryDataStatus, intervalTimesForUpdateCommentary } = require('./entityConst');
 const { getAllAutoUpdateCommentaryDataQuery, insertAutoUpdateCommentaryDataQuery, updateAutoUpdateCommentaryDataQuery } = require('../repository/TableAutoUpdateCommentaryData');
-const { updateCommentaryQuery, updateCommentaryDateByCommentaryIdQuery } = require('../repository/TableCommentary');
+const { updateCommentaryQuery, updateCommentaryDateByCommentaryIdQuery, deleteCommentaryTeamQuery } = require('../repository/TableCommentary');
 const { esGetMatchNumberFromCompetitionMatchAPI, upsertCommentaryTeamsAndPlayersService } = require('../services/competition');
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { updateWeatherQuery, insertWeatherQuery } = require("../repository/TableWeather");
@@ -99,11 +99,31 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                 const esTeam1Id = global.tblTeams.find(tt => tt.tpId === matchInfoData.teama?.team_id)
                                 if (!team1Id || (team1Id !== esTeam1Id?.teamId)) {
                                     changedValues.team1Id = esTeam1Id?.teamId;
+
+                                    await deleteCommentaryTeamQuery({
+                                        ...request,
+                                        body: {
+                                            commentaryId: commentaryId,
+                                            teamId: team1Id
+                                        }
+                                    }, fastify);
+
+                                    global.tblCommentaryTeams = global.tblCommentaryTeams.filter(item => !(item.commentaryId === commentaryId && item.teamId === team1Id));
                                 }
 
                                 const esTeam2Id = global.tblTeams.find(tt => tt.tpId === matchInfoData.teamb?.team_id)
                                 if (!team2Id || (team2Id !== esTeam2Id?.teamId)) {
                                     changedValues.team2Id = esTeam2Id?.teamId;
+
+                                    await deleteCommentaryTeamQuery({
+                                        ...request,
+                                        body: {
+                                            commentaryId: commentaryId,
+                                            teamId: team2Id
+                                        }
+                                    }, fastify);
+
+                                    global.tblCommentaryTeams = global.tblCommentaryTeams.filter(item => !(item.commentaryId === commentaryId && item.teamId === team2Id));
                                 }
 
                                 if (!checkCompetition?.matchTypeId) {

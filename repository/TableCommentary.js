@@ -9825,6 +9825,39 @@ const updateCommentaryTeamColorQuery = async (request, fastify) => {
   }
 };
 
+const deleteCommentaryTeamQuery = async (request, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `
+        UPDATE "tblCommentaryTeams" SET
+          "wrIsDelete" = $1,
+          "wrDeletedBy" = $2,
+          "wrDeletedAt" = now()
+        WHERE "wrTeamId" = $3 AND "wrCommentaryId" = $4
+        RETURNING *;
+      `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [
+          true,
+          request.userTokenInfo.WrUserId,
+          request.body.teamId,
+          request.body.commentaryId
+        ]
+      }
+    )
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableCommentary.js/deleteCommentaryTeamQuery",
+      request
+    );
+    throw new Error(error.message);
+  }
+}
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -9985,5 +10018,6 @@ module.exports = {
   updateBallByBallFullCommentaryQuery,
   upComStatusQuery,
   getAllCommentaryByCompetitionIdQuery,
-  updateCommentaryTeamColorQuery
+  updateCommentaryTeamColorQuery,
+  deleteCommentaryTeamQuery
 };
