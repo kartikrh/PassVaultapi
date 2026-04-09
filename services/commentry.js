@@ -22751,6 +22751,12 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
             if (!commentaryData) {
                 throw new Error("Commentary with this id not Found");
             }
+            commentaryIndex = global.tblCommentaries.findIndex(
+                (item) => item?.commentaryId === commentaryId
+            );
+            if (commentaryIndex === -1) {
+                throw new Error("Commentary with this id not Found");
+            }
             pythonURI = commentaryData.pythonURI ?? null;
         }
 
@@ -22771,12 +22777,6 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
         }
 
         if (commentaryDetails) {
-            commentaryIndex = global.tblCommentaries.findIndex(
-                (item) => item?.commentaryId === commentaryDetails.commentaryId
-            );
-            if (commentaryIndex === -1) {
-                throw new Error("Commentary with this id not Found");
-            }
             previousCommentaryStatus = commentaryData?.commentaryStatus;
             statusToUpdate = commentaryDetails?.commentaryStatus;
         }
@@ -22975,8 +22975,8 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                 updateTime: commentaryDetails.updateTime,
                 modifyDate: commentaryDetails.modifyDate,
                 commentaryStatus: commentaryDetails.commentaryStatus,
-                commentaryCloseTime:
-                    commentaryDetails.commentaryStatus == 4 ? new Date() : null,
+                // commentaryCloseTime:
+                //     commentaryDetails.commentaryStatus == 4 ? new Date() : null,
                 cancelTime : commentaryDetails.commentaryStatus == 10 ? new Date() : null,
                 // commentaryCloseTime:
                 //     commentaryDetails.commentaryStatus == 4 ? new Date() : null,
@@ -23546,7 +23546,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                 null
             );
         });
-        console.log("errorroorroororor", error)
+        // console.log("errorroorroororor", error)
         throw new Error(error.message);
     }
 };
