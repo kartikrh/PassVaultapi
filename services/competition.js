@@ -26,7 +26,7 @@ const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardC
 const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryPlayers, updateCommentaryPlayerById, isCountInPOintCommentaryChangeQuery, updateCommentaryDateByCommentaryIdQuery, updateCommentaryQuery, insertCommentaryTeamQuery, deleteInningWiseCommentaryPlayersQuery, deleteCommentaryTeamQuery } = require("../repository/TableCommentary")
 const { deleteTournamentTeamPlayersByCompIdQuery, insertTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
-const { nullTeamtpIds, autoUpdateCommentaryDataStatus } = require("../utilities/entityConst");
+const { nullTeamtpIds, autoUpdateCommentaryDataStatus, entitySportAPIEndPoint } = require("../utilities/entityConst");
 const { getAllPlayersByTeamIdQuery } = require("../repository/TableTeams");
 const { insertPlayerQuery, updateExchangePlayerQuery } = require("../repository/TablePlayer");
 const { insertTeamPlayerQuery, updateTeamPlayerHomeTeamQuery, getTeamPlayersByTeamMatchTypeIdQuery, getTeamPlayerByTeamIdQuery } = require("../repository/TableTeamPlayer");
@@ -1041,7 +1041,7 @@ const upsertPlayers = async (entitySocketData, players, playerTpId, isMen, reque
 }
 
 const insertTeamPlayersByTeamId = async (teamId, teamTpId, isMen, request, fastify) => {
-  const url = `/team/${teamTpId}/player`;
+  const url =  entitySportAPIEndPoint.getTeamAndPlayerData.replace('{tid}', teamTpId);
   const entitySportTeamPlayers = await callEntitySportAPI(url, request, fastify);
 
   let entitySportTeamPlayersResponse = entitySportTeamPlayers?.data?.result?.items?.players;
@@ -1277,7 +1277,7 @@ const esGetMatchNumberFromCompetitionMatchAPI = async (competitionTpId, request,
   let allCompetitionMatch = [], page = 1, totalPages = 1, matchNumber = 1, lastESMatchType = null;
   while (page <= totalPages) {
     const params = new URLSearchParams();
-    let url = `/competition/${competitionTpId}/matches` + "?";
+    let url =  entitySportAPIEndPoint.getCompetitionMatchData.replace('{cid}', competitionTpId) + "?";
     params.append("paged", page);
     params.append("per_page", 50);
     url += `&${params.toString()}`;
@@ -1564,7 +1564,7 @@ const upsertCommentaryTeamsAndPlayersService = async (checkCompetition, tourname
 }
 
 const competitionImportService = async (data, fastify, request) => {
-  const url = `/competition/${data.cid}/info`;
+  const url =  entitySportAPIEndPoint.getCompetitionData.replace('{cid}', data.cid);
   const entitySportCompetition = await callEntitySportAPI(url, request, fastify);
 
   if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
@@ -1691,7 +1691,7 @@ const competitionImportService = async (data, fastify, request) => {
   let page = 1, totalPages = 1;
   while (page <= totalPages) {
     const params = new URLSearchParams();
-    let url2 = `/competition/${data.cid}/matches?`;
+    let url2 =  entitySportAPIEndPoint.getCompetitionMatchData.replace('{cid}', data.cid) + "?";
     params.append("paged", page);
     params.append("per_page", 50);
     url2 += `&${params.toString()}`;
@@ -1879,7 +1879,7 @@ const competitionImportService = async (data, fastify, request) => {
     }
   }
 
-  const url3 = `/competition/${data.cid}/squads`;
+  const url3 =  entitySportAPIEndPoint.getCompetitionSquadData.replace('{cid}', data.cid);
   const entitySportCompetitionSquad = await callEntitySportAPI(url3, request, fastify);
 
   if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
@@ -2185,7 +2185,7 @@ const competitionImportService = async (data, fastify, request) => {
       const noOfInning = commentaryMatchType.noOfIningsPerSide;
       const maxOver = commentaryMatchType.maxOversInFirstInings;
 
-      const url4 = `/match/${match.match_id}/info`;
+      const url4 =  entitySportAPIEndPoint.getMatchData.replace('{mid}', match.match_id);
       const entitySportMatch = await callEntitySportAPI(url4, request, fastify);
 
       let entitySportMatchResponse = entitySportMatch?.data?.result;
@@ -2228,7 +2228,7 @@ const competitionImportService = async (data, fastify, request) => {
         await upsertCommentaryTeamsAndPlayersService(checkCompetition, tournamentTeamsPlayers, checkCommentary, maxOver, commentaryTeams, teamB, i, commentaryPlayers, teamBSquad, entitySportMatchResponse?.players, entitySocketData, request, fastify);
       }
 
-      const url5 = `/match/${match.match_id}/statistics`;
+      const url5 =  entitySportAPIEndPoint.getMatchStatisticsData.replace('{mid}', match.match_id);
       const entitySportMatchStatistics = await callEntitySportAPI(url5, request, fastify);
       let entitySportMatchStatisticsResponse = entitySportMatchStatistics?.data?.result;
       if (!entitySportMatchStatisticsResponse) {

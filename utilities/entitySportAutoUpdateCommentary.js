@@ -1,6 +1,6 @@
 const { APIEndpointModuleType, callEntitySportAPI, parseUmpires, ScoringTypes, ServiceType, callClientAPI, commentaryStatus } = require(".");
 const { errorLogger } = require("./logger");
-const { autoUpdateCommentaryDataStatus, intervalTimesForUpdateCommentary } = require('./entityConst');
+const { autoUpdateCommentaryDataStatus, intervalTimesForUpdateCommentary, entitySportAPIEndPoint } = require('./entityConst');
 const { getAllAutoUpdateCommentaryDataQuery, insertAutoUpdateCommentaryDataQuery, updateAutoUpdateCommentaryDataQuery } = require('../repository/TableAutoUpdateCommentaryData');
 const { updateCommentaryQuery, updateCommentaryDateByCommentaryIdQuery, deleteCommentaryTeamQuery } = require('../repository/TableCommentary');
 const { esGetMatchNumberFromCompetitionMatchAPI, upsertCommentaryTeamsAndPlayersService } = require('../services/competition');
@@ -43,7 +43,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                             );
 
                             if (!autoUpdateCommentaryData || autoUpdateCommentaryData.length === 0) {
-                                const url = `/match/${commentary.tpId}/info`;
+                                const url = entitySportAPIEndPoint.getMatchData.replace('{mid}', commentary.tpId);
                                 const entitySportMatch = await callEntitySportAPI(url, null, fastify);
 
                                 let entitySportMatchResponse = entitySportMatch?.data?.result;

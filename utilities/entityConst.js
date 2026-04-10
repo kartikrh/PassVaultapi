@@ -26,11 +26,26 @@ const autoUpdateCommentaryDataStatus = {
    added: 5
 }
 
+const entitySportAPIEndPoint = {
+   getICCRankingData: "/iccRanking/info",
+   getCompetitionData: "/competition/{cid}/info",
+   getCompetitionMatchData: "/competition/{cid}/matches",
+   getCompetitionStatisticsData: "/competition/{cid}/stats",
+   getCompetitionSquadData: "/competition/{cid}/squads",
+   getMatchData: "/match/{mid}/info",
+   getMatchInningsData: "/match/{mid}/innings/${inningId}/commentary",
+   getMatchStatisticsData: "/match/{mid}/statistics",
+   getTeamAndPlayerData: "/team/{tid}/player",
+   getPlayerAndStatisticsData: "/player/{pid}/statistics",
+   searchPlayerData: "/player/search"
+}
+
 module.exports = {
    entityConstant,
    PlayerType,
    nullTeamtpIds,
    entitySportAutoUpdateCommentaryTime,
    intervalTimesForUpdateCommentary,
-   autoUpdateCommentaryDataStatus
+   autoUpdateCommentaryDataStatus,
+   entitySportAPIEndPoint
 }
