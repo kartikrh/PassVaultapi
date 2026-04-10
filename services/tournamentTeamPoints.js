@@ -14,7 +14,7 @@ const {
   getTournamentPointsByGroupNameQuery,
   getTournamentTeamPointsQuery,
 } = require("../repository/TableTournmentTeamPoints");
-const { callClientAPI, ServiceType, APIEndpointModuleType, callEntitySportAPI, extractGroupDataFromArray, teamRemarkType, checkEntitySportAPIEndpointIsActive, compStatus, RefType } = require("../utilities");
+const { callClientAPI, ServiceType, APIEndpointModuleType, callEntitySportAPI, extractGroupDataFromArray, teamRemarkType, compStatus, RefType } = require("../utilities");
 const { nullTeamtpIds } = require("../utilities/entityConst");
 const { errorLogger } = require("../utilities/logger");
 const { insertAutoImportDataService } = require("./autoImportData");
@@ -729,12 +729,7 @@ const importUpdateTournamentTeamPointFromEntitySportService = async (data, fasti
     throw new Error(`Competition not found for tpid: ${competitionTpId}`);
   }
 
-  const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getCompetitionDataByIdFromEntity);
-  if (!checkEntitySportAPIEndpoint.data) {
-    throw new Error(checkEntitySportAPIEndpoint.message);
-  }
-
-  const url = checkEntitySportAPIEndpoint.data.replace("{cid}", competitionTpId);
+  const url = `/competition/${competitionTpId}/info`;
   const entitySportCompetitionInfo = await callEntitySportAPI(url, request, fastify);
 
   if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {

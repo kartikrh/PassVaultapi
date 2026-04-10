@@ -27,7 +27,6 @@ const {
     SourceID,
     RefType,
     getInningWiseDataFromEntity,
-    checkEntitySportAPIEndpointIsActive,
     callEntitySportAPI,
     EntityInningsStatus,
     oversToBalls,

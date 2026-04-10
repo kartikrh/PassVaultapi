@@ -126,7 +126,6 @@ const {
   EntityEnums,
   parseUmpires,
   callEntitySportAPI,
-  checkEntitySportAPIEndpointIsActive,
   CompetitionType,
   compStatus,
   ScoringTypes,
@@ -23583,12 +23582,7 @@ const weatherAndPitchDataService = async (commentaryId) => {
 } 
 
 const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
-  const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getCompetitionDataByIdFromEntity);
-  if (!checkEntitySportAPIEndpoint.data) {
-    throw new Error(checkEntitySportAPIEndpoint.message);
-  }
-
-  const url = checkEntitySportAPIEndpoint.data.replace("{cid}", cid);
+  const url = `/competition/${cid}/info`;
   const entitySportCompetition = await callEntitySportAPI(url, request, fastify);
 
   let entitySportCompetitionResponse = entitySportCompetition?.data?.result;
@@ -23647,13 +23641,7 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
 }
 
 const matchImportService = async (data, fastify, request = null) => {
-  const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getMatchDataByIdFromEntity);
-  if (!checkEntitySportAPIEndpoint.data) {
-    errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/commentary.js/matchImportService - checkEntitySportAPIEndpoint", request);
-    return false;
-  }
-
-  const url = checkEntitySportAPIEndpoint.data.replace("{mid}", data.mid);
+  const url = `/match/${data.mid}/info`;
   const entitySportMatch = await callEntitySportAPI(url, request, fastify);
 
   if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
@@ -25434,13 +25422,7 @@ const updateCommentaryPlayersFromEntityService = async (request, fastify) => {
     return;
   }
 
-  const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getMatchDataByIdFromEntity);
-  if (!checkEntitySportAPIEndpoint.data) {
-    errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/commentary.js/matchImportService - checkEntitySportAPIEndpoint", request);
-    return false;
-  }
-
-  const url = checkEntitySportAPIEndpoint.data.replace("{mid}", response?.match_id);
+  const url = `/match/${response?.match_id}/info`;
   const entitySportMatch = await callEntitySportAPI(url, request, fastify);
 
   let entitySportMatchResponse = entitySportMatch?.data?.result;

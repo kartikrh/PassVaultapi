@@ -3,7 +3,7 @@ const {
   updateConfigQuery,
   deleteConfigQuery,
 } = require("../repository/TableConfig");
-const { callClientAPI, ServiceType, APIEndpointModuleType, callEntitySportAPI } = require("../utilities");
+const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
 const configConstants = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { generateImageName, storeImageOnServer } = require("../utilities/Images");

@@ -30,7 +30,7 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { deletePlayersByTeamIdQuery } = require("../repository/TableTournamentsTeamPlayers")
 const { deletePointsByTeamIdQuery } = require("../repository/TableTournmentTeamPoints")
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
-const { trimTextData, callEntitySportAPI, APIEndpointModuleType, ServiceType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, EventType, checkEntitySportAPIEndpointIsActive, RefType, commentaryStatus, callClientAPI, ICCMatchType } = require("../utilities/index");
+const { trimTextData, callEntitySportAPI, APIEndpointModuleType, ServiceType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, EventType, RefType, commentaryStatus, callClientAPI, ICCMatchType } = require("../utilities/index");
 const { insertPlayerQuery, updateExchangePlayerQuery } = require("../repository/TablePlayer");
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { insertAutoImportDataService } = require("./autoImportData");
@@ -869,13 +869,7 @@ const UpdateTeamFromEntityService = async (data, fastify, request) => {
     return false;
   }
 
-  const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getTeamDataByIdFromEntity);
-  if (!checkEntitySportAPIEndpoint.data) {
-    errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/teams.js/UpdateTeamFromEntityService - checkEntitySportAPIEndpoint", request);
-    return false;
-  }
-
-  const url = checkEntitySportAPIEndpoint.data.replace("{tid}", checkTeamData.tpId);
+  const url = `/team/${checkTeamData.tpId}/player`;
   const entitySportTeamPlayer = await callEntitySportAPI(url, request, fastify);
 
   if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
@@ -1064,13 +1058,7 @@ const runMergePlayerImageJob = async (teamId, request, fastify) => {
 };
 
 const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
-  const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getTeamDataByIdFromEntity);
-  if (!checkEntitySportAPIEndpoint.data) {
-    errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/teams.js/insertTeamAndPlayers - checkEntitySportAPIEndpoint", request);
-    return false;
-  }
-
-  const url = checkEntitySportAPIEndpoint.data.replace("{tid}", data.tid);
+  const url = `/team/${data.tid}/player`;
   const entitySportTeamPlayers = await callEntitySportAPI(url, request, fastify);
 
   if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
