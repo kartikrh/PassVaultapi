@@ -1819,26 +1819,6 @@ const parseUmpires = (umpiresString) => {
     return { onFieldUmpires, thirdUmpire };
 };
 
-const checkEntitySportAPIEndpointIsActive = (moduleType) => {
-  try {
-    let getEntitySportAPIEndpointIsActive = global.tblAPIEndpoints.find(item => item.serviceType == ServiceType.entitySport && item.isActive == true && item.moduleType === moduleType);
-    if (!getEntitySportAPIEndpointIsActive) {
-      return {
-        message: `Entity Sport API module ${moduleType} is not active`,
-        data: null
-      };
-    }
-    return {
-      data: getEntitySportAPIEndpointIsActive?.endPoint
-    };
-  } catch (error) {
-    return {
-      message: error.message,
-      data: null
-    };
-  }
-}
-
 const playersMergeImageService = async (type, request, fastify) => {
   const startTime = new Date().toISOString();
   const startMessage =
@@ -2541,7 +2521,6 @@ module.exports = {
   extractBowlingStyle,
   EventType,
   parseUmpires,
-  checkEntitySportAPIEndpointIsActive,
   ICCMatchType,
   playersMergeImageService,
   roundToNearestMinutes,

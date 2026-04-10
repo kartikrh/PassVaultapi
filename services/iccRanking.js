@@ -1,5 +1,5 @@
 const { deleteICCRankingByIdQuery, insertICCRankingQuery, updateICCRankingQuery, activeInactiveICCRankingByIdQuery, deleteAllICCRankingQuery, removeDeletedICCRankingQuery } = require("../repository/TableICCRanking");
-const { ICCRankingType, callEntitySportAPI, ServiceType, APIEndpointModuleType, callClientAPI, ICCRankingPlayerType, checkEntitySportAPIEndpointIsActive, ICCMatchType, RefType } = require("../utilities");
+const { ICCRankingType, callEntitySportAPI, ServiceType, APIEndpointModuleType, callClientAPI, ICCRankingPlayerType, ICCMatchType, RefType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 const { playerImportService } = require("./player");
 const { teamImportService, upsertTeamPlayers } = require("./teams");
@@ -502,12 +502,7 @@ const extractEntries = async (json, isMen, request, fastify) => {
 const importICCRankingFromEntitySportService = async (data = null, fastify, request) => {
     await removeDeletedICCRankingQuery(request, fastify);
 
-    const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getICCRankingData);
-    if (!checkEntitySportAPIEndpoint.data) {
-        throw new Error(checkEntitySportAPIEndpoint.message);
-    }
-
-    const entitySportICCRanking = await callEntitySportAPI(checkEntitySportAPIEndpoint.data, request, fastify);
+    const entitySportICCRanking = await callEntitySportAPI(`/iccRanking/info`, request, fastify);
 
     if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
         global.autoImportData.esApiResponseData = entitySportICCRanking?.data?.result;

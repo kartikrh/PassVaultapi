@@ -34,7 +34,7 @@ const { deleteAwardsByPlayerIdQuery } = require("../repository/TableCommentaryAw
 const { bowlingStyleChangeOnCommPlayersQuery, deleteCommentaryPlayerById } = require("../repository/TableCommentary");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const configConstants = require("../utilities/configConstants");
-const { trimTextData, callEntitySportAPI, APIEndpointModuleType, ServiceType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, RefType, EventType, checkEntitySportAPIEndpointIsActive, ICCMatchType } = require("../utilities/index");
+const { trimTextData, callEntitySportAPI, APIEndpointModuleType, ServiceType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, RefType, EventType, ICCMatchType } = require("../utilities/index");
 const { errorLogger } = require("../utilities/logger");
 const { playersMergeImageService, callClientAPI } = require("../utilities/index");
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
@@ -1094,20 +1094,9 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
   }
 
   let playerNewTpId = null;
-  const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getPlayerDataByIdFromEntity);
-  if (!checkEntitySportAPIEndpoint.data) {
-    errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/player.js/UpdatePlayerFromEntityService - checkEntitySportAPIEndpoint", request);
-    return false;
-  }
 
   if (!checkPlayerData.tpId) {
-    const checkEntitySportAPIEndpoint2 = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.searchPlayerDataFromEntity);
-    if (!checkEntitySportAPIEndpoint2.data) {
-      errorLogger(fastify, checkEntitySportAPIEndpoint2.message, "/services/player.js/UpdatePlayerFromEntityService - checkEntitySportAPIEndpoint2", request);
-      return false;
-    }
-
-    let url2 = checkEntitySportAPIEndpoint2.data + "?search=" + encodeURIComponent(checkPlayerData.playerName);
+    let url2 = `/player/search?search=${encodeURIComponent(checkPlayerData.playerName)}`;
 
     const getCountryShortName = global.tblCountryCodes.find(item => item.id === checkPlayerData.countryId)?.shortName;
     if (getCountryShortName) {
@@ -1146,7 +1135,7 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
     playerNewTpId = checkPlayerData.tpId;
   }
 
-  const url = checkEntitySportAPIEndpoint.data.replace("{pid}", playerNewTpId);
+  const url = `/player/${playerNewTpId}/statistics`;
   const entitySportPlayer = await callEntitySportAPI(url, request, fastify);
 
   if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
@@ -1297,13 +1286,7 @@ const UpdatePlayerFromEntityService = async (data, fastify, request) => {
 };
 
 const playerImportService = async (data, fastify, request) => {
-  const checkEntitySportAPIEndpoint = checkEntitySportAPIEndpointIsActive(APIEndpointModuleType.getPlayerDataByIdFromEntity);
-  if (!checkEntitySportAPIEndpoint.data) {
-    errorLogger(fastify, checkEntitySportAPIEndpoint.message, "/services/player.js/playerImportService - checkEntitySportAPIEndpoint", request);
-    return false;
-  }
-
-  const url = checkEntitySportAPIEndpoint.data.replace("{pid}", data.pid);
+  const url = `/player/${data.pid}/statistics`;
   const entitySportPlayer = await callEntitySportAPI(url, request, fastify);
 
   if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
