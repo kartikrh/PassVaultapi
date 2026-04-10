@@ -48,6 +48,7 @@ const { insertAutoImportDataQuery, updateAutoImportDataQuery } = require("../rep
 const { insertTeamPlayersByTeamId, insertCommentaryPlayersByTeam } = require("./competition");
 const { insertTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers")
 const Sentry = require("@sentry/node");
+const { entitySportAPIEndPoint } = require("../utilities/entityConst")
 
 
 
@@ -4190,7 +4191,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
 
     let inningWiseRes = []
     let upComDetails = {};
-    let url = `/match/${matchId}/info`;
+    let url =  entitySportAPIEndPoint.getMatchData.replace('{mid}', matchId);
     const infoRes = await callEntitySportAPI(url, request, fastify);
     let matchInfoData = infoRes?.data?.result;
     if (!matchInfoData) {
@@ -4368,7 +4369,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
     if (!liveInningNumber || liveInningNumber == 0) return;
 
     for (let i = 1; i <= liveInningNumber; i++) {
-      let url = `/match/${matchId}/innings/${i}/commentary`;
+      let url =  entitySportAPIEndPoint.getMatchInningsData.replace('{mid}', matchId).replace('{inningId}', i);
       const entitySportMatch = await callEntitySportAPI(url, request, fastify);
       let entitySportMatchResponse = entitySportMatch?.data?.result;
       if (!entitySportMatchResponse) {
@@ -4642,7 +4643,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
       }
 
       // partnership create and update
-      let statsURL = `/match/${matchId}/statistics`;
+      let statsURL =  entitySportAPIEndPoint.getMatchStatisticsData.replace('{mid}', matchId);
       const entitySportMatchStats = await callEntitySportAPI(statsURL, request, fastify);
       let entitySportMatchStatsResponse = entitySportMatchStats?.data?.result;
       if (!entitySportMatchStatsResponse) {

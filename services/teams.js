@@ -39,6 +39,7 @@ const { upTeamNameInComQuery, updateCommentaryTeamColorQuery } = require("../rep
 const { playerImageChangeOnClientAPIService, upsertPlayerOnImportService } = require("../services/player");
 const { saveTeamMatchTypeByTeamService, deleteTeamMatchTypeByTeamIdService } = require("./teamMatchType");
 const { getTeamMatchTypeByTeamQuery } = require("../repository/TableTeamMatchType");
+const { entitySportAPIEndPoint } = require("../utilities/entityConst");
 const allTeamsService = async () => {
   return global.tblTeams;
 };
@@ -869,7 +870,7 @@ const UpdateTeamFromEntityService = async (data, fastify, request) => {
     return false;
   }
 
-  const url = `/team/${checkTeamData.tpId}/player`;
+  const url = entitySportAPIEndPoint.getTeamAndPlayerData.replace('{tid}', checkTeamData.tpId);
   const entitySportTeamPlayer = await callEntitySportAPI(url, request, fastify);
 
   if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
@@ -1058,7 +1059,7 @@ const runMergePlayerImageJob = async (teamId, request, fastify) => {
 };
 
 const insertTeamAndPlayers = async (data, eventType, request, fastify) => {
-  const url = `/team/${data.tid}/player`;
+  const url = entitySportAPIEndPoint.getTeamAndPlayerData.replace('{tid}', data.tid);
   const entitySportTeamPlayers = await callEntitySportAPI(url, request, fastify);
 
   if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {

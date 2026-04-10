@@ -226,7 +226,7 @@ const {
   updatePitchConditionQuery,
   deletePitchConditionWithCommIdQuery,
 } = require("../repository/TablePitchCondition");
-const { PlayerType, nullTeamtpIds, autoUpdateCommentaryDataStatus } = require("../utilities/entityConst");
+const { PlayerType, nullTeamtpIds, autoUpdateCommentaryDataStatus, entitySportAPIEndPoint } = require("../utilities/entityConst");
 const { insertPlayerEntityQuery, insertPlayerQuery, updateExchangePlayerQuery } = require("../repository/TablePlayer");
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
 const { insertVenueQuery } = require("../repository/TableVenue");
@@ -23582,7 +23582,7 @@ const weatherAndPitchDataService = async (commentaryId) => {
 } 
 
 const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
-  const url = `/competition/${cid}/info`;
+  const url = entitySportAPIEndPoint.getCompetitionData.replace('{cid}', cid);
   const entitySportCompetition = await callEntitySportAPI(url, request, fastify);
 
   let entitySportCompetitionResponse = entitySportCompetition?.data?.result;
@@ -23641,7 +23641,7 @@ const insertCompetitionOnMatchImportService = async (cid, fastify, request) => {
 }
 
 const matchImportService = async (data, fastify, request = null) => {
-  const url = `/match/${data.mid}/info`;
+  const url = entitySportAPIEndPoint.getMatchData.replace('{mid}', data.mid);
   const entitySportMatch = await callEntitySportAPI(url, request, fastify);
 
   if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
@@ -24002,7 +24002,7 @@ const matchImportService = async (data, fastify, request = null) => {
         await upsertCommentaryTeamsAndPlayersService(checkCompetition, tournamentTeamsPlayers, checkCommentary, maxOver, commentaryTeams, teamBData, i, commentaryPlayers, teamBSquad, entitySportMatchResponse?.players, entitySocketData, request, fastify);
       }
       
-      const url2 = `/match/${data.mid}/statistics`;
+      const url2 = entitySportAPIEndPoint.getMatchStatisticsData.replace('{mid}', data.mid);
       const entitySportMatchStatistics = await callEntitySportAPI(url2, request, fastify);
       let entitySportMatchStatisticsResponse = entitySportMatchStatistics?.data?.result;
       if (!entitySportMatchStatisticsResponse) {
@@ -25422,7 +25422,7 @@ const updateCommentaryPlayersFromEntityService = async (request, fastify) => {
     return;
   }
 
-  const url = `/match/${response?.match_id}/info`;
+  const url = entitySportAPIEndPoint.getMatchData.replace('{mid}', response?.match_id);
   const entitySportMatch = await callEntitySportAPI(url, request, fastify);
 
   let entitySportMatchResponse = entitySportMatch?.data?.result;
@@ -25579,7 +25579,7 @@ const getAllCommentaryByCompetitionIdForClientService = async (request, fastify)
 const importCompetitionMatchService = async (fastify) => {
   const competitions = global.tblCompetitions.filter(tcp => tcp.isActive && [compStatus.fixture, compStatus.live].includes(tcp.commStatus) && tcp.tpId !== null);
   for (const comp of competitions) {
-    let entitySportCompetitionMatchesUrl = `/competition/${comp.tpId}/matches?`;
+    let entitySportCompetitionMatchesUrl = entitySportAPIEndPoint.getCompetitionMatchData.replace('{cid}', comp.tpId) + "?";
     let page = 1, totalPages = 1;
     let allCompetitionMatch = [];
     while (page <= totalPages) {
