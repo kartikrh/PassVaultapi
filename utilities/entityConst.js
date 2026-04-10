@@ -33,7 +33,7 @@ const entitySportAPIEndPoint = {
    getCompetitionStatisticsData: "/competition/{cid}/stats",
    getCompetitionSquadData: "/competition/{cid}/squads",
    getMatchData: "/match/{mid}/info",
-   getMatchInningsData: "/match/{mid}/innings/${inningId}/commentary",
+   getMatchInningsData: "/match/{mid}/innings/{inningId}/commentary",
    getMatchStatisticsData: "/match/{mid}/statistics",
    getTeamAndPlayerData: "/team/{tid}/player",
    getPlayerAndStatisticsData: "/player/{pid}/statistics",
