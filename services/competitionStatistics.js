@@ -1,5 +1,6 @@
 const { insertCompetitionStatisticsQuery, updateCompetitionStatisticsByIdQuery, deleteCompetitionStatisticsByIdQuery, updateCompetitionStatisticsDisplayOrderQuery, removeDeletedCompetitionStatisticsQuery } = require("../repository/TableCompetitionStatistics");
 const { CompetitionStatisticsType, getKeyAndValueKey, callEntitySportAPI, RefType, competitionMatchTypeEnum } = require("../utilities");
+const { entitySportAPIEndPoint } = require("../utilities/entityConst");
 const { errorLogger } = require("../utilities/logger");
 const { insertAutoImportDataService } = require("./autoImportData");
 const { playerImportService } = require("./player");
@@ -262,7 +263,7 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
     const isMen = getCompetition?.isMen;
 
     const esResponseData = [];
-    const getEntitySportCompetitionStatisticsUrl = `/competition/${competitionTpId}/stats/`;
+    const getEntitySportCompetitionStatisticsUrl = entitySportAPIEndPoint.getCompetitionStatisticsData.replace('{cid}', competitionTpId) + "/";
     const getEntitySportCompetitionStatistics = await callEntitySportAPI(getEntitySportCompetitionStatisticsUrl, request, fastify);
     const getEntitySportCompetitionStatisticsResponse = getEntitySportCompetitionStatistics?.data?.result?.formats;
     esResponseData.push(getEntitySportCompetitionStatistics?.data?.result);
@@ -281,7 +282,7 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
             const getKey = await getKeyAndValueKey(statType.entityEnum);
             if (getKey) {
                 const getMatchType = global.tblMatchTypes.find(tmt => tmt.entityEnum === competitionMatchTypeEnum[isMen ? "men" : "women"][esMatchType]);
-                const url = `/competition/${competitionTpId}/stats/${getKey.key}?paged=1&per_page=50&format=${esMatchType}`;
+                const url = `${entitySportAPIEndPoint.getCompetitionStatisticsData.replace('{cid}', competitionTpId)}/${getKey.key}?paged=1&per_page=50&format=${esMatchType}`;
                 const entitySportCompetitionStatistics = await callEntitySportAPI(url, request, fastify);
 
                 esResponseData.push({
