@@ -290,6 +290,9 @@ module.exports = async function (fastify, opts) {
   });
 
   fastify.addHook("onRequest", async (request, reply) => {
+    if (!global.isAllDataLoadedInGlobal) {
+      throw new Error("Please wait data is loading!");
+    }
     // Record the request start time in nanoseconds
     // request.startTime = process.hrtime.bigint();
     // request.startTimeTimeStemp = new Date();
