@@ -110,6 +110,7 @@ const {
   getHeadToHeadCommentaryService,
   getCommentaryStatisticsService,
   getAllCommentaryByCompetitionIdForClientService,
+  abandonedCommentaryService,
 } = require("../../../../services/commentry");
 const { getEventSnapByComService, updateEventSnapByComService } = require("../../../../services/competitionEventSnap");
 const { getAllCommentariesDataService, getAllCommentariesDataServiceV1, getAllCommentariesDataV2Service } = require("../../../../services/score");
@@ -1460,6 +1461,15 @@ const getAllCommentaryByCompetitionIdForClient = async (request, reply, fastify)
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const abandonedCommentary = async (request, reply, fastify) => {
+  try {
+    const result = await abandonedCommentaryService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/abandonedCommentary", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 
 module.exports = {
   getAllCommentaries,
@@ -1588,4 +1598,5 @@ module.exports = {
   getHeadToHeadCommentary,
   getCommentaryStatistics,
   getAllCommentaryByCompetitionIdForClient,
+  abandonedCommentary
 }
