@@ -99,6 +99,10 @@ const getAllCommentaryQuery = async (fastify) => {
       OR (tc."wrCommentaryStatus" = 4 AND tc."wrCommentaryCloseTime" >= NOW() - INTERVAL '7 days')
     )
     AND (
+      tc."wrCommentaryStatus" != 11
+      OR (tc."wrCommentaryStatus" = 11 AND tc."wrCancelTime" >= NOW() - INTERVAL '7 days')
+    )
+    AND (
       tc."wrCancelTime" IS NULL
       OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
     );`,
@@ -9864,7 +9868,7 @@ const abandonedCommentaryQuery = async (data, fastify, request) => {
       `update "tblCommentaries" set
         "wrCommentaryStatus" = $1,
         "wrCommentaryResult" = $2,
-        "wrCommentaryCloseTime" = now()
+        "wrCancelTime" = now()
         where "wrCommentaryId" = ANY($3) AND "wrIsDelete" = false
       `,
       {
