@@ -54,11 +54,10 @@ const registerCronJobs = (fastify) => {
         if (!isAutoImportProcessRunning && global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
           isAutoImportProcessRunning = true;
           await entitySportAutoImportProcess(fastify);
+          isAutoImportProcessRunning = false;
         }
       } catch (error) {
         console.error("Error during scheduled task - entitySportAutoImportProcess:", error);
-      } finally {
-        isAutoImportProcessRunning = false;
       }
     })
   );
@@ -79,11 +78,10 @@ const registerCronJobs = (fastify) => {
           ) {
             isAutoUpdateCommentaryProcessRunning = true;
             await entitySportAutoUpdateCommentary(fastify);
+            isAutoUpdateCommentaryProcessRunning = false;
           }
         } catch (error) {
           console.error("Error during scheduled task - entitySportAutoUpdateCommentary:", error);
-        } finally {
-          isAutoUpdateCommentaryProcessRunning = false;
         }
       }
     )
@@ -101,11 +99,10 @@ const registerCronJobs = (fastify) => {
         ) {
           isAutoUpdatePlayerStatisticsProcessRunning = true;
           await autoUpdatePlayerStatisticsDataProcess(fastify);
+          isAutoUpdatePlayerStatisticsProcessRunning = false;
         }
       } catch (error) {
         console.error("Error during scheduled task - autoUpdatePlayerStatisticsDataProcess:", error);
-      } finally {
-        isAutoUpdatePlayerStatisticsProcessRunning = false;
       }
     })
   );
