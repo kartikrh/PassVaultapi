@@ -5717,6 +5717,10 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
       WHERE tc."wrCommentaryStatus" = 4 AND tc."wrIsDelete" = false
       AND tc."wrIsActive" = true AND tc."wrIsTest" = false
       AND (
+        tc."wrCommentaryStatus" != 11
+        OR (tc."wrCommentaryStatus" = 11 AND tc."wrCancelTime" >= NOW() - INTERVAL '7 days')
+      )
+      AND (
         tc."wrCancelTime" IS NULL
         OR tc."wrCancelTime" >= NOW() - INTERVAL '7 days'
       );`,
