@@ -115,6 +115,7 @@ const {
   checkSUpdatePassword,
   getHeadToHeadCommentary,
   getCommentaryStatistics,
+  abandonedCommentary,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -1546,5 +1547,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request , reply) => getCommentaryStatistics(request, reply, fastify)
+  });
+  fastify.post("/abandonedCommentary", {
+    schema: Commentary.abandonedCommentary.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => abandonedCommentary(request, reply, fastify),
   });
 };

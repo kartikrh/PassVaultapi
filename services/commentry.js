@@ -103,7 +103,8 @@ const {
   getAllCommentaryByCompetitionIdForClientQuery,
   getComTeamQuery,
   getAllCommentaryByCompetitionIdQuery,
-  deleteCommentaryTeamQuery
+  deleteCommentaryTeamQuery,
+  abandonedCommentaryQuery
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const { withSentryCronProfiling } = require("../utilities/sentryCron");
@@ -8757,9 +8758,9 @@ const getMatchDataByCId = async (data, request, fastify) => {
   let rno = 0;
   let type = null;
   let status = com.commentaryStatus;
-  if (status != 4 && status != 1 && status != 10) {
+  if (status != 4 && status != 1 && status != 10 && status != 11) {
     type = "live";
-  } else if (status == 4 || status == 10) {
+  } else if (status == 4 || status == 10 || status == 11) {
     type = "completed";
   } else if (status == 1) {
     type = "scheduled";
@@ -26098,6 +26099,151 @@ const insertComPlayerEntityService = async (entityData, playerTpId, teamData, re
     return
   }
 }
+
+const abandonedCommentaryService = async (request, fastify) => {
+  await abandonedCommentaryQuery(request.body, fastify, request);
+  // let _resFromPredictAPI;
+  // let callPredictions = [];
+
+  // update the global variable
+  for (let commentaryId of request.body.commentaryId) {
+    const index = global.tblCommentaries.findIndex(
+      (item) => item?.commentaryId === commentaryId
+    );
+    if (index !== -1) {
+      global.tblCommentaries[index].commentaryStatus = commentaryStatus.ABANDONED;
+      global.tblCommentaries[index].result = "Abandoned";
+
+      // const eventMarket = await closeEventMarketByCIdQuery(
+      //   { commentaryId },
+      //   fastify
+      // );
+      // if (eventMarket.length > 0) {
+      //   for (const updatedItem of eventMarket) {
+      //     let index = global.tblEventMarketsV2.findIndex(
+      //       (item) => item.eventMarketId === updatedItem.marketId
+      //     );
+      //     if (index !== -1) {
+      //       global.tblEventMarketsV2[index] = {
+      //         ...global.tblEventMarketsV2[index],
+      //         ...updatedItem,
+      //       };
+      //     }
+      //   }
+      // }
+      // global.tblMarketRunnerV2
+      //   .filter((elem) =>
+      //     eventMarket.some((e) => e.marketId === elem.eventMarketId)
+      //   )
+      //   .forEach((elem) => {
+      //     elem.selectionStatus = EventMarketStatus.Close;
+      //   });
+      // if (eventMarket.length > 0) {
+      //   let pythonURI = global.tblCommentaries[index].pythonURI || null;
+      //   _resFromPredictAPI = await callPredictorMarket(
+      //     {
+      //       commentary_id: commentaryId,
+      //     },
+      //     "/api/v1/endcommentary",
+      //     fastify,
+      //     request,
+      //     pythonURI
+      //   );
+      //   let callPrediction = {};
+      //   if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+      //     callPrediction.Cid = commentaryId;
+      //     callPrediction.predictioncallSuccess = false;
+      //     callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+      //     callPrediction.endPoint = "/api/v1/endcommentary";
+      //     callPredictions.push(callPrediction);
+      //   }
+      // }
+      // _resFromPredictAPI = null;
+      // callDataProvider(
+      //   {
+      //     commentaryId: commentaryId,
+      //     serviceType: ServiceType.dataProviderAPI,
+      //     moduleType: APIEndpointModuleType.commentaryUpdate,
+      //     type: "close",
+      //   },
+      //   fastify
+      // ).catch((err) => {
+      //   console.log("call data provider console", err);
+      //   errorLogger(
+      //     fastify,
+      //     err.message,
+      //     "ERROR --> services/commentary.js/closeEventMarketByCIdQuery",
+      //     request
+      //   );
+      // });
+
+      const cData = await getMatchDataByCId(
+        {
+          commentaryId: commentaryId,
+        },
+        request,
+        fastify
+      );
+
+      callClientAPI(
+        {
+          serviceType: ServiceType.clientAPI,
+          moduleType: APIEndpointModuleType.commentaryUpdate,
+          data: cData,
+        },
+        request,
+        fastify
+      ).catch((err) => {
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/abandonedCommentaryService - callClientAPI",
+          request
+        );
+      });
+
+      // const tipsData = global.tblTips
+      //   .filter(
+      //     (item) =>
+      //       item.commentaryId === global.tblCommentaries[index].competitionId ||
+      //       item.eventRefId === global.tblCommentaries[index].eventRefId
+      //   )
+      //   .map((elem) => elem.id);
+      // if (tipsData.length > 0) {
+      //   global.tblTips = global.tblTips.filter(
+      //     (item) => !tipsData.includes(item.id)
+      //   );
+      //   callClientAPI(
+      //     {
+      //       serviceType: ServiceType.clientAPI,
+      //       moduleType: APIEndpointModuleType.updateSeoModule,
+      //       data: {
+      //         module: "tips",
+      //         type: "delete",
+      //         data: {
+      //           id: tipsData,
+      //         },
+      //       },
+      //     },
+      //     request,
+      //     fastify
+      //   ).catch((err) => {
+      //     errorLogger(
+      //       fastify,
+      //       err.message,
+      //       "services/commentary.js/syncCommentaryStatsWithAPIAndSocket - callClientAPI",
+      //       request
+      //     );
+      //   });
+      // }
+    }
+  }
+  return {
+    message: "Commentary(s) abandoned successfully",
+    // callPredictions: callPredictions,
+  };
+};
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -26227,4 +26373,5 @@ module.exports = {
   insertCompletedCommentaryForTournamentTeamPointUpdateService,
   addSuperOverInEntity,
   insertComPlayerEntityService,
+  abandonedCommentaryService
 };

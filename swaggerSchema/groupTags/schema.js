@@ -4180,6 +4180,24 @@ const Commentary = {
       }
     }
   },
+  abandonedCommentary: {
+    schema: {
+      tags: ["Commentary"],
+      description: "abandoned Commentary",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["commentaryId"],
+      },
+    },
+  }
 };
 
 const Compitition = {

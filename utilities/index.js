@@ -847,6 +847,7 @@ const commentaryStatus = {
   COMPLETED: 4,
   INNINGCHANGE: 5,
   CANCELLED: 10,
+  ABANDONED: 11
 };
 const EntityCommentaryStatus = {
   DEFAULT : 0,

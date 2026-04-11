@@ -9858,6 +9858,32 @@ const deleteCommentaryTeamQuery = async (request, fastify) => {
   }
 }
 
+const abandonedCommentaryQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `update "tblCommentaries" set
+        "wrCommentaryStatus" = $1,
+        "wrCommentaryResult" = $2,
+        "wrCommentaryCloseTime" = now()
+        where "wrCommentaryId" = ANY($3) AND "wrIsDelete" = false
+      `,
+      {
+        bind: [11, "Abandoned", data.commentaryId],
+      }
+    );
+
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/abandonedCommentaryQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -10019,5 +10045,6 @@ module.exports = {
   upComStatusQuery,
   getAllCommentaryByCompetitionIdQuery,
   updateCommentaryTeamColorQuery,
-  deleteCommentaryTeamQuery
+  deleteCommentaryTeamQuery,
+  abandonedCommentaryQuery
 };
