@@ -289,7 +289,7 @@ const allCommentaryService = async (request, fastify) => {
     result = await getAllCommentaryByCompetitionIdQuery(competitionId, request, fastify);
     if (commentaryStatus === undefined) {
       result = result.filter(
-        (item) => ![4, 10].includes(item.commentaryStatus)
+        (item) => ![4, 10, 11].includes(item.commentaryStatus)
       );
     }
     if (commentaryStatus && commentaryStatus != 0) {
