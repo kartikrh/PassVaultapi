@@ -262,7 +262,7 @@ const allCommentaryService = async (request, fastify) => {
   let result;
   if (commentaryStatus === undefined) {
     result = global.tblCommentaries.filter(
-      (item) => ![4, 10].includes(item.commentaryStatus)
+      (item) => ![4, 10, 11].includes(item.commentaryStatus)
     );
     // result = global.tblCommentaries.filter(
     //   (item) => item.commentaryStatus === 1 || item.commentaryStatus === 3
