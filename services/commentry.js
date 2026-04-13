@@ -8760,8 +8760,10 @@ const getMatchDataByCId = async (data, request, fastify) => {
   let status = com.commentaryStatus;
   if (status != 4 && status != 1 && status != 10 && status != 11) {
     type = "live";
-  } else if (status == 4 || status == 10 || status == 11) {
+  } else if (status == 4 || status == 11) {
     type = "completed";
+  } else if (status == 10) {
+    type = "deleteEvent";
   } else if (status == 1) {
     type = "scheduled";
   }
