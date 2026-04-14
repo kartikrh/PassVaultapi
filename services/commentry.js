@@ -203,6 +203,7 @@ const {
 } = require("../repository/TableTournmentTeamPoints");
 const {
   getPlayersBattingHistoryByIdQuery,
+  dltPlyHistQuery,
 } = require("../repository/TablePlayerHistory");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const {
@@ -12966,8 +12967,23 @@ const cancelCommentaryService = async (request, fastify) => {
           );
         });
       }
+      // delete player history data if exist for this commentary
     }
   }
+  await dltPlyHistQuery({
+    commentaryId : request.body.commentaryId
+  }, request , fastify)
+  const idSet = new Set(request.body.commentaryId.map(Number));
+
+  global.tblCommPlayerBatHist = global.tblCommPlayerBatHist.filter(
+    (item) => !idSet.has(item.commentaryId)
+  );
+
+  global.tblCommPlayerBowlHist = global.tblCommPlayerBowlHist.filter(
+    (item) => !idSet.has(item.commentaryId)
+  );
+
+
   return {
     message: "Commentary(s) canceled successfully",
     callPredictions: callPredictions,
