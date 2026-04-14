@@ -262,7 +262,7 @@ const allCommentaryService = async (request, fastify) => {
   let result;
   if (commentaryStatus === undefined) {
     result = global.tblCommentaries.filter(
-      (item) => ![4, 10].includes(item.commentaryStatus)
+      (item) => ![4, 10, 11].includes(item.commentaryStatus)
     );
     // result = global.tblCommentaries.filter(
     //   (item) => item.commentaryStatus === 1 || item.commentaryStatus === 3
@@ -289,7 +289,7 @@ const allCommentaryService = async (request, fastify) => {
     result = await getAllCommentaryByCompetitionIdQuery(competitionId, request, fastify);
     if (commentaryStatus === undefined) {
       result = result.filter(
-        (item) => ![4, 10].includes(item.commentaryStatus)
+        (item) => ![4, 10, 11].includes(item.commentaryStatus)
       );
     }
     if (commentaryStatus && commentaryStatus != 0) {
@@ -8760,8 +8760,10 @@ const getMatchDataByCId = async (data, request, fastify) => {
   let status = com.commentaryStatus;
   if (status != 4 && status != 1 && status != 10 && status != 11) {
     type = "live";
-  } else if (status == 4 || status == 10 || status == 11) {
+  } else if (status == 4 || status == 11) {
     type = "completed";
+  } else if (status == 10) {
+    type = "deleteEvent";
   } else if (status == 1) {
     type = "scheduled";
   }
@@ -22981,7 +22983,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                 // commentaryCloseTime:
                 //     commentaryDetails.commentaryStatus == 4 ? new Date() : null,
                 commentaryCloseTime: 
-                  [4, 10].includes(Number(commentaryDetails?.commentaryStatus)) ? new Date() : null,
+                  [4, 10, 11].includes(Number(commentaryDetails?.commentaryStatus)) ? new Date() : null,
                 tossWonBy: commentaryDetails.tossWonBy,
                 choseTo: commentaryDetails.choseTo,
                 winnerId: commentaryDetails.winnerId,
@@ -23004,7 +23006,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                 // commentaryCloseTime:
                 //     commentaryDetails.commentaryStatus == 4 ? new Date() : null,
                 commentaryCloseTime: 
-                  [4, 10].includes(Number(commentaryDetails?.commentaryStatus)) ? new Date() : null,
+                  [4, 10, 11].includes(Number(commentaryDetails?.commentaryStatus)) ? new Date() : null,
                 tossWonBy: commentaryDetails.tossWonBy,
                 choseTo: commentaryDetails.choseTo,
                 winnerId: commentaryDetails.winnerId,
