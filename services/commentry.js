@@ -203,6 +203,7 @@ const {
 } = require("../repository/TableTournmentTeamPoints");
 const {
   getPlayersBattingHistoryByIdQuery,
+  dltPlyHistQuery,
 } = require("../repository/TablePlayerHistory");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const {
@@ -12966,8 +12967,23 @@ const cancelCommentaryService = async (request, fastify) => {
           );
         });
       }
+      // delete player history data if exist for this commentary
     }
   }
+  await dltPlyHistQuery({
+    commentaryId : request.body.commentaryId
+  }, request , fastify)
+  const idSet = new Set(request.body.commentaryId.map(Number));
+
+  global.tblCommPlayerBatHist = global.tblCommPlayerBatHist.filter(
+    (item) => !idSet.has(item.commentaryId)
+  );
+
+  global.tblCommPlayerBowlHist = global.tblCommPlayerBowlHist.filter(
+    (item) => !idSet.has(item.commentaryId)
+  );
+
+
   return {
     message: "Commentary(s) canceled successfully",
     callPredictions: callPredictions,
@@ -26105,7 +26121,7 @@ const insertComPlayerEntityService = async (entityData, playerTpId, teamData, re
 const abandonedCommentaryService = async (request, fastify) => {
   await abandonedCommentaryQuery(request.body, fastify, request);
   // let _resFromPredictAPI;
-  // let callPredictions = [];
+  let callPredictions = [];
 
   // update the global variable
   for (let commentaryId of request.body.commentaryId) {
@@ -26116,68 +26132,68 @@ const abandonedCommentaryService = async (request, fastify) => {
       global.tblCommentaries[index].commentaryStatus = commentaryStatus.ABANDONED;
       global.tblCommentaries[index].result = "Abandoned";
 
-      // const eventMarket = await closeEventMarketByCIdQuery(
-      //   { commentaryId },
-      //   fastify
-      // );
-      // if (eventMarket.length > 0) {
-      //   for (const updatedItem of eventMarket) {
-      //     let index = global.tblEventMarketsV2.findIndex(
-      //       (item) => item.eventMarketId === updatedItem.marketId
-      //     );
-      //     if (index !== -1) {
-      //       global.tblEventMarketsV2[index] = {
-      //         ...global.tblEventMarketsV2[index],
-      //         ...updatedItem,
-      //       };
-      //     }
-      //   }
-      // }
-      // global.tblMarketRunnerV2
-      //   .filter((elem) =>
-      //     eventMarket.some((e) => e.marketId === elem.eventMarketId)
-      //   )
-      //   .forEach((elem) => {
-      //     elem.selectionStatus = EventMarketStatus.Close;
-      //   });
-      // if (eventMarket.length > 0) {
-      //   let pythonURI = global.tblCommentaries[index].pythonURI || null;
-      //   _resFromPredictAPI = await callPredictorMarket(
-      //     {
-      //       commentary_id: commentaryId,
-      //     },
-      //     "/api/v1/endcommentary",
-      //     fastify,
-      //     request,
-      //     pythonURI
-      //   );
-      //   let callPrediction = {};
-      //   if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
-      //     callPrediction.Cid = commentaryId;
-      //     callPrediction.predictioncallSuccess = false;
-      //     callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
-      //     callPrediction.endPoint = "/api/v1/endcommentary";
-      //     callPredictions.push(callPrediction);
-      //   }
-      // }
-      // _resFromPredictAPI = null;
-      // callDataProvider(
-      //   {
-      //     commentaryId: commentaryId,
-      //     serviceType: ServiceType.dataProviderAPI,
-      //     moduleType: APIEndpointModuleType.commentaryUpdate,
-      //     type: "close",
-      //   },
-      //   fastify
-      // ).catch((err) => {
-      //   console.log("call data provider console", err);
-      //   errorLogger(
-      //     fastify,
-      //     err.message,
-      //     "ERROR --> services/commentary.js/closeEventMarketByCIdQuery",
-      //     request
-      //   );
-      // });
+      const eventMarket = await closeEventMarketByCIdQuery(
+        { commentaryId },
+        fastify
+      );
+      if (eventMarket.length > 0) {
+        for (const updatedItem of eventMarket) {
+          let index = global.tblEventMarketsV2.findIndex(
+            (item) => item.eventMarketId === updatedItem.marketId
+          );
+          if (index !== -1) {
+            global.tblEventMarketsV2[index] = {
+              ...global.tblEventMarketsV2[index],
+              ...updatedItem,
+            };
+          }
+        }
+      }
+      global.tblMarketRunnerV2
+        .filter((elem) =>
+          eventMarket.some((e) => e.marketId === elem.eventMarketId)
+        )
+        .forEach((elem) => {
+          elem.selectionStatus = EventMarketStatus.Close;
+        });
+      if (eventMarket.length > 0) {
+        let pythonURI = global.tblCommentaries[index].pythonURI || null;
+        _resFromPredictAPI = await callPredictorMarket(
+          {
+            commentary_id: commentaryId,
+          },
+          "/api/v1/endcommentary",
+          fastify,
+          request,
+          pythonURI
+        );
+        let callPrediction = {};
+        if (_resFromPredictAPI.data && _resFromPredictAPI.data.error_msg) {
+          callPrediction.Cid = commentaryId;
+          callPrediction.predictioncallSuccess = false;
+          callPrediction.predictionMessage = _resFromPredictAPI.data.error_msg;
+          callPrediction.endPoint = "/api/v1/endcommentary";
+          callPredictions.push(callPrediction);
+        }
+      }
+      _resFromPredictAPI = null;
+      callDataProvider(
+        {
+          commentaryId: commentaryId,
+          serviceType: ServiceType.dataProviderAPI,
+          moduleType: APIEndpointModuleType.commentaryUpdate,
+          type: "close",
+        },
+        fastify
+      ).catch((err) => {
+        console.log("call data provider console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/commentary.js/abandonedCommentaryService",
+          request
+        );
+      });
 
       const cData = await getMatchDataByCId(
         {
