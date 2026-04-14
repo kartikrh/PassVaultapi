@@ -3274,7 +3274,14 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           tpCurrentBall: c,
         }
         const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
-
+        let playerUpdatedData = undoResult.playersMap || {};
+        for (const tpId in playerUpdatedData) {
+          if (!playerUpdatedData.hasOwnProperty(tpId)) continue;
+          playerTpIdObj[tpId] = {
+            ...playerTpIdObj[tpId],
+            ...playerUpdatedData[tpId],
+          };
+        }
         if (undoResult) {
           battingTeam = undoResult.battingTeam;
           deleteOverIds.push(...undoResult.deleteOverIds);
@@ -3327,7 +3334,14 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           tpCurrentBall: c,
         }
         const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
-
+        let playerUpdatedData = undoResult.playersMap || {};
+        for (const tpId in playerUpdatedData) {
+          if (!playerUpdatedData.hasOwnProperty(tpId)) continue;
+          playerTpIdObj[tpId] = {
+            ...playerTpIdObj[tpId],
+            ...playerUpdatedData[tpId],
+          };
+        }
         if (undoResult) {
           battingTeam = undoResult.battingTeam;
           deleteOverIds.push(...undoResult.deleteOverIds);
@@ -3380,7 +3394,14 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           tpCurrentBall: c,
         }
         const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
-
+        let playerUpdatedData = undoResult.playersMap || {};
+        for (const tpId in playerUpdatedData) {
+          if (!playerUpdatedData.hasOwnProperty(tpId)) continue;
+          playerTpIdObj[tpId] = {
+            ...playerTpIdObj[tpId],
+            ...playerUpdatedData[tpId],
+          };
+        }
         if (undoResult) {
           battingTeam = undoResult.battingTeam;
           deleteOverIds.push(...undoResult.deleteOverIds);
@@ -3434,7 +3455,14 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           tpCurrentBall: c,
         }
         const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
-
+        let playerUpdatedData = undoResult.playersMap || {};
+        for (const tpId in playerUpdatedData) {
+          if (!playerUpdatedData.hasOwnProperty(tpId)) continue;
+          playerTpIdObj[tpId] = {
+            ...playerTpIdObj[tpId],
+            ...playerUpdatedData[tpId],
+          };
+        }
         if (undoResult) {
           battingTeam = undoResult.battingTeam;
           deleteOverIds.push(...undoResult.deleteOverIds);
@@ -3488,7 +3516,14 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           tpCurrentBall: c,
         }
         const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
-
+        let playerUpdatedData = undoResult.playersMap || {};
+        for (const tpId in playerUpdatedData) {
+          if (!playerUpdatedData.hasOwnProperty(tpId)) continue;
+          playerTpIdObj[tpId] = {
+            ...playerTpIdObj[tpId],
+            ...playerUpdatedData[tpId],
+          };
+        }
         if (undoResult) {
           battingTeam = undoResult.battingTeam;
           deleteOverIds.push(...undoResult.deleteOverIds);
@@ -3542,7 +3577,14 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           tpCurrentBall: c,
         }
         const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
-
+        let playerUpdatedData = undoResult.playersMap || {};
+        for (const tpId in playerUpdatedData) {
+          if (!playerUpdatedData.hasOwnProperty(tpId)) continue;
+          playerTpIdObj[tpId] = {
+            ...playerTpIdObj[tpId],
+            ...playerUpdatedData[tpId],
+          };
+        }
         if (undoResult) {
           battingTeam = undoResult.battingTeam;
           deleteOverIds.push(...undoResult.deleteOverIds);
