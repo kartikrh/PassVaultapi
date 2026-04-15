@@ -6,6 +6,8 @@ const { updateClientSocketStatusQuery, updateReconnectCountQuery } = require("..
 const { updateCommentaryViewsQuery } = require("../repository/TableCommentary");
 const { withSentryCronProfiling } = require("../utilities/sentryCron");
 
+global.clientSocketIo = [];
+
 const connectClients = async (fastify, clientSocketId) => {
   try {
     let clientConfigs = global.tblClientSocket.filter(c => c.isActive === true);

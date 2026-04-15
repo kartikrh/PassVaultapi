@@ -5462,6 +5462,20 @@ const Score = {
         required: ["competitionId"]
       }
     }
+  },
+  getCommentaryScoreStats: {
+    schema: {
+      tags: ["Score"],
+      description: "get all commentary score stats by commentary id",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          commentaryId: { type: "integer" }
+        },
+        required: ["commentaryId"]
+      }
+    }
   }
 };
 

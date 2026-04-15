@@ -26262,6 +26262,79 @@ const abandonedCommentaryService = async (request, fastify) => {
   };
 };
 
+// const getCommentaryScoreStatsService = async (request, fastify) => {
+//   const { commentaryId } = request.body;
+//   const getCommentary = global.tblCommentaries.find(c => c.commentaryId === commentaryId);
+//   if (!getCommentary) {
+//     throw new Error(`Commentary not found for id ${commentaryId}`);
+//   }
+//   const commentaryPlayers = global.tblCommentaryPlayers.filter(cp => cp.commentaryId === commentaryId);
+
+//   const stats = commentaryPlayers.reduce((acc, p) => {
+//     const key = p.teamId === getCommentary.team1Id ? "team1" : "team2";
+
+//     acc[key].total4 += p.batFour || 0;
+//     acc[key].total6 += p.batSix || 0;
+//     acc[key].bowlerDotBall += p.bowlerDotBall || 0;
+//     acc[key].bowlerExtraRuns += ((p?.bowlerWideBallRun || 0) + (p?.bowlerNoBallRun || 0) + (p?.bowlerByeBallRun || 0) + (p?.bowlerLegByeBallRun || 0));
+
+//     return acc;
+//   }, {
+//     team1: { total4: 0, total6: 0, bowlerDotBall: 0, bowlerExtraRuns: 0 },
+//     team2: { total4: 0, total6: 0, bowlerDotBall: 0, bowlerExtraRuns: 0 }
+//   });
+
+//   stats.team1.boundaryRuns = (stats.team1.total4 * 4) + (stats.team1.total6 * 6);
+//   stats.team2.boundaryRuns = (stats.team2.total4 * 4) + (stats.team2.total6 * 6);
+
+//   return stats;
+// }
+
+const getCommentaryScoreStatsService = async (request, fastify) => {
+  const { commentaryId } = request.body;
+  const getCommentary = global.tblCommentaries.find(c => c.commentaryId === commentaryId);
+  if (!getCommentary) {
+    throw new Error(`Commentary not found for id ${commentaryId}`);
+  }
+
+  const team1 = global.tblTeams.find(t => t.teamId === getCommentary.team1Id);
+  const team2 = global.tblTeams.find(t => t.teamId === getCommentary.team2Id);
+
+  const overData = global.tblOvers.filter(to => to.commentaryId === commentaryId && to.isDelete === false);
+
+  const stats = overData.reduce((acc, p) => {
+    const key = p.teamId === getCommentary.team1Id ? "team1" : "team2";
+
+    acc[key].totalFour += p.totalFour || 0;
+    acc[key].totalSix += p.totalSix || 0;
+    acc[key].dotBall += p.dotBall || 0;
+    acc[key].extraRuns += ((p?.totalWideRun || 0) + (p?.totalNoBallRun || 0) + (p?.totalByesRun || 0) + (p?.totalLegByesRun || 0));
+
+    return acc;
+  }, {
+    team1: { totalFour: 0, totalSix: 0, dotBall: 0, extraRuns: 0 },
+    team2: { totalFour: 0, totalSix: 0, dotBall: 0, extraRuns: 0 }
+  });
+
+  stats.team1 = {
+    ...stats.team1,
+    boundaryRuns: (stats.team1.totalFour * 4) + (stats.team1.totalSix * 6),
+    teamName: team1?.teamName || "Team 1",
+    teamShortName: team1?.teamShortName || "Team 1",
+    image: team1?.image || null
+  }
+
+  stats.team2 = {
+    ...stats.team2,
+    boundaryRuns: (stats.team2.totalFour * 4) + (stats.team2.totalSix * 6),
+    teamName: team2?.teamName || "Team 2",
+    teamShortName: team2?.teamShortName || "Team 2",
+    image: team2?.image || null
+  }
+
+  return stats;
+}
+
 module.exports = {
   allCommentaryService,
   commentaryByIdService,
@@ -26391,5 +26464,6 @@ module.exports = {
   insertCompletedCommentaryForTournamentTeamPointUpdateService,
   addSuperOverInEntity,
   insertComPlayerEntityService,
-  abandonedCommentaryService
+  abandonedCommentaryService,
+  getCommentaryScoreStatsService
 };
