@@ -373,7 +373,7 @@ const resetAllClientSocketReconnectCountQuery = async (request, fastify) => {
                 bind: [0, true, false]
             });
         return result;
-    } catch (error) {
+    } catch (err) {
         errorLogger(
             fastify,
             err.message,

@@ -2946,12 +2946,20 @@ const matchCompleteService = async (data , fastify,comDetails) =>{
     ? statusNote.match(/by\s.+$/i)?.[0] || statusNote
     : null;
 
-  const cancelledKeys = ["cancelled", "abandoned", "no result"];
-  const statusString = cancelledKeys.some(val =>
-    response?.match_info?.status_str?.toLowerCase().includes(val)
-  )
-    ? commentaryStatus.CANCELLED
-    : commentaryStatus.COMPLETED;
+  const cancelledKeys = ["cancelled", "no result"];
+  const abandonedKeys = ["abandoned"];
+
+  const status = response?.match_info?.status_str?.toLowerCase() || "";
+
+  let statusString;
+
+  if (cancelledKeys.some(key => status.includes(key))) {
+    statusString = commentaryStatus.CANCELLED;
+  } else if (abandonedKeys.some(key => status.includes(key))) {
+    statusString = commentaryStatus.ABANDONED;
+  } else {
+    statusString = commentaryStatus.COMPLETED;
+  }
 
   if (winTeam) {
     isBatTeamWon = winTeam.commentaryTeamId == batTeam.commentaryTeamId ? true : false;
@@ -3266,7 +3274,14 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           tpCurrentBall: c,
         }
         const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
-
+        let playerUpdatedData = undoResult.playersMap || {};
+        for (const tpId in playerUpdatedData) {
+          if (!playerUpdatedData.hasOwnProperty(tpId)) continue;
+          playerTpIdObj[tpId] = {
+            ...playerTpIdObj[tpId],
+            ...playerUpdatedData[tpId],
+          };
+        }
         if (undoResult) {
           battingTeam = undoResult.battingTeam;
           deleteOverIds.push(...undoResult.deleteOverIds);
@@ -3319,7 +3334,14 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           tpCurrentBall: c,
         }
         const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
-
+        let playerUpdatedData = undoResult.playersMap || {};
+        for (const tpId in playerUpdatedData) {
+          if (!playerUpdatedData.hasOwnProperty(tpId)) continue;
+          playerTpIdObj[tpId] = {
+            ...playerTpIdObj[tpId],
+            ...playerUpdatedData[tpId],
+          };
+        }
         if (undoResult) {
           battingTeam = undoResult.battingTeam;
           deleteOverIds.push(...undoResult.deleteOverIds);
@@ -3372,7 +3394,14 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           tpCurrentBall: c,
         }
         const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
-
+        let playerUpdatedData = undoResult.playersMap || {};
+        for (const tpId in playerUpdatedData) {
+          if (!playerUpdatedData.hasOwnProperty(tpId)) continue;
+          playerTpIdObj[tpId] = {
+            ...playerTpIdObj[tpId],
+            ...playerUpdatedData[tpId],
+          };
+        }
         if (undoResult) {
           battingTeam = undoResult.battingTeam;
           deleteOverIds.push(...undoResult.deleteOverIds);
@@ -3426,7 +3455,14 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           tpCurrentBall: c,
         }
         const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
-
+        let playerUpdatedData = undoResult.playersMap || {};
+        for (const tpId in playerUpdatedData) {
+          if (!playerUpdatedData.hasOwnProperty(tpId)) continue;
+          playerTpIdObj[tpId] = {
+            ...playerTpIdObj[tpId],
+            ...playerUpdatedData[tpId],
+          };
+        }
         if (undoResult) {
           battingTeam = undoResult.battingTeam;
           deleteOverIds.push(...undoResult.deleteOverIds);
@@ -3480,7 +3516,14 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           tpCurrentBall: c,
         }
         const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
-
+        let playerUpdatedData = undoResult.playersMap || {};
+        for (const tpId in playerUpdatedData) {
+          if (!playerUpdatedData.hasOwnProperty(tpId)) continue;
+          playerTpIdObj[tpId] = {
+            ...playerTpIdObj[tpId],
+            ...playerUpdatedData[tpId],
+          };
+        }
         if (undoResult) {
           battingTeam = undoResult.battingTeam;
           deleteOverIds.push(...undoResult.deleteOverIds);
@@ -3534,7 +3577,14 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           tpCurrentBall: c,
         }
         const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
-
+        let playerUpdatedData = undoResult.playersMap || {};
+        for (const tpId in playerUpdatedData) {
+          if (!playerUpdatedData.hasOwnProperty(tpId)) continue;
+          playerTpIdObj[tpId] = {
+            ...playerTpIdObj[tpId],
+            ...playerUpdatedData[tpId],
+          };
+        }
         if (undoResult) {
           battingTeam = undoResult.battingTeam;
           deleteOverIds.push(...undoResult.deleteOverIds);

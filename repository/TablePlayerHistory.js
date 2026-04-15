@@ -883,6 +883,40 @@ const getAllPlayerBowlingHistoryForClientQuery = async (playerId, fastify) => {
     throw new Error(err.message);
   }
 };
+const dltPlyHistQuery = async (data, request, fastify) => {
+  try {
+      await fastify.db.query(
+          `UPDATE "tblCommPlayerBatHist" SET
+            "wrIsDeleted" = true,
+            "wrDeletedBy" = $1,
+            "wrDeletedAt" = now()
+          WHERE "wrCommentaryId" = ANY($2)`,
+          {
+              type: fastify.db.QueryTypes.UPDATE,
+              bind: [request.userTokenInfo.WrUserId, data.commentaryId],
+          }
+      );
+      await fastify.db.query(
+          `UPDATE "tblCommPlayerBowlHist" SET
+            "wrIsDeleted" = true,
+            "wrDeletedBy" = $1,
+            "wrDeletedAt" = now()
+          WHERE "wrCommentaryId" = ANY($2)`,
+          {
+              type: fastify.db.QueryTypes.UPDATE,
+              bind: [request.userTokenInfo.WrUserId, data.commentaryId],
+          }
+      )
+  } catch (err) {
+      errorLogger(
+          fastify,
+          err.message,
+          "DB ERROR --> repository/TablePlayerHistory.js/deletePlayerBattingHistoryQuery",
+          request
+      );
+      throw new Error(err.message);
+  }
+};
 
 module.exports = {
   getAllPlayersBattingHistory,
@@ -902,5 +936,6 @@ module.exports = {
   insertPlayerBowlingHistoryQuery,
   updatePlayerBowlingHistoryQuery,
   getAllPlayersBattingHistoryForClientQuery,
-  getAllPlayerBowlingHistoryForClientQuery
+  getAllPlayerBowlingHistoryForClientQuery,
+  dltPlyHistQuery
 };
