@@ -49,6 +49,7 @@ const { insertTeamPlayersByTeamId, insertCommentaryPlayersByTeam } = require("./
 const { insertTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers")
 const Sentry = require("@sentry/node");
 const { entitySportAPIEndPoint } = require("../utilities/entityConst")
+const { entitySportUpdateCommentary } = require("../utilities/entitySportAutoUpdateCommentary")
 
 
 
@@ -374,6 +375,17 @@ const setEntityCom2Service = async (request , fastify) =>{
   try {
     transaction?.setStatus('ok');
     const {response} = request.body
+    const eventDate = new Date(response.match_info.date_start.replace(" ", "T"));
+    const currentDate = new Date();
+    if (Math.abs(currentDate - eventDate) > 48 * 60 * 60 * 1000) {
+      let commentaryData = global.tblCommentaries.find(tc => tc.tpId === response.match_id);
+      const checkCompetition = global.tblCompetitions.find(item => item.tpId === response.match_info?.competition?.cid);
+      if (!checkCompetition) {
+        throw new Error(`Competition with tpId ${response.match_info?.competition?.cid} not found`);
+      }
+
+      await entitySportUpdateCommentary(commentaryData, checkCompetition, response, false, fastify);
+    }
     if (response?.man_of_the_match?.pid) {
       const commentaryData = global.tblCommentaries.find(tc => tc.tpId === matchID);
       await assignAwards(commentaryData, response, request, fastify);
