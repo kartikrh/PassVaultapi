@@ -192,7 +192,6 @@ const entitySportUpdateCommentary = async (commentaryData, checkCompetition, ent
 
     if (venue?.country) {
         const existingCountry = global.tblCountryCodes.find(item => item.countryName.toLowerCase() === venue.country.toLowerCase());
-
         if (existingCountry) {
             if (existingCountry.id !== countryId) {
                 changedValues.countryId = existingCountry.id;
@@ -209,7 +208,7 @@ const entitySportUpdateCommentary = async (commentaryData, checkCompetition, ent
     }
 
     if (venue?.venue_id) {
-        let existingVenue = global.tblVenues.find(item => item.tpId && item.tpId == venue?.venue_id);
+        let existingVenue = global.tblVenues.find(item => item.tpId && item.tpId == venue.venue_id);
         if (!existingVenue) {
             existingVenue = global.tblVenues.find(item => item.countryId === changedValues?.countryId && item.city === venue?.location && item.name === venue?.name);
             if (!existingVenue) {
@@ -230,11 +229,18 @@ const entitySportUpdateCommentary = async (commentaryData, checkCompetition, ent
                     ...request,
                     body: {
                         id: existingVenue.id,
-                        tpId: venue?.venue_id || null
+                        tpId: venue?.venue_id || null,
+                        isActive: existingVenue.isActive
                     }
                 }, fastify);
                 const index = global.tblVenues.findIndex(item => item.id === existingVenue.id);
                 global.tblVenues[index] = existingVenue;
+            }
+        } else {
+            const currentVenue = venueId ? global.tblVenues.find(item => item.id === venueId) : null;
+            const shouldUpdate = !venueId || currentVenue?.tpId != venue.venue_id;
+            if (shouldUpdate) {
+                changedValues.venueId = existingVenue.id;
             }
         }
     }
