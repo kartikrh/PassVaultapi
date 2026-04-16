@@ -2412,6 +2412,37 @@ const normalizeCompetitionSeasonName = (competitionName) => {
   return normalizeText(competitionName).replace(/\s*\(?\d{4}([-/]\d{2,4})?\)?$/, "");
 };
 
+const getOverCalculation = (totalOvers) => {
+  if (!totalOvers) return null;
+  if (totalOvers === 10) {
+    return {
+      powerplay: [0, 2],
+      middle: [3, 5],
+      death: [6, 9]
+    };
+  } else if (totalOvers === 20) {
+    return {
+      powerplay: [0, 5],
+      middle: [6, 14],
+      death: [15, 19]
+    };
+  } else if (totalOvers === 50) {
+    return {
+      powerplay: [0, 9],
+      middle: [10, 39],
+      death: [40, 49]
+    };
+  } else if (totalOvers === 100) {
+    return {
+      powerplay: [0, 24],
+      middle: [25, 74],
+      death: [75, 99]
+    };
+  } else {
+    return null;
+  }
+}
+
 module.exports = {    
   ERROR_CODES,
   error,
@@ -2540,5 +2571,6 @@ module.exports = {
   oversToBalls,
   ClientAPIType,
   normalizeText,
-  normalizeCompetitionSeasonName
+  normalizeCompetitionSeasonName,
+  getOverCalculation
 };
