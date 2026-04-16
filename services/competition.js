@@ -1662,7 +1662,8 @@ const competitionImportService = async (data, fastify, request) => {
               ...request,
               body: {
                 id: checkVenue.id,
-                tpId: venue?.venue_id || null
+                tpId: venue?.venue_id || null,
+                isActive: checkVenue.isActive
               }
             }, fastify);
             const index = global.tblVenues.findIndex(item => item.id === checkVenue.id);
@@ -2085,10 +2086,11 @@ const competitionImportService = async (data, fastify, request) => {
         global.tblCommentaryTeams = global.tblCommentaryTeams.filter(item => !(item.commentaryId === commentaryId && item.teamId === checkCommentary.team2Id));
       }
 
-      if (checkCommentary?.venueId) {
-        const getVenueData = global.tblVenues.find(item => item.id === checkCommentary.venueId);
-        if (getVenueData?.tpId !== match?.venue?.venue_id) {
-          const getNewVenueData = global.tblVenues.find(item => item.tpId === Number(match?.venue?.venue_id));
+      const getNewVenueData = global.tblVenues.find(item => item.tpId === Number(match?.venue?.venue_id));
+      if (getNewVenueData) {
+        const currentVenue = checkCommentary?.venueId ? global.tblVenues.find(item => item.id === checkCommentary.venueId) : null;
+        const shouldUpdate = !checkCommentary?.venueId || currentVenue?.tpId != match?.venue?.venue_id;
+        if (shouldUpdate) {
           request.body = {
             ...checkCommentary,
             venueId: getNewVenueData?.id
@@ -2296,7 +2298,8 @@ const competitionImportService = async (data, fastify, request) => {
           ...request,
           body: {
             id: checkCommentary.venueId,
-            ...updateVenueReportData
+            ...updateVenueReportData,
+            isActive: global.tblVenues[venueIndex].isActive
           }
         }, fastify);
       }
