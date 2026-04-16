@@ -23905,6 +23905,26 @@ const matchImportService = async (data, fastify, request = null) => {
         global.tblCommentaryTeams = global.tblCommentaryTeams.filter(item => !(item.commentaryId === upsertedCommentaryId && item.teamId === checkCommentary.team2Id));
       }
 
+      if (checkCommentary?.venueId) {
+        const getVenueData = global.tblVenues.find(item => item.id === checkCommentary.venueId);
+        if (getVenueData?.tpId !== matchInfoResponse?.venue?.venue_id) {
+          const getNewVenueData = global.tblVenues.find(item => item.tpId === matchInfoResponse?.venue?.venue_id);
+          request.body = {
+            ...checkCommentary,
+            venueId: getNewVenueData?.id
+          }
+          await updateCommentaryQuery(request, fastify);
+          const index = global.tblCommentaries.findIndex(tc => tc.commentaryId === upsertedCommentaryId);
+          if (index !== -1) {
+            global.tblCommentaries[index] = {
+              ...global.tblCommentaries[index],
+              venueId: getNewVenueData?.id
+            };
+            checkCommentary = global.tblCommentaries[index];
+          }
+        }
+      }
+
       const esStart = matchInfoResponse?.date_start
         ? new Date(matchInfoResponse?.date_start)
         : null;
