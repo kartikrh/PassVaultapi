@@ -2088,7 +2088,7 @@ const competitionImportService = async (data, fastify, request) => {
       if (checkCommentary?.venueId) {
         const getVenueData = global.tblVenues.find(item => item.id === checkCommentary.venueId);
         if (getVenueData?.tpId !== match?.venue?.venue_id) {
-          const getNewVenueData = global.tblVenues.find(item => item.tpId === match?.venue?.venue_id);
+          const getNewVenueData = global.tblVenues.find(item => item.tpId === Number(match?.venue?.venue_id));
           request.body = {
             ...checkCommentary,
             venueId: getNewVenueData?.id

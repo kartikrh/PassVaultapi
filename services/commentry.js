@@ -23908,7 +23908,7 @@ const matchImportService = async (data, fastify, request = null) => {
       if (checkCommentary?.venueId) {
         const getVenueData = global.tblVenues.find(item => item.id === checkCommentary.venueId);
         if (getVenueData?.tpId !== matchInfoResponse?.venue?.venue_id) {
-          const getNewVenueData = global.tblVenues.find(item => item.tpId === matchInfoResponse?.venue?.venue_id);
+          const getNewVenueData = global.tblVenues.find(item => item.tpId === Number(matchInfoResponse?.venue?.venue_id));
           request.body = {
             ...checkCommentary,
             venueId: getNewVenueData?.id
