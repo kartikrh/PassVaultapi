@@ -145,6 +145,7 @@ const {
   EntityCommentaryStatus,
   getInningWiseDataFromEntity,
   getCombineFullScore,
+  getOverCalculation,
 } = require("../utilities");
 const {
   getAllPlayersByTeamIdQuery,
@@ -26324,35 +26325,99 @@ const getCommentaryScoreStatsService = async (request, fastify) => {
   const team2 = global.tblTeams.find(t => t.teamId === getCommentary.team2Id);
 
   const overData = global.tblOvers.filter(to => to.commentaryId === commentaryId && to.isDelete === false);
+  const matchType = global.tblMatchTypes.find(mt => mt.matchTypeId === getCommentary.matchTypeId);
+  const getTotalBalls = getOverCalculation(matchType?.oversPerInings);
+
+  const isInRange = (over, range) => {
+    if (!range) return false;
+    const [start, end] = range;
+    return over >= start && over <= end;
+  };
+
+  const formatScore = s => `${s.runs}/${s.wickets}`;
 
   const stats = overData.reduce((acc, p) => {
     const key = p.teamId === getCommentary.team1Id ? "team1" : "team2";
 
+    const over = Number(p.over);
+
     acc[key].totalFour += p.totalFour || 0;
     acc[key].totalSix += p.totalSix || 0;
     acc[key].dotBall += p.dotBall || 0;
-    acc[key].extraRuns += ((p?.totalWideRun || 0) + (p?.totalNoBallRun || 0) + (p?.totalByesRun || 0) + (p?.totalLegByesRun || 0));
+
+    const extraRuns =
+      (p.totalWideRun || 0) +
+      (p.totalNoBallRun || 0) +
+      (p.totalByesRun || 0) +
+      (p.totalLegByesRun || 0);
+
+    acc[key].extraRuns += extraRuns;
+
+    if (getTotalBalls && over != null) {
+      const ranges = [
+        { key: 'powerPlayScore', range: getTotalBalls.powerplay },
+        { key: 'middleOverScore', range: getTotalBalls.middle },
+        { key: 'deathOverScore', range: getTotalBalls.death }
+      ];
+
+      ranges.forEach(({ key: scoreKey, range }) => {
+        if (range && over >= range[0] && over <= range[1]) {
+          acc[key][scoreKey].runs += p.totalRun || 0;
+          acc[key][scoreKey].wickets += p.totalWicket || 0;
+        }
+      });
+    }
 
     return acc;
   }, {
-    team1: { totalFour: 0, totalSix: 0, dotBall: 0, extraRuns: 0 },
-    team2: { totalFour: 0, totalSix: 0, dotBall: 0, extraRuns: 0 }
+    team1: {
+      totalFour: 0,
+      totalSix: 0,
+      dotBall: 0,
+      extraRuns: 0,
+      powerPlayScore: { runs: 0, wickets: 0 },
+      middleOverScore: { runs: 0, wickets: 0 },
+      deathOverScore: { runs: 0, wickets: 0 }
+    },
+    team2: {
+      totalFour: 0,
+      totalSix: 0,
+      dotBall: 0,
+      extraRuns: 0,
+      powerPlayScore: { runs: 0, wickets: 0 },
+      middleOverScore: { runs: 0, wickets: 0 },
+      deathOverScore: { runs: 0, wickets: 0 }
+    }
   });
 
   stats.team1 = {
-    ...stats.team1,
-    boundaryRuns: (stats.team1.totalFour * 4) + (stats.team1.totalSix * 6),
+    teamId: team1?.teamId || null,
     teamName: team1?.teamName || "Team 1",
     teamShortName: team1?.teamShortName || "Team 1",
-    image: team1?.image || null
+    image: team1?.image || null,
+    powerPlayScore: formatScore(stats.team1.powerPlayScore),
+    middleOverScore: formatScore(stats.team1.middleOverScore),
+    deathOverScore: formatScore(stats.team1.deathOverScore),
+    totalSix: stats.team1.totalSix,
+    totalFour: stats.team1.totalFour,
+    boundaryRuns: (stats.team1.totalFour * 4) + (stats.team1.totalSix * 6),
+    dotBall: stats.team1.dotBall,
+    extraRuns: stats.team1.extraRuns
   }
 
   stats.team2 = {
-    ...stats.team2,
-    boundaryRuns: (stats.team2.totalFour * 4) + (stats.team2.totalSix * 6),
+    teamId: team2?.teamId || null,
     teamName: team2?.teamName || "Team 2",
     teamShortName: team2?.teamShortName || "Team 2",
-    image: team2?.image || null
+    image: team2?.image || null,
+    powerPlayScore: formatScore(stats.team2.powerPlayScore),
+    middleOverScore: formatScore(stats.team2.middleOverScore),
+    deathOverScore: formatScore(stats.team2.deathOverScore),
+    totalSix: stats.team2.totalSix,
+    totalFour: stats.team2.totalFour,
+    boundaryRuns: (stats.team2.totalFour * 4) + (stats.team2.totalSix * 6),
+    dotBall: stats.team2.dotBall,
+    extraRuns: stats.team2.extraRuns
   }
 
   return stats;
