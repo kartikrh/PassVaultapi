@@ -2413,6 +2413,7 @@ const normalizeCompetitionSeasonName = (competitionName) => {
 };
 
 const getOverCalculation = (totalOvers) => {
+  totalOvers = Number(totalOvers);
   if (!totalOvers) return null;
   if (totalOvers === 10) {
     return {
