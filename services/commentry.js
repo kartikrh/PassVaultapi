@@ -26326,6 +26326,10 @@ const getCommentaryScoreStatsService = async (request, fastify) => {
 
   const overData = global.tblOvers.filter(to => to.commentaryId === commentaryId && to.isDelete === false);
   const matchType = global.tblMatchTypes.find(mt => mt.matchTypeId === getCommentary.matchTypeId);
+  const validMatchTypesForOverCalc = [10, 20, 50, 100];
+  if (!matchType || !matchType.oversPerInings || !validMatchTypesForOverCalc.includes(matchType.oversPerInings)) {
+    return null;
+  }
   const getTotalBalls = getOverCalculation(matchType?.oversPerInings);
 
   const isInRange = (over, range) => {
