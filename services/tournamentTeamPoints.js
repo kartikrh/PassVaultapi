@@ -624,8 +624,18 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
   let alltournamentTeamPoints = await getAllTournamentTeamPointsQuery(fastify);
   alltournamentTeamPoints = alltournamentTeamPoints.filter(item => item.competitionId === competitionId);
 
+  const getPointTable = global.tblCompetitions.find(item => item.competitionId === competitionId)?.isPointTable;
   let standings = result?.standing?.standings || [];
   if (standings.length === 0) {
+    if (getPointTable !== false) {
+      await saveCompetitionService({
+        ...request,
+        body: {
+          competitionId: competitionId,
+          isPointTable: false
+        }
+      }, fastify);
+    }
     standings = [{
       round: {
         order: 1,
@@ -647,6 +657,16 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
           }
         })
     }];
+  } else {
+    if (getPointTable !== true) {
+      await saveCompetitionService({
+        ...request,
+        body: {
+          competitionId: competitionId,
+          isPointTable: true
+        }
+      }, fastify);
+    }
   }
 
   const groupData = extractGroupDataFromArray(standings);
