@@ -626,12 +626,14 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
 
   let standings = result?.standing?.standings || [];
   if (standings.length === 0) {
-    standings = result?.rounds?.map(r => {
-      return {
-        round: r,
-        standings: teams.map(team => {
+    standings = [{
+      round: {
+        order: 1,
+        name: result?.abbr
+      },
+      standings: result?.teams?.map(team => {
           return {
-            team_id: team.tpId,
+            team_id: team.tid,
             played: 0,
             win: 0,
             loss: 0,
@@ -641,11 +643,10 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
             points: 0,
             quality: "false",
             eliminate: "false",
-            team: result?.teams?.find(t => t.tid === team.tpId)
+            team
           }
         })
-      }
-    });
+    }];
   }
 
   const groupData = extractGroupDataFromArray(standings);
