@@ -12908,19 +12908,27 @@ const cancelCommentaryService = async (request, fastify) => {
           request
         );
       });
-      const cData = await getMatchDataByCId(
-        {
-          commentaryId: commentaryId,
-        },
-        request,
-        fastify
-      );
-
+      // const cData = await getMatchDataByCId(
+      //   {
+      //     commentaryId: commentaryId,
+      //   },
+      //   request,
+      //   fastify
+      // );
+      
       callClientAPI(
+        // {
+        //   serviceType: ServiceType.clientAPI,
+        //   moduleType: APIEndpointModuleType.commentaryUpdate,
+        //   data: cData,
+        // },
         {
           serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
-          data: cData,
+          data: {
+            commentaryId: request.body.commentaryId,
+            type: "deleteEvent",
+          }
         },
         request,
         fastify
