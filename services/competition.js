@@ -1753,7 +1753,7 @@ const competitionImportService = async (data, fastify, request) => {
       endDate: entitySportCompetitionResponse?.dateend,
       tpId: entitySportCompetitionResponse?.cid,
       pythonId: pythonIdData?.id || null,
-      isPointTable: entitySportCompetitionResponse?.table === "1"
+      isPointTable: entitySportCompetitionResponse?.standing?.standings?.length === 0 ? false : true
     };
 
     if (competitionData.isPointTable) {
@@ -1826,6 +1826,10 @@ const competitionImportService = async (data, fastify, request) => {
 
     const esCompetitionType = CompetitionType[entitySportCompetitionResponse?.category?.toUpperCase()]
 
+    const isPointTable = checkCompetition?.isPointTable;
+
+    const esIsPointTable = entitySportCompetitionResponse?.standing?.standings?.length === 0 ? false : true;
+
     const updateData = {};
 
     if (esStart && (!localStart || esStart.getTime() !== localStart.getTime())) {
@@ -1858,6 +1862,10 @@ const competitionImportService = async (data, fastify, request) => {
 
     if (esCompetitionType && (!competitionType || esCompetitionType !== competitionType)) {
       updateData.type = esCompetitionType;
+    }
+
+    if (esIsPointTable && (!isPointTable || esIsPointTable !== isPointTable)) {
+      updateData.isPointTable = esIsPointTable;
     }
 
     if (Object.keys(updateData).length > 0) {

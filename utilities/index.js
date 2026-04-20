@@ -1729,7 +1729,6 @@ const extractGroupDataFromArray = (tournamentTamPoint) => {
     .map(group => ({
       groupId: group.round.order,
       groupName: group.round.name.trim(),
-      roundId: group.round.rid,
       standings: group.standings
         .filter(team => !nullTeamtpIds.includes(Number(team.team_id)))
         .map(team => ({

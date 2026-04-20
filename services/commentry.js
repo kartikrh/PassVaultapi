@@ -8765,7 +8765,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
   } else if (status == 4 || status == 11) {
     type = "completed";
   } else if (status == 10) {
-    type = "deleteEvent";
+    type = "cancelEvent";
   } else if (status == 1) {
     type = "scheduled";
   }
@@ -12908,19 +12908,27 @@ const cancelCommentaryService = async (request, fastify) => {
           request
         );
       });
-      const cData = await getMatchDataByCId(
-        {
-          commentaryId: commentaryId,
-        },
-        request,
-        fastify
-      );
-
+      // const cData = await getMatchDataByCId(
+      //   {
+      //     commentaryId: commentaryId,
+      //   },
+      //   request,
+      //   fastify
+      // );
+      
       callClientAPI(
+        // {
+        //   serviceType: ServiceType.clientAPI,
+        //   moduleType: APIEndpointModuleType.commentaryUpdate,
+        //   data: cData,
+        // },
         {
           serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
-          data: cData,
+          data: {
+            commentaryId: request.body.commentaryId,
+            type: "deleteEvent",
+          }
         },
         request,
         fastify
