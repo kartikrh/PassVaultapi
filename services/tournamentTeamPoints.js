@@ -611,16 +611,6 @@ const getAllTournamentTeamPointsService = async (request, fastify) => {
 };
 
 const addEditTournamentTeamPointDataService = async (result, competitionId, fastify = null, request = null) => {
-  const competitionRoundType = result?.rounds?.[0]?.type;
-  const isValidCompetitionRoundType = competitionRoundType === "series" || competitionRoundType === "group";
-  if (!isValidCompetitionRoundType) {
-    return true;
-  }
-
-  if (!result?.standing?.standings || result?.standing?.standings?.length === 0) {
-    return true;
-  }
-
   const entitySocketData = global.tblEntitySockets[0];
   const eventType = global.tblEventTypes.find((et) => et.eventType.toLowerCase() === 'Cricket'.toLowerCase());
 
@@ -634,7 +624,31 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
   let alltournamentTeamPoints = await getAllTournamentTeamPointsQuery(fastify);
   alltournamentTeamPoints = alltournamentTeamPoints.filter(item => item.competitionId === competitionId);
 
-  const groupData = extractGroupDataFromArray(result?.standing?.standings);
+  let standings = result?.standing?.standings || [];
+  if (standings.length === 0) {
+    standings = result?.rounds?.map(r => {
+      return {
+        round: r,
+        standings: teams.map(team => {
+          return {
+            team_id: team.tpId,
+            played: 0,
+            win: 0,
+            loss: 0,
+            draw: 0,
+            nr: 0,
+            netrr: 0,
+            points: 0,
+            quality: "false",
+            eliminate: "false",
+            team: result?.teams?.find(t => t.tid === team.tpId)
+          }
+        })
+      }
+    });
+  }
+
+  const groupData = extractGroupDataFromArray(standings);
 
   for (let gd of groupData) {
     for (let s of gd?.standings || []) {
