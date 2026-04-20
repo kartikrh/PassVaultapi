@@ -1662,7 +1662,8 @@ const competitionImportService = async (data, fastify, request) => {
               ...request,
               body: {
                 id: checkVenue.id,
-                tpId: venue?.venue_id || null
+                tpId: venue?.venue_id || null,
+                isActive: checkVenue.isActive
               }
             }, fastify);
             const index = global.tblVenues.findIndex(item => item.id === checkVenue.id);
@@ -2085,6 +2086,27 @@ const competitionImportService = async (data, fastify, request) => {
         global.tblCommentaryTeams = global.tblCommentaryTeams.filter(item => !(item.commentaryId === commentaryId && item.teamId === checkCommentary.team2Id));
       }
 
+      const getNewVenueData = global.tblVenues.find(item => item.tpId === Number(match?.venue?.venue_id));
+      if (getNewVenueData) {
+        const currentVenue = checkCommentary?.venueId ? global.tblVenues.find(item => item.id === checkCommentary.venueId) : null;
+        const shouldUpdate = !checkCommentary?.venueId || currentVenue?.tpId != match?.venue?.venue_id;
+        if (shouldUpdate) {
+          request.body = {
+            ...checkCommentary,
+            venueId: getNewVenueData?.id
+          }
+          await updateCommentaryQuery(request, fastify);
+          const index = global.tblCommentaries.findIndex(tc => tc.commentaryId === commentaryId);
+          if (index !== -1) {
+            global.tblCommentaries[index] = {
+              ...global.tblCommentaries[index],
+              venueId: getNewVenueData?.id
+            };
+            checkCommentary = global.tblCommentaries[index];
+          }
+        }
+      }
+
       const esStart = match?.date_start
         ? new Date(match?.date_start)
         : null;
@@ -2276,7 +2298,8 @@ const competitionImportService = async (data, fastify, request) => {
           ...request,
           body: {
             id: checkCommentary.venueId,
-            ...updateVenueReportData
+            ...updateVenueReportData,
+            isActive: global.tblVenues[venueIndex].isActive
           }
         }, fastify);
       }
