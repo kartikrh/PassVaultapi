@@ -84,7 +84,8 @@ const createNewsService = async (request, fastify) => {
 
   // await handleSitemapUpdate(`news/${urlId}/${urlEndPoint}`)
 
-  if(data[0].isActive){
+  const now = Date.now();
+  if (data[0].isActive && data[0].startDate <= now && data[0].endDate >= now) {
     callClientAPI(
      {
         serviceType : ServiceType.clientAPI,
