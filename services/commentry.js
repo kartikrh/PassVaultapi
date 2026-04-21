@@ -25630,14 +25630,13 @@ const getAllCommentaryByCompetitionIdForClientService = async (request, fastify)
 const importCompetitionMatchService = async (fastify) => {
   const competitions = global.tblCompetitions.filter(tcp => tcp.isActive && [compStatus.fixture, compStatus.live].includes(tcp.commStatus) && tcp.tpId !== null);
   for (const comp of competitions) {
-    let entitySportCompetitionMatchesUrl = entitySportAPIEndPoint.getCompetitionMatchData.replace('{cid}', comp.tpId) + "?";
     let page = 1, totalPages = 1;
     let allCompetitionMatch = [];
     while (page <= totalPages) {
       const params = new URLSearchParams();
       params.append("paged", page);
       params.append("per_page", 50);
-      entitySportCompetitionMatchesUrl += `&${params.toString()}`;
+      const entitySportCompetitionMatchesUrl = `${entitySportAPIEndPoint.getCompetitionMatchData.replace('{cid}', comp.tpId)}?${params.toString()}`;
       const entitySportCompetitionMatch = await callEntitySportAPI(entitySportCompetitionMatchesUrl, null, fastify);
 
       let entitySportCompetitionMatchResponse = entitySportCompetitionMatch?.data?.result;
@@ -25655,7 +25654,6 @@ const importCompetitionMatchService = async (fastify) => {
         allCompetitionMatch.push(...entitySportCompetitionMatchResponse?.items);
       }
       page++;
-      entitySportCompetitionMatchesUrl = `/competition/${comp.tpId}/matches?`;
     }
 
     if (allCompetitionMatch.length === 0) {
