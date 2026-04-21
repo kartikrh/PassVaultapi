@@ -53,7 +53,7 @@ const saveVideoLibraryService = async (request, fastify) => {
   global.tblVideoLibrary.push(saveData);
 
   const now = Date.now();
-  if (saveData.isActive && saveData.startDate <= now && saveData.endDate >= now) {
+  if (saveData.isActive && saveData.from <= now && saveData.to >= now) {
     callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
@@ -184,8 +184,8 @@ const allVideoLibraryService = async (request) => {
     videos = videos.filter(item => {
       if (item.isPermanent) return true;
 
-      const start = new Date(item.startDate).getTime();
-      const end = new Date(item.endDate).getTime();
+      const start = new Date(item.from).getTime();
+      const end = new Date(item.to).getTime();
 
       return start <= now && end >= now;
     });
