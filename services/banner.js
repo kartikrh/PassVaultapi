@@ -111,6 +111,12 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       imagePath: validateBannerId.imagePath,
       deviceTypeId: Number(request.body.deviceTypeId) || validateBannerId?.deviceTypeId,
       whitelabelId: Number(request.body.whitelabelId) || validateBannerId?.whitelabelId,
+      displayOrder: request.body.hasOwnProperty("displayOrder")
+      ? request.body.displayOrder
+      : (
+          validateBannerId.displayOrder ??
+          Math.max(...global.tblBanner.map(item => item.displayOrder || 0)) + 1
+        )
     };
     if (request.body.image && request.body.image.length) {
       const imgName = generateImageName({

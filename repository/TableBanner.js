@@ -1,7 +1,6 @@
 const { errorLogger } = require("../utilities/logger");
 
 const getAllBannerQuery = async (fastify) => {
-  
   return await fastify.db.query(
     `select 
             tb."wrId" as "bannerId",
@@ -55,7 +54,7 @@ const insertBannerQuery = async (data, request, fastify) => {
           )
           VALUES (
             $1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10, $11, $12, $13,
-            (SELECT COALESCE(MAX("wrDisplayOrder"), 0) + 1 FROM "tblBanner")
+            (SELECT COALESCE(MAX("wrDisplayOrder"), 0) + 1 FROM "tblBanner" WHERE "wrIsDeleted" = false)
           )
           RETURNING *
         )
@@ -130,7 +129,8 @@ const updateBannerQuery = async (data, request, fastify) => {
                 "wrViewerCount" = $11,
                 "wrImagePath" = $12,
                 "wrDeviceTypeId" = $13,
-                "wrWhitelabelId" = $14
+                "wrWhitelabelId" = $14,
+                "wrDisplayOrder" = $15
                 where "wrId" = $9
             `,
       {
@@ -148,7 +148,8 @@ const updateBannerQuery = async (data, request, fastify) => {
           data.viewerCount || null,
           data.imagePath,
           data?.deviceTypeId ?? null,
-          data?.whitelabelId ?? null
+          data?.whitelabelId ?? null,
+          data.displayOrder
         ],
       }
     );
@@ -231,7 +232,7 @@ const bannerViewersCountQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
-const updateDisplayOrderBannerQuery = async (body, request, fastify) => {
+const updateDisplayOrderBannerQuery = async (data, request, fastify) => {
   try {
     return await fastify.db.query(
       `
