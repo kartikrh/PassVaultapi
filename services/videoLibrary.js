@@ -52,24 +52,27 @@ const saveVideoLibraryService = async (request, fastify) => {
   );
   global.tblVideoLibrary.push(saveData);
 
-  callClientAPI(
-    {
-       serviceType: ServiceType.clientAPI,
-       moduleType: APIEndpointModuleType.updateSeoModule,
-       data: {
-         module: 'videoLibrary',
-         type: "add",
-         data: saveData
-       }
-    }, request, fastify)
-   .catch((err) => {
-     errorLogger(
-       fastify,
-       err.message,
-       "services/videoLibrary.js/saveVideoLibraryService - callClientAPI",
-       request
-     );
-   });
+  const now = Date.now();
+  if (saveData.isActive && saveData.startDate <= now && saveData.endDate >= now) {
+    callClientAPI(
+      {
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.updateSeoModule,
+        data: {
+          module: 'videoLibrary',
+          type: "add",
+          data: saveData
+        }
+      }, request, fastify)
+      .catch((err) => {
+        errorLogger(
+          fastify,
+          err.message,
+          "services/videoLibrary.js/saveVideoLibraryService - callClientAPI",
+          request
+        );
+      });
+  }
 
   return saveData;
 };
@@ -171,10 +174,21 @@ const editVideoLibraryService = async (request, fastify, data) => {
 };
 
 const allVideoLibraryService = async (request) => {
-  const { isActive } = request.body; 
+  const { isActive, dateTime } = request.body; 
   let videos = global.tblVideoLibrary;
   if (isActive !== undefined) {
     videos = videos.filter(v => v.isActive === Boolean(isActive));
+  }
+  if (dateTime) {
+    const now = Date.now();
+    videos = videos.filter(item => {
+      if (item.isPermanent) return true;
+
+      const start = new Date(item.startDate).getTime();
+      const end = new Date(item.endDate).getTime();
+
+      return start <= now && end >= now;
+    });
   }
   return videos;
 };
