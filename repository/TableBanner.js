@@ -18,11 +18,13 @@ const getAllBannerQuery = async (fastify) => {
             tb."wrDeviceTypeId" as "deviceTypeId",
             tb."wrWhitelabelId" as "whitelabelId",
             ed."wrValue" as "encryptWhitelabelId",
-            twl."wrDomain" as "domain"
+            twl."wrDomain" as "domain",
+            tb."wrDisplayOrder" as "displayOrder"
         from "tblBanner" tb
         LEFT JOIN "tblWhitelabel" twl ON tb."wrWhitelabelId" = twl."wrId"
         LEFT JOIN "tblEncryptedData" ed ON tb."wrWhitelabelId" = ed."wrKey"
         where tb."wrIsDeleted" = false
+        order by tb."wrDisplayOrder" ASC
         `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -33,45 +35,53 @@ const insertBannerQuery = async (data, request, fastify) => {
   try {
     const result = await fastify.db.query(
       `
-                with insert_data as (
-                    insert into "tblBanner" (
-                        "wrTitle",
-                        "wrBannerType",
-                        "wrImage",
-                        "wrIsActive",
-                        "wrIsPermanent",
-                        "wrStartDate",
-                        "wrEndDate",
-                        "wrCreatedBy",
-                        "wrCreatedDate",
-                        "wrLink",
-                        "wrViewerCount",
-                        "wrImagePath",
-                        "wrDeviceTypeId",
-                        "wrWhitelabelId"
-                    )
-                values ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10, $11, $12, $13) returning *
-                )
-                select 
-                    tb."wrId" as "bannerId",
-                    tb."wrTitle" as "title",
-                    tb."wrBannerType" as "bannerType",
-                    tb."wrImage" as "image",
-                    tb."wrIsActive" as "isActive",
-                    tb."wrIsPermanent" as "isPermanent",
-                    tb."wrStartDate" as "startDate",
-                    tb."wrEndDate" as "endDate",
-                    tb."wrLink" as "link",
-                    tb."wrViewerCount" as "viewerCount",
-                    tb."wrImagePath" as "imagePath",
-                    tb."wrDeviceTypeId" as "deviceTypeId",
-                    tb."wrWhitelabelId" as "whitelabelId",
-                    ed."wrValue" as "encryptWhitelabelId",
-                    twl."wrDomain" as "domain"
-                from "insert_data" as tb
-                LEFT JOIN "tblWhitelabel" twl ON tb."wrWhitelabelId" = twl."wrId"
-                LEFT JOIN "tblEncryptedData" ed ON tb."wrWhitelabelId" = ed."wrKey"
-            `,
+        WITH insert_data AS (
+          INSERT INTO "tblBanner" (
+            "wrTitle",
+            "wrBannerType",
+            "wrImage",
+            "wrIsActive",
+            "wrIsPermanent",
+            "wrStartDate",
+            "wrEndDate",
+            "wrCreatedBy",
+            "wrCreatedDate",
+            "wrLink",
+            "wrViewerCount",
+            "wrImagePath",
+            "wrDeviceTypeId",
+            "wrWhitelabelId",
+            "wrDisplayOrder"
+          )
+          VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10, $11, $12, $13,
+            (SELECT COALESCE(MAX("wrDisplayOrder"), 0) + 1 FROM "tblBanner")
+          )
+          RETURNING *
+        )
+        SELECT 
+          tb."wrId" as "bannerId",
+          tb."wrTitle" as "title",
+          tb."wrBannerType" as "bannerType",
+          tb."wrImage" as "image",
+          tb."wrIsActive" as "isActive",
+          tb."wrIsPermanent" as "isPermanent",
+          tb."wrStartDate" as "startDate",
+          tb."wrEndDate" as "endDate",
+          tb."wrLink" as "link",
+          tb."wrViewerCount" as "viewerCount",
+          tb."wrImagePath" as "imagePath",
+          tb."wrDeviceTypeId" as "deviceTypeId",
+          tb."wrWhitelabelId" as "whitelabelId",
+          ed."wrValue" as "encryptWhitelabelId",
+          twl."wrDomain" as "domain",
+          tb."wrDisplayOrder" as "displayOrder"
+        FROM "insert_data" as tb
+        LEFT JOIN "tblWhitelabel" twl 
+          ON tb."wrWhitelabelId" = twl."wrId"
+        LEFT JOIN "tblEncryptedData" ed 
+          ON tb."wrWhitelabelId" = ed."wrKey"
+      `,
       {
         type: fastify.db.QueryTypes.INSERT,
         bind: [
@@ -220,12 +230,35 @@ const bannerViewersCountQuery = async (data, request, fastify) => {
     );
     throw new Error(err.message);
   }
-}
+};
+const updateDisplayOrderBannerQuery = async (body, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+      UPDATE "tblBanner"
+      SET "wrDisplayOrder" = $1
+      WHERE "wrId" = $2
+      `,
+      {
+        bind: [body.displayOrder, body.bannerId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableBanner/updateDisplayOrderBannerQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   insertBannerQuery,
   updateBannerQuery,
   deleteBannerQuery,
   getAllBannerQuery,
   activeInactiveBannerQuery,
-  bannerViewersCountQuery
+  bannerViewersCountQuery,
+  updateDisplayOrderBannerQuery
 };

@@ -1,4 +1,4 @@
-const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveBannerQuery } = require("../repository/TableBanner");
+const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveBannerQuery, updateDisplayOrderBannerQuery } = require("../repository/TableBanner");
   const {
     generateImageName,
     storeImageOnServer,
@@ -237,11 +237,27 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
   
     return `Banner updated successfully`;
   };
+
+  const updateDisplayOrderBannerService = async (request, fastify) => {
+  for (const item of request.body) {
+    await updateDisplayOrderBannerQuery(item, request, fastify);
+    let index = global.tblBanner.findIndex(
+      (elem) => elem.bannerId === item.bannerId
+    );
+    if (index !== -1) {
+      global.tblBanner[index].displayOrder = item.displayOrder;
+    }
+  }
+
+  return `Display order updated successfully`;
+};
+
   module.exports = {
     getAllBannerService,
     bannerByIdService,
     saveBannerService,
     deleteBannerService,
     activeInactiveBannerService,
+    updateDisplayOrderBannerService
   };
   

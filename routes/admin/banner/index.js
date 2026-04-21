@@ -8,6 +8,7 @@ const {
     saveBanner,
     deleteBanner,
     activeInactiveBanner,
+    updateDisplayOrderBanner
   } = require("../../../controller/users/admin/banner");
   const { Banner } = require("../../../swaggerSchema/groupTags/schema");
   
@@ -81,4 +82,17 @@ const {
       ],
       handler: (request, reply) => activeInactiveBanner(request, reply, fastify),
     });
-  };
+
+  fastify.post("/updateDisplayOrder", {
+    schema: Banner.updateDisplayOrder.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Banner",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => updateDisplayOrderBanner(request, reply, fastify),
+  });
+};
