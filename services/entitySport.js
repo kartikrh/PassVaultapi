@@ -2636,10 +2636,11 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               playersMap[commFielder2].isInPlayingEleven = true;
             }
           }
-
+          let wicketBatter = playerTpIdObj[c.wicket_batsman_id]
           if(
             w.wicketType != null && batsmanId == w.batterId && 
-            w.fieldPlayerId == commFielder1Id && w.fieldPlayer2Id == commFielder2Id
+            w.fieldPlayerId == commFielder1Id && w.fieldPlayer2Id == commFielder2Id &&
+            wicketBatter.isBatterOut == true
           ) {
             continue;
           }
@@ -2703,7 +2704,6 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               onStrike: onStrikeData,
               isBatterRetir: null,
               wicketType: null,
-              bowlerId: null,
               bowlerId: null,
               fielderId1: null,
               fielderId2: null,
@@ -6118,7 +6118,7 @@ const updateBatterIdService = async (data, request, fastify) => {
     if (!entityBatterData ||
       (
         entityBatterData.balls_faced == 0 &&
-        (!entityBatterData.how_out || entityBatterData.how_out == "Not out") &&
+        (!entityBatterData.how_out || entityBatterData?.how_out?.toLowerCase().trim() === "not out") &&
         !entityBatterData.dismissal
       )
     ) {
@@ -6134,6 +6134,12 @@ const updateBatterIdService = async (data, request, fastify) => {
         batDotBall: null,
         batsmanStrikeRate: null,
         isInPlayingEleven: true,
+        isBatterOut: false,
+        isBatterRetir: null,
+        wicketType: undoType === 1 ? null : oldBatterData?.wicketType,
+        bowlerId: undoType === 1 ? null : oldBatterData?.bowlerId,
+        fielderId1: undoType === 1 ? null : oldBatterData?.fielderId1,
+        fielderId2: undoType === 1 ? null : oldBatterData?.fielderId2,
         type: "update",
       };
       commPlayers.push(playerData);
@@ -6150,6 +6156,12 @@ const updateBatterIdService = async (data, request, fastify) => {
         batDotBall: entityBatterData?.run0 ?? 0,
         batsmanStrikeRate: parseFloat(entityBatterData.strike_rate) ?? "0",
         isInPlayingEleven: true,
+        isBatterOut: entityBatterData?.how_out?.toLowerCase().trim() === "not out" ? false : true,
+        isBatterRetir: null,
+        wicketType: undoType === 1 ? null : oldBatterData?.wicketType,
+        bowlerId: undoType === 1 ? null : oldBatterData?.bowlerId,
+        fielderId1: undoType === 1 ? null : oldBatterData?.fielderId1,
+        fielderId2: undoType === 1 ? null : oldBatterData?.fielderId2,
         type: "update",
       };
       commPlayers.push(playerData);
