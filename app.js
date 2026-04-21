@@ -6,7 +6,7 @@ const fsequelize = require("fastify-sequelize");
 const dbPg = require("./sequelize/config/config")();
 const swagger = require("@fastify/swagger");
 const swaggerUi = require("@fastify/swagger-ui");
-const { fetchAllDataFromDb } = require("./utilities/fetchAllData");
+const { fetchAllDataFromDb, newFetchAllDataFromDb } = require("./utilities/fetchAllData");
 const { registerCronJobs } = require("./utilities/cronJobs");
 // const fetchAllData = require("./utilities/fetchAllData");
 const { Server } = require("socket.io"); // Import Socket.IO
@@ -123,7 +123,8 @@ module.exports = async function (fastify, opts) {
       setImmediate(async () => {
         try {
           // await featchData(fastify);
-          await fetchAllDataFromDb(fastify);
+          // await fetchAllDataFromDb(fastify);
+          await newFetchAllDataFromDb(fastify);
           // await disConnectClientSocketQuery(fastify);
           // await disConnectEntitySocketQuery(fastify);
           await startSignalR(fastify);
