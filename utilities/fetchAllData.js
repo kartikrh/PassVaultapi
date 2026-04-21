@@ -117,7 +117,6 @@ const { getAllCompetitionStatisticsQuery } = require("../repository/TableCompeti
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
-    console.log("start: old")
     const getAllTabs = await getAllActiveInactiveTabsQuery(fastify);
     const getAllRoles = await getAllRolesQuery(fastify);
     const getAllBlocks = await getAllBlocksQuery(fastify);
@@ -345,7 +344,6 @@ const fetchAllDataFromDb = async (fastify, reply) => {
 
     console.log("Okkkk - Data Synchronized successfully");
     global.isAllDataLoadedInGlobal = true;
-    console.log("end: old")
 
     if (reply) {
       
