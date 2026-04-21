@@ -371,6 +371,331 @@ const fetchAllDataFromDb = async (fastify, reply) => {
   }
 };
 
+const newFetchAllDataFromDb = async (fastify, reply) => {
+  try {
+    console.log("start: new")
+    const [
+      getAllTabs,
+      getAllRoles,
+      getAllBlocks,
+      getAllMenuTypes,
+      getAllMenuItemTypes,
+      getAllPageFormats,
+      getAllPages,
+      getAllPageAliases,
+      getAllMenuItems,
+      getAllEventTypes,
+      getAllTeams,
+      getAllPaneltyRuns,
+      getAllPlayers,
+      getAllMatchType,
+      getAllUsers,
+      getAllPlayerTypes,
+      getAllBowlingTypes,
+      getAllConfigs,
+      getAllDevices,
+      getAllCommentary,
+      getAllCompetition,
+      getAllEvents,
+      getAllCommentaryPlayer,
+      getAllCommentaryTeams,
+      getAllCommentaryBallByBall,
+      getAllOvers,
+      getAllDisplayStatus,
+      getAllCommentaryWicket,
+      getAllCommentaryPartnership,
+      getAllNews,
+      getAllBanners,
+      getAllAdvertise,
+      getAllActivityLog,
+      getAllsubScribesDomain,
+      getAllsubScribesSubDomain,
+      getAllMatchTypePredictor,
+      getAllEventMarkets,
+      getAllMarketTemplate,
+      getAllMarketTypeCategories,
+      getAllMarketType,
+      getAllMarketTemplateRunner,
+      getAllVendors,
+      getAllVendorIps,
+      getAllClientSocket,
+      getAllAPIs,
+      getAllAPIEndpoints,
+      getAllTeamCompetition,
+      getAllNotification,
+      getAllTemplate,
+      getAllOtp,
+      getAllClient,
+      getAllMailSettings,
+      marketOddBallByBall,
+      thirdPartyApis,
+      clientVideos,
+      getAllAward,
+      getAllCommentaryAward,
+      getAllSocialMediaData,
+      getAllArticlesData,
+      getAllTournamentTeamPlayers,
+      getAllGroups,
+      getAllPlayerBattingHistory,
+      getAllPlayerBowlingHistory,
+      getAllCommentaryPlayersBattingHistory,
+      getAllCommentaryPlayersBowlingHistroy,
+      getAllPhotoLibrary,
+      getAllLibraryImages,
+      getAllVideoLibrary,
+      getAllShotTypes,
+      getAllTips,
+      getAllMatchTypeBowling,
+      getAllCountryCodes,
+      getAllCardType,
+      getAllPackages,
+      getAllWhitelabels,
+      getAllNotificationConfigs,
+      getHideEvents,
+      getAllVenues,
+      getAllWeatherData,
+      getAllPitchConditions,
+      getAllPythonAPIs,
+      getAllMatchTypeTemplates,
+      getAllOverTypes,
+      getAllICCRanking,
+      getAllEntitySockets,
+      getAllCompetitionStatisticsType,
+      getAllCompetitionStatistics
+    ] = await Promise.all([
+      getAllActiveInactiveTabsQuery(fastify),
+      getAllRolesQuery(fastify),
+      getAllBlocksQuery(fastify),
+      getAllMenuTypesQuery(fastify),
+      getAllMenuItemTypesQuery(fastify),
+      allPageFormateQuery(fastify),
+      allPageQuery(fastify),
+      allPageAliases(fastify),
+      allMenuItemsQuery(fastify),
+      allEventTypesQuery(fastify),
+      allTeamQuery(fastify),
+      allPaneltyRunsQuery(fastify),
+      getAllPlayersQuery(fastify),
+      getAllMatchTypeQuery(fastify),
+      getAllUsersQuery(fastify),
+      getAllPlayerTypeQuery(fastify),
+      getAllBowlingTypeQuery(fastify),
+      getAllCongigQuery(fastify),
+      getAllDevicesQuery(fastify),
+      getAllCommentaryQuery(fastify),
+      getAllCompititionQuery(fastify),
+      getAllEventsQuery(fastify),
+      getAllCommentaryPlayerQuery(fastify),
+      getAllCommentaryTeamsQuery(fastify),
+      getAllCommentaryBallByBallQuery(fastify),
+      getAllOversQuery(fastify),
+      allDisplayStatusesQuery(fastify),
+      getAllCommentaryWicketQuery(fastify),
+      getAllCommentaryPartnershipQuery(fastify),
+      getAllNewsQuery(fastify),
+      getAllBannerQuery(fastify),
+      getAllAdvertiseQuery(fastify),
+      getAllActivityLogQuery(fastify),
+      getAllSubScribesDomainQuery(fastify),
+      getAllSubScribesSubDomainQuery(fastify),
+      getAllMatchTypePredictorQuery(fastify),
+      getAllEventMarketsQuery(fastify),
+      getAllMarketTemplateQuery(fastify),
+      getAllMarketTypeCategoriesQuery(fastify),
+      getAllMarketTypeQuery(fastify),
+      getAllMarketTemplateRunnerQuery(fastify),
+      getAllVendorsQuery(fastify),
+      getAllVendorIpsQuery(fastify),
+      getAllClientSocketQuery(fastify),
+      getAllAPI(fastify),
+      getAllAPIEndPoint(fastify),
+      getAllTeamCompetitionQuery(fastify),
+      getAllNotificationQuery(fastify),
+      getAllTemplateQuery(fastify),
+      getAllOtpQuery(fastify),
+      getAllClientQuery(fastify),
+      allMailSettingsQuery(fastify),
+      getAllMarketOddsBallByBall(fastify),
+      allThirdPartyApisQuery(fastify),
+      allClientVideoQuery(fastify),
+      getAllAwardQuery(fastify),
+      getAllCommentaryAwardQuery(fastify),
+      allSocialMediaQuery(fastify),
+      getAllArticlesQuery(fastify),
+      getAllTournamentTeamPlayersQuery(fastify),
+      getAllGroupsQuery(fastify),
+      getAllBattingHistory(fastify),
+      getAllBowlingHistory(fastify),
+      getAllCommentaryBattingHistory(fastify),
+      getAllCommentaryBowlingHistory(fastify),
+      getAllPhotoLibraryQuery(fastify),
+      getAllLibraryImagesQuery(fastify),
+      getAllVideoLibraryQuery(fastify),
+      getAllShotTypesQuery(fastify),
+      getAllTipsQuery(fastify),
+      getAllMatchTypeBowlingPredictor(fastify),
+      getAllCountryCodesQuery(fastify),
+      getAllCardTypeQuery(fastify),
+      getAllPackagesQuery(fastify),
+      getAllWhitelabelsQuery(fastify),
+      getAllNotificationConfigsQuery(fastify),
+      getAllHideEventsQuery(fastify),
+      getAllVenuesQuery(fastify),
+      getAllWeathersQuery(fastify),
+      getAllPitchConditionsQuery(fastify),
+      getAllPythonAPIsQuery(fastify),
+      getAllMatchTypeTemplatesQuery(fastify),
+      getAllOverTypesQuery(fastify),
+      getAllICCRankingQuery(fastify),
+      getAllEntitySocketsQuery(fastify),
+      getAllCompetitionStatisticsTypeQuery(fastify),
+      getAllCompetitionStatisticsQuery(fastify)
+    ]);
+    const allCommentaryIds = getAllCommentary.map((item) => item.commentaryId);
+    let getAllEventMarketsV2 = [];
+    let getEventMarketRunnerV2 = [];
+    if (allCommentaryIds.length > 0) {
+        getAllEventMarketsV2 = await getAllEventMarketsV2Query(fastify, allCommentaryIds.join(", "));
+        if (getAllEventMarketsV2.length > 0) {
+          const eventMarketIds = getAllEventMarketsV2.map((item) => item.eventMarketId);
+          
+          if (eventMarketIds.length > 0) {
+              getEventMarketRunnerV2 = await getAllMarketRunnersQuery(fastify, eventMarketIds.join(", "));
+          }
+        }
+    }
+    // const getAllEventMarketsV2 = await getAllEventMarketsV2Query(fastify, 
+    //   getAllCommentary.map((item) => item.commentaryId).join(", ")
+    // );
+    // const getEventMarketRunnerV2 = await getAllMarketRunnersQuery(fastify, 
+    //   getAllEventMarketsV2.map((item) => item.eventMarketId).join(", ")
+    // );
+
+    global.tblTabs = getAllTabs;
+    global.tblRoles = getAllRoles;
+    global.tblBlocks = getAllBlocks;
+    global.tblMenuTypes = getAllMenuTypes;
+    global.tblMenuItemTypes = getAllMenuItemTypes;
+    global.tblPageFormats = getAllPageFormats;
+    global.tblPages = getAllPages;
+    global.tblPageAliases = getAllPageAliases;
+    global.tblMenuItems = getAllMenuItems;
+    global.tblEventTypes = getAllEventTypes;
+    global.tblTeams = getAllTeams;
+    global.tblPaneltyRuns = getAllPaneltyRuns;
+    global.tblPlayers = getAllPlayers;
+    global.tblMatchTypes = getAllMatchType;
+    global.tblUsers = getAllUsers;
+    global.tblPlayerTypes = getAllPlayerTypes;
+    global.tblBowlingTypes = getAllBowlingTypes;
+    global.tblConfigs = getAllConfigs;
+    global.tblDevices = getAllDevices;
+    global.tblCompetitions = getAllCompetition;
+    global.tblEvents = getAllEvents;
+    global.tblDisplayStatus = getAllDisplayStatus;
+    global.tblCommentaries = getAllCommentary;
+    global.tblCommentaryTeams = getAllCommentaryTeams;
+    global.tblCommentaryPlayers = getAllCommentaryPlayer;
+    global.tblCommentaryBallByBall = getAllCommentaryBallByBall;
+    global.tblOvers = getAllOvers;
+    global.tblCommentaryWicket = getAllCommentaryWicket;
+    global.tblCommentaryPartnership = getAllCommentaryPartnership;
+    global.tblNews = getAllNews;
+    global.tblSubScribesDomain = getAllsubScribesDomain;
+    global.tblSubScribesSubDomain = getAllsubScribesSubDomain;
+    global.tblMatchTypePredictor = getAllMatchTypePredictor;
+    global.tblMarketTemplate = getAllMarketTemplate;
+    global.tblEventMarkets = getAllEventMarkets;
+    global.tblMarketTypeCategories = getAllMarketTypeCategories;
+    global.tblMarketTypes = getAllMarketType;
+    global.tblMarketTemplateRunners = getAllMarketTemplateRunner;
+    global.tblVendors = getAllVendors;
+    global.tblVendorIp = getAllVendorIps;
+    global.tblClientSocket = getAllClientSocket;
+    global.tblActivityLogs = getAllActivityLog;
+    global.tblBanner = getAllBanners;
+    global.tblAdvertise = getAllAdvertise;
+    global.tblAPIs = getAllAPIs;
+    global.tblAPIEndpoints = getAllAPIEndpoints;
+    global.tblTeamCompetition = getAllTeamCompetition;
+    global.tblNotifications = getAllNotification;
+    global.tblTemplate = getAllTemplate;
+    global.tblOtp = getAllOtp;
+    global.tblClient = getAllClient;
+    global.tblMailSettings = getAllMailSettings;
+    global.tblMarketOddsBallByBall = marketOddBallByBall;
+    global.tblThirdPartyApis = thirdPartyApis;
+    global.tblClientVideos = clientVideos;
+    global.tblAwards = getAllAward;
+    global.tblCommentaryAwards = getAllCommentaryAward;
+    global.tblSocialMedia = getAllSocialMediaData;
+    global.tblArticles = getAllArticlesData;
+    global.tblTournamentTeamPlayers = getAllTournamentTeamPlayers;
+    global.tblEventMarketsV1 = [];
+    global.tblGroups = getAllGroups;
+    global.tblPlayersBattingHistory = getAllPlayerBattingHistory;
+    global.tblPlayersBowlingHistory = getAllPlayerBowlingHistory;
+    global.tblCommPlayerBatHist = getAllCommentaryPlayersBattingHistory;
+    global.tblCommPlayerBowlHist = getAllCommentaryPlayersBowlingHistroy;
+    global.tblPhotoLibrary = getAllPhotoLibrary;
+    global.tblLibraryImages = getAllLibraryImages;
+    global.tblVideoLibrary = getAllVideoLibrary;
+    global.tblShotType = getAllShotTypes;
+    global.tblTips = getAllTips;
+    global.tblEventMarketsV2 = getAllEventMarketsV2;
+    global.tblMarketRunnerV2 = getEventMarketRunnerV2;
+    global.tblMatchTypeBowlingTypePredictor = getAllMatchTypeBowling;
+    global.tblCountryCodes = getAllCountryCodes;
+    global.tblCardType = getAllCardType;
+    global.tblPackages = getAllPackages;
+    global.tblWhitelabels = getAllWhitelabels;
+    global.tblNotificationConfig = getAllNotificationConfigs;
+    global.tblHideEvents = getHideEvents;
+    global.tblVenues = getAllVenues;
+    global.tblWeather = getAllWeatherData;
+    global.tblPitchConditions = getAllPitchConditions;
+    global.tblPythonAPI = getAllPythonAPIs;
+    global.tblMatchTypeTemplates = getAllMatchTypeTemplates;
+    global.tblOverTypes = getAllOverTypes;
+    global.tblICCRanking = getAllICCRanking;
+    global.tblEntitySockets = getAllEntitySockets;
+    global.tblCompetitionStatisticsType = getAllCompetitionStatisticsType;
+    global.tblCompetitionStatistics = getAllCompetitionStatistics;
+
+    // global.responseLogs = responseLogs;
+    // global.thirdPartyAPILogs = thirdPartyAPILogs;
+    // global.predictorAPILogs = predictorAPILogs;
+    // global.commentaryLogs = commentaryLogs;
+    // global.errorLogs = errorLogs
+
+    console.log("Okkkk - Data Synchronized successfully");
+    global.isAllDataLoadedInGlobal = true;
+    console.log("end: new")
+
+    if (reply) {
+      
+      reply.status(200).send({
+        status: 200,
+        message: "Data fetched successfully",
+      });
+    }
+  } catch (error) {
+    console.log("error in fetchAllDataFromDb", error.message,error);
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> utilities/fetchAllData.js/fetchDataFromDb",
+      null
+    );
+    if (reply) {
+      reply.status(200).send({
+        status: 200,
+        error: error.message,
+      });
+    }
+  }
+};
+
 const FetchingCommentariesDataFromCron = async (fastify) => {
   try {
     let last7Days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -939,4 +1264,4 @@ const loadEnityDataOnGlobal = async (request, fastify, reply) => {
 };
 
 
-module.exports = { fetchAllDataFromDb, FetchingCommentariesDataFromCron, panelLoadDataByEnum, upcomingCommentaries, loadEnityDataOnGlobal };
+module.exports = { fetchAllDataFromDb, FetchingCommentariesDataFromCron, panelLoadDataByEnum, upcomingCommentaries, loadEnityDataOnGlobal, newFetchAllDataFromDb };
