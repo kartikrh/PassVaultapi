@@ -83,7 +83,7 @@ const {
       handler: (request, reply) => activeInactiveBanner(request, reply, fastify),
     });
 
-  fastify.post("/updateDisplayOrder", {
+  fastify.post("/changeDisplayOrder", {
     schema: Banner.updateDisplayOrder.schema,
     preHandler: [
       (request, reply) => authorize(request, reply, fastify),
