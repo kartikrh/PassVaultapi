@@ -10,11 +10,28 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
   // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
   
   const getAllBannerService = async (request, fastify) => {
-    const { isActive } = request.body;
-    if (isActive == undefined) {
-      return global.tblBanner;
+    let data = global.tblBanner
+    const { isActive , isPermanent , startDate, endDate} = request.body;
+    if(isActive != undefined){
+      data = data.filter((i)=> i.isActive == isActive)
     }
-    return global.tblBanner.filter((item) => item.isActive === isActive);
+    if(isPermanent != undefined){
+      data = data.filter((i)=> i.isPermanent == isPermanent)
+    }
+    if(startDate &&  endDate){
+      const start = new Date(startDate).getTime();
+      const end = new Date(endDate).getTime();
+
+      data = data.filter(item => {
+        if (item.isPermanent) return false; // optional
+        
+        const stDate = new Date(item.startDate).getTime();
+        const enDate = new Date(item.endDate).getTime();
+
+        return stDate <= end && enDate >= start;
+      });
+    }
+    return data;
   };
   
   const bannerByIdService = async (request, fastify) => {
