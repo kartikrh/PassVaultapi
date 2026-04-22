@@ -1,4 +1,4 @@
-const { matchTypesEntity, matchStatusEntity, entityCompetition } = require("../utilities")
+const { matchTypesEntity, matchStatusEntity, entityCompetition, commentaryStatus } = require("../utilities")
 const { getUserListQuery } = require("../repository/TableUser");
 
 const matchStatusDataService = async (request) =>{
@@ -17,9 +17,23 @@ const getUserListService = async (request, fastify)=>{
     let result = await getUserListQuery(request, fastify);
     return result;
 }
+const getCommentaryListService = async (request, fastify) => {
+    let result = global.tblCommentaries.filter(item =>
+        ![commentaryStatus.COMPLETED, commentaryStatus.CANCELLED, commentaryStatus.ABANDONED].includes(item.commentaryStatus)
+    ).map(item => {
+        return {
+            commentaryId: item.commentaryId,
+            eventName: item.eventName,
+            eventRefId: item.eventRefId,
+            eventDate: item.eventDate,
+        };
+    });
+    return result;
+}
 module.exports = {
     matchStatusDataService,
     matchTypeDataService,
     compStatusDataService,
     getUserListService,
+    getCommentaryListService,
 }
