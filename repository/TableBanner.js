@@ -241,7 +241,7 @@ const updateDisplayOrderBannerQuery = async (data, request, fastify) => {
       WHERE "wrId" = $2
       `,
       {
-        bind: [body.displayOrder, body.bannerId],
+        bind: [data.displayOrder, data.bannerId],
       }
     );
   } catch (err) {
