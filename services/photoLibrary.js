@@ -9,6 +9,7 @@ const {
   isDefaultChangeQuery,
   isDefaultFalseQuery,
   updatePhotoLibraryStatusQuery,
+  updatePhotoLibraryDisplayOrderQuery,
 } = require("../repository/TablePhotoLibrary");
 const {
   generateImageName,
@@ -67,6 +68,9 @@ const editPhotoLibraryService = async (request, fastify, data) => {
     startDate: request.body.startDate ?? validateId.startDate,
     endDate: request.body.endDate ?? validateId.endDate,
     isActive: request.body.isActive ?? validateId.isActive,
+    commentaryId: request.body.commentaryId ?? validateId.commentaryId,
+    displayOrder: request.body.displayOrder ?? validateId.displayOrder, 
+    whitelabelId: request.body.whitelabelId ?? validateId.whitelabelId, 
     photoLibraryId: parseInt(request.body.photoLibraryId, 10),
   };
 
@@ -81,7 +85,7 @@ const editPhotoLibraryService = async (request, fastify, data) => {
   );
 
   if (index != -1) {
-    global.tblPhotoLibrary[index] = modifiedData[0];
+    global.tblPhotoLibrary[index] = modifiedData;
   }
 
   callClientAPI(
@@ -91,7 +95,7 @@ const editPhotoLibraryService = async (request, fastify, data) => {
        data: {
          module: 'photoLibrary',
          type: "update",
-         data: modifiedData[0]
+         data: modifiedData
        }
     }, request, fastify)
    .catch((err) => {
@@ -103,7 +107,7 @@ const editPhotoLibraryService = async (request, fastify, data) => {
      );
    });
 
-  return modifiedData[0];
+  return modifiedData;
 };
 
 const saveLibraryImageService = async (request, fastify, data) => {
@@ -507,6 +511,19 @@ const updatePhotoLibraryStatusService = async (request, fastify) => {
   };
 };
 
+const updatePhotoLibraryDisplayOrderService = async (request, fastify) => {
+  for (const item of request.body) {
+    await updatePhotoLibraryDisplayOrderQuery(item, fastify, request);
+    const index = global.tblPhotoLibrary.findIndex(
+      (library) => library.photoLibraryId === item.photoLibraryId
+    );
+    if (index !== -1) {
+      global.tblPhotoLibrary[index].displayOrder = item.displayOrder;
+    }
+  }
+  return "Photo library display order updated successfully";
+};
+
 module.exports = {
   allPhotoLibraryService,
   getAllLibraryImagesService,
@@ -520,4 +537,5 @@ module.exports = {
   updateDisplayOrderService,
   updateIsDefultService,
   updatePhotoLibraryStatusService,
+  updatePhotoLibraryDisplayOrderService,
 };

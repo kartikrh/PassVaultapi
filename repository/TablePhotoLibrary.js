@@ -36,19 +36,28 @@ const { errorLogger } = require("../utilities/logger");
 
 const getAllPhotoLibraryQuery = async (fastify) => {
   return await fastify.db.query(
-    `SELECT 
-        "wrPhotoLibraryId" AS "photoLibraryId",
-        "wrTitle" AS "title",
-        "wrSEO" AS "SEO",
-        "wrDescription" AS "description",
-        "wrIsPermanent" AS "isPermanent",
-        "wrStartDate" AS "startDate",
-        "wrEndDate" AS "endDate",
-        "wrIsActive" AS "isActive"
-      FROM "tblPhotoLibrary"
-      ORDER BY "wrPhotoLibraryId" ASC
-      ;`,
-    { type: fastify.db.QueryTypes.SELECT }
+    `SELECT
+        tpl."wrPhotoLibraryId" AS "photoLibraryId",
+        tpl."wrTitle" AS "title",
+        tpl."wrSEO" AS "SEO",
+        tpl."wrDescription" AS "description",
+        tpl."wrIsPermanent" AS "isPermanent",
+        tpl."wrStartDate" AS "startDate",
+        tpl."wrEndDate" AS "endDate",
+        tpl."wrIsActive" AS "isActive",
+        tpl."wrDisplayOrder" AS "displayOrder",
+        tpl."wrCommentaryId" AS "commentaryId",
+        tpl."wrWhitelabelId" AS "whitelabelId",
+        ed."wrValue" AS "encryptWhitelabelId",
+        twl."wrDomain" AS "domain"
+     FROM "tblPhotoLibrary" tpl
+     LEFT JOIN "tblWhitelabel" twl ON tpl."wrWhitelabelId" = twl."wrId"
+     LEFT JOIN "tblEncryptedData" ed ON tpl."wrWhitelabelId" = ed."wrKey"
+     WHERE tpl."wrIsDeleted" = false
+     ORDER BY tpl."wrPhotoLibraryId" ASC`,
+    {
+      type: fastify.db.QueryTypes.SELECT
+    }
   );
 };
 
@@ -75,23 +84,47 @@ const insertPhotoLibraryQuery = async (data, fastify, request) => {
     const result = await fastify.db.query(
       `WITH insert_data AS (
         INSERT INTO "tblPhotoLibrary" (
-        "wrTitle", "wrSEO", "wrDescription", "wrIsPermanent", "wrStartDate", "wrEndDate", "wrIsActive"
-        ) 
+          "wrTitle",
+          "wrSEO",
+          "wrDescription",
+          "wrIsPermanent",
+          "wrStartDate",
+          "wrEndDate",
+          "wrIsActive",
+          "wrDisplayOrder",
+          "wrCommentaryId",
+          "wrWhitelabelId"
+        )
         VALUES (
-          $1, $2, $3, $4, $5, $6, $7
-        ) 
+          $1, $2, $3, $4, $5, $6, $7,
+          (
+            SELECT COALESCE(MAX("wrDisplayOrder"), 0) + 1
+            FROM "tblPhotoLibrary"
+            WHERE "wrIsDeleted" = false
+          ),
+          $8, $9
+        )
         RETURNING *
-      )        
-      SELECT 
-        "wrPhotoLibraryId" AS "photoLibraryId",
-        "wrTitle" AS "title",
-        "wrSEO" AS "SEO",
-        "wrDescription" AS "description",
-        "wrIsPermanent" AS "isPermanent",
-        "wrStartDate" AS "startDate",
-        "wrEndDate" AS "endDate",
-        "wrIsActive" AS "isActive"
-      FROM insert_data;`,
+      )
+      SELECT
+        tpl."wrPhotoLibraryId" AS "photoLibraryId",
+        tpl."wrTitle" AS "title",
+        tpl."wrSEO" AS "SEO",
+        tpl."wrDescription" AS "description",
+        tpl."wrIsPermanent" AS "isPermanent",
+        tpl."wrStartDate" AS "startDate",
+        tpl."wrEndDate" AS "endDate",
+        tpl."wrIsActive" AS "isActive",
+        tpl."wrDisplayOrder" AS "displayOrder",
+        tpl."wrCommentaryId" AS "commentaryId",
+        tpl."wrWhitelabelId" AS "whitelabelId",
+        ed."wrValue" AS "encryptWhitelabelId",
+        twl."wrDomain" AS "domain"
+      FROM insert_data tpl
+      LEFT JOIN "tblWhitelabel" twl
+        ON tpl."wrWhitelabelId" = twl."wrId"
+      LEFT JOIN "tblEncryptedData" ed
+        ON tpl."wrWhitelabelId" = ed."wrKey";`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
@@ -101,7 +134,9 @@ const insertPhotoLibraryQuery = async (data, fastify, request) => {
           data.isPermanent || false,
           data.startDate || null,
           data.endDate || null,
-          data.isActive ?? false
+          data.isActive ?? false,
+          data.commentaryId || 0,
+          data.whitelabelId || null
         ],
       }
     );
@@ -120,30 +155,54 @@ const insertPhotoLibraryQuery = async (data, fastify, request) => {
 const updatePhotoLibraryQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
-      `UPDATE "tblPhotoLibrary" SET 
-        "wrTitle" = $1, "wrSEO" = $2, "wrDescription" = $3, "wrIsPermanent" = $4, "wrStartDate" = $5, "wrEndDate" = $6, "wrIsActive" = $7
-      WHERE "wrPhotoLibraryId" = $8
-      RETURNING 
-        "wrPhotoLibraryId" AS "photoLibraryId",
-        "wrTitle" AS "title",
-        "wrSEO" AS "SEO",
-        "wrDescription" AS "description",
-        "wrIsPermanent" AS "isPermanent",
-        "wrStartDate" AS "startDate",
-        "wrEndDate" AS "endDate",
-        "wrIsActive" AS "isActive"`,
+      `WITH update_data AS (
+          UPDATE "tblPhotoLibrary"
+          SET
+            "wrTitle" = $1,
+            "wrSEO" = $2,
+            "wrDescription" = $3,
+            "wrIsPermanent" = $4,
+            "wrStartDate" = $5,
+            "wrEndDate" = $6,
+            "wrIsActive" = $7,
+            "wrCommentaryId" = $8,
+            "wrDisplayOrder" = $9,
+            "wrWhitelabelId" = $10
+          WHERE "wrPhotoLibraryId" = $11
+          RETURNING *
+      )
+      SELECT
+        upd."wrPhotoLibraryId" AS "photoLibraryId",
+        upd."wrTitle" AS "title",
+        upd."wrSEO" AS "SEO",
+        upd."wrDescription" AS "description",
+        upd."wrIsPermanent" AS "isPermanent",
+        upd."wrStartDate" AS "startDate",
+        upd."wrEndDate" AS "endDate",
+        upd."wrIsActive" AS "isActive",
+        upd."wrDisplayOrder" AS "displayOrder",
+        upd."wrCommentaryId" AS "commentaryId",
+        upd."wrWhitelabelId" AS "whitelabelId",
+        ed."wrValue" AS "encryptWhitelabelId",
+        twl."wrDomain" AS "domain"
+      FROM update_data upd
+      LEFT JOIN "tblWhitelabel" twl ON upd."wrWhitelabelId" = twl."wrId"
+      LEFT JOIN "tblEncryptedData" ed ON upd."wrWhitelabelId" = ed."wrKey";`,
       {
-        type: fastify.db.QueryTypes.UPDATE,
+        type: fastify.db.QueryTypes.SELECT,
         bind: [
           data.title,
           data.SEO,
           data.description,
-          data.isPermanent || false,
-          data.startDate || null,
-          data.endDate || null,
-          data.isActive || false,
+          data.isPermanent ?? false,
+          data.startDate ?? null,
+          data.endDate ?? null,
+          data.isActive ?? false,
+          data.commentaryId ?? 0,
+          data.displayOrder ?? 0,
+          data.whitelabelId ?? null,
           data.photoLibraryId
-        ],
+        ]
       }
     );
     return result[0];
@@ -394,6 +453,31 @@ const updatePhotoLibraryStatusQuery = async (data, fastify, request) => {
   }
 };
 
+const updatePhotoLibraryDisplayOrderQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblPhotoLibrary"
+       SET "wrDisplayOrder" = $1
+       WHERE "wrPhotoLibraryId" = $2`,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [
+          data.displayOrder,
+          data.photoLibraryId
+        ],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePhotoLibrary.js/updatePhotoLibraryDisplayOrderQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllPhotoLibraryQuery,
   getAllLibraryImagesQuery,
@@ -407,4 +491,5 @@ module.exports = {
   isDefaultChangeQuery,
   isDefaultFalseQuery,
   updatePhotoLibraryStatusQuery,
+  updatePhotoLibraryDisplayOrderQuery,
 };
