@@ -274,6 +274,24 @@ const updateDisplayOrderService = async (request, fastify) => {
       global.tblVideoLibrary[index].displayOrder = item.displayOrder;
     }
   }
+  let allActiveData = global.tblVideoLibrary.filter(item => item.isActive == true);
+  callClientAPI({
+    serviceType: ServiceType.clientAPI,
+    moduleType: APIEndpointModuleType.updateSeoModule,
+    data: {
+      module: 'videoLibrary',
+      type: "changeDisplayOrder",
+      data: allActiveData
+    }
+  }, request, fastify)
+  .catch((err) => {
+    errorLogger(
+      fastify,
+      err.message,
+      "services/videoLibrary.js/deleteVideoLibraryQuery - callClientAPI",
+      request
+    );
+  });
 
   return `Display order updated successfully`;
 }
