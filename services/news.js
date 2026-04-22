@@ -15,13 +15,24 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
 
 const getAllNewsService = async (request, fastify) => {
-  const { isActive , type } = request.body;
+  const { isActive , type, dateTime } = request.body;
   let result = global.tblNews;
   if(isActive !== undefined){
     result = result.filter((item) => item.isActive === isActive);
   }
   if(type){
     result = result.filter((item) => item.type === type);
+  }
+  if (dateTime) {
+    const now = Date.now();
+    result = result.filter(item => {
+      if (item.isPermanent) return true;
+
+      const start = new Date(item.startDate).getTime();
+      const end = new Date(item.endDate).getTime();
+
+      return start <= now && end >= now;
+    });
   }
   return result;
 };
@@ -73,7 +84,8 @@ const createNewsService = async (request, fastify) => {
 
   // await handleSitemapUpdate(`news/${urlId}/${urlEndPoint}`)
 
-  if(data[0].isActive){
+  const now = Date.now();
+  if (data[0].isActive && data[0].startDate <= now && data[0].endDate >= now) {
     callClientAPI(
      {
         serviceType : ServiceType.clientAPI,

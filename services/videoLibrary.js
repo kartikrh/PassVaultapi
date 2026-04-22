@@ -3,6 +3,7 @@ const {
   updateVideoLibraryQuery,
   deleteVideoLibraryQuery,
   updateVideoLibraryStatusQuery,
+  updateDisplayOrder,
 } = require("../repository/TableVideoLibrary");
 const {
   generateImageName,
@@ -52,24 +53,27 @@ const saveVideoLibraryService = async (request, fastify) => {
   );
   global.tblVideoLibrary.push(saveData);
 
-  callClientAPI(
-    {
-       serviceType: ServiceType.clientAPI,
-       moduleType: APIEndpointModuleType.updateSeoModule,
-       data: {
-         module: 'videoLibrary',
-         type: "add",
-         data: saveData
-       }
-    }, request, fastify)
-   .catch((err) => {
-     errorLogger(
-       fastify,
-       err.message,
-       "services/videoLibrary.js/saveVideoLibraryService - callClientAPI",
-       request
-     );
-   });
+  const now = Date.now();
+  if (saveData.isActive && saveData.from <= now && saveData.to >= now) {
+    callClientAPI(
+      {
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.updateSeoModule,
+        data: {
+          module: 'videoLibrary',
+          type: "add",
+          data: saveData
+        }
+      }, request, fastify)
+      .catch((err) => {
+        errorLogger(
+          fastify,
+          err.message,
+          "services/videoLibrary.js/saveVideoLibraryService - callClientAPI",
+          request
+        );
+      });
+  }
 
   return saveData;
 };
@@ -126,6 +130,7 @@ const editVideoLibraryService = async (request, fastify, data) => {
     commentaryId: request.body.commentaryId ?? validateId.commentaryId,
     id: parseInt(request.body.id, 10),
     videoPath: request.body.videoPath ?? validateId.videoPath,
+    whitelabelId: request.body.whitelabelId ?? validateId.whitelabelId,
   };
   if(updateData.type === 2) {
     updateData.video = null
@@ -171,10 +176,24 @@ const editVideoLibraryService = async (request, fastify, data) => {
 };
 
 const allVideoLibraryService = async (request) => {
-  const { isActive } = request.body; 
+  const { isActive, dateTime, isPermanent } = request.body; 
   let videos = global.tblVideoLibrary;
   if (isActive !== undefined) {
     videos = videos.filter(v => v.isActive === Boolean(isActive));
+  }
+  if (isPermanent !== undefined) {
+    videos = videos.filter(v => v.isPermanent === Boolean(isPermanent));
+  }
+  if (dateTime) {
+    const now = Date.now();
+    videos = videos.filter(item => {
+      if (item.isPermanent) return true;
+
+      const start = new Date(item.from).getTime();
+      const end = new Date(item.to).getTime();
+
+      return start <= now && end >= now;
+    });
   }
   return videos;
 };
@@ -247,10 +266,23 @@ const updateVideoStatusService = async (request, fastify) => {
   return updatedVideo[0];
 };
 
+const updateDisplayOrderService = async (request, fastify) => {
+  for (const item of request.body) {
+    await updateDisplayOrder(item, request, fastify);
+    let index = global.tblVideoLibrary.findIndex((elem) => elem.id === item.id);
+    if (index !== -1) {
+      global.tblVideoLibrary[index].displayOrder = item.displayOrder;
+    }
+  }
+
+  return `Display order updated successfully`;
+}
+
 module.exports = {
   allVideoLibraryService,
   videoLibraryById,
   createVideoLibraryService,
   deleteVideoLibraryService,
   updateVideoStatusService,
+  updateDisplayOrderService,
 };

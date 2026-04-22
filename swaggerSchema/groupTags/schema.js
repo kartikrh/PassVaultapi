@@ -7104,6 +7104,24 @@ const Banner = {
       },
     },
   },
+  updateDisplayOrder: {
+    schema: {
+      tags: ["Banner"],
+      description: "update display order of banners",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            bannerId: { type: "integer" },
+            displayOrder: { type: "integer" }
+          },
+          required: ["bannerId", "displayOrder"]
+        }
+      }
+    }
+  },
 };
 
 const Advertise = {

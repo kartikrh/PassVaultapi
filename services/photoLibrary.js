@@ -26,24 +26,28 @@ const savePhotoLibraryService = async (request, fastify) => {
     request
   );
   global.tblPhotoLibrary.push(saveData);
-  callClientAPI(
-    {
-       serviceType: ServiceType.clientAPI,
-       moduleType: APIEndpointModuleType.updateSeoModule,
-       data: {
-         module: 'photoLibrary',
-         type: "add",
-         data: saveData
-       }
-    }, request, fastify)
-   .catch((err) => {
-     errorLogger(
-       fastify,
-       err.message,
-       "services/photoLibrary.js/savePhotoLibraryService - callClientAPI",
-       request
-     );
-   });
+
+  const now = Date.now();
+  if (saveData.isActive && saveData.startDate <= now && saveData.endDate >= now) {
+    callClientAPI(
+      {
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.updateSeoModule,
+        data: {
+          module: 'photoLibrary',
+          type: "add",
+          data: saveData
+        }
+      }, request, fastify)
+      .catch((err) => {
+        errorLogger(
+          fastify,
+          err.message,
+          "services/photoLibrary.js/savePhotoLibraryService - callClientAPI",
+          request
+        );
+      });
+  }
   return saveData;
 };
 
@@ -251,10 +255,21 @@ const editLibraryImageService = async (request, fastify, data) => {
 };
 
 const allPhotoLibraryService = async (request) => {
-  const { isActive } = request.body;
+  const { isActive, dateTime } = request.body;
   let data = global.tblPhotoLibrary;
   if (isActive !== undefined) {
     data = data.filter(p => p.isActive === isActive);
+  }
+  if (dateTime) {
+    const now = Date.now();
+    data = data.filter(item => {
+      if (item.isPermanent) return true;
+
+      const start = new Date(item.startDate).getTime();
+      const end = new Date(item.endDate).getTime();
+
+      return start <= now && end >= now;
+    });
   }
   return data;
 };

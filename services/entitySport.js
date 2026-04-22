@@ -2193,9 +2193,8 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               request,
               fastify
             );
-            global.tblCommentaryBallByBall.push(oball)
             oball.type = "create";
-            ballbyball.push(oball)
+            // ballbyball.push(oball)
             if(batters.length > 0) {
               const partRequestData = {
                 batters,
@@ -2209,8 +2208,11 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               const partnershipData = await upsertCommPartnershipService(partRequestData, fastify, request);
               if (partnershipData && partnershipData.length > 0) {
                 prtship.push(...partnershipData);
+                oball.commentaryPartnershipId = partnershipData[0].commentaryPartnershipId
               }
             }
+            global.tblCommentaryBallByBall.push(oball)
+            ballbyball.push(oball)
           } 
         }
         if(event =="overend"){
@@ -2508,9 +2510,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               fastify
           );
           // add ball to global variable
-          global.tblCommentaryBallByBall.push(oball)
           oball.type = "create";
-          ballbyball.push(oball);
 
           if (batters.length > 0) {
             const partRequestData = {
@@ -2526,8 +2526,12 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             const partnershipData = await upsertCommPartnershipService(partRequestData, fastify, request);
             if (partnershipData && partnershipData.length > 0) {
               prtship.push(...partnershipData);
+              oball.commentaryPartnershipId = partnershipData[0].commentaryPartnershipId
             }
           }
+          global.tblCommentaryBallByBall.push(oball)
+          ballbyball.push(oball);
+
           const generateWicket1 = generateWicket({
             commentaryDetails : comDetails,
             currentWicket: wicketData,
@@ -2632,10 +2636,11 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               playersMap[commFielder2].isInPlayingEleven = true;
             }
           }
-
+          let wicketBatter = playerTpIdObj[c.wicket_batsman_id]
           if(
             w.wicketType != null && batsmanId == w.batterId && 
-            w.fieldPlayerId == commFielder1Id && w.fieldPlayer2Id == commFielder2Id
+            w.fieldPlayerId == commFielder1Id && w.fieldPlayer2Id == commFielder2Id &&
+            wicketBatter.isBatterOut == true
           ) {
             continue;
           }
@@ -2699,7 +2704,6 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               onStrike: onStrikeData,
               isBatterRetir: null,
               wicketType: null,
-              bowlerId: null,
               bowlerId: null,
               fielderId1: null,
               fielderId2: null,
@@ -3284,6 +3288,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           deleteOverIds,
           over,
           tpCurrentBall: c,
+          partnership : partnershipMap
         }
         const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
         if (undoResult) {
@@ -3345,6 +3350,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           deleteOverIds,
           over,
           tpCurrentBall: c,
+          partnership : partnershipMap
         }
         const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
         if (undoResult) {
@@ -3360,6 +3366,20 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           deleteOverIds.push(...undoResult.deleteOverIds);
           oversMap[overKey] = undoResult.over;
           Object.assign(playersMap, undoResult.playersMap);
+          if (undoResult?.partnership) {
+            for (const key in undoResult.partnership) {
+              if (!partnershipMap[key]) {
+                // ✅ new partnership
+                partnershipMap[key] = undoResult.partnership[key];
+              } else {
+                // update existing
+                partnershipMap[key] = {
+                  ...partnershipMap[key],
+                  ...undoResult.partnership[key]
+                };
+              }
+            }
+          }
         }
       }
     }
@@ -3406,6 +3426,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           deleteOverIds,
           over,
           tpCurrentBall: c,
+          partnership : partnershipMap
         }
         const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
         if (undoResult) {
@@ -3421,6 +3442,20 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           deleteOverIds.push(...undoResult.deleteOverIds);
           oversMap[overKey] = undoResult.over;
           Object.assign(playersMap, undoResult.playersMap);
+          if (undoResult?.partnership) {
+            for (const key in undoResult.partnership) {
+              if (!partnershipMap[key]) {
+                // ✅ new partnership
+                partnershipMap[key] = undoResult.partnership[key];
+              } else {
+                // ✅ update existing
+                partnershipMap[key] = {
+                  ...partnershipMap[key],
+                  ...undoResult.partnership[key]
+                };
+              }
+            }
+          }
         }
       }
     }
@@ -3468,6 +3503,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           deleteOverIds,
           over,
           tpCurrentBall: c,
+          partnership : partnershipMap
         }
         const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
         if (undoResult) {
@@ -3483,6 +3519,20 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           deleteOverIds.push(...undoResult.deleteOverIds);
           oversMap[overKey] = undoResult.over;
           Object.assign(playersMap, undoResult.playersMap);
+          if (undoResult?.partnership) {
+            for (const key in undoResult.partnership) {
+              if (!partnershipMap[key]) {
+                // ✅ new partnership
+                partnershipMap[key] = undoResult.partnership[key];
+              } else {
+                // ✅ update existing
+                partnershipMap[key] = {
+                  ...partnershipMap[key],
+                  ...undoResult.partnership[key]
+                };
+              }
+            }
+          }
         }
       }
     }
@@ -3530,6 +3580,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           deleteOverIds,
           over,
           tpCurrentBall: c,
+          partnership : partnershipMap
         }
         const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
         if (undoResult) {
@@ -3545,6 +3596,20 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           deleteOverIds.push(...undoResult.deleteOverIds);
           oversMap[overKey] = undoResult.over;
           Object.assign(playersMap, undoResult.playersMap);
+          if (undoResult?.partnership) {
+            for (const key in undoResult.partnership) {
+              if (!partnershipMap[key]) {
+                // ✅ new partnership
+                partnershipMap[key] = undoResult.partnership[key];
+              } else {
+                // ✅ update existing
+                partnershipMap[key] = {
+                  ...partnershipMap[key],
+                  ...undoResult.partnership[key]
+                };
+              }
+            }
+          }
         }
       }
     }
@@ -3592,6 +3657,7 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           deleteOverIds,
           over,
           tpCurrentBall: c,
+          partnership : partnershipMap
         }
         const undoResult = await applyUndoForAllTypes(requestData, b1, fastify, request);
         if (undoResult) {
@@ -3607,6 +3673,20 @@ const handleStoreBall = async (data, fastify, comDetails, request) => {
           deleteOverIds.push(...undoResult.deleteOverIds);
           oversMap[overKey] = undoResult.over;
           Object.assign(playersMap, undoResult.playersMap);
+          if (undoResult?.partnership) {
+            for (const key in undoResult.partnership) {
+              if (!partnershipMap[key]) {
+                // ✅ new partnership
+                partnershipMap[key] = undoResult.partnership[key];
+              } else {
+                // ✅ update existing
+                partnershipMap[key] = {
+                  ...partnershipMap[key],
+                  ...undoResult.partnership[key]
+                };
+              }
+            }
+          }
         }
       }
     }
@@ -3805,9 +3885,34 @@ const regularBallUndoService = async (data, fastify, request) => {
     deleteOverIds,
     over,
     tpCurrentBall,
+    partnership
   } = data;
 
+  // let partnership = {}
   let playersMap = {};
+  if ((commBall.ballFour === 1 || commBall.ballSix === 1) && 
+      commBall.commentaryPartnershipId != 0 &&
+      commBall.commentaryPartnershipId != null
+  ) {
+    const id = commBall.commentaryPartnershipId;
+    let existing = partnership[id]
+    if(!existing){
+      existing = global.tblCommentaryPartnership.find((i) => i.commentaryPartnershipId == commBall.commentaryPartnershipId)
+    }
+    if (existing) {
+      partnership[id] = {
+        ...existing,
+        totalFour:
+          commBall?.ballFour === 1
+            ? Math.max(0, existing.totalFour - 1)
+            : existing.totalFour,
+        totalSix:
+          commBall?.ballSix === 1
+            ? Math.max(0, existing.totalSix - 1)
+            : existing.totalSix
+      };
+    }
+  }
   let liveTeamScore = response?.live?.live_score?.runs;
   let live_score_data = response?.live?.live_score;
   let run = commBall.ballRun;
@@ -3863,6 +3968,7 @@ const regularBallUndoService = async (data, fastify, request) => {
     deleteOverIds,
     playersMap,
     battingTeam,
+    partnership
   }
 }
 
@@ -3877,9 +3983,33 @@ const wideBallUndoService = async (data, fastify, request) => {
     deleteOverIds,
     over,
     tpCurrentBall,
+    partnership
   } = data;
 
   let playersMap = {};
+  if ((commBall.ballFour === 1 || commBall.ballSix === 1) && 
+      commBall.commentaryPartnershipId != 0 &&
+      commBall.commentaryPartnershipId != null
+  ) {
+    const id = commBall.commentaryPartnershipId;
+    let existing = partnership[id]
+    if(!existing){
+      existing = global.tblCommentaryPartnership.find((i) => i.commentaryPartnershipId == commBall.commentaryPartnershipId)
+    }
+    if (existing) {
+      partnership[id] = {
+        ...existing,
+        totalFour:
+          commBall?.ballFour === 1
+            ? Math.max(0, existing.totalFour - 1)
+            : existing.totalFour,
+        totalSix:
+          commBall?.ballSix === 1
+            ? Math.max(0, existing.totalSix - 1)
+            : existing.totalSix
+      };
+    }
+  }
   let liveTeamScore = response?.live?.live_score?.runs;
   let live_score_data = response?.live?.live_score;
   let run = commBall?.ballExtraRun ?? 0;
@@ -3918,6 +4048,7 @@ const wideBallUndoService = async (data, fastify, request) => {
     deleteOverIds,
     playersMap,
     battingTeam,
+    partnership
   }
 }
 
@@ -3932,9 +4063,33 @@ const noballUndoService = async (data, fastify, request) => {
     deleteOverIds,
     over,
     tpCurrentBall,
+    partnership
   } = data;
 
   let playersMap = {};
+  if ((commBall.ballFour === 1 || commBall.ballSix === 1) && 
+      commBall.commentaryPartnershipId != 0 &&
+      commBall.commentaryPartnershipId != null
+  ) {
+    const id = commBall.commentaryPartnershipId;
+    let existing = partnership[id]
+    if(!existing){
+      existing = global.tblCommentaryPartnership.find((i) => i.commentaryPartnershipId == commBall.commentaryPartnershipId)
+    }
+    if (existing) {
+      partnership[id] = {
+        ...existing,
+        totalFour:
+          commBall?.ballFour === 1
+            ? Math.max(0, existing.totalFour - 1)
+            : existing.totalFour,
+        totalSix:
+          commBall?.ballSix === 1
+            ? Math.max(0, existing.totalSix - 1)
+            : existing.totalSix
+      };
+    }
+  }
   let liveTeamScore = response?.live?.live_score?.runs;
   let live_score_data = response?.live?.live_score;
   let run = commBall?.ballExtraRun ?? 0;
@@ -3972,6 +4127,7 @@ const noballUndoService = async (data, fastify, request) => {
     deleteOverIds,
     playersMap,
     battingTeam,
+    partnership
   }
 }
 
@@ -3986,9 +4142,33 @@ const legByeRunUndoService = async (data, fastify, request) => {
     deleteOverIds,
     over,
     tpCurrentBall,
+    partnership
   } = data;
 
   let playersMap = {};
+  if ((commBall.ballFour === 1 || commBall.ballSix === 1) && 
+      commBall.commentaryPartnershipId != 0 &&
+      commBall.commentaryPartnershipId != null
+  ) {
+    const id = commBall.commentaryPartnershipId;
+    let existing = partnership[id]
+    if(!existing){
+      existing = global.tblCommentaryPartnership.find((i) => i.commentaryPartnershipId == commBall.commentaryPartnershipId)
+    }
+    if (existing) {
+      partnership[id] = {
+        ...existing,
+        totalFour:
+          commBall?.ballFour === 1
+            ? Math.max(0, existing.totalFour - 1)
+            : existing.totalFour,
+        totalSix:
+          commBall?.ballSix === 1
+            ? Math.max(0, existing.totalSix - 1)
+            : existing.totalSix
+      };
+    }
+  }
   let liveTeamScore = response?.live?.live_score?.runs;
   let live_score_data = response?.live?.live_score;
   let run = commBall.ballRun;
@@ -4044,6 +4224,7 @@ const legByeRunUndoService = async (data, fastify, request) => {
     deleteOverIds,
     playersMap,
     battingTeam,
+    partnership
   }
 }
 
@@ -4058,9 +4239,33 @@ const byeRunUndoService = async (data, fastify, request) => {
     deleteOverIds,
     over,
     tpCurrentBall,
+    partnership
   } = data;
 
   let playersMap = {};
+  if ((commBall.ballFour === 1 || commBall.ballSix === 1) && 
+      commBall.commentaryPartnershipId != 0 &&
+      commBall.commentaryPartnershipId != null
+  ) {
+    const id = commBall.commentaryPartnershipId;
+    let existing = partnership[id]
+    if(!existing){
+      existing = global.tblCommentaryPartnership.find((i) => i.commentaryPartnershipId == commBall.commentaryPartnershipId)
+    }
+    if (existing) {
+      partnership[id] = {
+        ...existing,
+        totalFour:
+          commBall?.ballFour === 1
+            ? Math.max(0, existing.totalFour - 1)
+            : existing.totalFour,
+        totalSix:
+          commBall?.ballSix === 1
+            ? Math.max(0, existing.totalSix - 1)
+            : existing.totalSix
+      };
+    }
+  }
   let liveTeamScore = response?.live?.live_score?.runs;
   let live_score_data = response?.live?.live_score;
   let run = commBall.ballRun;
@@ -4116,6 +4321,7 @@ const byeRunUndoService = async (data, fastify, request) => {
     deleteOverIds,
     playersMap,
     battingTeam,
+    partnership
   } 
 }
 
@@ -4194,6 +4400,8 @@ const upsertCommPartnershipService = async (data, fastify, request) => {
       batter2Runs: cp2.runs,
       batter1Balls: cp1.balls,
       batter2Balls: cp2.balls,
+      totalFour : commBall.ballFour == 1 ? partExist.totalFour + 1 : partExist.totalFour,
+      totalSix : commBall.ballSix == 1 ? partExist.totalSix + 1 : partExist.totalSix,
       isActive: wicketBall === true ? false : true
     }
     //update partnersip in db
@@ -4206,6 +4414,7 @@ const upsertCommPartnershipService = async (data, fastify, request) => {
     })
   }
   else {
+    console.log("commBall",commBall)
     let cp1 = playerTpIdObj[part.batsmen[0].batsman_id]
     let cp2 = playerTpIdObj[part.batsmen[1].batsman_id]
     partnership = genEtPartnership({
@@ -4217,8 +4426,8 @@ const upsertCommPartnershipService = async (data, fastify, request) => {
         totalRuns: part.runs,
         totalBalls: part.balls,
         commentaryBallByBallId: commBall?.commentaryBallByBallId,
-        // totalSix ,
-        // totalFour,
+        totalFour  : commBall.ballFour == 1 ? 1 : 0,
+        totalSix : commBall.ballSix == 1 ? 1 : 0,
         batter1Runs: part.batsmen[0].runs,
         batter2Runs: part.batsmen[1].runs,
         batter1Balls: part.batsmen[0].balls,
@@ -5909,7 +6118,7 @@ const updateBatterIdService = async (data, request, fastify) => {
     if (!entityBatterData ||
       (
         entityBatterData.balls_faced == 0 &&
-        (!entityBatterData.how_out || entityBatterData.how_out == "Not out") &&
+        (!entityBatterData.how_out || entityBatterData?.how_out?.toLowerCase().trim() === "not out") &&
         !entityBatterData.dismissal
       )
     ) {
@@ -5925,6 +6134,12 @@ const updateBatterIdService = async (data, request, fastify) => {
         batDotBall: null,
         batsmanStrikeRate: null,
         isInPlayingEleven: true,
+        isBatterOut: false,
+        isBatterRetir: null,
+        wicketType: undoType === 1 ? null : oldBatterData?.wicketType,
+        bowlerId: undoType === 1 ? null : oldBatterData?.bowlerId,
+        fielderId1: undoType === 1 ? null : oldBatterData?.fielderId1,
+        fielderId2: undoType === 1 ? null : oldBatterData?.fielderId2,
         type: "update",
       };
       commPlayers.push(playerData);
@@ -5941,6 +6156,12 @@ const updateBatterIdService = async (data, request, fastify) => {
         batDotBall: entityBatterData?.run0 ?? 0,
         batsmanStrikeRate: parseFloat(entityBatterData.strike_rate) ?? "0",
         isInPlayingEleven: true,
+        isBatterOut: entityBatterData?.how_out?.toLowerCase().trim() === "not out" ? false : true,
+        isBatterRetir: null,
+        wicketType: undoType === 1 ? null : oldBatterData?.wicketType,
+        bowlerId: undoType === 1 ? null : oldBatterData?.bowlerId,
+        fielderId1: undoType === 1 ? null : oldBatterData?.fielderId1,
+        fielderId2: undoType === 1 ? null : oldBatterData?.fielderId2,
         type: "update",
       };
       commPlayers.push(playerData);
