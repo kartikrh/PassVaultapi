@@ -38,7 +38,7 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => updateVideoStatus(request, reply, fastify)
   });
 
-  fastify.post("/updateDisplayOrder", {
+  fastify.post("/changeDisplayOrder", {
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => updateDisplayOrder(request, reply, fastify)
   });
