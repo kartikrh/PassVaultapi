@@ -274,6 +274,27 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
     }
   }
 
+  let allActiveData = global.tblBanner.filter(item => item.isActive == true);
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.updateBanner,
+      data: {
+        type: "changeDisplayOrder",
+        data: allActiveData
+      }
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    errorLogger(
+      fastify,
+      err.message,
+      "API ERROR --> services/banner/deleteBannerService",
+      request
+    )
+  });
+
   return `Display order updated successfully`;
 };
 
