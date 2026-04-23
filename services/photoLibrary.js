@@ -75,7 +75,7 @@ const editPhotoLibraryService = async (request, fastify, data) => {
     whitelabelId: request.body.whitelabelId ?? validateId.whitelabelId, 
     photoLibraryId: parseInt(request.body.photoLibraryId, 10),
   };
-
+  
   const modifiedData = await updatePhotoLibraryQuery(
     updateData,
     fastify,
