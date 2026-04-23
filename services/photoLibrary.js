@@ -259,10 +259,26 @@ const editLibraryImageService = async (request, fastify, data) => {
 };
 
 const allPhotoLibraryService = async (request) => {
-  const { isActive, dateTime } = request.body;
+  const { isActive, dateTime , isPermanent , startDate , endDate } = request.body;
   let data = global.tblPhotoLibrary;
   if (isActive !== undefined) {
     data = data.filter(p => p.isActive === isActive);
+  }
+  if(isPermanent != undefined){
+    data = data.filter((i)=> i.isPermanent == Boolean(isPermanent))
+  }
+  if(startDate &&  endDate){
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+
+    data = data.filter(item => {
+      if (item.isPermanent) return false; // optional
+      
+      const stDate = new Date(item.startDate).getTime();
+      const enDate = new Date(item.endDate).getTime();
+
+      return stDate <= end && enDate >= start;
+    });
   }
   if (dateTime) {
     const now = Date.now();

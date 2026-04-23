@@ -17,11 +17,28 @@ const {
 const getAllAdvertiseService = async (request, fastify) => {
   const isActive = request.body?.isActive;
   const dateTime = request.body?.dateTime;
+  const { isPermanent , startDate, endDate} = request.body;
 
   let data = global.tblAdvertise;
 
   if (isActive != undefined) {
     data = data.filter((item) => item.isActive === isActive);
+  }
+  if(isPermanent != undefined){
+    data = data.filter((i)=> i.isPermanent == Boolean(isPermanent))
+  }
+  if(startDate &&  endDate){
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+
+    data = data.filter(item => {
+      if (item.isPermanent) return false; // optional
+      
+      const stDate = new Date(item.startDate).getTime();
+      const enDate = new Date(item.endDate).getTime();
+
+      return stDate <= end && enDate >= start;
+    });
   }
 
   if (dateTime) {

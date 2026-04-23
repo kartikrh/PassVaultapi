@@ -176,7 +176,7 @@ const editVideoLibraryService = async (request, fastify, data) => {
 };
 
 const allVideoLibraryService = async (request) => {
-  const { isActive, dateTime, isPermanent } = request.body; 
+  const { isActive, dateTime, isPermanent , startDate , endDate} = request.body; 
   let videos = global.tblVideoLibrary;
   if (isActive !== undefined) {
     videos = videos.filter(v => v.isActive === Boolean(isActive));
@@ -184,6 +184,20 @@ const allVideoLibraryService = async (request) => {
   if (isPermanent !== undefined) {
     videos = videos.filter(v => v.isPermanent === Boolean(isPermanent));
   }
+  if(startDate && endDate){
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+
+    videos = videos.filter(item => {
+      if (item.isPermanent) return false; // optional
+      
+      const stDate = new Date(item.from).getTime();
+      const enDate = new Date(item.to).getTime();
+
+      return stDate <= end && enDate >= start;
+    });
+  }
+
   if (dateTime) {
     const now = Date.now();
     videos = videos.filter(item => {
