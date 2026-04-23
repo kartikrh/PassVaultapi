@@ -16,6 +16,8 @@ const {
   storeImageOnServer,
   removeImageFromServer,
 } = require("../utilities/Images");
+const { commentaryStatus } = require("../utilities/index");
+const { errorLogger } = require("../utilities/logger");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
@@ -524,6 +526,26 @@ const updatePhotoLibraryDisplayOrderService = async (request, fastify) => {
   return "Photo library display order updated successfully";
 };
 
+const getPhotoLibraryCommentaryService = async () => {
+  const wrCommentaryStatus = [
+    commentaryStatus.COMPLETED,
+    commentaryStatus.CANCELLED,
+    commentaryStatus.ABANDONED
+  ];
+  let data = global.tblCommentaries
+    .filter(item =>
+      !wrCommentaryStatus.includes(Number(item.commentaryStatus))
+    )
+    .map(item => ({
+      commentaryId: item.commentaryId,
+      eventRefId: item.eventRefId,
+      eventName: item.eventName,
+      eventDate: item.eventDate,
+      commentaryStatus: item.commentaryStatus
+    }));
+  return data;
+};
+
 module.exports = {
   allPhotoLibraryService,
   getAllLibraryImagesService,
@@ -538,4 +560,5 @@ module.exports = {
   updateIsDefultService,
   updatePhotoLibraryStatusService,
   updatePhotoLibraryDisplayOrderService,
+  getPhotoLibraryCommentaryService,
 };
