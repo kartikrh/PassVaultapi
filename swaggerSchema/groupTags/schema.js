@@ -9441,8 +9441,8 @@ const PhotoLibrary = {
           SEO: { type: "string" },
           description: { type: "string" },
           isPermanent: { type: "boolean" },
-          startDate: { type: "string" },
-          endDate: { type: "string" },
+          startDate: { type: "string", format: "date-time", nullable: true },
+          endDate: { type: "string", format: "date-time", nullable: true }
         },
         required: ["photoLibraryId", "title"],
       },
