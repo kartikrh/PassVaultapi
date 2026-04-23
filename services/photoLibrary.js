@@ -67,15 +67,15 @@ const editPhotoLibraryService = async (request, fastify, data) => {
     SEO: request.body.SEO ?? validateId.SEO,
     description: request.body.description ?? validateId.description,
     isPermanent: request.body.isPermanent ?? validateId.isPermanent,
-    startDate: request.body.startDate == undefined ? validateId.startDate : request.body.startDate,
-    endDate: request.body.endDate == undefined ? validateId.endDate : request.body.endDate,
+    startDate: request.body.startDate ?? null,
+    endDate: request.body.endDate ?? null,
     isActive: request.body.isActive ?? validateId.isActive,
     commentaryId: request.body.commentaryId ?? validateId.commentaryId,
     displayOrder: request.body.displayOrder ?? validateId.displayOrder, 
     whitelabelId: request.body.whitelabelId ?? validateId.whitelabelId, 
     photoLibraryId: parseInt(request.body.photoLibraryId, 10),
   };
-
+  
   const modifiedData = await updatePhotoLibraryQuery(
     updateData,
     fastify,
