@@ -16,12 +16,27 @@ const {
 
 const getAllAdvertiseService = async (request, fastify) => {
   const isActive = request.body?.isActive;
+  const dateTime = request.body?.dateTime;
 
-  if (isActive === undefined) {
-    return global.tblAdvertise;
+  let data = global.tblAdvertise;
+
+  if (isActive != undefined) {
+    data = data.filter((item) => item.isActive === isActive);
   }
 
-  return global.tblAdvertise.filter((item) => item.isActive === isActive);
+  if (dateTime) {
+    const now = Date.now();
+    data = data.filter(item => {
+      if (item.isPermanent) return true;
+
+      const start = new Date(item.startDate).getTime();
+      const end = new Date(item.endDate).getTime();
+
+      return start <= now && end >= now;
+    });
+  }
+
+  return data;
 };
 
 const advertiseByIdService = async (request) => {
@@ -73,26 +88,29 @@ const createAdvertiseService = async (request, fastify) => {
     const newAdvertise = data[0];
     global.tblAdvertise.push(newAdvertise);
 
-    callClientAPI(
-      {
-        serviceType: ServiceType.clientAPI,
-        moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
-        data: {
-          type: ClientAPIType.Insert,
-          advertise: newAdvertise
-        }
-      },
-      request,
-      fastify
-    ).catch((err) => {
-      console.log("call client api console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/advertise.js/createAdvertiseService",
-        request
-      );
-    });
+    const now = Date.now();
+    if (newAdvertise.isActive && newAdvertise.startDate <= now && newAdvertise.endDate >= now) {
+      callClientAPI(
+        {
+          serviceType: ServiceType.clientAPI,
+          moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
+          data: {
+            type: ClientAPIType.Insert,
+            advertise: newAdvertise
+          }
+        },
+        request,
+        fastify
+      ).catch((err) => {
+        console.log("call client api console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/advertise.js/createAdvertiseService",
+          request
+        );
+      });
+    }
 
     return newAdvertise;
   } catch (err) {

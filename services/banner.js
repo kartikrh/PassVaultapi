@@ -10,27 +10,25 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
   // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
   
   const getAllBannerService = async (request, fastify) => {
-    let data = global.tblBanner
-    const { isActive , isPermanent , startDate, endDate} = request.body;
-    if(isActive != undefined){
-      data = data.filter((i)=> i.isActive == isActive)
-    }
-    if(isPermanent != undefined){
-      data = data.filter((i)=> i.isPermanent == isPermanent)
-    }
-    if(startDate &&  endDate){
-      const start = new Date(startDate).getTime();
-      const end = new Date(endDate).getTime();
+    const { isActive, dateTime } = request.body;
+    let data = global.tblBanner;
 
+    if (isActive != undefined) {
+      data = data.filter((item) => item.isActive === isActive);
+    }
+
+    if (dateTime) {
+      const now = Date.now();
       data = data.filter(item => {
-        if (item.isPermanent) return false; // optional
-        
-        const stDate = new Date(item.startDate).getTime();
-        const enDate = new Date(item.endDate).getTime();
+        if (item.isPermanent) return true;
 
-        return stDate <= end && enDate >= start;
+        const start = new Date(item.from).getTime();
+        const end = new Date(item.to).getTime();
+
+        return start <= now && end >= now;
       });
     }
+
     return data;
   };
   
@@ -74,22 +72,26 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       request,
       fastify
     );
-    callClientAPI(
-      {
-        serviceType : ServiceType.clientAPI,
-        moduleType : APIEndpointModuleType.updateBanner,
-        data : data
-      },
-      request,
-      fastify
-    ).catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "API ERROR --> services/banner/createBannerService",
-        request
-      )
-    });
+
+    const now = Date.now();
+    if (data.isActive && data.startDate <= now && data.endDate >= now) {
+      callClientAPI(
+        {
+          serviceType: ServiceType.clientAPI,
+          moduleType: APIEndpointModuleType.updateBanner,
+          data: data
+        },
+        request,
+        fastify
+      ).catch((err) => {
+        errorLogger(
+          fastify,
+          err.message,
+          "API ERROR --> services/banner/createBannerService",
+          request
+        )
+      });
+    }
   
     global.tblBanner.push(data[0]);
 
