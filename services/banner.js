@@ -10,11 +10,26 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
   // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
   
   const getAllBannerService = async (request, fastify) => {
-    const { isActive } = request.body;
-    if (isActive == undefined) {
-      return global.tblBanner;
+    const { isActive, dateTime } = request.body;
+    let data = global.tblBanner;
+
+    if (isActive != undefined) {
+      data = data.filter((item) => item.isActive === isActive);
     }
-    return global.tblBanner.filter((item) => item.isActive === isActive);
+
+    if (dateTime) {
+      const now = Date.now();
+      data = data.filter(item => {
+        if (item.isPermanent) return true;
+
+        const start = new Date(item.from).getTime();
+        const end = new Date(item.to).getTime();
+
+        return start <= now && end >= now;
+      });
+    }
+
+    return data;
   };
   
   const bannerByIdService = async (request, fastify) => {
@@ -57,22 +72,26 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       request,
       fastify
     );
-    callClientAPI(
-      {
-        serviceType : ServiceType.clientAPI,
-        moduleType : APIEndpointModuleType.updateBanner,
-        data : data
-      },
-      request,
-      fastify
-    ).catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "API ERROR --> services/banner/createBannerService",
-        request
-      )
-    });
+
+    const now = Date.now();
+    if (data.isActive && data.startDate <= now && data.endDate >= now) {
+      callClientAPI(
+        {
+          serviceType: ServiceType.clientAPI,
+          moduleType: APIEndpointModuleType.updateBanner,
+          data: data
+        },
+        request,
+        fastify
+      ).catch((err) => {
+        errorLogger(
+          fastify,
+          err.message,
+          "API ERROR --> services/banner/createBannerService",
+          request
+        )
+      });
+    }
   
     global.tblBanner.push(data[0]);
 
