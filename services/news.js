@@ -15,7 +15,7 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
 
 const getAllNewsService = async (request, fastify) => {
-  const { isActive , type, dateTime } = request.body;
+  const { isActive , type, dateTime , isPermanent, startDate, endDate } = request.body;
   let result = global.tblNews;
   if(isActive !== undefined){
     result = result.filter((item) => item.isActive === isActive);
@@ -23,6 +23,23 @@ const getAllNewsService = async (request, fastify) => {
   if(type){
     result = result.filter((item) => item.type === type);
   }
+  if(isPermanent != undefined){
+    result = result.filter((i)=> i.isPermanent == Boolean(isPermanent))
+  }
+  if(startDate &&  endDate){
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+
+    result = result.filter(item => {
+      if (item.isPermanent) return false; // optional
+      
+      const stDate = new Date(item.startDate).getTime();
+      const enDate = new Date(item.endDate).getTime();
+
+      return stDate <= end && enDate >= start;
+    });
+  }
+
   if (dateTime) {
     const now = Date.now();
     result = result.filter(item => {
