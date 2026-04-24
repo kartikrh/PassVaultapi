@@ -297,7 +297,10 @@ const updateDisplayOrderService = async (request, fastify) => {
       global.tblVideoLibrary[index].displayOrder = item.displayOrder;
     }
   }
-  let allActiveData = global.tblVideoLibrary.filter(item => item.isActive == true);
+  const now = Date.now();
+  let allActiveData = global.tblVideoLibrary.filter(item => 
+    item.isActive === true && (item.isPermanent === true || (item.from <= now && item.to >= now))
+  );
   callClientAPI({
     serviceType: ServiceType.clientAPI,
     moduleType: APIEndpointModuleType.updateSeoModule,
