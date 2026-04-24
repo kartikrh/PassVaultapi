@@ -9,6 +9,7 @@ const {
     saveAdvertise,
     deleteAdvertise,
     activeInactiveAdvertise,
+    changeDisplayOrder
 } = require("../../../controller/users/admin/advertise");
 
 const { Advertise } = require("../../../swaggerSchema/groupTags/schema");
@@ -70,6 +71,18 @@ module.exports = async (fastify, opts) => {
                 }),
         ],
         handler: (request, reply) => activeInactiveAdvertise(request, reply, fastify),
+    });
+
+    fastify.post("/changeDisplayOrder", {
+        preHandler: [
+            (request, reply) => authorize(request, reply, fastify),
+            (request, reply, done) =>
+                checkPermission(request, reply, fastify, {
+                    tabName: "Advertise",
+                    mode: "edit",
+                }),
+        ],
+        handler: (request, reply) => changeDisplayOrder(request, reply, fastify),
     });
 
 };

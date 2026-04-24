@@ -18,7 +18,8 @@ const getAllNewsQuery = async (fastify) => {
             "wrSEO" as "SEO",
             "wrType" as "type",
             "wrSEODescription" as "SEODescription",
-            "wrImagePath" as "imagePath"
+            "wrImagePath" as "imagePath",
+            "wrDisplayOrder" as "displayOrder"
         from "tblNews"
         where "wrIsDeleted" = false
         `,
@@ -48,9 +49,15 @@ const insertNewsQuery = async (data, request, fastify) => {
                         "wrSEO",
                         "wrSEODescription",
                         "wrType",
-                        "wrImagePath"
+                        "wrImagePath",
+                        "wrDisplayOrder"
                     )
-                values ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10, $11, $12, $13,$14, $15) returning *
+                values ( $1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10, $11, $12, $13, $14, $15, (
+                        SELECT COALESCE(MAX("wrDisplayOrder"), 0) + 1
+                        FROM "tblNews"
+                        WHERE "wrIsDeleted" = false
+                    )
+                  ) returning *
                 )
                 select 
                     "wrNewsId" as "newsId",
@@ -67,7 +74,8 @@ const insertNewsQuery = async (data, request, fastify) => {
                     "wrSEO" as "SEO",
                     "wrSEODescription" as "SEODescription",
                     "wrType" as "type",
-                    "wrImagePath" as "imagePath"
+                    "wrImagePath" as "imagePath",
+                    "wrDisplayOrder" as "displayOrder"
                 from "insert_data"
             `,
       {
@@ -122,7 +130,8 @@ const updateNewsQuery = async (data, request, fastify) => {
                 "wrSEO" = $13,
                 "wrSEODescription" = $14,
                 "wrType" = $15,
-                "wrImagePath" = $16
+                "wrImagePath" = $16,
+                "wrDisplayOrder" = $17
                 where "wrNewsId" = $9
             `,
       {
@@ -142,7 +151,9 @@ const updateNewsQuery = async (data, request, fastify) => {
           data.SEO || null,
           data.SEODescription || null,
           data.type,
-          data.imagePath
+          // Number(data.type ?? newsType.news),
+          data.imagePath,
+          data.displayOrder
         ],
       }
     );
@@ -227,11 +238,36 @@ const newsViewersCountQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 }
+
+const changeeDisplayOrderQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+      UPDATE "tblNews"
+      SET "wrDisplayOrder" = $1
+      WHERE "wrNewsId" = $2
+      `,
+      {
+        bind: [data.displayOrder, data.newsId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableNews/updateDisplayOrderNewsQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   insertNewsQuery,
   updateNewsQuery,
   deleteNewsQuery,
   getAllNewsQuery,
   activeInactiveNewsQuery,
-  newsViewersCountQuery
+  newsViewersCountQuery,
+  changeeDisplayOrderQuery
 };

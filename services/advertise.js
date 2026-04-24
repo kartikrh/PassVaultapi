@@ -3,6 +3,7 @@ const {
   updateAdvertiseQuery,
   deleteAdvertiseQuery,
   activeInactiveAdvertiseQuery,
+  changeDisplayOrderQuery
 } = require("../repository/TableAdvertise");
 const { ServiceType, APIEndpointModuleType, callClientAPI, ClientAPIType } = require("../utilities");
 
@@ -60,6 +61,7 @@ const saveAdvertiseService = async (request, fastify) => {
 
 const createAdvertiseService = async (request, fastify) => {
   try {
+       request.body.displayOrder = request.body.displayOrder ?? null;
     if (request.body.image && request.body.image.length) {
       const imgName = generateImageName({
         name: request.body.title,
@@ -142,6 +144,9 @@ const updateAdvertiseService = async (request, fastify) => {
     endDate: request.body.endDate || validateAdvertise.endDate,
     viewerCount: validateAdvertise.viewerCount,
     whitelabelId: Number(request.body.whitelabelId) || validateAdvertise.whitelabelId,
+    displayOrder: request.body.hasOwnProperty("displayOrder")
+  ? request.body.displayOrder
+  : validateAdvertise.displayOrder,
   };
 
   if (request.body.image && request.body.image.length) {
@@ -307,10 +312,28 @@ const activeInactiveAdvertiseService = async (request, fastify) => {
   return "Advertise updated successfully";
 };
 
+const changeDisplayOrderService = async (request, fastify) => {
+  for (const item of request.body) {
+    await changeDisplayOrderQuery(item, request, fastify);
+    let index = global.tblAdvertise.findIndex(
+      (elem) => elem.advertiseId === item.advertiseId
+    );
+    if (index !== -1) {
+      global.tblAdvertise[index].displayOrder = item.displayOrder;
+    }
+  }
+  let allActiveData = global.tblAdvertise.filter(
+    (item) => item.isActive == true
+  );
+ 
+  return true;
+};
+
 module.exports = {
   getAllAdvertiseService,
   advertiseByIdService,
   saveAdvertiseService,
   deleteAdvertiseService,
   activeInactiveAdvertiseService,
+  changeDisplayOrderService
 };

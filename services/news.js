@@ -3,6 +3,7 @@ const {
   deleteNewsQuery,
   updateNewsQuery,
   activeInactiveNewsQuery,
+  changeeDisplayOrderQuery
 } = require("../repository/TableNews");
 const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
 const {
@@ -71,6 +72,7 @@ const createNewsService = async (request, fastify) => {
   const data = await insertNewsQuery(
     {
       ...request.body,
+      type: request.body.type === "news" ? 1 : Number(request.body.type) || 0,
       userId: request.userTokenInfo.WrUserId,
     },
     request,
@@ -137,7 +139,13 @@ const updateNewsService = async (request, fastify) => {
     SEO : request.body.SEO || validateNewsId.SEO,
     type : request.body.type || validateNewsId.type,
     SEODescription : request.body.SEODescription || validateNewsId.SEODescription,
-    imagePath : validateNewsId.imagePath
+    imagePath : validateNewsId.imagePath,
+    displayOrder: request.body.hasOwnProperty("displayOrder")
+      ? request.body.displayOrder
+      : (
+          validateNewsId.displayOrder ??
+          Math.max(...global.tblNews.map(item => item.displayOrder || 0)) + 1
+        )
   };
   if (request.body.image && request.body.image.length) {
     const imgName = generateImageName({
@@ -262,10 +270,25 @@ const activeInactiveNewsService = async (request, fastify) => {
   
   return `News updated successfully`;
 };
+
+const changeDisplayOrderService = async (request, fastify) => {
+  for (const item of request.body) {
+    await changeeDisplayOrderQuery(item, request, fastify);
+    const index = global.tblNews.findIndex(
+      elem => elem.newsId === item.newsId
+    );
+    if (index !== -1) {
+      global.tblNews[index].displayOrder = item.displayOrder;
+    }
+  }
+  return "Display order updated successfully";
+};
+
 module.exports = {
   getAllNewsService,
   newsByIdService,
   saveNewsService,
   deleteNewsService,
   activeInactiveNewsService,
+  changeDisplayOrderService
 };
