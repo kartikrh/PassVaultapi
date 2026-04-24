@@ -93,7 +93,7 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
     if (data.isActive) {
       if (data.isPermanent) {
         sendToClient = true;
-      } else if (data.from <= now && data.to >= now) {
+      } else if (data.startDate <= now && data.endDate >= now) {
         sendToClient = true;
       }
     }

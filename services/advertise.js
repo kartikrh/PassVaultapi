@@ -110,7 +110,7 @@ const createAdvertiseService = async (request, fastify) => {
     if (newAdvertise.isActive) {
       if (newAdvertise.isPermanent) {
         sendToClient = true;
-      } else if (newAdvertise.from <= now && newAdvertise.to >= now) {
+      } else if (newAdvertise.startDate <= now && newAdvertise.endDate >= now) {
         sendToClient = true;
       }
     }

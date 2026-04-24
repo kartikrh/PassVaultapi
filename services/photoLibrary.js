@@ -35,7 +35,7 @@ const savePhotoLibraryService = async (request, fastify) => {
   if (saveData.isActive) {
     if (saveData.isPermanent) {
       sendToClient = true;
-    } else if (saveData.from <= now && saveData.to >= now) {
+    } else if (saveData.startDate <= now && saveData.endDate >= now) {
       sendToClient = true;
     }
   }
