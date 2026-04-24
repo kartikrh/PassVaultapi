@@ -54,7 +54,16 @@ const saveVideoLibraryService = async (request, fastify) => {
   global.tblVideoLibrary.push(saveData);
 
   const now = Date.now();
-  if (saveData.isActive && saveData.from <= now && saveData.to >= now) {
+  let sendToClient = false;
+  if (saveData.isActive) {
+    if (saveData.isPermanent) {
+      sendToClient = true;
+    } else if (saveData.from <= now && saveData.to >= now) {
+      sendToClient = true;
+    }
+  }
+
+  if (sendToClient) {
     callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
