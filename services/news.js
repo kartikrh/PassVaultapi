@@ -16,14 +16,31 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
 
 const getAllNewsService = async (request, fastify) => {
-  const { isActive , type, dateTime } = request.body;
+  const { isActive, type, dateTime, isPermanent, startDate, endDate } = request.body;
   let result = global.tblNews;
-  if(isActive !== undefined){
+  if (isActive !== undefined) {
     result = result.filter((item) => item.isActive === isActive);
   }
-  if(type){
+  if (type) {
     result = result.filter((item) => item.type === type);
   }
+  if (isPermanent != undefined) {
+    result = result.filter((i) => i.isPermanent == Boolean(isPermanent))
+  }
+  if (startDate && endDate) {
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+
+    result = result.filter(item => {
+      if (item.isPermanent) return false; // optional
+
+      const stDate = new Date(item.startDate).getTime();
+      const enDate = new Date(item.endDate).getTime();
+
+      return stDate <= end && enDate >= start;
+    });
+  }
+
   if (dateTime) {
     const now = Date.now();
     result = result.filter(item => {
@@ -80,32 +97,40 @@ const createNewsService = async (request, fastify) => {
   );
 
   global.tblNews.push(data[0]);
-  
+
   // const urlId = data[0].newsId;
   // const urlEndPoint = data[0].title.replace(/ /g, "-");
 
   // await handleSitemapUpdate(`news/${urlId}/${urlEndPoint}`)
 
   const now = Date.now();
-  if (data[0].isActive && data[0].startDate <= now && data[0].endDate >= now) {
+  let sendToClient = false;
+  if (data[0].isActive) {
+    if (data[0].isPermanent) {
+      sendToClient = true;
+    } else if (data[0].startDate <= now && data[0].endDate >= now) {
+      sendToClient = true;
+    }
+  }
+  if (sendToClient) {
     callClientAPI(
-     {
-        serviceType : ServiceType.clientAPI,
-        moduleType : APIEndpointModuleType.updateSeoModule,
-        data : {
-          module : 'news',
-          type : "add",
-          data : data[0]
+      {
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.updateSeoModule,
+        data: {
+          module: 'news',
+          type: "add",
+          data: data[0]
         }
-     }, request, fastify)
-    .catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "services/news.js/createNewsService - callClientAPI",
-        request
-      );
-    });
+      }, request, fastify)
+      .catch((err) => {
+        errorLogger(
+          fastify,
+          err.message,
+          "services/news.js/createNewsService - callClientAPI",
+          request
+        );
+      });
   }
 
   return data;
@@ -135,17 +160,18 @@ const updateNewsService = async (request, fastify) => {
     userId: request.userTokenInfo.WrUserId,
     tags: request.body.tags,
     viewerCount: request.body.viewerCount,
-    credit : request.body.credit || validateNewsId.credit,
-    SEO : request.body.SEO || validateNewsId.SEO,
-    type : request.body.type || validateNewsId.type,
-    SEODescription : request.body.SEODescription || validateNewsId.SEODescription,
-    imagePath : validateNewsId.imagePath,
+    credit: request.body.credit || validateNewsId.credit,
+    SEO: request.body.SEO || validateNewsId.SEO,
+    type: request.body.type || validateNewsId.type,
+    SEODescription: request.body.SEODescription || validateNewsId.SEODescription,
+    imagePath: validateNewsId.imagePath,
+
     displayOrder: request.body.hasOwnProperty("displayOrder")
       ? request.body.displayOrder
       : (
-          validateNewsId.displayOrder ??
-          Math.max(...global.tblNews.map(item => item.displayOrder || 0)) + 1
-        )
+        validateNewsId.displayOrder ??
+        Math.max(...global.tblNews.map(item => item.displayOrder || 0)) + 1
+      )
   };
   if (request.body.image && request.body.image.length) {
     const imgName = generateImageName({
@@ -165,29 +191,34 @@ const updateNewsService = async (request, fastify) => {
   }
 
   await updateNewsQuery(body, request, fastify);
+  const whiteLabelData = global.tblWhitelabels.find(
+    (item) => item.id == body.whitelabelId
+  );
+  body.domain = whiteLabelData?.domain ?? null
+  body.encryptWhitelabelId = whiteLabelData?.whitelabelId ?? null
   const index = global.tblNews.findIndex(
     (item) => item.newsId === request.body.newsId
   );
   global.tblNews[index] = body;
-  if(body.isActive){
+  if (body.isActive) {
     callClientAPI(
       {
-        serviceType : ServiceType.clientAPI,
-        moduleType : APIEndpointModuleType.updateSeoModule,
-        data : {
-          module : 'news',
-          type : "update",
-          data : body
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.updateSeoModule,
+        data: {
+          module: 'news',
+          type: "update",
+          data: body
         }
       }, request, fastify)
-    .catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "services/news.js/createNewsService - callClientAPI",
-        request
-      );
-    });
+      .catch((err) => {
+        errorLogger(
+          fastify,
+          err.message,
+          "services/news.js/createNewsService - callClientAPI",
+          request
+        );
+      });
   }
   return body;
 };
@@ -208,18 +239,18 @@ const deleteNewsService = async (request, fastify) => {
   global.tblNews = global.tblNews.filter(
     (item) => !newsId.includes(item.newsId)
   );
-  
-    callClientAPI({
-      serviceType : ServiceType.clientAPI,
-      moduleType : APIEndpointModuleType.updateSeoModule,
-      data : {
-        module : 'news',
-        type : "delete",
-        data : {
-          newsId : newsId
-        }
+
+  callClientAPI({
+    serviceType: ServiceType.clientAPI,
+    moduleType: APIEndpointModuleType.updateSeoModule,
+    data: {
+      module: 'news',
+      type: "delete",
+      data: {
+        newsId: newsId
       }
-    }, request, fastify)
+    }
+  }, request, fastify)
     .catch((err) => {
       errorLogger(
         fastify,
@@ -249,16 +280,16 @@ const activeInactiveNewsService = async (request, fastify) => {
 
   const index = global.tblNews.findIndex((item) => item.newsId === newsId);
   global.tblNews[index].isActive = isActive;
-    callClientAPI(
-      {
-        serviceType : ServiceType.clientAPI,
-        moduleType : APIEndpointModuleType.updateSeoModule,
-        data : {
-          module : 'news',
-          type : isActive ? "active" : "inactive",
-          data : global.tblNews[index]
-        }
-      }, request, fastify)
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.updateSeoModule,
+      data: {
+        module: 'news',
+        type: isActive ? "active" : "inactive",
+        data: global.tblNews[index]
+      }
+    }, request, fastify)
     .catch((err) => {
       errorLogger(
         fastify,
@@ -267,7 +298,7 @@ const activeInactiveNewsService = async (request, fastify) => {
         request
       );
     });
-  
+
   return `News updated successfully`;
 };
 

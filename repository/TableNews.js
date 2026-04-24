@@ -1,83 +1,95 @@
 const { newsType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
-
 const getAllNewsQuery = async (fastify) => {
   return await fastify.db.query(
-    `select 
-            "wrNewsId" as "newsId",
-            "wrTitle" as "title",
-            "wrNews" as "news",
-            "wrImage" as "image",
-            "wrIsActive" as "isActive",
-            "wrIsPermanent" as "isPermanent",
-            "wrStartDate" as "startDate",
-            "wrEndDate" as "endDate",
-            "wrTags" as "tags",
-            "wrViewerCount" as "viewerCount",
-            "wrCredit" as "credit",
-            "wrSEO" as "SEO",
-            "wrType" as "type",
-            "wrSEODescription" as "SEODescription",
-            "wrImagePath" as "imagePath",
-            "wrDisplayOrder" as "displayOrder"
-        from "tblNews"
-        where "wrIsDeleted" = false
+    `SELECT 
+            tn."wrNewsId" as "newsId",
+            tn."wrTitle" as "title",
+            tn."wrNews" as "news",
+            tn."wrImage" as "image",
+            tn."wrIsActive" as "isActive",
+            tn."wrIsPermanent" as "isPermanent",
+            tn."wrStartDate" as "startDate",
+            tn."wrEndDate" as "endDate",
+            tn."wrTags" as "tags",
+            tn."wrViewerCount" as "viewerCount",
+            tn."wrCredit" as "credit",
+            tn."wrSEO" as "SEO",
+            tn."wrType" as "type",
+            tn."wrSEODescription" as "SEODescription",
+            tn."wrImagePath" as "imagePath",
+            tn."wrDisplayOrder" as "displayOrder",
+            tn."wrWhitelabelId" as "whitelabelId",
+            ed."wrValue" as "encryptWhitelabelId",
+            twl."wrDomain" as "domain"
+        FROM "tblNews" as tn
+        LEFT JOIN "tblWhitelabel" twl 
+            ON tn."wrWhitelabelId" = twl."wrId"
+        LEFT JOIN "tblEncryptedData" ed 
+            ON tn."wrWhitelabelId" = ed."wrKey"
+        WHERE tn."wrIsDeleted" = false
         `,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
   );
 };
+
 const insertNewsQuery = async (data, request, fastify) => {
   try {
     const result = await fastify.db.query(
       `
-                with insert_data as (
-                    insert into "tblNews" (
-                        "wrTitle",
-                        "wrNews",
-                        "wrImage",
-                        "wrIsActive",
-                        "wrIsPermanent",
-                        "wrStartDate",
-                        "wrEndDate",
-                        "wrCreatedBy",
-                        "wrCreatedDate",
-                        "wrTags",
-                        "wrViewerCount",
-                        "wrCredit",
-                        "wrSEO",
-                        "wrSEODescription",
-                        "wrType",
-                        "wrImagePath",
-                        "wrDisplayOrder"
-                    )
-                values ( $1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10, $11, $12, $13, $14, $15, (
-                        SELECT COALESCE(MAX("wrDisplayOrder"), 0) + 1
-                        FROM "tblNews"
-                        WHERE "wrIsDeleted" = false
-                    )
-                  ) returning *
-                )
-                select 
-                    "wrNewsId" as "newsId",
-                    "wrTitle" as "title",
-                    "wrNews" as "news",
-                    "wrImage" as "image",
-                    "wrIsActive" as "isActive",
-                    "wrIsPermanent" as "isPermanent",
-                    "wrStartDate" as "startDate",
-                    "wrEndDate" as "endDate",
-                    "wrTags" as "tags",
-                    "wrViewerCount" as "viewerCount",
-                    "wrCredit" as "credit",
-                    "wrSEO" as "SEO",
-                    "wrSEODescription" as "SEODescription",
-                    "wrType" as "type",
-                    "wrImagePath" as "imagePath",
-                    "wrDisplayOrder" as "displayOrder"
-                from "insert_data"
-            `,
+      with insert_data as (
+        insert into "tblNews" (
+          "wrTitle",
+          "wrNews",
+          "wrImage",
+          "wrIsActive",
+          "wrIsPermanent",
+          "wrStartDate",
+          "wrEndDate",
+          "wrCreatedBy",
+          "wrCreatedDate",
+          "wrTags",
+          "wrViewerCount",
+          "wrCredit",
+          "wrSEO",
+          "wrSEODescription",
+          "wrType",
+          "wrImagePath",
+          "wrWhitelabelId"
+        )
+        values (
+          $1, $2, $3, $4, $5, $6, $7, $8, now(),
+          $9, $10, $11, $12, $13, $14, $15, $16
+        )
+        returning *
+      )
+      select 
+        tn."wrNewsId" as "newsId",
+        tn."wrTitle" as "title",
+        tn."wrNews" as "news",
+        tn."wrImage" as "image",
+        tn."wrIsActive" as "isActive",
+        tn."wrIsPermanent" as "isPermanent",
+        tn."wrStartDate" as "startDate",
+        tn."wrEndDate" as "endDate",
+        tn."wrTags" as "tags",
+        tn."wrViewerCount" as "viewerCount",
+        tn."wrCredit" as "credit",
+        tn."wrSEO" as "SEO",
+        tn."wrSEODescription" as "SEODescription",
+        tn."wrType" as "type",
+        tn."wrImagePath" as "imagePath",
+        tn."wrWhitelabelId" as "whitelabelId",
+        ed."wrValue" as "encryptWhitelabelId",
+        twl."wrDomain" as "domain"
+      from insert_data as tn
+      LEFT JOIN "tblWhitelabel" twl 
+        ON tn."wrWhitelabelId" = twl."wrId"
+      LEFT JOIN "tblEncryptedData" ed 
+        ON tn."wrWhitelabelId" = ed."wrKey"
+      `,
       {
         type: fastify.db.QueryTypes.INSERT,
         bind: [
@@ -95,10 +107,12 @@ const insertNewsQuery = async (data, request, fastify) => {
           data.SEO || null,
           data.SEODescription || null,
           data.type || newsType.news,
-          data.imagePath || null
+          data.imagePath || null,
+          data.whitelabelId || null,
         ],
       }
     );
+
     return result[0];
   } catch (err) {
     errorLogger(
@@ -110,30 +124,31 @@ const insertNewsQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+
 const updateNewsQuery = async (data, request, fastify) => {
   try {
     return await fastify.db.query(
       `
-                update "tblNews" set
-                "wrTitle" = $1,
-                "wrNews" = $2,
-                "wrImage" = $3,
-                "wrIsActive" = $4,
-                "wrIsPermanent" = $5,
-                "wrStartDate" = $6,
-                "wrEndDate" = $7,
-                "wrModifyBy" = $8,
-                "wrModifyDate" = now(),
-                "wrTags" = $10,
-                "wrViewerCount" = $11,
-                "wrCredit" = $12,
-                "wrSEO" = $13,
-                "wrSEODescription" = $14,
-                "wrType" = $15,
-                "wrImagePath" = $16,
-                "wrDisplayOrder" = $17
-                where "wrNewsId" = $9
-            `,
+      update "tblNews" set
+        "wrTitle" = $1,
+        "wrNews" = $2,
+        "wrImage" = $3,
+        "wrIsActive" = $4,
+        "wrIsPermanent" = $5,
+        "wrStartDate" = $6,
+        "wrEndDate" = $7,
+        "wrModifyBy" = $8,
+        "wrModifyDate" = now(),
+        "wrTags" = $10,
+        "wrViewerCount" = $11,
+        "wrCredit" = $12,
+        "wrSEO" = $13,
+        "wrSEODescription" = $14,
+        "wrType" = $15,
+        "wrImagePath" = $16,
+        "wrWhitelabelId" = $17
+      where "wrNewsId" = $9
+      `,
       {
         bind: [
           data.title,
@@ -151,9 +166,8 @@ const updateNewsQuery = async (data, request, fastify) => {
           data.SEO || null,
           data.SEODescription || null,
           data.type,
-          // Number(data.type ?? newsType.news),
           data.imagePath,
-          data.displayOrder
+          data.whitelabelId || null,
         ],
       }
     );
