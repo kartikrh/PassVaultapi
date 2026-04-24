@@ -15,7 +15,7 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
 
 const getAllNewsService = async (request, fastify) => {
-  const { isActive , type, dateTime } = request.body;
+  const { isActive , type, dateTime , isPermanent, startDate, endDate } = request.body;
   let result = global.tblNews;
   if(isActive !== undefined){
     result = result.filter((item) => item.isActive === isActive);
@@ -23,6 +23,23 @@ const getAllNewsService = async (request, fastify) => {
   if(type){
     result = result.filter((item) => item.type === type);
   }
+  if(isPermanent != undefined){
+    result = result.filter((i)=> i.isPermanent == Boolean(isPermanent))
+  }
+  if(startDate &&  endDate){
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+
+    result = result.filter(item => {
+      if (item.isPermanent) return false; // optional
+      
+      const stDate = new Date(item.startDate).getTime();
+      const enDate = new Date(item.endDate).getTime();
+
+      return stDate <= end && enDate >= start;
+    });
+  }
+
   if (dateTime) {
     const now = Date.now();
     result = result.filter(item => {
@@ -85,7 +102,15 @@ const createNewsService = async (request, fastify) => {
   // await handleSitemapUpdate(`news/${urlId}/${urlEndPoint}`)
 
   const now = Date.now();
-  if (data[0].isActive && data[0].startDate <= now && data[0].endDate >= now) {
+  let sendToClient = false;
+  if (data[0].isActive) {
+    if (data[0].isPermanent) {
+      sendToClient = true;
+    } else if (data[0].startDate <= now && data[0].endDate >= now) {
+      sendToClient = true;
+    }
+  }
+  if (sendToClient) {
     callClientAPI(
      {
         serviceType : ServiceType.clientAPI,
@@ -137,7 +162,8 @@ const updateNewsService = async (request, fastify) => {
     SEO : request.body.SEO || validateNewsId.SEO,
     type : request.body.type || validateNewsId.type,
     SEODescription : request.body.SEODescription || validateNewsId.SEODescription,
-    imagePath : validateNewsId.imagePath
+    imagePath : validateNewsId.imagePath,
+    whitelabelId: Number(request.body.whitelabelId) || validateBannerId?.whitelabelId,
   };
   if (request.body.image && request.body.image.length) {
     const imgName = generateImageName({
@@ -157,6 +183,11 @@ const updateNewsService = async (request, fastify) => {
   }
 
   await updateNewsQuery(body, request, fastify);
+  const whiteLabelData = global.tblWhitelabels.find(
+    (item) => item.id == body.whitelabelId
+  );
+  body.domain = whiteLabelData?.domain ?? null
+  body.encryptWhitelabelId = whiteLabelData?.whitelabelId ?? null
   const index = global.tblNews.findIndex(
     (item) => item.newsId === request.body.newsId
   );

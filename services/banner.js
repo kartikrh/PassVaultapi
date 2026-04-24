@@ -10,11 +10,26 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
   // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
   
   const getAllBannerService = async (request, fastify) => {
-    const { isActive, dateTime } = request.body;
+    const { isActive, dateTime ,isPermanent , startDate, endDate} = request.body;
     let data = global.tblBanner;
+    if(isActive != undefined){
+      data = data.filter((i)=> i.isActive == Boolean(isActive))
+    }
+    if(isPermanent != undefined){
+      data = data.filter((i)=> i.isPermanent == Boolean(isPermanent))
+    }
+    if(startDate &&  endDate){
+      const start = new Date(startDate).getTime();
+      const end = new Date(endDate).getTime();
 
-    if (isActive != undefined) {
-      data = data.filter((item) => item.isActive === isActive);
+      data = data.filter(item => {
+        if (item.isPermanent) return false; // optional
+        
+        const stDate = new Date(item.startDate).getTime();
+        const enDate = new Date(item.endDate).getTime();
+
+        return stDate <= end && enDate >= start;
+      });
     }
 
     if (dateTime) {
@@ -74,7 +89,15 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
     );
 
     const now = Date.now();
-    if (data.isActive && data.startDate <= now && data.endDate >= now) {
+    let sendToClient = false;
+    if (data.isActive) {
+      if (data.isPermanent) {
+        sendToClient = true;
+      } else if (data.startDate <= now && data.endDate >= now) {
+        sendToClient = true;
+      }
+    }
+    if (sendToClient) {
       callClientAPI(
         {
           serviceType: ServiceType.clientAPI,
@@ -273,6 +296,29 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       global.tblBanner[index].displayOrder = item.displayOrder;
     }
   }
+  const now = Date.now();
+  let allActiveData = global.tblBanner.filter(item => 
+    item.isActive === true && (item.isPermanent === true || (item.startDate <= now && item.endDate >= now))
+  );
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.updateBanner,
+      data: {
+        type: "changeDisplayOrder",
+        data: allActiveData
+      }
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    errorLogger(
+      fastify,
+      err.message,
+      "API ERROR --> services/banner/deleteBannerService",
+      request
+    )
+  });
 
   return `Display order updated successfully`;
 };

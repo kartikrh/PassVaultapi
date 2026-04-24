@@ -47,7 +47,7 @@ const {
 } = require("../../services/user");
 const { errorLogger,updateWebRequestLogs } = require("../../utilities/logger");
 // const fetchAllDataFromDb = require("../../utilities/fetchAllData");
-const { fetchAllDataFromDb, panelLoadDataByEnum, loadEnityDataOnGlobal } = require("../../utilities/fetchAllData");
+const { fetchAllDataFromDb, panelLoadDataByEnum, loadEnityDataOnGlobal, globalMemoryDatas } = require("../../utilities/fetchAllData");
 const { ckImageUploadService, imgUploadService } = require("../../services/ckImage");
 const configConstants = require("../../utilities/configConstants");
 
@@ -565,6 +565,15 @@ const loadEnityData = async (request, fastify, reply) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const globalMemoryData = async (request, reply, fastify) => {
+  try {
+    const result = await globalMemoryDatas(request, fastify, reply);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/globalMemoryData", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
   signUpUser,
   signInUser,
@@ -616,4 +625,5 @@ module.exports = {
   clientDataById,
   verifySeamlessOTP,
   loadEnityData,
+  globalMemoryData
 };

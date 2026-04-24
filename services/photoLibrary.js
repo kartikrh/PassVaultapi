@@ -9,12 +9,15 @@ const {
   isDefaultChangeQuery,
   isDefaultFalseQuery,
   updatePhotoLibraryStatusQuery,
+  updatePhotoLibraryDisplayOrderQuery,
 } = require("../repository/TablePhotoLibrary");
 const {
   generateImageName,
   storeImageOnServer,
   removeImageFromServer,
 } = require("../utilities/Images");
+const { commentaryStatus } = require("../utilities/index");
+const { errorLogger } = require("../utilities/logger");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
@@ -28,7 +31,15 @@ const savePhotoLibraryService = async (request, fastify) => {
   global.tblPhotoLibrary.push(saveData);
 
   const now = Date.now();
-  if (saveData.isActive && saveData.startDate <= now && saveData.endDate >= now) {
+  let sendToClient = false;
+  if (saveData.isActive) {
+    if (saveData.isPermanent) {
+      sendToClient = true;
+    } else if (saveData.startDate <= now && saveData.endDate >= now) {
+      sendToClient = true;
+    }
+  }
+  if (sendToClient) {
     callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
@@ -64,12 +75,15 @@ const editPhotoLibraryService = async (request, fastify, data) => {
     SEO: request.body.SEO ?? validateId.SEO,
     description: request.body.description ?? validateId.description,
     isPermanent: request.body.isPermanent ?? validateId.isPermanent,
-    startDate: request.body.startDate ?? validateId.startDate,
-    endDate: request.body.endDate ?? validateId.endDate,
+    startDate: request.body.startDate ?? null,
+    endDate: request.body.endDate ?? null,
     isActive: request.body.isActive ?? validateId.isActive,
+    commentaryId: request.body.commentaryId ?? validateId.commentaryId,
+    displayOrder: request.body.displayOrder ?? validateId.displayOrder, 
+    whitelabelId: request.body.whitelabelId ?? validateId.whitelabelId, 
     photoLibraryId: parseInt(request.body.photoLibraryId, 10),
   };
-
+  
   const modifiedData = await updatePhotoLibraryQuery(
     updateData,
     fastify,
@@ -81,7 +95,7 @@ const editPhotoLibraryService = async (request, fastify, data) => {
   );
 
   if (index != -1) {
-    global.tblPhotoLibrary[index] = modifiedData[0];
+    global.tblPhotoLibrary[index] = modifiedData;
   }
 
   callClientAPI(
@@ -91,7 +105,7 @@ const editPhotoLibraryService = async (request, fastify, data) => {
        data: {
          module: 'photoLibrary',
          type: "update",
-         data: modifiedData[0]
+         data: modifiedData
        }
     }, request, fastify)
    .catch((err) => {
@@ -103,7 +117,7 @@ const editPhotoLibraryService = async (request, fastify, data) => {
      );
    });
 
-  return modifiedData[0];
+  return modifiedData;
 };
 
 const saveLibraryImageService = async (request, fastify, data) => {
@@ -255,10 +269,26 @@ const editLibraryImageService = async (request, fastify, data) => {
 };
 
 const allPhotoLibraryService = async (request) => {
-  const { isActive, dateTime } = request.body;
+  const { isActive, dateTime , isPermanent , startDate , endDate } = request.body;
   let data = global.tblPhotoLibrary;
   if (isActive !== undefined) {
     data = data.filter(p => p.isActive === isActive);
+  }
+  if(isPermanent != undefined){
+    data = data.filter((i)=> i.isPermanent == Boolean(isPermanent))
+  }
+  if(startDate &&  endDate){
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+
+    data = data.filter(item => {
+      if (item.isPermanent) return false; // optional
+      
+      const stDate = new Date(item.startDate).getTime();
+      const enDate = new Date(item.endDate).getTime();
+
+      return stDate <= end && enDate >= start;
+    });
   }
   if (dateTime) {
     const now = Date.now();
@@ -507,6 +537,60 @@ const updatePhotoLibraryStatusService = async (request, fastify) => {
   };
 };
 
+const updatePhotoLibraryDisplayOrderService = async (request, fastify) => {
+  for (const item of request.body) {
+    await updatePhotoLibraryDisplayOrderQuery(item, fastify, request);
+    const index = global.tblPhotoLibrary.findIndex(
+      (library) => library.photoLibraryId === item.photoLibraryId
+    );
+    if (index !== -1) {
+      global.tblPhotoLibrary[index].displayOrder = item.displayOrder;
+    }
+  }
+  const now = Date.now();
+  let allActiveData = global.tblPhotoLibrary.filter(item => 
+    item.isActive === true && (item.isPermanent === true || (item.startDate <= now && item.endDate >= now))
+  );
+  callClientAPI({
+    serviceType: ServiceType.clientAPI,
+    moduleType: APIEndpointModuleType.updateSeoModule,
+    data: {
+      module: 'libraryImage',
+      type: "changeDisplayOrder",
+      data: allActiveData
+    }
+  }, request, fastify)
+    .catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "services/photoLibrary.js/updatePhotoLibraryDisplayOrderService - callClientAPI",
+        request
+      );
+    });
+  return "Photo library display order updated successfully";
+};
+
+const getPhotoLibraryCommentaryService = async () => {
+  const wrCommentaryStatus = [
+    commentaryStatus.COMPLETED,
+    commentaryStatus.CANCELLED,
+    commentaryStatus.ABANDONED
+  ];
+  let data = global.tblCommentaries
+    .filter(item =>
+      !wrCommentaryStatus.includes(Number(item.commentaryStatus))
+    )
+    .map(item => ({
+      commentaryId: item.commentaryId,
+      eventRefId: item.eventRefId,
+      eventName: item.eventName,
+      eventDate: item.eventDate,
+      commentaryStatus: item.commentaryStatus
+    }));
+  return data;
+};
+
 module.exports = {
   allPhotoLibraryService,
   getAllLibraryImagesService,
@@ -520,4 +604,6 @@ module.exports = {
   updateDisplayOrderService,
   updateIsDefultService,
   updatePhotoLibraryStatusService,
+  updatePhotoLibraryDisplayOrderService,
+  getPhotoLibraryCommentaryService,
 };

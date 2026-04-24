@@ -5,6 +5,8 @@ const {
   savePhotoLibrary,
   deletePhotoLibrary,
   updatePhotoLibraryStatus,
+  updatePhotoLibraryDisplayOrder,
+  getPhotoLibraryCommentary,
 } = require("../../../controller/users/admin/photoLibrary");
 const { PhotoLibrary } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -35,5 +37,15 @@ module.exports = async (fastify, opts) => {
   fastify.post("/updateStatus", {
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => updatePhotoLibraryStatus(request, reply, fastify),
+  });
+
+  fastify.post("/changeDisplayOrder", {
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) => updatePhotoLibraryDisplayOrder(request, reply, fastify),
+  });
+
+  fastify.post("/allCommentary", {
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) => getPhotoLibraryCommentary(request, reply, fastify),
   });
 };

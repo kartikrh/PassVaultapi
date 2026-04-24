@@ -4414,7 +4414,7 @@ const upsertCommPartnershipService = async (data, fastify, request) => {
     })
   }
   else {
-    console.log("commBall",commBall)
+    // console.log("commBall",commBall)
     let cp1 = playerTpIdObj[part.batsmen[0].batsman_id]
     let cp2 = playerTpIdObj[part.batsmen[1].batsman_id]
     partnership = genEtPartnership({
