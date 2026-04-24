@@ -37,8 +37,8 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       data = data.filter(item => {
         if (item.isPermanent) return true;
 
-        const start = new Date(item.from).getTime();
-        const end = new Date(item.to).getTime();
+        const start = new Date(item.startDate).getTime();
+        const end = new Date(item.endDate).getTime();
 
         return start <= now && end >= now;
       });
