@@ -34,13 +34,12 @@ const getAllNewsQuery = async (fastify) => {
     }
   );
 };
-
 const insertNewsQuery = async (data, request, fastify) => {
   try {
     const result = await fastify.db.query(
       `
-      with insert_data as (
-        insert into "tblNews" (
+      WITH insert_data AS (
+        INSERT INTO "tblNews" (
           "wrTitle",
           "wrNews",
           "wrImage",
@@ -57,15 +56,17 @@ const insertNewsQuery = async (data, request, fastify) => {
           "wrSEODescription",
           "wrType",
           "wrImagePath",
-          "wrWhitelabelId"
+          "wrWhitelabelId",
+          "wrDisplayOrder"
         )
-        values (
+        VALUES (
           $1, $2, $3, $4, $5, $6, $7, $8, now(),
-          $9, $10, $11, $12, $13, $14, $15, $16
+          $9, $10, $11, $12, $13, $14, $15, $16,
+          (SELECT COALESCE(MAX("wrDisplayOrder"), 0) + 1 FROM "tblNews" WHERE "wrIsDeleted" = false)
         )
-        returning *
+        RETURNING *
       )
-      select 
+      SELECT 
         tn."wrNewsId" as "newsId",
         tn."wrTitle" as "title",
         tn."wrNews" as "news",
@@ -82,9 +83,10 @@ const insertNewsQuery = async (data, request, fastify) => {
         tn."wrType" as "type",
         tn."wrImagePath" as "imagePath",
         tn."wrWhitelabelId" as "whitelabelId",
+        tn."wrDisplayOrder" as "displayOrder",
         ed."wrValue" as "encryptWhitelabelId",
         twl."wrDomain" as "domain"
-      from insert_data as tn
+      FROM insert_data tn
       LEFT JOIN "tblWhitelabel" twl 
         ON tn."wrWhitelabelId" = twl."wrId"
       LEFT JOIN "tblEncryptedData" ed 
@@ -106,7 +108,12 @@ const insertNewsQuery = async (data, request, fastify) => {
           data.credit || null,
           data.SEO || null,
           data.SEODescription || null,
-          data.type || newsType.news,
+          data.type === "news"
+            ? newsType.news
+            : data.type === "article"
+              ? newsType.article
+              : Number(data.type) || newsType.news,
+
           data.imagePath || null,
           data.whitelabelId || null,
         ],
