@@ -154,7 +154,8 @@ const updateNewsService = async (request, fastify) => {
     SEO : request.body.SEO || validateNewsId.SEO,
     type : request.body.type || validateNewsId.type,
     SEODescription : request.body.SEODescription || validateNewsId.SEODescription,
-    imagePath : validateNewsId.imagePath
+    imagePath : validateNewsId.imagePath,
+    whitelabelId: Number(request.body.whitelabelId) || validateBannerId?.whitelabelId,
   };
   if (request.body.image && request.body.image.length) {
     const imgName = generateImageName({
@@ -174,6 +175,11 @@ const updateNewsService = async (request, fastify) => {
   }
 
   await updateNewsQuery(body, request, fastify);
+  const whiteLabelData = global.tblWhitelabels.find(
+    (item) => item.id == body.whitelabelId
+  );
+  body.domain = whiteLabelData?.domain ?? null
+  body.encryptWhitelabelId = whiteLabelData?.whitelabelId ?? null
   const index = global.tblNews.findIndex(
     (item) => item.newsId === request.body.newsId
   );
