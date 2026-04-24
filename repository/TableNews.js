@@ -4,23 +4,28 @@ const { errorLogger } = require("../utilities/logger");
 const getAllNewsQuery = async (fastify) => {
   return await fastify.db.query(
     `select 
-            "wrNewsId" as "newsId",
-            "wrTitle" as "title",
-            "wrNews" as "news",
-            "wrImage" as "image",
-            "wrIsActive" as "isActive",
-            "wrIsPermanent" as "isPermanent",
-            "wrStartDate" as "startDate",
-            "wrEndDate" as "endDate",
-            "wrTags" as "tags",
-            "wrViewerCount" as "viewerCount",
-            "wrCredit" as "credit",
-            "wrSEO" as "SEO",
-            "wrType" as "type",
-            "wrSEODescription" as "SEODescription",
-            "wrImagePath" as "imagePath"
-        from "tblNews"
-        where "wrIsDeleted" = false
+            tn."wrNewsId" as "newsId",
+            tn."wrTitle" as "title",
+            tn."wrNews" as "news",
+            tn."wrImage" as "image",
+            tn."wrIsActive" as "isActive",
+            tn."wrIsPermanent" as "isPermanent",
+            tn."wrStartDate" as "startDate",
+            tn."wrEndDate" as "endDate",
+            tn."wrTags" as "tags",
+            tn."wrViewerCount" as "viewerCount",
+            tn."wrCredit" as "credit",
+            tn."wrSEO" as "SEO",
+            tn."wrType" as "type",
+            tn."wrSEODescription" as "SEODescription",
+            tn."wrImagePath" as "imagePath",
+            tn."wrWhitelabelId" as "whitelabelId",
+            ed."wrValue" as "encryptWhitelabelId",
+            twl."wrDomain" as "domain"
+        FROM "tblNews" as tn
+        LEFT JOIN "tblWhitelabel" twl ON tn."wrWhitelabelId" = twl."wrId"
+        LEFT JOIN "tblEncryptedData" ed ON tn."wrWhitelabelId" = ed."wrKey"
+        where tn."wrIsDeleted" = false
         `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -48,28 +53,33 @@ const insertNewsQuery = async (data, request, fastify) => {
                         "wrSEO",
                         "wrSEODescription",
                         "wrType",
-                        "wrImagePath"
+                        "wrImagePath",
+                        "wrWhitelabelId"
                     )
-                values ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10, $11, $12, $13,$14, $15) returning *
+                values ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10, $11, $12, $13,$14, $15, $16) returning *
                 )
                 select 
-                    "wrNewsId" as "newsId",
-                    "wrTitle" as "title",
-                    "wrNews" as "news",
-                    "wrImage" as "image",
-                    "wrIsActive" as "isActive",
-                    "wrIsPermanent" as "isPermanent",
-                    "wrStartDate" as "startDate",
-                    "wrEndDate" as "endDate",
-                    "wrTags" as "tags",
-                    "wrViewerCount" as "viewerCount",
-                    "wrCredit" as "credit",
-                    "wrSEO" as "SEO",
-                    "wrSEODescription" as "SEODescription",
-                    "wrType" as "type",
-                    "wrImagePath" as "imagePath"
-                from "insert_data"
-            `,
+                    tn."wrNewsId" as "newsId",
+                    tn."wrTitle" as "title",
+                    tn."wrNews" as "news",
+                    tn."wrImage" as "image",
+                    tn."wrIsActive" as "isActive",
+                    tn."wrIsPermanent" as "isPermanent",
+                    tn."wrStartDate" as "startDate",
+                    tn."wrEndDate" as "endDate",
+                    tn."wrTags" as "tags",
+                    tn."wrViewerCount" as "viewerCount",
+                    tn."wrCredit" as "credit",
+                    tn."wrSEO" as "SEO",
+                    tn."wrSEODescription" as "SEODescription",
+                    tn."wrType" as "type",
+                    tn."wrImagePath" as "imagePath",
+                    tn."wrWhitelabelId" as "whitelabelId",
+                    ed."wrValue" as "encryptWhitelabelId",
+                    twl."wrDomain" as "domain"
+                from "insert_data" as tn
+                LEFT JOIN "tblWhitelabel" twl ON tn."wrWhitelabelId" = twl."wrId"
+                LEFT JOIN "tblEncryptedData" ed ON tn."wrWhitelabelId" = ed."wrKey";`,
       {
         type: fastify.db.QueryTypes.INSERT,
         bind: [
@@ -87,7 +97,8 @@ const insertNewsQuery = async (data, request, fastify) => {
           data.SEO || null,
           data.SEODescription || null,
           data.type || newsType.news,
-          data.imagePath || null
+          data.imagePath || null,
+          data.whitelabelId || null,
         ],
       }
     );
@@ -122,7 +133,8 @@ const updateNewsQuery = async (data, request, fastify) => {
                 "wrSEO" = $13,
                 "wrSEODescription" = $14,
                 "wrType" = $15,
-                "wrImagePath" = $16
+                "wrImagePath" = $16,
+                "wrWhitelabelId" = $17
                 where "wrNewsId" = $9
             `,
       {
@@ -142,7 +154,8 @@ const updateNewsQuery = async (data, request, fastify) => {
           data.SEO || null,
           data.SEODescription || null,
           data.type,
-          data.imagePath
+          data.imagePath,
+          data.whitelabelId || null,
         ],
       }
     );

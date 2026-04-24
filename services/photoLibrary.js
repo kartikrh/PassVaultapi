@@ -539,6 +539,24 @@ const updatePhotoLibraryDisplayOrderService = async (request, fastify) => {
       global.tblPhotoLibrary[index].displayOrder = item.displayOrder;
     }
   }
+  let allActiveData = global.tblPhotoLibrary.filter(item => item.isActive == true);
+  callClientAPI({
+    serviceType: ServiceType.clientAPI,
+    moduleType: APIEndpointModuleType.updateSeoModule,
+    data: {
+      module: 'libraryImage',
+      type: "changeDisplayOrder",
+      data: allActiveData
+    }
+  }, request, fastify)
+    .catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "services/photoLibrary.js/updatePhotoLibraryDisplayOrderService - callClientAPI",
+        request
+      );
+    });
   return "Photo library display order updated successfully";
 };
 
