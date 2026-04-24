@@ -296,8 +296,10 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       global.tblBanner[index].displayOrder = item.displayOrder;
     }
   }
-
-  let allActiveData = global.tblBanner.filter(item => item.isActive == true);
+  const now = Date.now();
+  let allActiveData = global.tblBanner.filter(item => 
+    item.isActive === true && (item.isPermanent === true || (item.startDate <= now && item.endDate >= now))
+  );
   callClientAPI(
     {
       serviceType: ServiceType.clientAPI,

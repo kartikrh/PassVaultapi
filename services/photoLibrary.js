@@ -547,7 +547,10 @@ const updatePhotoLibraryDisplayOrderService = async (request, fastify) => {
       global.tblPhotoLibrary[index].displayOrder = item.displayOrder;
     }
   }
-  let allActiveData = global.tblPhotoLibrary.filter(item => item.isActive == true);
+  const now = Date.now();
+  let allActiveData = global.tblPhotoLibrary.filter(item => 
+    item.isActive === true && (item.isPermanent === true || (item.startDate <= now && item.endDate >= now))
+  );
   callClientAPI({
     serviceType: ServiceType.clientAPI,
     moduleType: APIEndpointModuleType.updateSeoModule,
