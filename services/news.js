@@ -47,8 +47,12 @@ const getAllNewsService = async (request, fastify) => {
 
       const start = new Date(item.startDate).getTime();
       const end = new Date(item.endDate).getTime();
+      const result = start <= now && end >= now;
+      if (!result) {
+        global.pendingNewsToClient.push(item);
+      }
 
-      return start <= now && end >= now;
+      return result;
     });
   }
   return result;
@@ -192,6 +196,7 @@ const updateNewsService = async (request, fastify) => {
     (item) => item.newsId === request.body.newsId
   );
   global.tblNews[index] = body;
+  global.pendingNewsToClient = global.pendingNewsToClient.filter(item => item.newsId !== body.newsId);
   if(body.isActive){
     callClientAPI(
       {
@@ -232,6 +237,8 @@ const deleteNewsService = async (request, fastify) => {
     (item) => !newsId.includes(item.newsId)
   );
   
+  global.pendingNewsToClient = global.pendingNewsToClient.filter(item => !newsId.includes(item.newsId));
+
     callClientAPI({
       serviceType : ServiceType.clientAPI,
       moduleType : APIEndpointModuleType.updateSeoModule,
@@ -272,6 +279,9 @@ const activeInactiveNewsService = async (request, fastify) => {
 
   const index = global.tblNews.findIndex((item) => item.newsId === newsId);
   global.tblNews[index].isActive = isActive;
+
+  global.pendingNewsToClient = global.pendingNewsToClient.filter(item => item.newsId !== newsId);
+
     callClientAPI(
       {
         serviceType : ServiceType.clientAPI,
@@ -293,10 +303,57 @@ const activeInactiveNewsService = async (request, fastify) => {
   
   return `News updated successfully`;
 };
+
+const sendActiveNewsToClientAPIService = async (fastify) => {
+  try {
+    if (global.pendingNewsToClient.length > 0) {
+      const now = Date.now();
+      for (const data of global.pendingNewsToClient) {
+        const start = new Date(data.startDate).getTime();
+        const end = new Date(data.endDate).getTime();
+
+        const result = start <= now && end >= now;
+        if (result) {
+          callClientAPI(
+            {
+              serviceType: ServiceType.clientAPI,
+              moduleType: APIEndpointModuleType.updateSeoModule,
+              data: {
+                module: 'news',
+                type: "add",
+                data: data
+              }
+            },
+            null,
+            fastify
+          ).then(res => {
+            global.pendingNewsToClient = global.pendingNewsToClient.filter(item => item.newsId !== data.newsId);
+          }).catch((err) => {
+            errorLogger(
+              fastify,
+              err.message,
+              "ERROR --> services/news.js.js/sendActiveNewsToClientAPIService- callClientAPI",
+              null
+            );
+          });
+        }
+      }
+    }
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> services/news.js.js/sendActiveNewsToClientAPIService",
+      null
+    );
+  }
+}
+
 module.exports = {
   getAllNewsService,
   newsByIdService,
   saveNewsService,
   deleteNewsService,
   activeInactiveNewsService,
+  sendActiveNewsToClientAPIService
 };

@@ -51,6 +51,12 @@ global.tblData = {};
 global.marketData = {};
 global.isAllDataLoadedInGlobal = false;
 global.connectedEntitySocketClients = global.connectedEntitySocketClients || [];
+global.pendingAdvertiseToClient = [];
+global.pendingBannerToClient = [];
+global.pendingNewsToClient = [];
+global.pendingPhotoLibraryToClient = [];
+global.pendingVideoLibraryToClient = [];
+
 if (process.env.ENABLE_SENTRY === "TRUE") {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
