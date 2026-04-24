@@ -89,7 +89,15 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
     );
 
     const now = Date.now();
-    if (data.isActive && data.startDate <= now && data.endDate >= now) {
+    let sendToClient = false;
+    if (data.isActive) {
+      if (data.isPermanent) {
+        sendToClient = true;
+      } else if (data.from <= now && data.to >= now) {
+        sendToClient = true;
+      }
+    }
+    if (sendToClient) {
       callClientAPI(
         {
           serviceType: ServiceType.clientAPI,

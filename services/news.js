@@ -102,7 +102,15 @@ const createNewsService = async (request, fastify) => {
   // await handleSitemapUpdate(`news/${urlId}/${urlEndPoint}`)
 
   const now = Date.now();
-  if (data[0].isActive && data[0].startDate <= now && data[0].endDate >= now) {
+  let sendToClient = false;
+  if (data[0].isActive) {
+    if (data[0].isPermanent) {
+      sendToClient = true;
+    } else if (data[0].from <= now && data[0].to >= now) {
+      sendToClient = true;
+    }
+  }
+  if (sendToClient) {
     callClientAPI(
      {
         serviceType : ServiceType.clientAPI,

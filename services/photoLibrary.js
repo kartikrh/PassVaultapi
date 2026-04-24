@@ -31,7 +31,15 @@ const savePhotoLibraryService = async (request, fastify) => {
   global.tblPhotoLibrary.push(saveData);
 
   const now = Date.now();
-  if (saveData.isActive && saveData.startDate <= now && saveData.endDate >= now) {
+  let sendToClient = false;
+  if (saveData.isActive) {
+    if (saveData.isPermanent) {
+      sendToClient = true;
+    } else if (saveData.from <= now && saveData.to >= now) {
+      sendToClient = true;
+    }
+  }
+  if (sendToClient) {
     callClientAPI(
       {
         serviceType: ServiceType.clientAPI,

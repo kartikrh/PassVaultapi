@@ -106,7 +106,15 @@ const createAdvertiseService = async (request, fastify) => {
     global.tblAdvertise.push(newAdvertise);
 
     const now = Date.now();
-    if (newAdvertise.isActive && newAdvertise.startDate <= now && newAdvertise.endDate >= now) {
+    let sendToClient = false;
+    if (newAdvertise.isActive) {
+      if (newAdvertise.isPermanent) {
+        sendToClient = true;
+      } else if (newAdvertise.from <= now && newAdvertise.to >= now) {
+        sendToClient = true;
+      }
+    }
+    if (sendToClient) {
       callClientAPI(
         {
           serviceType: ServiceType.clientAPI,
