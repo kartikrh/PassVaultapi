@@ -106,7 +106,7 @@ const createNewsService = async (request, fastify) => {
   if (data[0].isActive) {
     if (data[0].isPermanent) {
       sendToClient = true;
-    } else if (data[0].from <= now && data[0].to >= now) {
+    } else if (data[0].startDate <= now && data[0].endDate >= now) {
       sendToClient = true;
     }
   }
