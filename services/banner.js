@@ -39,8 +39,12 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
 
         const start = new Date(item.startDate).getTime();
         const end = new Date(item.endDate).getTime();
+        const result = start <= now && end >= now;
+        if (!result) {
+          global.pendingBannerToClient.push(item);
+        }
 
-        return start <= now && end >= now;
+        return result;
       });
     }
 
@@ -183,6 +187,9 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
     );
     body.domain = whiteLabelData?.domain ?? null
     body.encryptWhitelabelId = whiteLabelData?.whitelabelId ?? null
+
+    global.pendingBannerToClient = global.pendingBannerToClient.filter(item => item.bannerId !== body.bannerId);
+
     callClientAPI(
       {
         serviceType : ServiceType.clientAPI,
@@ -219,6 +226,9 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
     }
     // delete the banner
     await deleteBannerQuery(bannerId, request, fastify);
+
+    global.pendingBannerToClient = global.pendingBannerToClient.filter(item => item.bannerId !== bannerId);
+
     callClientAPI(
       {
         serviceType : ServiceType.clientAPI,
@@ -259,6 +269,9 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       request,
       fastify
     );
+
+    global.pendingBannerToClient = global.pendingBannerToClient.filter(item => item.bannerId !== bannerId);
+
     callClientAPI(
       {
         serviceType : ServiceType.clientAPI,
@@ -300,6 +313,9 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
   let allActiveData = global.tblBanner.filter(item => 
     item.isActive === true && (item.isPermanent === true || (item.startDate <= now && item.endDate >= now))
   );
+
+  global.pendingBannerToClient = global.pendingBannerToClient.filter(item => allActiveData.map(item => item.bannerId).includes(item.bannerId));
+
   callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
@@ -323,12 +339,54 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
   return `Display order updated successfully`;
 };
 
+const sendActiveBannerToClientAPIService = async (fastify) => {
+  try {
+    if (global.pendingBannerToClient.length > 0) {
+      const now = Date.now();
+      for (const data of global.pendingBannerToClient) {
+        const start = new Date(data.startDate).getTime();
+        const end = new Date(data.endDate).getTime();
+
+        const result = start <= now && end >= now;
+        if (result) {
+          callClientAPI(
+            {
+              serviceType: ServiceType.clientAPI,
+              moduleType: APIEndpointModuleType.updateBanner,
+              data: data
+            },
+            null,
+            fastify
+          ).then(res => {
+            global.pendingBannerToClient = global.pendingBannerToClient.filter(item => item.bannerId !== data.bannerId);
+          }).catch((err) => {
+            errorLogger(
+              fastify,
+              err.message,
+              "ERROR --> services/banner.js/sendActiveBannerToClientAPIService- callClientAPI",
+              null
+            )
+          });
+        }
+      }
+    }
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> services/banner.js/sendActiveBannerToClientAPIService",
+      null
+    )
+  }
+}
+
   module.exports = {
     getAllBannerService,
     bannerByIdService,
     saveBannerService,
     deleteBannerService,
     activeInactiveBannerService,
-    updateDisplayOrderBannerService
+    updateDisplayOrderBannerService,
+    sendActiveBannerToClientAPIService
   };
   
