@@ -257,7 +257,6 @@ const deleteNewsService = async (request, fastify) => {
           newsId : newsId
         }
       }
-    }
   }, request, fastify)
     .catch((err) => {
       errorLogger(
