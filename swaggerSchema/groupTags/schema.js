@@ -11833,6 +11833,42 @@ const TeamMatchType = {
   }
 };
 
+const ClientLikeDislikeActivity = {
+  getByClientTypeRefId: {
+    schema: {
+      tags: ["Client Like Dislike Activity"],
+      description: "Get client like dislike activity",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          type: { type: "integer" },
+          refId: { type: "integer" },
+          clientId: { type: "integer" }
+        },
+        required: ["type", "refId", "clientId"]
+      }
+    }
+  },
+  save: {
+    schema: {
+      tags: ["Client Like Dislike Activity"],
+      description: "Save client like dislike activity",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          type: { type: "integer" },
+          refId: { type: "integer" },
+          clientId: { type: "integer" },
+          isLike: { type: "boolean", nullable: true }
+        },
+        required: ["type", "refId", "clientId", "isLike"]
+      }
+    }
+  }
+}
+
 module.exports = {
   Auth,
   Tabs,
@@ -11917,5 +11953,6 @@ module.exports = {
   AutoUpdatePlayerStatisticsData,
   CompititionStatisticsType,
   CompititionStatistics,
-  TeamMatchType
+  TeamMatchType,
+  ClientLikeDislikeActivity
 };
