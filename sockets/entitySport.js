@@ -12,8 +12,8 @@ const configConstants = require("../utilities/configConstants");
 const { createDataQuery } = require("../repository/TableEntityDataLog");
 const { default: pLimit } = require("p-limit");
 const Sentry = require("@sentry/node");
-const commentaryQueue = new Map(); // {matchId: {payload, fastify}}
-const matchIdLocks = new Map(); // {matchId: {promise, lastActivity}} - combined lock + activity tracking
+global.commentaryQueue = new Map(); // {matchId: {payload, fastify}}
+global.matchIdLocks = new Map(); // {matchId: {promise, lastActivity}} - combined lock + activity tracking
 let processTimeout = null;
 
 // Memory management constants
@@ -31,14 +31,14 @@ const limit = pLimit(CONCURRENCY_LIMIT);
 setInterval(() => {
   const now = Date.now();
   let removedCount = 0;
-  for (const [matchId, lockData] of matchIdLocks.entries()) {
+  for (const [matchId, lockData] of global.matchIdLocks.entries()) {
     if (now - lockData.lastActivity > LOCK_IDLE_TIMEOUT) {
-      matchIdLocks.delete(matchId);
+      global.matchIdLocks.delete(matchId);
       removedCount++;
     }
   }
   if (removedCount > 0) {
-    console.log(`Cleaned up ${removedCount} stale locks. Current locks: ${matchIdLocks.size}, Queue size: ${commentaryQueue.size}`);
+    console.log(`Cleaned up ${removedCount} stale locks. Current locks: ${global.matchIdLocks.size}, Queue size: ${global.commentaryQueue.size}`);
   }
 }, LOCK_CLEANUP_INTERVAL);
 
@@ -48,20 +48,20 @@ setInterval(() => {
  * But ensures serial processing within each matchId (no duplicates)
  */
 function getOrCreateLock(matchId) {
-  if (!matchIdLocks.has(matchId)) {
-    matchIdLocks.set(matchId, {
+  if (!global.matchIdLocks.has(matchId)) {
+    global.matchIdLocks.set(matchId, {
       promise: Promise.resolve(),
       lastActivity: Date.now()
     });
   } else {
     // Update activity time
-    matchIdLocks.get(matchId).lastActivity = Date.now();
+    global.matchIdLocks.get(matchId).lastActivity = Date.now();
   }
-  return matchIdLocks.get(matchId).promise;
+  return global.matchIdLocks.get(matchId).promise;
 }
 
 function setLock(matchId, promise) {
-  matchIdLocks.set(matchId, {
+  global.matchIdLocks.set(matchId, {
     promise: promise,
     lastActivity: Date.now()
   });
@@ -76,16 +76,16 @@ function addToQueue(payload, fastify) {
   const matchId = payload.response.match_id;
 
   // Prevent unbounded queue growth
-  if (commentaryQueue.size >= MAX_QUEUE_SIZE) {
+  if (global.commentaryQueue.size >= MAX_QUEUE_SIZE) {
     console.warn(`Queue size exceeded ${MAX_QUEUE_SIZE}. Dropping oldest items.`);
     // Drop first item to make room
-    const firstKey = commentaryQueue.keys().next().value;
+    const firstKey = global.commentaryQueue.keys().next().value;
     if (firstKey) {
-      commentaryQueue.delete(firstKey);
+      global.commentaryQueue.delete(firstKey);
     }
   }
 
-  commentaryQueue.set(matchId, {
+  global.commentaryQueue.set(matchId, {
     payload,
     enqueuedAt: Date.now(),
   });
@@ -104,10 +104,10 @@ function addToQueue(payload, fastify) {
  * Each matchId processes one at a time via locks
  */
 async function processQueue(fastify) {
-  if (commentaryQueue.size === 0) return;
+  if (global.commentaryQueue.size === 0) return;
 
-  const entries = Array.from(commentaryQueue.entries());
-  commentaryQueue.clear(); // clear immediately to free memory
+  const entries = Array.from(global.commentaryQueue.entries());
+  global.commentaryQueue.clear(); // clear immediately to free memory
 
   for (const [matchId, { payload, enqueuedAt }] of entries) {
     const currentLock = getOrCreateLock(matchId);
@@ -190,8 +190,8 @@ async function processQueue(fastify) {
     .catch(() => {})
     .finally(() => {
       // cleanup lock safely
-      if (matchIdLocks.get(matchId)?.promise === newLock) {
-        matchIdLocks.delete(matchId);
+      if (global.matchIdLocks.get(matchId)?.promise === newLock) {
+          global.matchIdLocks.delete(matchId);
       }
     });
   }

@@ -43,6 +43,7 @@ const {
   clientDataById,
   verifySeamlessOTP,
   loadEnityData,
+  globalMemoryData,
   //loginRegistrationClient,
 } = require("../controller/users/index");
 const { Auth ,sendPushNotification,weblogs, Config, EventType, Commentary} = require("../swaggerSchema/groupTags/schema");
@@ -343,4 +344,8 @@ module.exports = async function (fastify, opts) {
       }
     }
   });
+  fastify.post("/globalMemory", {
+    handler: (request, reply) => globalMemoryData(request, reply, fastify),
+  })
+
 };

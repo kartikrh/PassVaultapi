@@ -31,7 +31,15 @@ const savePhotoLibraryService = async (request, fastify) => {
   global.tblPhotoLibrary.push(saveData);
 
   const now = Date.now();
-  if (saveData.isActive && saveData.startDate <= now && saveData.endDate >= now) {
+  let sendToClient = false;
+  if (saveData.isActive) {
+    if (saveData.isPermanent) {
+      sendToClient = true;
+    } else if (saveData.startDate <= now && saveData.endDate >= now) {
+      sendToClient = true;
+    }
+  }
+  if (sendToClient) {
     callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
@@ -67,15 +75,15 @@ const editPhotoLibraryService = async (request, fastify, data) => {
     SEO: request.body.SEO ?? validateId.SEO,
     description: request.body.description ?? validateId.description,
     isPermanent: request.body.isPermanent ?? validateId.isPermanent,
-    startDate: request.body.startDate ?? validateId.startDate,
-    endDate: request.body.endDate ?? validateId.endDate,
+    startDate: request.body.startDate ?? null,
+    endDate: request.body.endDate ?? null,
     isActive: request.body.isActive ?? validateId.isActive,
     commentaryId: request.body.commentaryId ?? validateId.commentaryId,
     displayOrder: request.body.displayOrder ?? validateId.displayOrder, 
     whitelabelId: request.body.whitelabelId ?? validateId.whitelabelId, 
     photoLibraryId: parseInt(request.body.photoLibraryId, 10),
   };
-
+  
   const modifiedData = await updatePhotoLibraryQuery(
     updateData,
     fastify,
@@ -261,10 +269,26 @@ const editLibraryImageService = async (request, fastify, data) => {
 };
 
 const allPhotoLibraryService = async (request) => {
-  const { isActive, dateTime } = request.body;
+  const { isActive, dateTime , isPermanent , startDate , endDate } = request.body;
   let data = global.tblPhotoLibrary;
   if (isActive !== undefined) {
     data = data.filter(p => p.isActive === isActive);
+  }
+  if(isPermanent != undefined){
+    data = data.filter((i)=> i.isPermanent == Boolean(isPermanent))
+  }
+  if(startDate &&  endDate){
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+
+    data = data.filter(item => {
+      if (item.isPermanent) return false; // optional
+      
+      const stDate = new Date(item.startDate).getTime();
+      const enDate = new Date(item.endDate).getTime();
+
+      return stDate <= end && enDate >= start;
+    });
   }
   if (dateTime) {
     const now = Date.now();
@@ -523,6 +547,27 @@ const updatePhotoLibraryDisplayOrderService = async (request, fastify) => {
       global.tblPhotoLibrary[index].displayOrder = item.displayOrder;
     }
   }
+  const now = Date.now();
+  let allActiveData = global.tblPhotoLibrary.filter(item => 
+    item.isActive === true && (item.isPermanent === true || (item.startDate <= now && item.endDate >= now))
+  );
+  callClientAPI({
+    serviceType: ServiceType.clientAPI,
+    moduleType: APIEndpointModuleType.updateSeoModule,
+    data: {
+      module: 'libraryImage',
+      type: "changeDisplayOrder",
+      data: allActiveData
+    }
+  }, request, fastify)
+    .catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "services/photoLibrary.js/updatePhotoLibraryDisplayOrderService - callClientAPI",
+        request
+      );
+    });
   return "Photo library display order updated successfully";
 };
 

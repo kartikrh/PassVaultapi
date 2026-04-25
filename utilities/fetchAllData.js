@@ -935,6 +935,32 @@ const loadEnityDataOnGlobal = async (request, fastify, reply) => {
     }
   }
 };
+const v8 = require('v8');
 
+function getHeapSize(obj) {
+  try {
+    const serialized = v8.serialize(obj);
+    return (serialized.length / (1024 * 1024)).toFixed(2);
+  } catch (e) {
+    return 'N/A';
+  }
+}  
+const globalMemoryDatas = async(request , fastify) =>{
+  let result = [];
 
-module.exports = { fetchAllDataFromDb, FetchingCommentariesDataFromCron, panelLoadDataByEnum, upcomingCommentaries, loadEnityDataOnGlobal };
+  for (const key of Object.keys(global)) {
+    // if (key.startsWith('tbl')) {
+      result.push({
+        key,
+        size : parseFloat(getHeapSize(global[key])) || 0,
+        sizeinMb: `${parseFloat(getHeapSize(global[key])) || 0 } MB`
+      });
+    // }
+  }
+
+  result = result.sort((a, b) => b.size - a.size)
+  // .forEach(i => console.log(`${i.key}: ${i.size} MB`));
+  return result;
+}  
+      
+module.exports = { fetchAllDataFromDb, FetchingCommentariesDataFromCron, panelLoadDataByEnum, upcomingCommentaries, loadEnityDataOnGlobal, globalMemoryDatas };

@@ -37,8 +37,8 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       data = data.filter(item => {
         if (item.isPermanent) return true;
 
-        const start = new Date(item.from).getTime();
-        const end = new Date(item.to).getTime();
+        const start = new Date(item.startDate).getTime();
+        const end = new Date(item.endDate).getTime();
 
         return start <= now && end >= now;
       });
@@ -89,7 +89,15 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
     );
 
     const now = Date.now();
-    if (data.isActive && data.startDate <= now && data.endDate >= now) {
+    let sendToClient = false;
+    if (data.isActive) {
+      if (data.isPermanent) {
+        sendToClient = true;
+      } else if (data.startDate <= now && data.endDate >= now) {
+        sendToClient = true;
+      }
+    }
+    if (sendToClient) {
       callClientAPI(
         {
           serviceType: ServiceType.clientAPI,
@@ -288,8 +296,10 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       global.tblBanner[index].displayOrder = item.displayOrder;
     }
   }
-
-  let allActiveData = global.tblBanner.filter(item => item.isActive == true);
+  const now = Date.now();
+  let allActiveData = global.tblBanner.filter(item => 
+    item.isActive === true && (item.isPermanent === true || (item.startDate <= now && item.endDate >= now))
+  );
   callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
