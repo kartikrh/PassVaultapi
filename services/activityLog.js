@@ -41,7 +41,6 @@ const saveActivityLogService = async (request, fastify) => {
   }
 };
 const createActivityLogService = async (request, fastify) => {
-  console.log("🚀 ~ createActivityLogService ~ request:", request.body)
   let data = await insertActivityLogQuery(
     {
       ...request.body,
