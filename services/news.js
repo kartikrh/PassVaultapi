@@ -3,6 +3,7 @@ const {
   deleteNewsQuery,
   updateNewsQuery,
   activeInactiveNewsQuery,
+  changeeDisplayOrderQuery
 } = require("../repository/TableNews");
 const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
 const {
@@ -15,24 +16,24 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
 
 const getAllNewsService = async (request, fastify) => {
-  const { isActive , type, dateTime , isPermanent, startDate, endDate } = request.body;
+  const { isActive, type, dateTime, isPermanent, startDate, endDate } = request.body;
   let result = global.tblNews;
-  if(isActive !== undefined){
+  if (isActive !== undefined) {
     result = result.filter((item) => item.isActive === isActive);
   }
-  if(type){
+  if (type) {
     result = result.filter((item) => item.type === type);
   }
-  if(isPermanent != undefined){
-    result = result.filter((i)=> i.isPermanent == Boolean(isPermanent))
+  if (isPermanent != undefined) {
+    result = result.filter((i) => i.isPermanent == Boolean(isPermanent))
   }
-  if(startDate &&  endDate){
+  if (startDate && endDate) {
     const start = new Date(startDate).getTime();
     const end = new Date(endDate).getTime();
 
     result = result.filter(item => {
       if (item.isPermanent) return false; // optional
-      
+
       const stDate = new Date(item.startDate).getTime();
       const enDate = new Date(item.endDate).getTime();
 
@@ -92,6 +93,7 @@ const createNewsService = async (request, fastify) => {
   const data = await insertNewsQuery(
     {
       ...request.body,
+      type: request.body.type === "news" ? 1 : Number(request.body.type) || 0,
       userId: request.userTokenInfo.WrUserId,
     },
     request,
@@ -99,7 +101,7 @@ const createNewsService = async (request, fastify) => {
   );
 
   global.tblNews.push(data[0]);
-  
+
   // const urlId = data[0].newsId;
   // const urlEndPoint = data[0].title.replace(/ /g, "-");
 
@@ -116,23 +118,23 @@ const createNewsService = async (request, fastify) => {
   }
   if (sendToClient) {
     callClientAPI(
-     {
-        serviceType : ServiceType.clientAPI,
-        moduleType : APIEndpointModuleType.updateSeoModule,
-        data : {
-          module : 'news',
-          type : "add",
-          data : data[0]
+      {
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.updateSeoModule,
+        data: {
+          module: 'news',
+          type: "add",
+          data: data[0]
         }
-     }, request, fastify)
-    .catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "services/news.js/createNewsService - callClientAPI",
-        request
-      );
-    });
+      }, request, fastify)
+      .catch((err) => {
+        errorLogger(
+          fastify,
+          err.message,
+          "services/news.js/createNewsService - callClientAPI",
+          request
+        );
+      });
   }
 
   return data;
@@ -162,12 +164,18 @@ const updateNewsService = async (request, fastify) => {
     userId: request.userTokenInfo.WrUserId,
     tags: request.body.tags,
     viewerCount: request.body.viewerCount,
-    credit : request.body.credit || validateNewsId.credit,
-    SEO : request.body.SEO || validateNewsId.SEO,
-    type : request.body.type || validateNewsId.type,
-    SEODescription : request.body.SEODescription || validateNewsId.SEODescription,
-    imagePath : validateNewsId.imagePath,
-    whitelabelId: Number(request.body.whitelabelId) || validateBannerId?.whitelabelId,
+    credit: request.body.credit || validateNewsId.credit,
+    SEO: request.body.SEO || validateNewsId.SEO,
+    type: request.body.type || validateNewsId.type,
+    SEODescription: request.body.SEODescription || validateNewsId.SEODescription,
+    imagePath: validateNewsId.imagePath,
+
+    displayOrder: request.body.hasOwnProperty("displayOrder")
+      ? request.body.displayOrder
+      : (
+        validateNewsId.displayOrder ??
+        Math.max(...global.tblNews.map(item => item.displayOrder || 0)) + 1
+      )
   };
   if (request.body.image && request.body.image.length) {
     const imgName = generateImageName({
@@ -200,22 +208,22 @@ const updateNewsService = async (request, fastify) => {
   if(body.isActive){
     callClientAPI(
       {
-        serviceType : ServiceType.clientAPI,
-        moduleType : APIEndpointModuleType.updateSeoModule,
-        data : {
-          module : 'news',
-          type : "update",
-          data : body
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.updateSeoModule,
+        data: {
+          module: 'news',
+          type: "update",
+          data: body
         }
       }, request, fastify)
-    .catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "services/news.js/createNewsService - callClientAPI",
-        request
-      );
-    });
+      .catch((err) => {
+        errorLogger(
+          fastify,
+          err.message,
+          "services/news.js/createNewsService - callClientAPI",
+          request
+        );
+      });
   }
   return body;
 };
@@ -249,7 +257,8 @@ const deleteNewsService = async (request, fastify) => {
           newsId : newsId
         }
       }
-    }, request, fastify)
+    }
+  }, request, fastify)
     .catch((err) => {
       errorLogger(
         fastify,
@@ -300,10 +309,22 @@ const activeInactiveNewsService = async (request, fastify) => {
         request
       );
     });
-  
+
   return `News updated successfully`;
 };
 
+const changeDisplayOrderService = async (request, fastify) => {
+  for (const item of request.body) {
+    await changeeDisplayOrderQuery(item, request, fastify);
+    const index = global.tblNews.findIndex(
+      elem => elem.newsId === item.newsId
+    );
+    if (index !== -1) {
+      global.tblNews[index].displayOrder = item.displayOrder;
+    }
+  }
+  return "Display order updated successfully";
+};
 const sendActiveNewsToClientAPIService = async (fastify) => {
   try {
     if (global.pendingNewsToClient.length > 0) {
@@ -355,5 +376,6 @@ module.exports = {
   saveNewsService,
   deleteNewsService,
   activeInactiveNewsService,
+  changeDisplayOrderService,
   sendActiveNewsToClientAPIService
 };
