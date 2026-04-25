@@ -49,8 +49,12 @@ const getAllAdvertiseService = async (request, fastify) => {
 
       const start = new Date(item.startDate).getTime();
       const end = new Date(item.endDate).getTime();
+      const result = start <= now && end >= now;
+      if (!result) {
+        global.pendingAdvertiseToClient.push(item);
+      }
 
-      return start <= now && end >= now;
+      return result;
     });
   }
 
@@ -233,6 +237,8 @@ const updateAdvertiseService = async (request, fastify) => {
     global.tblAdvertise[index] = { ...global.tblAdvertise[index], ...body };
   }
 
+  global.pendingAdvertiseToClient = global.pendingAdvertiseToClient.filter(item => item.advertiseId !== body.advertiseId);
+
   callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
@@ -274,6 +280,8 @@ const deleteAdvertiseService = async (request, fastify) => {
     (item) => !advertiseId.includes(item.advertiseId)
   );
 
+  global.pendingAdvertiseToClient = global.pendingAdvertiseToClient.filter(item => !advertiseId.includes(item.advertiseId));
+
   callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
@@ -312,6 +320,8 @@ const activeInactiveAdvertiseService = async (request, fastify) => {
   );
 
   global.tblAdvertise[index].isActive = isActive;
+
+  global.pendingAdvertiseToClient = global.pendingAdvertiseToClient.filter(item => item.advertiseId !== advertiseId);
 
   callClientAPI(
     {
@@ -353,6 +363,49 @@ const changeDisplayOrderService = async (request, fastify) => {
  
   return true;
 };
+const sendActiveAdvertiseToClientAPIService = async (fastify) => {
+  try {
+    if (global.pendingAdvertiseToClient.length > 0) {
+      const now = Date.now();
+      for (const data of global.pendingAdvertiseToClient) {
+        const start = new Date(data.startDate).getTime();
+        const end = new Date(data.endDate).getTime();
+
+        const result = start <= now && end >= now;
+        if (result) {
+          callClientAPI(
+            {
+              serviceType: ServiceType.clientAPI,
+              moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
+              data: {
+                type: ClientAPIType.Insert,
+                advertise: data
+              }
+            },
+            null,
+            fastify
+          ).then(res => {
+            global.pendingAdvertiseToClient = global.pendingAdvertiseToClient.filter(item => item.advertiseId !== data.advertiseId);
+          }).catch((err) => {
+            errorLogger(
+              fastify,
+              err.message,
+              "ERROR --> services/advertise.js/sendActiveAdvertiseToClientService - callClientAPI",
+              null
+            );
+          });
+        }
+      }
+    }
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> services/advertise.js/sendActiveAdvertiseToClientService",
+      null
+    );
+  }
+}
 
 module.exports = {
   getAllAdvertiseService,
@@ -360,5 +413,6 @@ module.exports = {
   saveAdvertiseService,
   deleteAdvertiseService,
   activeInactiveAdvertiseService,
-  changeDisplayOrderService
+  changeDisplayOrderService,
+  sendActiveAdvertiseToClientAPIService
 };

@@ -21,7 +21,8 @@ const getAllVideoLibraryQuery = async (fastify) => {
       tvb."wrDisplayOrder" as "displayOrder",
       tvb."wrWhitelabelId" as "whitelabelId",
       ed."wrValue" as "encryptWhitelabelId",
-      twl."wrDomain" as "domain"
+      twl."wrDomain" as "domain",
+      tvb."wrViewCount" as "viewCount"
     FROM "tblVideoLibrary" as tvb
     LEFT JOIN "tblWhitelabel" twl ON tvb."wrWhitelabelId" = twl."wrId"
     LEFT JOIN "tblEncryptedData" ed ON tvb."wrWhitelabelId" = ed."wrKey"
@@ -66,7 +67,8 @@ const insertVideoLibraryQuery = async (data, fastify, request) => {
                 tvb."wrDisplayOrder" as "displayOrder",
                 tvb."wrWhitelabelId" as "whitelabelId",
                 ed."wrValue" as "encryptWhitelabelId",
-                twl."wrDomain" as "domain"
+                twl."wrDomain" as "domain",
+                tvb."wrViewCount" as "viewCount"
               FROM insert_data as tvb
               LEFT JOIN "tblWhitelabel" twl ON tvb."wrWhitelabelId" = twl."wrId"
               LEFT JOIN "tblEncryptedData" ed ON tvb."wrWhitelabelId" = ed."wrKey";`,
@@ -131,7 +133,8 @@ const updateVideoLibraryQuery = async (data, fastify, request) => {
               u."wrDisplayOrder" AS "displayOrder",
               u."wrWhitelabelId" AS "whitelabelId",
               ed."wrValue" AS "encryptWhitelabelId",
-              twl."wrDomain" AS "domain"
+              twl."wrDomain" AS "domain",
+              u."wrViewCount" as "viewCount"
             FROM updated u
             LEFT JOIN "tblWhitelabel" twl ON u."wrWhitelabelId" = twl."wrId"
             LEFT JOIN "tblEncryptedData" ed ON u."wrWhitelabelId" = ed."wrKey";`,
@@ -239,6 +242,27 @@ const updateDisplayOrder = async (body, request, fastify) => {
   }
 }
 
+const updateVideoLibraryViewCountQuery = async (body, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblVideoLibrary" SET
+        "wrViewCount" = COALESCE("wrViewCount", 0) + 1
+      WHERE "wrId" = $1 `,
+      {
+        bind: [body.refId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableVideoLibrary.js/updateVideoLibraryViewCountQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
+
 module.exports = {
   getAllVideoLibraryQuery,
   insertVideoLibraryQuery,
@@ -246,4 +270,5 @@ module.exports = {
   deleteVideoLibraryQuery,
   updateVideoLibraryStatusQuery,
   updateDisplayOrder,
+  updateVideoLibraryViewCountQuery
 };

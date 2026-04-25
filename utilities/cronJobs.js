@@ -18,6 +18,11 @@ const {
   insertCompletedCommentaryForTournamentTeamPointUpdateService,
 } = require("../services/commentry.js");
 const { insertCompletedCompetitionsInAutoImportService } = require("../services/competition.js");
+const { sendActiveAdvertiseToClientAPIService } = require("../services/advertise.js");
+const { sendActiveBannerToClientAPIService } = require("../services/banner.js");
+const { sendActiveNewsToClientAPIService } = require("../services/news.js");
+const { sendActivePhotoLibraryToClientAPIService } = require("../services/photoLibrary.js");
+const { sendActiveVideoLibraryToClientAPIService } = require("../services/videoLibrary.js");
 
 const registerCronJobs = (fastify) => {
   cron.schedule(
@@ -119,6 +124,23 @@ const registerCronJobs = (fastify) => {
         }
       } catch (error) {
         console.error("Error during scheduled task:", error);
+      }
+    })
+  );
+
+  cron.schedule(
+    "* * * * *",
+    withSentryCronProfiling("send-data-to-client", "* * * * *", async () => {
+      try {
+        if (global.isAllDataLoadedInGlobal) {
+          await sendActiveAdvertiseToClientAPIService(fastify);
+          await sendActiveBannerToClientAPIService(fastify);
+          await sendActiveNewsToClientAPIService(fastify);
+          await sendActivePhotoLibraryToClientAPIService(fastify);
+          await sendActiveVideoLibraryToClientAPIService(fastify);
+        }
+      } catch (error) {
+        console.error("Error during scheduled task send-data-to-client:", error);
       }
     })
   );
