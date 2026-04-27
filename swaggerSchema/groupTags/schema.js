@@ -11844,7 +11844,7 @@ const ClientLikeDislikeActivity = {
         properties: {
           type: { type: "integer" },
           refId: { type: "integer" },
-          clientId: { type: "integer" }
+          clientId: { type: "string" }
         },
         required: ["type", "refId", "clientId"]
       }
