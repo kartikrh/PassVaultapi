@@ -307,7 +307,12 @@ const updateDisplayOrderService = async (request, fastify) => {
   }
   const now = Date.now();
   let allActiveData = global.tblVideoLibrary.filter(item => 
-    item.isActive === true && (item.isPermanent === true || (item.from <= now && item.to >= now))
+    item.isActive === true && (item.isPermanent === true || 
+      (
+        new Date(item.from).getTime() <= now &&
+        new Date(item.to).getTime() >= now
+      )
+    )
   );
 
   global.pendingVideoLibraryToClient = global.pendingVideoLibraryToClient.filter(item => request.body.map(item => item.id).includes(item.id));

@@ -324,7 +324,12 @@ const changeDisplayOrderService = async (request, fastify) => {
   }
   const now = Date.now();
   let allActiveData = global.tblNews.filter(item =>
-    item.isActive === true && (item.isPermanent === true || (item.startDate <= now && item.endDate >= now))
+    item.isActive === true && (item.isPermanent === true || 
+      (
+        new Date(item.startDate).getTime() <= now &&
+        new Date(item.endDate).getTime() >= now
+      )
+    )
   );
   callClientAPI(
     {
