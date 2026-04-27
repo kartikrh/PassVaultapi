@@ -322,6 +322,33 @@ const changeDisplayOrderService = async (request, fastify) => {
       global.tblNews[index].displayOrder = item.displayOrder;
     }
   }
+  const now = Date.now();
+  let allActiveData = global.tblNews.filter(item =>
+    item.isActive === true && (item.isPermanent === true || 
+      (
+        new Date(item.startDate).getTime() <= now &&
+        new Date(item.endDate).getTime() >= now
+      )
+    )
+  );
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.updateSeoModule,
+      data: {
+        module: 'news',
+        type: "changeDisplayOrder",
+        data: allActiveData
+      }
+    }, request, fastify)
+    .catch((err) => {
+      errorLogger(
+        fastify,
+        err.message,
+        "services/news.js/changeDisplayOrderService - callClientAPI",
+        request
+      );
+    });
   return "Display order updated successfully";
 };
 const sendActiveNewsToClientAPIService = async (fastify) => {
