@@ -19,7 +19,8 @@ const checkClientService = async (request, fastify) => {
 const getByClientTypeRefIdService = async (request, fastify) => {
     const client = await checkClientService(request, fastify);
     request.body.clientId = client.clientId;
-    return await getByClientTypeRefIdQuery(request, fastify);
+    const result = await getByClientTypeRefIdQuery(request, fastify);
+    return result?.[0];
 };
 
 const saveClientLikeDislikeActivityService = async (request, fastify) => {
