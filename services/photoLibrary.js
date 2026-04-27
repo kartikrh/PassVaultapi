@@ -559,7 +559,12 @@ const updatePhotoLibraryDisplayOrderService = async (request, fastify) => {
   }
   const now = Date.now();
   let allActiveData = global.tblPhotoLibrary.filter(item => 
-    item.isActive === true && (item.isPermanent === true || (item.startDate <= now && item.endDate >= now))
+    item.isActive === true && (item.isPermanent === true || 
+      (
+        new Date(item.startDate).getTime() <= now &&
+        new Date(item.endDate).getTime() >= now
+      )
+    )
   );
 
   global.pendingPhotoLibraryToClient = global.pendingPhotoLibraryToClient.filter(item => allActiveData.map(item => item.photoLibraryId).includes(item.photoLibraryId));
