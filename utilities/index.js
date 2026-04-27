@@ -2396,7 +2396,8 @@ const oversToBalls = (overs) => {
 const ClientAPIType = {
   Insert: 1,
   Update: 2,
-  Delete: 3
+  Delete: 3,
+  ChangeDisplayOrder: 4,
 }
 
 const normalizeText = (value) => {
