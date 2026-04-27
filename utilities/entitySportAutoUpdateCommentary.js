@@ -110,7 +110,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
 const entitySportUpdateCommentary = async (commentaryData, checkCompetition, entitySportMatchResponse, isAutoUpdate = false, fastify) => {
     const request = {
         userTokenInfo: {
-            WrUserId: -2
+            WrUserId: isAutoUpdate ? -2 : -5
         }
     };
 
