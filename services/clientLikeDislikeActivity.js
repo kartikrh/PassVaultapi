@@ -4,14 +4,13 @@ const { getOriginalIdFromEncryptedId } = require("../repository/TableUser");
 const checkClientService = async (request, fastify) => {
     const clientId = request.body.clientId;
     let getClientId = await getOriginalIdFromEncryptedId(clientId, fastify);
-    console.log("🚀 ~ checkClientService ~ getClientId:", getClientId)
     if (!getClientId) {
         throw new Error(`Client with this encrypted id ${clientId} not found!`);
     }
 
-    const checkExist = global.tblClient.find(item => item.clientId === getClientId.wrKey && item.isActive === true);
+    const checkExist = global.tblClient.find(item => item.clientId === getClientId && item.isActive === true);
     if (!checkExist) {
-        throw new Error(`Client with this id ${getClientId.wrKey} not found!`);
+        throw new Error(`Client with this id ${getClientId} not found!`);
     }
 
     return checkExist;
