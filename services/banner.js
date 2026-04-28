@@ -311,7 +311,12 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
   }
   const now = Date.now();
   let allActiveData = global.tblBanner.filter(item => 
-    item.isActive === true && (item.isPermanent === true || (item.startDate <= now && item.endDate >= now))
+    item.isActive === true && (item.isPermanent === true || 
+      (
+        new Date(item.startDate).getTime() <= now &&
+        new Date(item.endDate).getTime() >= now
+      )
+    )
   );
 
   global.pendingBannerToClient = global.pendingBannerToClient.filter(item => allActiveData.map(item => item.bannerId).includes(item.bannerId));

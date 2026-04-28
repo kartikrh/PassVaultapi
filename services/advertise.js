@@ -357,9 +357,35 @@ const changeDisplayOrderService = async (request, fastify) => {
       global.tblAdvertise[index].displayOrder = item.displayOrder;
     }
   }
-  let allActiveData = global.tblAdvertise.filter(
-    (item) => item.isActive == true
+  const now = Date.now();
+  let allActiveData = global.tblAdvertise.filter(item =>
+    item.isActive === true && (item.isPermanent === true ||
+      (
+        new Date(item.startDate).getTime() <= now &&
+        new Date(item.endDate).getTime() >= now
+      )
+    )
   );
+  callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
+      data: {
+        type: ClientAPIType.ChangeDisplayOrder,
+        advertise: allActiveData
+      }
+    },
+    request,
+    fastify
+  ).catch((err) => {
+    console.log("call client api console", err);
+    errorLogger(
+      fastify,
+      err.message,
+      "ERROR --> services/advertise.js/changeDisplayOrderService - callClientAPI",
+      request
+    );
+  });
  
   return true;
 };
