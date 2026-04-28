@@ -492,7 +492,11 @@ const updatePhotoLibraryStatusService = async (request, fastify) => {
     {
        serviceType: ServiceType.clientAPI,
        moduleType: APIEndpointModuleType.updateSeoModule,
-       data: global.tblPhotoLibrary[index]
+       data: {
+          module: 'photoLibrary',
+          type: "update",
+          data: global.tblPhotoLibrary[index]
+        }
     }, request, fastify,
     "services/photoLibrary.js/updatePhotoLibraryStatusService"
   );
