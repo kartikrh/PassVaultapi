@@ -463,7 +463,7 @@ const updateTeamService = async (request, fastify) => {
     body.image = fullPath;
     body.imagePath = imagePath;
 
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
@@ -474,16 +474,9 @@ const updateTeamService = async (request, fastify) => {
         },
       },
       request,
-      fastify
-    ).catch((err) => {
-      console.log("teamImage update call client api console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/team.js/updateTeamService",
-        request
-      );
-    });
+      fastify,
+      "services/teams.js/updateTeamService"
+    );
   }
 
   if (request.body.jersey && request.body.jersey.length) {
@@ -511,7 +504,7 @@ const updateTeamService = async (request, fastify) => {
       await upsertTeamPlayers(teamPlayer, body, player, -1, null, entitySocketData, request, fastify);
     }
 
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
@@ -522,16 +515,9 @@ const updateTeamService = async (request, fastify) => {
         },
       },
       request,
-      fastify
-    ).catch((err) => {
-      console.log("teamJersey update call client api console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/team.js/updateTeamService",
-        request
-      );
-    });
+      fastify,
+      "services/teams.js/updateTeamService"
+    );
   }
 
   await updateTeamQuery(body, fastify, request);

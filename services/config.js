@@ -53,22 +53,16 @@ const createConfigService = async (request, fastify) => {
     }, fastify, request);
 
   global.tblConfigs.push(data);
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType : ServiceType.clientAPI,
         moduleType : APIEndpointModuleType.updateConfig,
         data : data
       },
       request,
-      fastify
-    ).catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "API ERROR --> services/config/createConfigService",
-        request
-      )
-    });
+      fastify,
+      "services/config.js/createConfigService"
+    );
   
   return data;
 };
@@ -120,22 +114,16 @@ const updateConfigService = async (request, fastify) => {
   const index = global.tblConfigs.findIndex((item) => item.configId === configId);
 
   global.tblConfigs[index] = data;
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType : ServiceType.clientAPI,
         moduleType : APIEndpointModuleType.updateConfig,
         data : data
       },
       request,
-      fastify
-    ).catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "API ERROR --> services/config/updateConfigService",
-        request
-      )
-    });
+      fastify,
+      "services/config.js/updateConfigService"
+    );
 
   return data;
 };
@@ -157,7 +145,7 @@ const deleteConfigService = async (request, fastify) => {
 
   global.tblConfigs = global.tblConfigs.filter((item) => !configId.includes(item.configId));
 
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType : ServiceType.clientAPI,
       moduleType : APIEndpointModuleType.updateConfig,
@@ -167,15 +155,9 @@ const deleteConfigService = async (request, fastify) => {
       }
     },
     request,
-    fastify
-  ).catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "API ERROR --> services/config/deleteConfigService",
-      request
-    )
-  });
+    fastify,
+    "services/config.js/deleteConfigService"
+  );
 
   return `Config(s) deleted successfully`;
 };

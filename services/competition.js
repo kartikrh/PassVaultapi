@@ -243,7 +243,7 @@ const createCompititionService = async (request, fastify) => {
   global.tblCompetitions.push(result);
 
   if(result.isActive && result.isTrending){
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType : ServiceType.clientAPI,
       moduleType : APIEndpointModuleType.updateSeoModule,
@@ -254,15 +254,9 @@ const createCompititionService = async (request, fastify) => {
       }
     },
     request,
-    fastify
-  ).catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "API ERROR --> services/competition.js/createCompititionService - callClientAPI",
-      request
-    )
-  });
+    fastify,
+    "services/competition.js/createCompititionService"
+  );
   }
   return result;
 };
@@ -415,7 +409,7 @@ const updateCompititionService = async (request, fastify) => {
   global.tblCompetitions[index] = data;
 
 if(data.isActive && data.isTrending){
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
@@ -426,15 +420,9 @@ if(data.isActive && data.isTrending){
       }
     },
     request,
-    fastify
-  ).catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "API ERROR --> services/competition.js/updateCompititionService - callClientAPI",
-      request
-    )
-  });
+    fastify,
+    "services/competition.js/updateCompititionService"
+  );
 }
   return data;
 };
@@ -489,7 +477,7 @@ const deleteCompetitionService = async (request, fastify) => {
   //   (item) => !competitionId.includes(item.competitionId)
   // );
 
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
@@ -500,15 +488,9 @@ const deleteCompetitionService = async (request, fastify) => {
       }
     },
     request,
-    fastify
-  ).catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "API ERROR --> services/competition.js/deleteCompetitionService - callClientAPI",
-      request
-    )
-  });
+    fastify,
+    "services/competition.js/deleteCompetitionService"
+  );
 
   return `Competition(s) deleted successfully`;
 };
@@ -536,7 +518,7 @@ const updateDisplayOrderService = async (request, fastify) => {
     const dispalyOrderData = await updateDisplayOrderQuery(item, fastify, request);
     const compData = global.tblCompetitions.find(elem => elem.competitionId == item.competitionId);
     if (compData.isActive && compData.isTrending) {
-      callClientAPI(
+      await callClientAPI(
         {
           serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.updateSeoModule,
@@ -547,15 +529,9 @@ const updateDisplayOrderService = async (request, fastify) => {
           }
         },
         request,
-        fastify
-      ).catch((err) => {
-        errorLogger(
-          fastify,
-          err.message,
-          "API ERROR --> services/competition.js/updateDisplayOrderService - callClientAPI",
-          request
-        )
-      });
+        fastify,
+        "services/competition.js/updateDisplayOrderService"
+      );
     }
   }
 
@@ -588,7 +564,7 @@ const isTrendingChangeStatusService = async (request, fastify) => {
     global.tblCompetitions[index].isTrending = isTrending;
   }
   
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType : ServiceType.clientAPI,
       moduleType : APIEndpointModuleType.updateSeoModule,
@@ -597,15 +573,9 @@ const isTrendingChangeStatusService = async (request, fastify) => {
         type : isTrending ? "isTrue" : "isFalse",
         data : global.tblCompetitions[index]
       }
-    }, request, fastify)
-  .catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "API ERROR --> services/competition.js/isTrendingChangeStatusService - callClientAPI",
-      request
-    );
-  });
+    }, request, fastify,
+    "services/competition.js/isTrendingChangeStatusService"
+  );
   
   return `Competition isTrending status updated successfully`;
 };
@@ -635,7 +605,7 @@ const isEventSnapService = async (request, fastify) => {
   }
   const compData = global.tblCompetitions[index]
   if (compData.isActive && compData.isTrending) {
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
@@ -644,15 +614,9 @@ const isEventSnapService = async (request, fastify) => {
           type: "update",
           data: compData
         }
-      }, request, fastify)
-      .catch((err) => {
-        errorLogger(
-          fastify,
-          err.message,
-          "API ERROR --> services/competition.js/isEventSnapService - callClientAPI",
-          request
-        );
-      });
+      }, request, fastify,
+      "services/competition.js/isEventSnapService"
+    );
   }
   
   return `Competition isEventSnap status updated successfully`;
@@ -739,7 +703,7 @@ const isPointTableService = async (request, fastify) => {
 
   const compData = global.tblCompetitions[index];
   if (compData.isActive && compData.isTrending) {
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
@@ -748,15 +712,9 @@ const isPointTableService = async (request, fastify) => {
           type: "update",
           data: compData
         }
-      }, request, fastify)
-      .catch((err) => {
-        errorLogger(
-          fastify,
-          err.message,
-          "API ERROR --> services/competition.js/isPointTableService - callClientAPI",
-          request
-        );
-      });
+      }, request, fastify,
+      "services/competition.js/isPointTableService"
+    );
   }
 
   return `Competition isEventSnap status updated successfully`;
@@ -2314,23 +2272,16 @@ const competitionImportService = async (data, fastify, request) => {
 
       const cData = await getComDataByCId({ commentaryId: commentaryId }, request, fastify);
       if (cData.isActive && !cData.isTest) {
-        callClientAPI(
+        await callClientAPI(
           {
             serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.commentaryUpdate,
             data: cData,
           },
           request,
-          fastify
-        ).catch((err) => {
-          console.log("call client api console", err);
-          errorLogger(
-            fastify,
-            err.message,
-            "ERROR --> services/competition.js/competitionImportService",
-            request
-          );
-        });
+          fastify,
+          "services/competition.js/competitionImportService"
+        );
       }
 
       const commentaryCompletedStatus = [EntityMatchStatus.ABANDONED, EntityMatchStatus.COMPLETED];

@@ -16,7 +16,7 @@ const {
   storeImageOnServer,
   removeImageFromServer,
 } = require("../utilities/Images");
-const { commentaryStatus } = require("../utilities/index");
+const { commentaryStatus, getDataFromTime } = require("../utilities/index");
 const { errorLogger } = require("../utilities/logger");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
@@ -40,7 +40,7 @@ const savePhotoLibraryService = async (request, fastify) => {
     }
   }
   if (sendToClient) {
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
@@ -49,15 +49,9 @@ const savePhotoLibraryService = async (request, fastify) => {
           type: "add",
           data: saveData
         }
-      }, request, fastify)
-      .catch((err) => {
-        errorLogger(
-          fastify,
-          err.message,
-          "services/photoLibrary.js/savePhotoLibraryService - callClientAPI",
-          request
-        );
-      });
+      }, request, fastify,
+      "services/photoLibrary.js/savePhotoLibraryService"
+    );
   }
   return saveData;
 };
@@ -100,7 +94,7 @@ const editPhotoLibraryService = async (request, fastify, data) => {
 
   global.pendingPhotoLibraryToClient = global.pendingPhotoLibraryToClient.filter(item => item.photoLibraryId !== updateData.photoLibraryId);
 
-  callClientAPI(
+  await callClientAPI(
     {
        serviceType: ServiceType.clientAPI,
        moduleType: APIEndpointModuleType.updateSeoModule,
@@ -109,15 +103,9 @@ const editPhotoLibraryService = async (request, fastify, data) => {
          type: "update",
          data: modifiedData
        }
-    }, request, fastify)
-   .catch((err) => {
-     errorLogger(
-       fastify,
-       err.message,
-       "services/photoLibrary.js/editPhotoLibraryService - callClientAPI",
-       request
-     );
-   });
+    }, request, fastify,
+    "services/photoLibrary.js/editPhotoLibraryService"
+  );
 
   return modifiedData;
 };
@@ -161,7 +149,7 @@ const saveLibraryImageService = async (request, fastify, data) => {
   const saveData = await insertLibraryImageQuery(data.body, fastify, request);
   global.tblLibraryImages.push(saveData);
 
-  callClientAPI(
+  await callClientAPI(
     {
        serviceType: ServiceType.clientAPI,
        moduleType: APIEndpointModuleType.updateSeoModule,
@@ -170,15 +158,9 @@ const saveLibraryImageService = async (request, fastify, data) => {
          type: "add",
          data: saveData
        }
-    }, request, fastify)
-   .catch((err) => {
-     errorLogger(
-       fastify,
-       err.message,
-       "services/photoLibrary.js/saveLibraryImageService - callClientAPI",
-       request
-     );
-   });
+    }, request, fastify,
+    "services/photoLibrary.js/saveLibraryImageService"
+  );
 
   return saveData;
 };
@@ -249,7 +231,7 @@ const editLibraryImageService = async (request, fastify, data) => {
     global.tblLibraryImages[index] = modifiedData[0];
   }
 
-  callClientAPI(
+  await callClientAPI(
     {
        serviceType: ServiceType.clientAPI,
        moduleType: APIEndpointModuleType.updateSeoModule,
@@ -258,15 +240,9 @@ const editLibraryImageService = async (request, fastify, data) => {
          type: "update",
          data: modifiedData[0]
        }
-    }, request, fastify)
-   .catch((err) => {
-     errorLogger(
-       fastify,
-       err.message,
-       "services/photoLibrary.js/editLibraryImageService - callClientAPI",
-       request
-     );
-   });
+    }, request, fastify,
+    "services/photoLibrary.js/editLibraryImageService"
+  );
   return modifiedData[0];
 };
 
@@ -293,19 +269,7 @@ const allPhotoLibraryService = async (request) => {
     });
   }
   if (dateTime) {
-    const now = Date.now();
-    data = data.filter(item => {
-      if (item.isPermanent) return true;
-
-      const start = new Date(item.startDate).getTime();
-      const end = new Date(item.endDate).getTime();
-      const result = start <= now && end >= now;
-      if (!result) {
-        global.pendingPhotoLibraryToClient.push(item);
-      }
-
-      return result;
-    });
+    data = getDataFromTime(data, "pendingPhotoLibraryToClient");
   }
   return data;
 };
@@ -375,7 +339,7 @@ const deletePhotoLibraryService = async (request, fastify) => {
 
   global.pendingPhotoLibraryToClient = global.pendingPhotoLibraryToClient.filter(item => !photoLibraryId.includes(item.photoLibraryId));
 
-  callClientAPI({
+  await callClientAPI({
     serviceType: ServiceType.clientAPI,
     moduleType: APIEndpointModuleType.updateSeoModule,
     data: {
@@ -385,15 +349,9 @@ const deletePhotoLibraryService = async (request, fastify) => {
         photoLibraryId: photoLibraryId
       }
     }
-  }, request, fastify)
-   .catch((err) => {
-     errorLogger(
-       fastify,
-       err.message,
-       "services/photoLibrary.js/deletePhotoLibraryService - callClientAPI",
-       request
-     );
-   });
+  }, request, fastify,
+    "services/photoLibrary.js/deletePhotoLibraryService"
+  );
 
   return `Photo library data deleted successfully`;
 };
@@ -413,7 +371,7 @@ const deleteLibraryImagesService = async (request, fastify) => {
     (item) => !id.includes(item.id)
   );
 
-  callClientAPI(
+  await callClientAPI(
     {
        serviceType: ServiceType.clientAPI,
        moduleType: APIEndpointModuleType.updateSeoModule,
@@ -424,15 +382,9 @@ const deleteLibraryImagesService = async (request, fastify) => {
           id: id
         }
        }
-    }, request, fastify)
-   .catch((err) => {
-     errorLogger(
-       fastify,
-       err.message,
-       "services/photoLibrary.js/deleteLibraryImagesService - callClientAPI",
-       request
-     );
-   });
+    }, request, fastify,
+    "services/photoLibrary.js/deleteLibraryImagesService"
+  );
 
   return `Library image(s) data deleted successfully`;
 };
@@ -450,7 +402,7 @@ const updateDisplayOrderService = async (request, fastify) => {
 
   global.pendingPhotoLibraryToClient = global.pendingPhotoLibraryToClient.filter(item => request.body.id.map(item => item.id).includes(item.photoLibraryId));
 
-  callClientAPI(
+  await callClientAPI(
     {
        serviceType: ServiceType.clientAPI,
        moduleType: APIEndpointModuleType.updateSeoModule,
@@ -459,15 +411,9 @@ const updateDisplayOrderService = async (request, fastify) => {
          type: "displayOrder",
          data: request.body
        }
-    }, request, fastify)
-   .catch((err) => {
-     errorLogger(
-       fastify,
-       err.message,
-       "services/photoLibrary.js/updateDisplayOrderService - callClientAPI",
-       request
-     );
-   });
+    }, request, fastify,
+    "services/photoLibrary.js/updateDisplayOrderService"
+  );
 
   return `Display order updated successfully`;
 };
@@ -502,7 +448,7 @@ const updateIsDefultService = async (request, fastify) => {
     global.tblLibraryImages[index].isDefault = request.body.isDefault;
   }
 
-  callClientAPI(
+  await callClientAPI(
     {
        serviceType: ServiceType.clientAPI,
        moduleType: APIEndpointModuleType.updateSeoModule,
@@ -515,15 +461,9 @@ const updateIsDefultService = async (request, fastify) => {
           photoLibraryId: result.photoLibraryId
          }
        }
-    }, request, fastify)
-   .catch((err) => {
-     errorLogger(
-       fastify,
-       err.message,
-       "services/photoLibrary.js/updateIsDefultService - callClientAPI",
-       request
-     );
-   });
+    }, request, fastify,
+    "services/photoLibrary.js/updateIsDefultService"
+  );
 
   return `IsDefault updated successfully`;
 };
@@ -569,7 +509,7 @@ const updatePhotoLibraryDisplayOrderService = async (request, fastify) => {
 
   global.pendingPhotoLibraryToClient = global.pendingPhotoLibraryToClient.filter(item => allActiveData.map(item => item.photoLibraryId).includes(item.photoLibraryId));
 
-  callClientAPI({
+  await callClientAPI({
     serviceType: ServiceType.clientAPI,
     moduleType: APIEndpointModuleType.updateSeoModule,
     data: {
@@ -577,15 +517,9 @@ const updatePhotoLibraryDisplayOrderService = async (request, fastify) => {
       type: "changeDisplayOrder",
       data: allActiveData
     }
-  }, request, fastify)
-    .catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "services/photoLibrary.js/updatePhotoLibraryDisplayOrderService - callClientAPI",
-        request
-      );
-    });
+  }, request, fastify,
+    "services/photoLibrary.js/updatePhotoLibraryDisplayOrderService"
+  );
   return "Photo library display order updated successfully";
 };
 
@@ -619,7 +553,8 @@ const sendActivePhotoLibraryToClientAPIService = async (fastify) => {
 
         const result = start <= now && end >= now;
         if (result) {
-          callClientAPI(
+          global.pendingPhotoLibraryToClient = global.pendingPhotoLibraryToClient.filter(item => item.photoLibraryId !== data.photoLibraryId);
+          await callClientAPI(
             {
               serviceType: ServiceType.clientAPI,
               moduleType: APIEndpointModuleType.updateSeoModule,
@@ -630,17 +565,9 @@ const sendActivePhotoLibraryToClientAPIService = async (fastify) => {
               }
             },
             null,
-            fastify
-          ).then(res => {
-            global.pendingPhotoLibraryToClient = global.pendingPhotoLibraryToClient.filter(item => item.photoLibraryId !== data.photoLibraryId);
-          }).catch((err) => {
-            errorLogger(
-              fastify,
-              err.message,
-              "ERROR --> services/photoLibrary.js/sendActivePhotoLibraryToClientAPIService- callClientAPI",
-              null
-            );
-          });
+            fastify,
+            "services/photoLibrary.js/sendActivePhotoLibraryToClientAPIService"
+          );
         }
       }
     }
