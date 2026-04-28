@@ -87,7 +87,7 @@ const createTblTournamentTeamPointsService = async (request, fastify) => {
   if (validateCompetitionId && validateCompetitionId.isActive == true) {
     const res = await responseChangeService(saveData?.teamId, saveData?.competitionId);
   
-    callClientAPI(
+    await callClientAPI(
      {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
@@ -96,15 +96,9 @@ const createTblTournamentTeamPointsService = async (request, fastify) => {
           type: "add",
           data: { ...saveData, ...res}
         }
-     }, request, fastify)
-    .catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "services/tournamentTeamPoints.js/createTblTournamentTeamPointsService - callClientAPI",
-        request
-      );
-    });
+     }, request, fastify,
+      "services/tournamentTeamPoints.js/createTblTournamentTeamPointsService"
+    );
   }
   return saveData
 }
@@ -153,7 +147,7 @@ const updateTblTournamentTeamPointsService = async (request, fastify) => {
 
   if (validateCompetitionId && validateCompetitionId.isActive == true) {
     const res = await responseChangeService(updateData?.teamId, updateData?.competitionId);
-    callClientAPI(
+    await callClientAPI(
      {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
@@ -162,15 +156,9 @@ const updateTblTournamentTeamPointsService = async (request, fastify) => {
           type: "update",
           data: { ...updateData, ...res }
         }
-     }, request, fastify)
-    .catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "services/tournamentTeamPoints.js/updateTblTournamentTeamPointsService - callClientAPI",
-        request
-      );
-    });
+     }, request, fastify,
+      "services/tournamentTeamPoints.js/updateTblTournamentTeamPointsService"
+    );
   }
   return updateData
 }
@@ -202,7 +190,7 @@ const createTournamentTeamPointsService = async (newItems, fastify, request) => 
 
     if (competitionData && competitionData.isActive == true) {
       const res = await responseChangeService(saveData?.teamId, saveData?.competitionId);
-      callClientAPI(
+      await callClientAPI(
        {
           serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.updateSeoModule,
@@ -211,15 +199,9 @@ const createTournamentTeamPointsService = async (newItems, fastify, request) => 
             type: "add",
             data: { ...saveData, ...res }
           }
-       }, request, fastify)
-      .catch((err) => {
-        errorLogger(
-          fastify,
-          err.message,
-          "services/tournamentTeamPoints.js/createTournamentTeamPointsService - callClientAPI",
-          request
-        );
-      });
+       }, request, fastify,
+        "services/tournamentTeamPoints.js/createTournamentTeamPointsService"
+      );
     }
   });
   await Promise.all(insertData);
@@ -271,7 +253,7 @@ const updateTournamentTeamPointsService = async (existingItems, fastify, request
 
     if (competitionData && competitionData.isActive == true) {
       const res = await responseChangeService(updateData?.teamId, updateData?.competitionId);
-      callClientAPI(
+      await callClientAPI(
        {
           serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.updateSeoModule,
@@ -280,15 +262,9 @@ const updateTournamentTeamPointsService = async (existingItems, fastify, request
             type: "update",
             data: { ...updateData, ...res }
           }
-       }, request, fastify)
-      .catch((err) => {
-        errorLogger(
-          fastify,
-          err.message,
-          "services/tournamentTeamPoints.js/updateTournamentTeamPointsService - callClientAPI",
-          request
-        );
-      });
+       }, request, fastify,
+        "services/tournamentTeamPoints.js/updateTournamentTeamPointsService"
+      );
     }
 
   });
@@ -325,7 +301,7 @@ const deleteTournamentTeamPointsService = async (request, fastify) => {
     );
   }
 
-  callClientAPI(
+  await callClientAPI(
    {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
@@ -337,15 +313,9 @@ const deleteTournamentTeamPointsService = async (request, fastify) => {
         }
       }
    },
-   request, fastify)
-  .catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "services/tournamentTeamPoints.js/deleteTournamentTeamPointsService - callClientAPI",
-      request
-    );
-  });
+   request, fastify,
+    "services/tournamentTeamPoints.js/deleteTournamentTeamPointsService"
+  );
   
 
   return `TournamentTeamPoint(s) deleted successfully`;
@@ -385,7 +355,7 @@ const activeInactiveTournamentTeamPointsService = async (request, fastify) => {
       updateData.push({ ...validationResult, ...res });
     }
     updateData.push({ ...result[0], ...res })
-    callClientAPI(
+    await callClientAPI(
      {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
@@ -395,15 +365,9 @@ const activeInactiveTournamentTeamPointsService = async (request, fastify) => {
           data: updateData
         }
      },
-     request, fastify)
-    .catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "services/tournamentTeamPoints.js/activeInactiveTournamentTeamPointsService - callClientAPI",
-        request
-      );
-    });
+     request, fastify,
+      "services/tournamentTeamPoints.js/activeInactiveTournamentTeamPointsService"
+    );
   }
 
   return `TournamentTeamPoint isActive stage updated successfully`;
@@ -550,7 +514,7 @@ const setTeamNetRunRateService = async (teamId, competitionId, fastify) => {
   );
   if (competitionData && competitionData.isActive == true) {
     const res = await responseChangeService(updatedData?.teamId, updatedData?.competitionId);
-    callClientAPI(
+    await callClientAPI(
      {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
@@ -559,15 +523,9 @@ const setTeamNetRunRateService = async (teamId, competitionId, fastify) => {
           type: "update",
           data: { ...updatedData, ...res }
         }
-     }, null, fastify)
-    .catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "services/tournamentTeamPoints.js/setTeamNetRunRateService - callClientAPI",
-        null
-      );
-    });
+     }, null, fastify,
+      "services/tournamentTeamPoints.js/setTeamNetRunRateService"
+    );
   }
   return updatedData;
 };
@@ -688,7 +646,7 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
           let validateComp = global.tblCompetitions.find(item => item.competitionId == competitionId)
           if (validateComp && validateComp?.isActive == true) {
             const res = await responseChangeService(updateData?.teamId, updateData?.competitionId);
-            callClientAPI(
+            await callClientAPI(
               {
                 serviceType: ServiceType.clientAPI,
                 moduleType: APIEndpointModuleType.updateSeoModule,
@@ -697,15 +655,9 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
                   type: "update",
                   data: { ...updateData, ...res }
                 }
-              }, null, fastify)
-              .catch((err) => {
-                errorLogger(
-                  fastify,
-                  err.message,
-                  "services/tournamentTeamPoints.js/importTournamentTeamPointFromEntitySportService update - callClientAPI",
-                  null
-                );
-              });
+              }, null, fastify,
+              "services/tournamentTeamPoints.js/addEditTournamentTeamPointDataService"
+            );
           }
         } else {
           const data = {
@@ -723,7 +675,7 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
             let validateComp = global.tblCompetitions.find(item => item.competitionId == competitionId)
             if (validateComp && validateComp?.isActive == true) {
               const res = await responseChangeService(pointData?.teamId, pointData?.competitionId);
-              callClientAPI(
+              await callClientAPI(
                 {
                   serviceType: ServiceType.clientAPI,
                   moduleType: APIEndpointModuleType.updateSeoModule,
@@ -732,15 +684,9 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
                     type: "add",
                     data: { ...pointData, ...res }
                   }
-                }, null, fastify)
-                .catch((err) => {
-                  errorLogger(
-                    fastify,
-                    err.message,
-                    "services/tournamentTeamPoints.js/importTournamentTeamPointFromEntitySportService add - callClientAPI",
-                    null
-                  );
-                });
+                }, null, fastify,
+                "services/tournamentTeamPoints.js/addEditTournamentTeamPointDataService"
+              );
             }
           }
         }

@@ -204,7 +204,7 @@ const approveDomainService = async (request, fastify) => {
 
   global.tblSubScribesDomain[index].isApproved = request.body.isApproved;
 
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
@@ -218,16 +218,9 @@ const approveDomainService = async (request, fastify) => {
       },
     },
     request,
-    fastify
-  ).catch((err) => {
-    console.log("cll client api console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/subScribesDomain.js/approveDomainService",
-      request
-    );
-  });
+    fastify,
+    "services/subScribesDomain.js/approveDomainService"
+  );
   return "Domain updated Successfully";
 }
 
@@ -243,7 +236,7 @@ const activeInactiveVideoApprovedService = async (request, fastify) => {
 
   global.tblSubScribesDomain[index].isVideoApproved = request.body.isVideoApproved;
 
-  callClientAPI(
+  await callClientAPI(
     { 
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
@@ -257,16 +250,9 @@ const activeInactiveVideoApprovedService = async (request, fastify) => {
       },
     },
     request,
-    fastify
-  ).catch((err) => {
-    console.log("cll client api console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/subScribesDomain.js/activeInactiveVideoApprovedService",
-      request
-    );
-  });
+    fastify,
+    "services/subScribesDomain.js/activeInactiveVideoApprovedService"
+  );
   return "Video approved updated Successfully";
 }
 
