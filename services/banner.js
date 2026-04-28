@@ -100,6 +100,8 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
         fastify,
         "services/banner.js/createBannerService"
       );
+    } else {
+      global.pendingBannerToClient(data);
     }
   
     global.tblBanner.push(data[0]);

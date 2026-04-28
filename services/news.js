@@ -117,6 +117,8 @@ const createNewsService = async (request, fastify) => {
       }, request, fastify,
       "services/news.js/createNewsService"
     );
+  } else {
+    global.pendingNewsToClient.push(data[0]);
   }
 
   return data;
@@ -260,18 +262,18 @@ const activeInactiveNewsService = async (request, fastify) => {
 
   global.pendingNewsToClient = global.pendingNewsToClient.filter(item => item.newsId !== newsId);
 
-    await callClientAPI(
-      {
-        serviceType : ServiceType.clientAPI,
-        moduleType : APIEndpointModuleType.updateSeoModule,
-        data : {
-          module : 'news',
-          type : isActive ? "active" : "inactive",
-          data : global.tblNews[index]
-        }
-      }, request, fastify,
-      "services/news.js/activeInactiveNewsService"
-    );
+  await callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.updateSeoModule,
+      data: {
+        module: 'news',
+        type: isActive ? "active" : "inactive",
+        data: global.tblNews[index]
+      }
+    }, request, fastify,
+    "services/news.js/activeInactiveNewsService"
+  );
 
   return `News updated successfully`;
 };
@@ -295,6 +297,9 @@ const changeDisplayOrderService = async (request, fastify) => {
       )
     )
   );
+
+  global.pendingNewsToClient = global.pendingNewsToClient.filter(item => allActiveData.map(item => item.newsId).includes(item.newsId));
+
   await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
