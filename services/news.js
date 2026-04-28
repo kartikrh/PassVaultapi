@@ -5,7 +5,7 @@ const {
   activeInactiveNewsQuery,
   changeeDisplayOrderQuery
 } = require("../repository/TableNews");
-const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { callClientAPI, ServiceType, APIEndpointModuleType, getDataFromTime } = require("../utilities");
 const {
   generateImageName,
   storeImageOnServer,
@@ -42,19 +42,7 @@ const getAllNewsService = async (request, fastify) => {
   }
 
   if (dateTime) {
-    const now = Date.now();
-    result = result.filter(item => {
-      if (item.isPermanent) return true;
-
-      const start = new Date(item.startDate).getTime();
-      const end = new Date(item.endDate).getTime();
-      const result = start <= now && end >= now;
-      if (!result) {
-        global.pendingNewsToClient.push(item);
-      }
-
-      return result;
-    });
+    result = getDataFromTime(result, "pendingNewsToClient");
   }
   return result;
 };
@@ -117,7 +105,7 @@ const createNewsService = async (request, fastify) => {
     }
   }
   if (sendToClient) {
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
@@ -126,15 +114,9 @@ const createNewsService = async (request, fastify) => {
           type: "add",
           data: data[0]
         }
-      }, request, fastify)
-      .catch((err) => {
-        errorLogger(
-          fastify,
-          err.message,
-          "services/news.js/createNewsService - callClientAPI",
-          request
-        );
-      });
+      }, request, fastify,
+      "services/news.js/createNewsService"
+    );
   }
 
   return data;
@@ -206,7 +188,7 @@ const updateNewsService = async (request, fastify) => {
   global.tblNews[index] = body;
   global.pendingNewsToClient = global.pendingNewsToClient.filter(item => item.newsId !== body.newsId);
   if(body.isActive){
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
@@ -215,15 +197,9 @@ const updateNewsService = async (request, fastify) => {
           type: "update",
           data: body
         }
-      }, request, fastify)
-      .catch((err) => {
-        errorLogger(
-          fastify,
-          err.message,
-          "services/news.js/createNewsService - callClientAPI",
-          request
-        );
-      });
+      }, request, fastify,
+      "services/news.js/updateNewsService"
+    );
   }
   return body;
 };
@@ -247,7 +223,7 @@ const deleteNewsService = async (request, fastify) => {
   
   global.pendingNewsToClient = global.pendingNewsToClient.filter(item => !newsId.includes(item.newsId));
 
-    callClientAPI({
+    await callClientAPI({
       serviceType : ServiceType.clientAPI,
       moduleType : APIEndpointModuleType.updateSeoModule,
       data : {
@@ -257,15 +233,9 @@ const deleteNewsService = async (request, fastify) => {
           newsId : newsId
         }
       }
-  }, request, fastify)
-    .catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "services/news.js/createNewsService - callClientAPI",
-        request
-      );
-    });
+  }, request, fastify,
+      "services/news.js/deleteNewsService"
+    );
   return `News deleted successfully`;
 };
 const activeInactiveNewsService = async (request, fastify) => {
@@ -290,7 +260,7 @@ const activeInactiveNewsService = async (request, fastify) => {
 
   global.pendingNewsToClient = global.pendingNewsToClient.filter(item => item.newsId !== newsId);
 
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType : ServiceType.clientAPI,
         moduleType : APIEndpointModuleType.updateSeoModule,
@@ -299,15 +269,9 @@ const activeInactiveNewsService = async (request, fastify) => {
           type : isActive ? "active" : "inactive",
           data : global.tblNews[index]
         }
-      }, request, fastify)
-    .catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "services/news.js/createNewsService - callClientAPI",
-        request
-      );
-    });
+      }, request, fastify,
+      "services/news.js/activeInactiveNewsService"
+    );
 
   return `News updated successfully`;
 };
@@ -331,7 +295,7 @@ const changeDisplayOrderService = async (request, fastify) => {
       )
     )
   );
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
@@ -340,15 +304,9 @@ const changeDisplayOrderService = async (request, fastify) => {
         type: "changeDisplayOrder",
         data: allActiveData
       }
-    }, request, fastify)
-    .catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "services/news.js/changeDisplayOrderService - callClientAPI",
-        request
-      );
-    });
+    }, request, fastify,
+    "services/news.js/changeDisplayOrderService"
+  );
   return "Display order updated successfully";
 };
 const sendActiveNewsToClientAPIService = async (fastify) => {
@@ -361,7 +319,8 @@ const sendActiveNewsToClientAPIService = async (fastify) => {
 
         const result = start <= now && end >= now;
         if (result) {
-          callClientAPI(
+          global.pendingNewsToClient = global.pendingNewsToClient.filter(item => item.newsId !== data.newsId);
+          await callClientAPI(
             {
               serviceType: ServiceType.clientAPI,
               moduleType: APIEndpointModuleType.updateSeoModule,
@@ -372,17 +331,9 @@ const sendActiveNewsToClientAPIService = async (fastify) => {
               }
             },
             null,
-            fastify
-          ).then(res => {
-            global.pendingNewsToClient = global.pendingNewsToClient.filter(item => item.newsId !== data.newsId);
-          }).catch((err) => {
-            errorLogger(
-              fastify,
-              err.message,
-              "ERROR --> services/news.js.js/sendActiveNewsToClientAPIService- callClientAPI",
-              null
-            );
-          });
+            fastify,
+            "services/news.js/sendActiveNewsToClientAPIService"
+          );
         }
       }
     }

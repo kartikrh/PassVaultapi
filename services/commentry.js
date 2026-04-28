@@ -1178,23 +1178,16 @@ const createCommentaryService = async (request, fastify) => {
       fastify
     );
 
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.commentaryUpdate,
         data: cData,
       },
       request,
-      fastify
-    ).catch((err) => {
-      console.log("call client api console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/createCommentaryService",
-        request
-      );
-    });
+      fastify,
+      "services/commentry.js/createCommentaryService"
+    );
   }
 
   // const urlEventRefId = addCommentry.eventRefId;
@@ -1888,7 +1881,7 @@ const updateCommentaryService = async (request, fastify) => {
     fastify
   );
 
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
@@ -1898,16 +1891,9 @@ const updateCommentaryService = async (request, fastify) => {
       },
     },
     request,
-    fastify
-  ).catch((err) => {
-    console.log("call client api console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/updateCommentaryService",
-      request
-    );
-  });
+    fastify,
+    "services/commentry.js/updateCommentaryService"
+  );
 
   if (
     global?.clientSocketIo !== undefined &&
@@ -2372,23 +2358,16 @@ const cloneCommentaryService = async (request, fastify) => {
       fastify
     );
 
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.commentaryUpdate,
         data: cData,
       },
       request,
-      fastify
-    ).catch((err) => {
-      console.log("call client api console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/cloneCommentaryService",
-        request
-      );
-    });
+      fastify,
+      "services/commentry.js/cloneCommentaryService"
+    );
   }
 
   // const urlEventRefId = newCommentary.eventRefId;
@@ -2596,7 +2575,7 @@ const deleteCommentaryService = async (request, fastify) => {
   //   }
   // }
 
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
@@ -2607,16 +2586,9 @@ const deleteCommentaryService = async (request, fastify) => {
       },
     },
     request,
-    fastify
-  ).catch((err) => {
-    console.log("call client api console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/deleteCommentaryService",
-      request
-    );
-  });
+    fastify,
+    "services/commentry.js/deleteCommentaryService"
+  );
 
   callDataProvider(
     {
@@ -4074,23 +4046,16 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           fastify
         );
 
-        callClientAPI(
+        await callClientAPI(
           {
             serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.commentaryUpdate,
             data: cData,
           },
           request,
-          fastify
-        ).catch((err) => {
-          console.log("call client api console", err);
-          errorLogger(
-            fastify,
-            err.message,
-            "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-            request
-          );
-        });
+          fastify,
+          "services/commentry.js/syncCommentaryStatsWithAPIAndSocket"
+        );
       }
       if (previousCommentaryStatus != statusToUpdate && statusToUpdate == 4) {
         await notiConfigContentReplaceService(
@@ -4227,7 +4192,7 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           global.tblTips = global.tblTips.filter(
             (item) => !tipsData.includes(item.id)
           );
-          callClientAPI(
+          await callClientAPI(
             {
               serviceType: ServiceType.clientAPI,
               moduleType: APIEndpointModuleType.updateSeoModule,
@@ -4240,7 +4205,8 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
               },
             },
             request,
-            fastify
+            fastify,
+            "services/commentry.js/syncCommentaryStatsWithAPIAndSocket"
           )
         }
       }
@@ -6535,23 +6501,16 @@ const commentaryStatusService = async (request, fastify) => {
     fastify
   );
 
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
       data: cData,
     },
     request,
-    fastify
-  ).catch((err) => {
-    console.log("call client api console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/commentaryStatusService",
-      request
-    );
-  });
+    fastify,
+    "services/commentry.js/commentaryStatusService"
+  );
 
   commentaryDetails.callPredictions = [];
   return {
@@ -10153,7 +10112,7 @@ const changeShowClientService = async (request, fastify) => {
       fastify
     );
 
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.commentaryUpdate,
@@ -10164,16 +10123,9 @@ const changeShowClientService = async (request, fastify) => {
         },
       },
       request,
-      fastify
-    ).catch((err) => {
-      console.log("cll client api console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/changeShowClientService",
-        request
-      );
-    });
+      fastify,
+      "services/commentry.js/changeShowClientService"
+    );
 
     commActionLogger(
       {
@@ -10611,23 +10563,16 @@ const updateResultInCommentaryService = async (request, fastify) => {
       fastify
     );
 
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.commentaryUpdate,
         data: cData,
       },
       request,
-      fastify
-    ).catch((err) => {
-      console.log("call cleint api console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/updateResultInCommentaryService",
-        request
-      );
-    });
+      fastify,
+      "services/commentry.js/updateResultInCommentaryService"
+    );
   }
 
   return "Result updated successfully";
@@ -10855,7 +10800,7 @@ const activeInactiveCommentaryService = async (request, fastify) => {
     request,
     fastify
   );
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
@@ -10866,16 +10811,9 @@ const activeInactiveCommentaryService = async (request, fastify) => {
       },
     },
     request,
-    fastify
-  ).catch((err) => {
-    console.log("call client api console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/activeInactiveCommentaryService",
-      request
-    );
-  });
+    fastify,
+    "services/commentry.js/activeInactiveCommentaryService"
+  );
   if (
     global?.clientSocketIo !== undefined &&
     global?.clientSocketIo.length > 0
@@ -10999,23 +10937,16 @@ const closeCommentaryService = async (request, fastify) => {
         fastify
       );
 
-      callClientAPI(
+      await callClientAPI(
         {
           serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
           data: cData,
         },
         request,
-        fastify
-      ).catch((err) => {
-        console.log("call client api console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/closeEventMarketByCIdQuery",
-          request
-        );
-      });
+        fastify,
+        "services/commentry.js/closeCommentaryService"
+      );
       // find competition
       let comp = global.tblCompetitions.find(
         (item) =>
@@ -11053,7 +10984,7 @@ const closeCommentaryService = async (request, fastify) => {
         global.tblTips = global.tblTips.filter(
           (item) => !tipsData.includes(item.id)
         );
-        callClientAPI(
+        await callClientAPI(
           {
             serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.updateSeoModule,
@@ -11066,15 +10997,9 @@ const closeCommentaryService = async (request, fastify) => {
             },
           },
           request,
-          fastify
-        ).catch((err) => {
-          errorLogger(
-            fastify,
-            err.message,
-            "services/commentary.js/syncCommentaryStatsWithAPIAndSocket - callClientAPI",
-            request
-          );
-        });
+          fastify,
+          "services/commentry.js/closeCommentaryService"
+        );
       }
     }
     if (setEventSnap.length > 0) {
@@ -11515,7 +11440,7 @@ const updateEventRefIdInCommentaryService = async (request, fastify) => {
     fastify
   );
   
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
@@ -11525,16 +11450,9 @@ const updateEventRefIdInCommentaryService = async (request, fastify) => {
       },
     },
     request,
-    fastify
-  ).catch((err) => {
-    console.log("call client api console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/updateEventRefIdInCommentaryService",
-      request
-    );
-  });
+    fastify,
+    "services/commentry.js/updateEventRefIdInCommentaryService"
+  );
 
   updatedData.callPrediction = callPrediction;
   return updatedData;
@@ -12916,7 +12834,7 @@ const cancelCommentaryService = async (request, fastify) => {
       //   fastify
       // );
       
-      callClientAPI(
+      await callClientAPI(
         // {
         //   serviceType: ServiceType.clientAPI,
         //   moduleType: APIEndpointModuleType.commentaryUpdate,
@@ -12932,15 +12850,7 @@ const cancelCommentaryService = async (request, fastify) => {
         },
         request,
         fastify
-      ).catch((err) => {
-        console.log("call client api console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/closeEventMarketByCIdQuery",
-          request
-        );
-      });
+      );
 
       const tipsData = global.tblTips
         .filter(
@@ -12953,7 +12863,7 @@ const cancelCommentaryService = async (request, fastify) => {
         global.tblTips = global.tblTips.filter(
           (item) => !tipsData.includes(item.id)
         );
-        callClientAPI(
+        await callClientAPI(
           {
             serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.updateSeoModule,
@@ -12966,15 +12876,9 @@ const cancelCommentaryService = async (request, fastify) => {
             },
           },
           request,
-          fastify
-        ).catch((err) => {
-          errorLogger(
-            fastify,
-            err.message,
-            "services/commentary.js/syncCommentaryStatsWithAPIAndSocket - callClientAPI",
-            request
-          );
-        });
+          fastify,
+          "services/commentry.js/cancelCommentaryService"
+        );
       }
       // delete player history data if exist for this commentary
     }
@@ -13065,7 +12969,7 @@ const deleteEventResultService = async (request, fastify) => {
     await netRunRateRe_calculationService(request, fastify);
   }
 
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
@@ -13076,16 +12980,9 @@ const deleteEventResultService = async (request, fastify) => {
       },
     },
     request,
-    fastify
-  ).catch((err) => {
-    console.log("call client api console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/deleteEventResultService",
-      request
-    );
-  });
+    fastify,
+    "services/commentry.js/deleteEventResultService"
+  );
 
   callDataProvider(
     {
@@ -13420,7 +13317,7 @@ const deleteCommentaryHistoryService = async (request, fastify) => {
   //   await calculationOfCommPlayerBowlHistService(request, fastify);
   // }
 
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
@@ -13431,16 +13328,9 @@ const deleteCommentaryHistoryService = async (request, fastify) => {
       },
     },
     request,
-    fastify
-  ).catch((err) => {
-    console.log("call client api console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/deleteCommentaryHistoryService",
-      request
-    );
-  });
+    fastify,
+    "services/commentry.js/deleteCommentaryHistoryService"
+  );
 
   callDataProvider(
     {
@@ -13558,7 +13448,7 @@ const changeIsTestComService = async (request, fastify) => {
     request,
     fastify
   );
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
@@ -13569,16 +13459,9 @@ const changeIsTestComService = async (request, fastify) => {
       },
     },
     request,
-    fastify
-  ).catch((err) => {
-    console.log("call client api console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/changeIsTestComService",
-      request
-    );
-  });
+    fastify,
+    "services/commentry.js/changeIsTestComService"
+  );
   commActionLogger(
     {
       commentaryId: request.body.commentaryId,
@@ -14157,23 +14040,16 @@ const saveComVirtual = async (request, fastify) => {
           fastify
         );
 
-        callClientAPI(
+        await callClientAPI(
           {
             serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.commentaryUpdate,
             data: cData
           },
           request,
-          fastify
-        ).catch((err) => {
-          console.log("call client api console in saveCommVirtual", err);
-          errorLogger(
-            fastify,
-            err.message,
-            "ERROR --> services/commentary.js/saveComVirtual",
-            request
-          );
-        });
+          fastify,
+          "services/commentry.js/saveComVirtual"
+        );
       // }
       // if (previousCommentaryStatus != statusToUpdate && statusToUpdate == 4) {
       //   // await notiConfigContentReplaceService(EventName.EVENTCOMPLETED, commentaryData.commentaryId, request, fastify)
@@ -15505,14 +15381,15 @@ const commentaryStartService = async (request, fastify) => {
         fastify
       );
 
-      callClientAPI(
+      await callClientAPI(
         {
           serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
           data: cData,
         },
         request,
-        fastify
+        fastify,
+        "services/commentry.js/commentaryStartService"
       );
       if (commentaryData?.isPredictMarket == true) {
         callDataProvider(
@@ -15817,22 +15694,16 @@ const commentaryTossService = async (request, fastify) => {
         fastify
       );
 
-      callClientAPI(
+      await callClientAPI(
         {
           serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
           data: cData,
         },
         request,
-        fastify
-      ).catch((err) => {
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/commentaryTossService",
-          request
-        );
-      });
+        fastify,
+        "services/commentry.js/commentaryTossService"
+      );
     }
     if (commentaryTeams.length > 0) {
       let teams = [];
@@ -17467,23 +17338,16 @@ const commentaryInningChangeService = async (request, fastify) => {
           fastify
         );
 
-        callClientAPI(
+        await callClientAPI(
           {
             serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.commentaryUpdate,
             data: cData,
           },
           request,
-          fastify
-        ).catch((err) => {
-          console.log("call client api console", err);
-          errorLogger(
-            fastify,
-            err.message,
-            "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-            request
-          );
-        });
+          fastify,
+          "services/commentry.js/commentaryInningChangeService"
+        );
       }
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "commentaryDetails",
@@ -23062,23 +22926,16 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                     fastify
                 );
 
-                callClientAPI(
+                await callClientAPI(
                     {
                         serviceType: ServiceType.clientAPI,
                         moduleType: APIEndpointModuleType.commentaryUpdate,
                         data: cData,
                     },
                     request,
-                    fastify
-                ).catch((err) => {
-                    console.log("call client api console", err);
-                    errorLogger(
-                        fastify,
-                        err.message,
-                        "ERROR --> services/commentary.js/syncEntitySportCommentaryService",
-                        request
-                    );
-                });
+                    fastify,
+                  "services/commentry.js/syncEntitySportCommentaryService"
+                );
             }
             // if (previousCommentaryStatus != statusToUpdate && statusToUpdate == 4) {
             //     await notiConfigContentReplaceService(
@@ -24135,23 +23992,16 @@ const matchImportService = async (data, fastify, request = null) => {
       fastify
     );
 
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.commentaryUpdate,
         data: cData,
       },
       request,
-      fastify
-    ).catch((err) => {
-      console.log("call client api console in matchImportService", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/matchImportService",
-        request
-      );
-    });
+      fastify,
+      "services/commentry.js/matchImportService"
+    );
   }
 
   const commentaryId = checkCommentary?.commentaryId;
@@ -24602,23 +24452,16 @@ const undoCommentaryService = async (request, fastify) => {
           fastify
         );
 
-        callClientAPI(
+        await callClientAPI(
           {
             serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.commentaryUpdate,
             data: cData,
           },
           request,
-          fastify
-        ).catch((err) => {
-          console.log("call client api console", err);
-          errorLogger(
-            fastify,
-            err.message,
-            "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-            request
-          );
-        });
+          fastify,
+          "services/commentry.js/undoCommentaryService"
+        );
       }
       if (previousCommentaryStatus != statusToUpdate && statusToUpdate == 4) {
         await notiConfigContentReplaceService(
@@ -24733,7 +24576,7 @@ const undoCommentaryService = async (request, fastify) => {
           global.tblTips = global.tblTips.filter(
             (item) => !tipsData.includes(item.id)
           );
-          callClientAPI(
+          await callClientAPI(
             {
               serviceType: ServiceType.clientAPI,
               moduleType: APIEndpointModuleType.updateSeoModule,
@@ -24746,7 +24589,8 @@ const undoCommentaryService = async (request, fastify) => {
               },
             },
             request,
-            fastify
+            fastify,
+            "services/commentry.js/undoCommentaryService"
           )
         }
       }
@@ -26233,22 +26077,16 @@ const abandonedCommentaryService = async (request, fastify) => {
         fastify
       );
 
-      callClientAPI(
+      await callClientAPI(
         {
           serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
           data: cData,
         },
         request,
-        fastify
-      ).catch((err) => {
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/commentary.js/abandonedCommentaryService - callClientAPI",
-          request
-        );
-      });
+        fastify,
+        "services/commentry.js/abandonedCommentaryService"
+      );
 
       // const tipsData = global.tblTips
       //   .filter(

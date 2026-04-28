@@ -12,7 +12,7 @@ const {
 } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
-const { VideoLibraryType } = require("../utilities/index");
+const { VideoLibraryType, getDataFromTime } = require("../utilities/index");
 const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
 
 const saveVideoLibraryService = async (request, fastify) => {
@@ -64,7 +64,7 @@ const saveVideoLibraryService = async (request, fastify) => {
   }
 
   if (sendToClient) {
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
@@ -73,15 +73,9 @@ const saveVideoLibraryService = async (request, fastify) => {
           type: "add",
           data: saveData
         }
-      }, request, fastify)
-      .catch((err) => {
-        errorLogger(
-          fastify,
-          err.message,
-          "services/videoLibrary.js/saveVideoLibraryService - callClientAPI",
-          request
-        );
-      });
+      }, request, fastify,
+      "services/videoLibrary.js/saveVideoLibraryService"
+    );
   }
 
   return saveData;
@@ -164,7 +158,7 @@ const editVideoLibraryService = async (request, fastify, data) => {
 
   global.pendingVideoLibraryToClient = global.pendingVideoLibraryToClient.filter(item => item.id !== updateData.id);
 
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
@@ -173,15 +167,9 @@ const editVideoLibraryService = async (request, fastify, data) => {
         type: "update",
         data: modifiedData[0]
       }
-    }, request, fastify)
-  .catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "services/videoLibrary.js/editVideoLibraryService - callClientAPI",
-      request
-    );
-  });
+    }, request, fastify,
+    "services/videoLibrary.js/editVideoLibraryService"
+  );
 
   return modifiedData[0];
 };
@@ -210,19 +198,7 @@ const allVideoLibraryService = async (request) => {
   }
 
   if (dateTime) {
-    const now = Date.now();
-    videos = videos.filter(item => {
-      if (item.isPermanent) return true;
-
-      const start = new Date(item.from).getTime();
-      const end = new Date(item.to).getTime();
-      const result = start <= now && end >= now;
-      if (!result) {
-        global.pendingVideoLibraryToClient.push(item);
-      }
-
-      return result;
-    });
+    videos = getDataFromTime(videos, "pendingVideoLibraryToClient", "from", "to");
   }
   return videos;
 };
@@ -258,7 +234,7 @@ const deleteVideoLibraryService = async (request, fastify) => {
 
   global.pendingVideoLibraryToClient = global.pendingVideoLibraryToClient.filter(item => !id.includes(item.id));
 
-  callClientAPI({
+  await callClientAPI({
     serviceType: ServiceType.clientAPI,
     moduleType: APIEndpointModuleType.updateSeoModule,
     data: {
@@ -268,15 +244,9 @@ const deleteVideoLibraryService = async (request, fastify) => {
         id: id
       }
     }
-  }, request, fastify)
-  .catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "services/videoLibrary.js/deleteVideoLibraryQuery - callClientAPI",
-      request
-    );
-  });
+  }, request, fastify,
+    "services/videoLibrary.js/deleteVideoLibraryService"
+  );
 
   return `Video library data deleted successfully`;
 };
@@ -317,7 +287,7 @@ const updateDisplayOrderService = async (request, fastify) => {
 
   global.pendingVideoLibraryToClient = global.pendingVideoLibraryToClient.filter(item => request.body.map(item => item.id).includes(item.id));
 
-  callClientAPI({
+  await callClientAPI({
     serviceType: ServiceType.clientAPI,
     moduleType: APIEndpointModuleType.updateSeoModule,
     data: {
@@ -325,15 +295,9 @@ const updateDisplayOrderService = async (request, fastify) => {
       type: "changeDisplayOrder",
       data: allActiveData
     }
-  }, request, fastify)
-  .catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "services/videoLibrary.js/deleteVideoLibraryQuery - callClientAPI",
-      request
-    );
-  });
+  }, request, fastify,
+    "services/videoLibrary.js/updateDisplayOrderService"
+  );
 
   return `Display order updated successfully`;
 }
@@ -348,7 +312,8 @@ const sendActiveVideoLibraryToClientAPIService = async (fastify) => {
 
         const result = start <= now && end >= now;
         if (result) {
-          callClientAPI(
+          global.pendingVideoLibraryToClient = global.pendingVideoLibraryToClient.filter(item => item.id !== data.id);
+          await callClientAPI(
             {
               serviceType: ServiceType.clientAPI,
               moduleType: APIEndpointModuleType.updateSeoModule,
@@ -359,17 +324,9 @@ const sendActiveVideoLibraryToClientAPIService = async (fastify) => {
               }
             },
             null,
-            fastify
-          ).then(res => {
-            global.pendingVideoLibraryToClient = global.pendingVideoLibraryToClient.filter(item => item.id !== data.id);
-          }).catch((err) => {
-            errorLogger(
-              fastify,
-              err.message,
-              "ERROR --> services/videoLibrary.js/sendActiveVideoLibraryToClientAPIService- callClientAPI",
-              null
-            );
-          });
+            fastify,
+            "services/videoLibrary.js/sendActiveVideoLibraryToClientAPIService"
+          );
         }
       }
     }

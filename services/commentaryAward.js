@@ -140,7 +140,7 @@ const assignAwardService = async (request, fastify) => {
           global.tblCommentaryAwards = global.tblCommentaryAwards.filter(
             (el) => !awardIds.includes(el.id)
           );
-            callClientAPI(
+            await callClientAPI(
                 {
                     serviceType: ServiceType.clientAPI,
                     moduleType: APIEndpointModuleType.updateSeoModule,
@@ -149,15 +149,9 @@ const assignAwardService = async (request, fastify) => {
                         type: "delete",
                         data: { id: awardIds }
                     }
-                }, request, fastify
-            ).catch((err) => {
-                errorLogger(
-                    fastify,
-                    err.message,
-                    "services/commentaryAwards.js/assignAwardService - callClientAPI",
-                    request
-                );
-            });
+                }, request, fastify,
+              "services/commentaryAward.js/assignAwardService"
+            );
         }
         }
     let addAward = await assignAwardQuery(comAwards, request, fastify);
@@ -182,7 +176,7 @@ const assignAwardService = async (request, fastify) => {
             playerStat: commPlayer
         }
         
-        callClientAPI(
+        await callClientAPI(
             {
                 serviceType: ServiceType.clientAPI,
                 moduleType: APIEndpointModuleType.updateSeoModule,
@@ -191,15 +185,9 @@ const assignAwardService = async (request, fastify) => {
                     type: "add",
                     data: award
                 }
-            }, request, fastify)
-            .catch((err) => {
-                errorLogger(
-                    fastify,
-                    err.message,
-                    "services/commentaryAwards.js/assignAwardService add - callClientAPI",
-                    request
-                );
-            });
+            }, request, fastify,
+          "services/commentaryAward.js/assignAwardService"
+        );
     }
     return addAward;
 }

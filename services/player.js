@@ -1506,7 +1506,7 @@ const playerImageChangeOnClientAPIService = async (teamPlayer, matchTypeId, fast
       })
   );
   if (updatedData.length > 0) {
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
@@ -1515,15 +1515,9 @@ const playerImageChangeOnClientAPIService = async (teamPlayer, matchTypeId, fast
           type: "update",
           data: updatedData
         }
-      }, null, fastify)
-      .catch((err) => {
-        errorLogger(
-          fastify,
-          err.message,
-          "services/player.js/playerImageChangeOnClientAPIService - callClientAPI",
-          null
-        );
-      });
+      }, null, fastify,
+      "services/player.js/playerImageChangeOnClientAPIService"
+    );
   }
 }
 

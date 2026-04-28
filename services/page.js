@@ -49,7 +49,7 @@ const addPageService = async (request, fastify) => {
     });
   }
 
-  callClientAPI({
+  await callClientAPI({
     serviceType: ServiceType.clientAPI,
     moduleType: APIEndpointModuleType.updateMenuList,
     data: {
@@ -59,15 +59,9 @@ const addPageService = async (request, fastify) => {
     },
   },
   request,
-  fastify
-  ).catch((error) => {
-    errorLogger(
-      fastify,
-      error.message ,
-      "services/page.js/addPageService - callClientAPI",
-      request
-    );
-  });
+  fastify,
+    "services/page.js/addPageService"
+  );
   return data;
 };
 
@@ -133,7 +127,7 @@ const updatePageService = async (request, fastify) => {
     });
   }
 
-  callClientAPI({
+  await callClientAPI({
     serviceType: ServiceType.clientAPI,
     moduleType: APIEndpointModuleType.updateMenuList,
     data: {
@@ -141,14 +135,9 @@ const updatePageService = async (request, fastify) => {
       module : "pages",
       data : global.tblPages[index]
     },
-  }, request , fastify).catch((error) => {
-    errorLogger(
-      fastify,
-      error.message,
-      "services/page.js/updatePageService - callClientAPI",
-      request
-    );
-  });
+  }, request , fastify,
+    "services/page.js/updatePageService"
+  );
 
   return {
     ...result,
@@ -197,7 +186,7 @@ const deletePageService = async (request, fastify) => {
     (item) => !encryptedIds.includes(item.pageId)
   );
 
-  callClientAPI({
+  await callClientAPI({
     serviceType: ServiceType.clientAPI,
     moduleType: APIEndpointModuleType.updateMenuList,
     data: {
@@ -207,14 +196,9 @@ const deletePageService = async (request, fastify) => {
         pageId : request.body.pageId,
       }
     },
-  }, request , fastify).catch((error) => {
-    errorLogger(
-      fastify,
-      error.message,
-      "services/page.js/deletePageService - callClientAPI",
-      request
-    );
-  });
+  }, request , fastify,
+    "services/page.js/deletePageService"
+  );
   return "Page(s) deleted successfully";
 };
 

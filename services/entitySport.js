@@ -166,7 +166,7 @@ const saveCommentariesService = async (request , fastify) =>{
                 request,
                 fastify
               );
-              callClientAPI(
+              await callClientAPI(
                 {
                   serviceType: ServiceType.clientAPI,
                   moduleType: APIEndpointModuleType.commentaryUpdate,
@@ -177,16 +177,9 @@ const saveCommentariesService = async (request , fastify) =>{
                   },
                 },
                 request,
-                fastify
-              ).catch((err) => {
-                console.log("call client api console on entitySport", err);
-                errorLogger(
-                  fastify,
-                  err.message,
-                  "ERROR --> services/entitySport.js/saveCommentariesService",
-                  request
-                );
-              });
+                fastify,
+                "services/entitySport.js/saveCommentariesService"
+              );
             }
         }
     }
@@ -447,23 +440,16 @@ const setEntityCom2Service = async (request , fastify) =>{
         fastify
       );
 
-      callClientAPI(
+      await callClientAPI(
         {
           serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
           data: cData,
         },
         request,
-        fastify
-      ).catch((err) => {
-        console.log("call client api in setEntityCom2Service - 2", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/entitysport.js/serEntityCom2Service",
-          request
-        );
-      });
+        fastify,
+        "services/entitySport.js/setEntityCom2Service"
+      );
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       });
@@ -607,23 +593,16 @@ const setEntityCom2Service = async (request , fastify) =>{
           fastify
         );
 
-        callClientAPI(
+        await callClientAPI(
           {
             serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.commentaryUpdate,
             data: cData,
           },
           request,
-          fastify
-        ).catch((err) => {
-          console.log("call client api console in setEntityCom2Service", err);
-          errorLogger(
-            fastify,
-            err.message,
-            "ERROR --> services/entitysport.js/setEntityCom2Service",
-            request
-          );
-        });
+          fastify,
+          "services/entitySport.js/setEntityCom2Service"
+        );
       }
       if(comDetails.commentaryStatus == commentaryStatus.TOSSDONE){
         // check if getting same data from entity
@@ -1222,23 +1201,16 @@ const setEntityCom2Service = async (request , fastify) =>{
         fastify
       );
 
-      callClientAPI(
+      await callClientAPI(
         {
           serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
           data: cData,
         },
         request,
-        fastify
-      ).catch((err) => {
-        console.log("call client api in setEntityCom2Service - 2", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/entitysport.js/serEntityCom2Service",
-          request
-        );
-      });
+        fastify,
+        "services/entitySport.js/setEntityCom2Service"
+      );
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       });
@@ -4608,23 +4580,16 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
         fastify
       );
 
-      callClientAPI(
+      await callClientAPI(
         {
           serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
           data: cData,
         },
         request,
-        fastify
-      ).catch((err) => {
-        console.log("call client api in storeInningData", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/entitysport.js/storeInningWiseEntityDataService",
-          request
-        );
-      });
+        fastify,
+        "services/entitySport.js/storeInningWiseEntityDataService"
+      );
 
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
@@ -6362,16 +6327,9 @@ const cancelCommentaryOnInningService  = async (commentaryId, request, fastify) 
           data: cData,
         },
         request,
-        fastify
-      ).catch((err) => {
-        console.log("call client api console in entitySport", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/entitySport.js/cancelCommentaryOnInningService",
-          request
-        );
-      });
+        fastify,
+        "services/entitySport.js/cancelCommentaryOnInningService"
+      );
     }
     return true;
   } catch (error) {

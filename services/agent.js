@@ -263,7 +263,7 @@ const changeShowClientService = async (request, fastify) => {
       fastify
     );
 
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.commentaryUpdate,
@@ -274,16 +274,9 @@ const changeShowClientService = async (request, fastify) => {
         },
       },
       request,
-      fastify
-    ).catch((err) => {
-      console.log("cll client api console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/changeShowClientService",
-        request
-      );
-    });
+      fastify,
+      "services/agent.js/changeShowClientService"
+    );
   // }
 
   if (
@@ -343,7 +336,7 @@ const activeInactiveCommentaryService = async (request, fastify) => {
     request,
     fastify
   );
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
@@ -354,16 +347,9 @@ const activeInactiveCommentaryService = async (request, fastify) => {
       },
     },
     request,
-    fastify
-  ).catch((err) => {
-    console.log("call client api console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/activeInactiveCommentaryService",
-      request
-    );
-  });
+    fastify,
+    "services/agent.js/activeInactiveCommentaryService"
+  );
   if (
     global?.clientSocketIo !== undefined &&
     global?.clientSocketIo.length > 0
