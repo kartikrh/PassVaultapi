@@ -122,6 +122,8 @@ const createAdvertiseService = async (request, fastify) => {
         fastify,
         "services/advertise.js/createAdvertiseService"
       );
+    } else {
+      global.pendingAdvertiseToClient.push(newAdvertise);
     }
 
     return newAdvertise;

@@ -52,6 +52,8 @@ const savePhotoLibraryService = async (request, fastify) => {
       }, request, fastify,
       "services/photoLibrary.js/savePhotoLibraryService"
     );
+  } else {
+    global.pendingPhotoLibraryToClient.push(saveData);
   }
   return saveData;
 };
@@ -448,6 +450,8 @@ const updateIsDefultService = async (request, fastify) => {
     global.tblLibraryImages[index].isDefault = request.body.isDefault;
   }
 
+  global.pendingPhotoLibraryToClient = global.pendingPhotoLibraryToClient.filter(item => item.photoLibraryId !== result.photoLibraryId);
+
   await callClientAPI(
     {
        serviceType: ServiceType.clientAPI,
@@ -481,6 +485,18 @@ const updatePhotoLibraryStatusService = async (request, fastify) => {
   if (index !== -1) {
     global.tblPhotoLibrary[index].isActive = isActive;
   }
+
+  global.pendingPhotoLibraryToClient = global.pendingPhotoLibraryToClient.filter(item => item.photoLibraryId !== photoLibraryId);
+
+  await callClientAPI(
+    {
+       serviceType: ServiceType.clientAPI,
+       moduleType: APIEndpointModuleType.updateSeoModule,
+       data: global.tblPhotoLibrary[index]
+    }, request, fastify,
+    "services/photoLibrary.js/updatePhotoLibraryStatusService"
+  );
+
   return {
     photoLibraryId,
     isActive

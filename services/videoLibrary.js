@@ -76,6 +76,8 @@ const saveVideoLibraryService = async (request, fastify) => {
       }, request, fastify,
       "services/videoLibrary.js/saveVideoLibraryService"
     );
+  } else {
+    global.pendingVideoLibraryToClient.push(saveData);
   }
 
   return saveData;
@@ -264,6 +266,22 @@ const updateVideoStatusService = async (request, fastify) => {
   };
   const updatedVideo = await updateVideoLibraryStatusQuery(body, fastify, request);
   global.tblVideoLibrary[index].isActive = isActive;
+
+  global.pendingVideoLibraryToClient = global.pendingVideoLibraryToClient.filter(item => item.id !== updateData.id);
+
+  await callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.updateSeoModule,
+      data: {
+        module: 'videoLibrary',
+        type: "update",
+        data: global.tblVideoLibrary[index]
+      }
+    }, request, fastify,
+    "services/videoLibrary.js/updateVideoStatusService"
+  );
+
   return updatedVideo[0];
 };
 
