@@ -270,6 +270,11 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
           client,
           connectedAt: new Date()
         });
+        global.entitySportSocketIo.push({
+          entitySocketId: urlConfig.entitySocketId,
+          client
+        });
+
         global.socketIo.emit("entitysocketconnect", `Connected to entitySport - ${urlConfig.serverName} at ${new Date().toISOString()}`);
 
         try {
@@ -292,6 +297,8 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
 
       client.on("disconnect", async (reason) => {
         global.connectedEntitySocketClients = global.connectedEntitySocketClients.filter(item => item.urlConfig.entitySocketId !== urlConfig.entitySocketId);
+        global.entitySportSocketIo = global.entitySportSocketIo.filter(item => item.entitySocketId !== urlConfig.entitySocketId);
+
         global.socketIo.emit("entitysocketdisconnect", `Entity socket disconnected from ${urlConfig.serverName}, reason: ${reason} at ${new Date().toISOString()}`);
 
         try {

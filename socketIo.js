@@ -1,13 +1,14 @@
 const jwt = require("jsonwebtoken");
 const { errorLogger, pythonSocketLogger } = require("./utilities/logger");
 const { getEventMarketByIdsQuery, insertTimeLogs, updateTimeLogs, socketMarketRunnerDataQuery, openMarketScoketConnectionDataQuery, getMnMarketByCId, getMarketByComIdQuery } = require("./repository/TableEventMarkets");
-const { MarketActionType, callTPAPI } = require("./utilities");
+const { MarketActionType, callTPAPI, pushSessionData } = require("./utilities");
 const {createMarketOddsBallByBallBYIDFromSocketIo,createMarketOddsBallInSaveDetails,CheckAndCreateMarketOddsBallInSaveDetails} = require("./repository/TableMarketOddsBallByBall")
 const configConstants = require('./utilities/configConstants');
 const { getAllEventMarketsV2ByIdQuery } = require("./repository/TableEventMarkets");
 const { getAllMarketRunnersV2ByIdQuery } = require("./repository/TableMarketRunner");
 
 global.sessionData = []
+
 const connection = (socket , fastify) => {
   if (socket.isInternal) {
     console.log("🐍 Python connected socket:", socket.id, new Date());
@@ -43,14 +44,14 @@ const connection = (socket , fastify) => {
         global.socketIo.to(commentaryId).emit("updateMarketData", marketData);
       }
       let ballbybllId;
-      global.sessionData.push({type: "before socket", data: marketData})
+      pushSessionData({type: "before socket", data: marketData})
       const marketIdArr = marketData.map((item) => {
         const mark = JSON.parse(item);
         MarketArr.push(mark);
         ballbybllId = mark.ballByBallId;
         return mark.marketId;
       });
-      global.sessionData.push({type: "after socket", data: marketIdArr})
+      pushSessionData({type: "after socket", data: marketIdArr})
       const inninRunData = MarketArr.filter((item) => item?.isInningRun === true);
       const roomName = `mnMarket-${commentaryId}`;
       const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(roomName);
@@ -125,7 +126,7 @@ const connection = (socket , fastify) => {
       }
     }
 
-      global.sessionData.push({type: "marketToUpdate", data: marketToUpdate})
+      pushSessionData({type: "marketToUpdate", data: marketToUpdate})
       let LDOMARKETSIDS;
       try {
         LDOMARKETSIDS = global.tblConfigs
@@ -140,7 +141,7 @@ const connection = (socket , fastify) => {
           !LDOMARKETSIDS.includes(market.marketTypeCategoryId.toString()) &&
           market.status === 1
       );
-      global.sessionData.push({type: "filteredMarkets", data: filteredMarkets})
+      pushSessionData({type: "filteredMarkets", data: filteredMarkets})
       if (ballbybllId && filteredMarkets.length > 0) {
         const result = [];
   
@@ -174,7 +175,7 @@ const connection = (socket , fastify) => {
             });
           }
         });
-        global.sessionData.push({type: "Result", data: result})
+        pushSessionData({type: "Result", data: result})
         // Convert data to JSON strings
         result.forEach((event) => {
           event.data = JSON.stringify(event.data);
