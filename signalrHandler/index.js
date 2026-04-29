@@ -13,6 +13,7 @@ global.isAdminStoppedSignalR = false;
 let intervalId;
 let _fastify;
 let checkConfigIntervalId = null;
+const MAX_RATE_HISTORY = 20;
 
 async function startSignalR(fastify) {
   try {
@@ -60,6 +61,9 @@ async function startSignalR(fastify) {
           };
         
         
+          if (intervalId) {
+            clearInterval(intervalId);
+          }
           intervalId = setInterval(checkAndUpdateMarketRate, _SignalRInterwal || 10000);
         
           connection.on('Rate', async (message) => {
@@ -232,9 +236,15 @@ async function startSignalR(fastify) {
                              
                                if (items.backSize !== undefined) {
                                 global.selectionData[items.selectionId].backSize.push(items.backSize);
+                                if (global.selectionData[items.selectionId].backSize.length > MAX_RATE_HISTORY) {
+                                  global.selectionData[items.selectionId].backSize.shift();
+                                }
                                }
                                if (items.laySize !== undefined) {
                                 global.selectionData[items.selectionId].laySize.push(items.laySize);
+                                if (global.selectionData[items.selectionId].laySize.length > MAX_RATE_HISTORY) {
+                                  global.selectionData[items.selectionId].laySize.shift();
+                                }
                               }
                             
                               let selection = global.selectionData[items.selectionId];

@@ -243,6 +243,17 @@ const wicketType = {
   9: "Hit Ball Twice",
   10: "Obstruct the Fielding",
 };
+const pushSessionData = (data) => {
+  const MAX_SESSION_DATA = 100;
+  if (!global.sessionData) {
+    global.sessionData = [];
+  }
+  global.sessionData.push(data);
+  if (global.sessionData.length > MAX_SESSION_DATA) {
+    global.sessionData.shift();
+  }
+};
+
 const BALL_TYPE = {
   OVER_COMPLETE: 0,
   REGULAR: 1,
@@ -2655,5 +2666,6 @@ module.exports = {
   normalizeText,
   normalizeCompetitionSeasonName,
   getOverCalculation,
-  getDataFromTime
+  getDataFromTime,
+  pushSessionData
 };

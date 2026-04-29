@@ -1,5 +1,6 @@
 const signalR = require('@microsoft/signalr');
-const {EventMarketStatus, EventMarketRateSource,MarketUpdateType} = require('../utilities/index');
+const {EventMarketStatus, EventMarketRateSource, MarketUpdateType, pushSessionData} = require('../utilities/index');
+
 const {marketDataLogger} = require("../utilities/logger");
 const {updateEventMarketRunnerMaunalQuery,getEventMarketByIdsQuery,
     UpdateEventMarketByCIdFromSocketQuery,updateMarketStatusFromSignalRQuery, getAllEventMarketsV2ByIdQuery} = require('../repository/TableEventMarkets');
@@ -157,10 +158,16 @@ async function startSignalR(fastify) {
                             await updateConnectionStatus(thirdParty, _fastify);
                             await subScribeConnectMarketRate(_fastify);
 
+                            if (updateMarketRateIntervalId) {
+                                clearInterval(updateMarketRateIntervalId);
+                            }
                             updateMarketRateIntervalId = setInterval(() => {
                                 subScribeConnectMarketRate(_fastify);
                             }, _SignalRInterwal || 10000); // 10 seconds interval
 
+                            if (IntervalId) {
+                                clearInterval(IntervalId);
+                            }
                             IntervalId = setInterval(async () => {
                                 await processRateQueue();
                             }, _RateUpdate);
@@ -1308,7 +1315,7 @@ const createUpdateGlobalSignalRData = async (message, request) => {
             }
         }
     } catch (error) {
-        global.sessionData.push({type: "signalrHandler/CreateUpdateSignalRData", data: error})
+        pushSessionData({type: "signalrHandler/CreateUpdateSignalRData", data: error})
         console.log("CreateUpdateSignalRData error", error)
         errorLogger(
             _fastify,
@@ -1440,7 +1447,7 @@ const updateMarketRunnerDataOnSocket = async (message) => {
             }
         });
     } catch (error) {
-        global.sessionData.push({type: "signalrHandler/updateMarketRunnerDataOnSocket", data: error})
+        pushSessionData({type: "signalrHandler/updateMarketRunnerDataOnSocket", data: error})
         errorLogger(
             _fastify,
             error,

@@ -23779,7 +23779,8 @@ const matchImportService = async (data, fastify, request = null) => {
         if (shouldUpdate) {
           request.body = {
             ...checkCommentary,
-            venueId: getNewVenueData?.id
+            venueId: getNewVenueData?.id,
+            location: getNewVenueData?.name && getNewVenueData?.city ? `${getNewVenueData.name}, ${getNewVenueData.city}` : null,
           }
           await updateCommentaryQuery(request, fastify);
           const index = global.tblCommentaries.findIndex(tc => tc.commentaryId === upsertedCommentaryId);
