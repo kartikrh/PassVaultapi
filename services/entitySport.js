@@ -1509,14 +1509,15 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             ...comP,
             isPlay: isPlayData,
             onStrike: onStrikeData,
-            batRun: p.runs,
-            batBall: p.balls_faced,
-            batFour: p.fours,
-            batSix: p.sixes,
+            batRun: p.runs ?? 0,
+            batBall: p.balls_faced ?? 0,
+            batFour: p.fours  ?? 0,
+            batSix: p.sixes ?? 0,
             batterOrder,
             batsmanStrikeRate: parseFloat(p.strike_rate) ?? "0",
             isInPlayingEleven: true,
           };
+          
           currentPlayers.push(comP.commentaryPlayerId);
         }
       }
@@ -1634,17 +1635,17 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
         let tpBowler = bowlers.find((i)=>i.bowler_id == b);
         playersMap[b] = {
           ...comP,
-          isPlay : tpBowler.bowling == "true" ? true : null,
+          isPlay : tpBowler?.bowling == "true" ? true : null,
           onStrike : false,
-          bowlerOver: tpBowler.overs,
-          bowlerRun: tpBowler.runs_conceded,
-          bowlerTotalWicket: tpBowler.wickets,
+          bowlerOver: tpBowler?.overs ?? null,
+          bowlerRun: tpBowler?.runs_conceded  ?? null,
+          bowlerTotalWicket: tpBowler?.wickets ?? null,
           bowlerEconomy: parseFloat(tpBowler.econ) ?? "0",
           bowlerOrder,
           bowlerMaidenOver: tpBowler?.maidens ?? 0,
-          bowlerWideBall : tpBowler.wides,
-          bowlerNoBall : tpBowler.noballs,
-          bowlerDotBall : tpBowler.run0,
+          bowlerWideBall : tpBowler?.wides ?? 0,
+          bowlerNoBall : tpBowler?.noballs ?? 0,
+          bowlerDotBall : tpBowler?.run0 ?? 0,
           isInPlayingEleven: true,
           bowlerTotalBall: oversToBalls(tpBowler?.overs),
         }
@@ -2679,7 +2680,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               bowlerId: null,
               fielderId1: null,
               fielderId2: null,
-              batDotBall: (+playersMap[oldBatsman.tpId]?.batDotBall) - 1,
+              batDotBall: (+playersMap[oldBatsman.tpId]?.batDotBall) > 0 ? (+playersMap[oldBatsman.tpId]?.batDotBall) - 1 : +playersMap[oldBatsman.tpId]?.batDotBall,
             }
             w.batterId = playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId;
             w.batterName = playerTpIdObj[c.wicket_batsman_id]?.playerName;

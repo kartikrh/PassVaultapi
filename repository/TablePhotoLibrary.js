@@ -49,7 +49,8 @@ const getAllPhotoLibraryQuery = async (fastify) => {
         tpl."wrCommentaryId" AS "commentaryId",
         tpl."wrWhitelabelId" AS "whitelabelId",
         ed."wrValue" AS "encryptWhitelabelId",
-        twl."wrDomain" AS "domain"
+        twl."wrDomain" AS "domain",
+        tpl."wrViewCount" AS "viewCount"
      FROM "tblPhotoLibrary" tpl
      LEFT JOIN "tblWhitelabel" twl ON tpl."wrWhitelabelId" = twl."wrId"
      LEFT JOIN "tblEncryptedData" ed ON tpl."wrWhitelabelId" = ed."wrKey"
@@ -119,7 +120,8 @@ const insertPhotoLibraryQuery = async (data, fastify, request) => {
         tpl."wrCommentaryId" AS "commentaryId",
         tpl."wrWhitelabelId" AS "whitelabelId",
         ed."wrValue" AS "encryptWhitelabelId",
-        twl."wrDomain" AS "domain"
+        twl."wrDomain" AS "domain",
+        tpl."wrViewCount" AS "viewCount"
       FROM insert_data tpl
       LEFT JOIN "tblWhitelabel" twl
         ON tpl."wrWhitelabelId" = twl."wrId"
@@ -184,7 +186,8 @@ const updatePhotoLibraryQuery = async (data, fastify, request) => {
         upd."wrCommentaryId" AS "commentaryId",
         upd."wrWhitelabelId" AS "whitelabelId",
         ed."wrValue" AS "encryptWhitelabelId",
-        twl."wrDomain" AS "domain"
+        twl."wrDomain" AS "domain",
+        upd."wrViewCount" AS "viewCount"
       FROM update_data upd
       LEFT JOIN "tblWhitelabel" twl ON upd."wrWhitelabelId" = twl."wrId"
       LEFT JOIN "tblEncryptedData" ed ON upd."wrWhitelabelId" = ed."wrKey";`,
@@ -478,6 +481,27 @@ const updatePhotoLibraryDisplayOrderQuery = async (data, fastify, request) => {
   }
 };
 
+const updatePhotoLibraryViewCountQuery = async (body, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblPhotoLibrary" SET
+        "wrViewCount" = COALESCE("wrViewCount", 0) + 1
+      WHERE "wrPhotoLibraryId" = $1 `,
+      {
+        bind: [body.refId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TablePhotoLibrary.js/updatePhotoLibraryViewCountQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+}
+
 module.exports = {
   getAllPhotoLibraryQuery,
   getAllLibraryImagesQuery,
@@ -492,4 +516,5 @@ module.exports = {
   isDefaultFalseQuery,
   updatePhotoLibraryStatusQuery,
   updatePhotoLibraryDisplayOrderQuery,
+  updatePhotoLibraryViewCountQuery
 };
