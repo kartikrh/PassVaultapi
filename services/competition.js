@@ -2059,7 +2059,8 @@ const competitionImportService = async (data, fastify, request) => {
         if (shouldUpdate) {
           request.body = {
             ...checkCommentary,
-            venueId: getNewVenueData?.id
+            venueId: getNewVenueData?.id,
+            location: getNewVenueData?.name && getNewVenueData?.city ? `${getNewVenueData.name}, ${getNewVenueData.city}` : null,
           }
           await updateCommentaryQuery(request, fastify);
           const index = global.tblCommentaries.findIndex(tc => tc.commentaryId === commentaryId);
