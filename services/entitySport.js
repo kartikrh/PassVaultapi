@@ -1517,6 +1517,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             batsmanStrikeRate: parseFloat(p.strike_rate) ?? "0",
             isInPlayingEleven: true,
           };
+          
           currentPlayers.push(comP.commentaryPlayerId);
         }
       }
