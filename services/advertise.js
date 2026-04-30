@@ -3,8 +3,9 @@ const {
   updateAdvertiseQuery,
   deleteAdvertiseQuery,
   activeInactiveAdvertiseQuery,
+  changeDisplayOrderQuery
 } = require("../repository/TableAdvertise");
-const { ServiceType, APIEndpointModuleType, callClientAPI, ClientAPIType } = require("../utilities");
+const { ServiceType, APIEndpointModuleType, callClientAPI, ClientAPIType, getDataFromTime } = require("../utilities");
 
 const {
   generateImageName,
@@ -42,15 +43,7 @@ const getAllAdvertiseService = async (request, fastify) => {
   }
 
   if (dateTime) {
-    const now = Date.now();
-    data = data.filter(item => {
-      if (item.isPermanent) return true;
-
-      const start = new Date(item.startDate).getTime();
-      const end = new Date(item.endDate).getTime();
-
-      return start <= now && end >= now;
-    });
+    data = getDataFromTime(data, "pendingAdvertiseToClient");
   }
 
   return data;
@@ -77,6 +70,7 @@ const saveAdvertiseService = async (request, fastify) => {
 
 const createAdvertiseService = async (request, fastify) => {
   try {
+       request.body.displayOrder = request.body.displayOrder ?? null;
     if (request.body.image && request.body.image.length) {
       const imgName = generateImageName({
         name: request.body.title,
@@ -115,7 +109,7 @@ const createAdvertiseService = async (request, fastify) => {
       }
     }
     if (sendToClient) {
-      callClientAPI(
+      await callClientAPI(
         {
           serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
@@ -125,16 +119,11 @@ const createAdvertiseService = async (request, fastify) => {
           }
         },
         request,
-        fastify
-      ).catch((err) => {
-        console.log("call client api console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/advertise.js/createAdvertiseService",
-          request
-        );
-      });
+        fastify,
+        "services/advertise.js/createAdvertiseService"
+      );
+    } else {
+      global.pendingAdvertiseToClient.push(newAdvertise);
     }
 
     return newAdvertise;
@@ -167,6 +156,9 @@ const updateAdvertiseService = async (request, fastify) => {
     endDate: request.body.endDate || validateAdvertise.endDate,
     viewerCount: validateAdvertise.viewerCount,
     whitelabelId: Number(request.body.whitelabelId) || validateAdvertise.whitelabelId,
+    displayOrder: request.body.hasOwnProperty("displayOrder")
+  ? request.body.displayOrder
+  : validateAdvertise.displayOrder,
   };
 
   if (request.body.image && request.body.image.length) {
@@ -228,7 +220,9 @@ const updateAdvertiseService = async (request, fastify) => {
     global.tblAdvertise[index] = { ...global.tblAdvertise[index], ...body };
   }
 
-  callClientAPI(
+  global.pendingAdvertiseToClient = global.pendingAdvertiseToClient.filter(item => item.advertiseId !== body.advertiseId);
+
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
@@ -238,16 +232,9 @@ const updateAdvertiseService = async (request, fastify) => {
       }
     },
     request,
-    fastify
-  ).catch((err) => {
-    console.log("call client api console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/advertise.js/updateAdvertiseService",
-      request
-    );
-  });
+    fastify,
+    "services/advertise.js/updateAdvertiseService"
+  );
 
   return body;
 };
@@ -269,7 +256,9 @@ const deleteAdvertiseService = async (request, fastify) => {
     (item) => !advertiseId.includes(item.advertiseId)
   );
 
-  callClientAPI(
+  global.pendingAdvertiseToClient = global.pendingAdvertiseToClient.filter(item => !advertiseId.includes(item.advertiseId));
+
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
@@ -279,16 +268,9 @@ const deleteAdvertiseService = async (request, fastify) => {
       }
     },
     request,
-    fastify
-  ).catch((err) => {
-    console.log("call client api console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/advertise.js/deleteAdvertiseService",
-      request
-    );
-  });
+    fastify,
+    "services/advertise.js/deleteAdvertiseService"
+  );
 
   return "Advertise deleted successfully";
 };
@@ -308,7 +290,9 @@ const activeInactiveAdvertiseService = async (request, fastify) => {
 
   global.tblAdvertise[index].isActive = isActive;
 
-  callClientAPI(
+  global.pendingAdvertiseToClient = global.pendingAdvertiseToClient.filter(item => item.advertiseId !== advertiseId);
+
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
@@ -318,19 +302,84 @@ const activeInactiveAdvertiseService = async (request, fastify) => {
       }
     },
     request,
-    fastify
-  ).catch((err) => {
-    console.log("call client api console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/advertise.js/activeInactiveAdvertiseService",
-      request
-    );
-  });
+    fastify,
+    "services/advertise.js/activeInactiveAdvertiseService"
+  );
 
   return "Advertise updated successfully";
 };
+
+const changeDisplayOrderService = async (request, fastify) => {
+  for (const item of request.body) {
+    await changeDisplayOrderQuery(item, request, fastify);
+    let index = global.tblAdvertise.findIndex(
+      (elem) => elem.advertiseId === item.advertiseId
+    );
+    if (index !== -1) {
+      global.tblAdvertise[index].displayOrder = item.displayOrder;
+    }
+  }
+  const now = Date.now();
+  let allActiveData = global.tblAdvertise.filter(item =>
+    item.isActive === true && (item.isPermanent === true ||
+      (
+        new Date(item.startDate).getTime() <= now &&
+        new Date(item.endDate).getTime() >= now
+      )
+    )
+  );
+  await callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
+      data: {
+        type: ClientAPIType.ChangeDisplayOrder,
+        advertise: allActiveData
+      }
+    },
+    request,
+    fastify,
+    "services/advertise.js/changeDisplayOrderService"
+  );
+ 
+  return true;
+};
+const sendActiveAdvertiseToClientAPIService = async (fastify) => {
+  try {
+    if (global.pendingAdvertiseToClient.length > 0) {
+      const now = Date.now();
+      for (const data of global.pendingAdvertiseToClient) {
+        const start = new Date(data.startDate).getTime();
+        const end = new Date(data.endDate).getTime();
+
+        const result = start <= now && end >= now;
+        if (result) {
+          global.pendingAdvertiseToClient = global.pendingAdvertiseToClient.filter(item => item.advertiseId !== data.advertiseId);
+          await callClientAPI(
+            {
+              serviceType: ServiceType.clientAPI,
+              moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
+              data: {
+                type: ClientAPIType.Insert,
+                advertise: data
+              }
+            },
+            null,
+            fastify,
+            "services/advertise.js/sendActiveAdvertiseToClientAPIService"
+          );
+        }
+      }
+    }
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> services/advertise.js/sendActiveAdvertiseToClientService",
+      null
+    );
+  }
+}
 
 module.exports = {
   getAllAdvertiseService,
@@ -338,4 +387,6 @@ module.exports = {
   saveAdvertiseService,
   deleteAdvertiseService,
   activeInactiveAdvertiseService,
+  changeDisplayOrderService,
+  sendActiveAdvertiseToClientAPIService
 };

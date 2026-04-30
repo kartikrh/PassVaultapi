@@ -51,6 +51,12 @@ global.tblData = {};
 global.marketData = {};
 global.isAllDataLoadedInGlobal = false;
 global.connectedEntitySocketClients = global.connectedEntitySocketClients || [];
+global.pendingAdvertiseToClient = [];
+global.pendingBannerToClient = [];
+global.pendingNewsToClient = [];
+global.pendingPhotoLibraryToClient = [];
+global.pendingVideoLibraryToClient = [];
+
 if (process.env.ENABLE_SENTRY === "TRUE") {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
@@ -116,7 +122,7 @@ module.exports = async function (fastify, opts) {
         "marketTemplateModel", "eventMarketsModel", "marketRunnerModel", "marketTemplateRunnerModel",
         "vendorsModel", "vendorIpModel", "clientSocketModel", "activityLogModel", "mailSettingsModel",
         "thirdPartyApisModel", "commentaryScoringLogsModel", "clientVideoModel", "awardModel", "commentaryAwardModel", "cardTypeModel",
-        "iccRankingModel", "competitionStatisticsTypeModel", "competitionStatisticsModel", "teamMatchTypeModel"
+        "iccRankingModel", "competitionStatisticsTypeModel", "competitionStatisticsModel", "teamMatchTypeModel", "clientLikeDislikeActivityModel"
       ];
 
       models.forEach((model) => require(`./sequelize/tables/${model}`)(fastify.db));

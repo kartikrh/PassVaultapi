@@ -454,23 +454,16 @@ const createVirtualEventService = async (request, fastify) => {
         request,
         fastify
     );
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.commentaryUpdate,
         data: cData,
       },
       request,
-      fastify
-    ).catch((err) => {
-      console.log("call client api console", err);
-      errorLogger(
-        fastify,
-        err.message,
-        "ERROR --> services/commentary.js/cloneCommentaryService",
-        request
-      );
-    });
+      fastify,
+      "services/virtual.js/createVirtualEventService"
+    );
   }
   // save virtual card data
   if (request.body.cards.length > 0) {
@@ -876,23 +869,16 @@ const virtualEventTossService = async (request, fastify) => {
     request,
     fastify
   );
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
       data: cData,
     },
     request,
-    fastify
-  ).catch((err) => {
-    console.log("call client api console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/cloneCommentaryService",
-      request
-    );
-  });
+    fastify,
+    "services/virtual.js/virtualEventTossService"
+  );
   return comData;
 };
 
@@ -2776,23 +2762,16 @@ const comResponseService = async (request, fastify, completeOver = false) => {
     fastify
   );
 
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
       data: cData
     },
     request,
-    fastify
-  ).catch((err) => {
-    console.log("call client api console in saveCommVirtual", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/saveComVirtual",
-      request
-    );
-  });
+    fastify,
+    "services/virtual.js/comResponseService"
+  );
   return {
     teams,
     commentaryDetails,
@@ -3193,23 +3172,16 @@ const cancelEventAPIService = async (request, fastify) => {
     fastify
   );
 
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
       data: cData,
     },
     request,
-    fastify
-  ).catch((err) => {
-    console.log("call client api console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/commentary.js/closeEventMarketByCIdQuery",
-      request
-    );
-  });
+    fastify,
+    "services/virtual.js/cancelEventAPIService"
+  );
 
 
   // if (

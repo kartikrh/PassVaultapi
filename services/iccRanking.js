@@ -125,7 +125,7 @@ const createICCRankingService = async (request, fastify) => {
     global.tblICCRanking.push(saveData);
     if (saveData && saveData.isActive == true) {
         const keyNames = await fieldNamesService(saveData, fastify);
-        callClientAPI(
+        await callClientAPI(
             {
                 serviceType: ServiceType.clientAPI,
                 moduleType: APIEndpointModuleType.updateSeoModule,
@@ -134,15 +134,9 @@ const createICCRankingService = async (request, fastify) => {
                     type: "add",
                     data: { ...saveData, ...keyNames }
                 }
-            }, request, fastify)
-            .catch((err) => {
-                errorLogger(
-                    fastify,
-                    err.message,
-                    "services/iccRanking.js/createICCRankingService - callClientAPI",
-                    request
-                );
-            });
+            }, request, fastify,
+          "services/iccRanking.js/createICCRankingService"
+        );
     }
     return saveData;
 };
@@ -266,7 +260,7 @@ const updateICCRankingByIdService = async (request, fastify) => {
     );
 
     if (clientData.length > 0) {
-        callClientAPI(
+        await callClientAPI(
             {
                 serviceType: ServiceType.clientAPI,
                 moduleType: APIEndpointModuleType.updateSeoModule,
@@ -275,15 +269,9 @@ const updateICCRankingByIdService = async (request, fastify) => {
                     type: "update",
                     data: clientData
                 }
-            }, request, fastify)
-            .catch((err) => {
-                errorLogger(
-                    fastify,
-                    err.message,
-                    "services/iccRanking.js/updateICCRankingByIdService - callClientAPI",
-                    request
-                );
-            });
+            }, request, fastify,
+          "services/iccRanking.js/updateICCRankingByIdService"
+        );
     }
 
     return "ICC Ranking(s) updated successfully";
@@ -305,7 +293,7 @@ const deleteICCRankingByIdService = async (request, fastify) => {
     await deleteICCRankingByIdQuery(id, fastify, request);
     global.tblICCRanking = global.tblICCRanking.filter((item) => !id.includes(item.id));
 
-    callClientAPI(
+    await callClientAPI(
         {
             serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.updateSeoModule,
@@ -316,15 +304,9 @@ const deleteICCRankingByIdService = async (request, fastify) => {
                     id: id
                 }
             }
-        }, request, fastify)
-        .catch((err) => {
-            errorLogger(
-                fastify,
-                err.message,
-                "services/iccRanking.js/deleteICCRankingByIdService - callClientAPI",
-                request
-            );
-        });
+        }, request, fastify,
+      "services/iccRanking.js/deleteICCRankingByIdService"
+    );
 
     return `ICC Ranking(s) deleted successfully`;
 };
@@ -345,7 +327,7 @@ const activeInactiveICCRankingByIdService = async (request, fastify) => {
     }
 
     const keyNames = await fieldNamesService(global.tblICCRanking[index], fastify);
-    callClientAPI(
+    await callClientAPI(
         {
             serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.updateSeoModule,
@@ -354,15 +336,9 @@ const activeInactiveICCRankingByIdService = async (request, fastify) => {
                 type: isActive ? "active" : "inactive",
                 data: { ...global.tblICCRanking[index], ...keyNames }
             }
-        }, request, fastify)
-        .catch((err) => {
-            errorLogger(
-                fastify,
-                err.message,
-                "services/iccRanking.js/activeInactiveICCRankingByIdService - callClientAPI",
-                request
-            );
-        });
+        }, request, fastify,
+      "services/iccRanking.js/activeInactiveICCRankingByIdService"
+    );
 
     return `IsActive stage updated successfully`;
 };
@@ -521,7 +497,7 @@ const importICCRankingFromEntitySportService = async (data = null, fastify, requ
     await deleteAllICCRankingQuery(request, fastify);
     global.tblICCRanking = [];
 
-    callClientAPI(
+    await callClientAPI(
         {
             serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.updateSeoModule,
@@ -529,15 +505,9 @@ const importICCRankingFromEntitySportService = async (data = null, fastify, requ
                 module: 'iccRankings',
                 type: "deleteAll"
             }
-        }, request, fastify)
-        .catch((err) => {
-            errorLogger(
-                fastify,
-                err.message,
-                "services/iccRanking.js/importICCRankingFromEntitySportService - deleteAllICCRanking - callClientAPI",
-                request
-            );
-        });
+        }, request, fastify,
+      "services/iccRanking.js/importICCRankingFromEntitySportService"
+    );
 
     for (const entry of resultEntries) {
         await createICCRankingService({

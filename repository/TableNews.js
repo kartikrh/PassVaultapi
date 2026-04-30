@@ -1,9 +1,8 @@
 const { newsType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
-
 const getAllNewsQuery = async (fastify) => {
   return await fastify.db.query(
-    `select 
+    `SELECT 
             tn."wrNewsId" as "newsId",
             tn."wrTitle" as "title",
             tn."wrNews" as "news",
@@ -19,13 +18,16 @@ const getAllNewsQuery = async (fastify) => {
             tn."wrType" as "type",
             tn."wrSEODescription" as "SEODescription",
             tn."wrImagePath" as "imagePath",
+            tn."wrDisplayOrder" as "displayOrder",
             tn."wrWhitelabelId" as "whitelabelId",
             ed."wrValue" as "encryptWhitelabelId",
             twl."wrDomain" as "domain"
         FROM "tblNews" as tn
-        LEFT JOIN "tblWhitelabel" twl ON tn."wrWhitelabelId" = twl."wrId"
-        LEFT JOIN "tblEncryptedData" ed ON tn."wrWhitelabelId" = ed."wrKey"
-        where tn."wrIsDeleted" = false
+        LEFT JOIN "tblWhitelabel" twl 
+            ON tn."wrWhitelabelId" = twl."wrId"
+        LEFT JOIN "tblEncryptedData" ed 
+            ON tn."wrWhitelabelId" = ed."wrKey"
+        WHERE tn."wrIsDeleted" = false
         `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -36,50 +38,60 @@ const insertNewsQuery = async (data, request, fastify) => {
   try {
     const result = await fastify.db.query(
       `
-                with insert_data as (
-                    insert into "tblNews" (
-                        "wrTitle",
-                        "wrNews",
-                        "wrImage",
-                        "wrIsActive",
-                        "wrIsPermanent",
-                        "wrStartDate",
-                        "wrEndDate",
-                        "wrCreatedBy",
-                        "wrCreatedDate",
-                        "wrTags",
-                        "wrViewerCount",
-                        "wrCredit",
-                        "wrSEO",
-                        "wrSEODescription",
-                        "wrType",
-                        "wrImagePath",
-                        "wrWhitelabelId"
-                    )
-                values ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10, $11, $12, $13,$14, $15, $16) returning *
-                )
-                select 
-                    tn."wrNewsId" as "newsId",
-                    tn."wrTitle" as "title",
-                    tn."wrNews" as "news",
-                    tn."wrImage" as "image",
-                    tn."wrIsActive" as "isActive",
-                    tn."wrIsPermanent" as "isPermanent",
-                    tn."wrStartDate" as "startDate",
-                    tn."wrEndDate" as "endDate",
-                    tn."wrTags" as "tags",
-                    tn."wrViewerCount" as "viewerCount",
-                    tn."wrCredit" as "credit",
-                    tn."wrSEO" as "SEO",
-                    tn."wrSEODescription" as "SEODescription",
-                    tn."wrType" as "type",
-                    tn."wrImagePath" as "imagePath",
-                    tn."wrWhitelabelId" as "whitelabelId",
-                    ed."wrValue" as "encryptWhitelabelId",
-                    twl."wrDomain" as "domain"
-                from "insert_data" as tn
-                LEFT JOIN "tblWhitelabel" twl ON tn."wrWhitelabelId" = twl."wrId"
-                LEFT JOIN "tblEncryptedData" ed ON tn."wrWhitelabelId" = ed."wrKey";`,
+      WITH insert_data AS (
+        INSERT INTO "tblNews" (
+          "wrTitle",
+          "wrNews",
+          "wrImage",
+          "wrIsActive",
+          "wrIsPermanent",
+          "wrStartDate",
+          "wrEndDate",
+          "wrCreatedBy",
+          "wrCreatedDate",
+          "wrTags",
+          "wrViewerCount",
+          "wrCredit",
+          "wrSEO",
+          "wrSEODescription",
+          "wrType",
+          "wrImagePath",
+          "wrWhitelabelId",
+          "wrDisplayOrder"
+        )
+        VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, now(),
+          $9, $10, $11, $12, $13, $14, $15, $16,
+          (SELECT COALESCE(MAX("wrDisplayOrder"), 0) + 1 FROM "tblNews" WHERE "wrIsDeleted" = false)
+        )
+        RETURNING *
+      )
+      SELECT 
+        tn."wrNewsId" as "newsId",
+        tn."wrTitle" as "title",
+        tn."wrNews" as "news",
+        tn."wrImage" as "image",
+        tn."wrIsActive" as "isActive",
+        tn."wrIsPermanent" as "isPermanent",
+        tn."wrStartDate" as "startDate",
+        tn."wrEndDate" as "endDate",
+        tn."wrTags" as "tags",
+        tn."wrViewerCount" as "viewerCount",
+        tn."wrCredit" as "credit",
+        tn."wrSEO" as "SEO",
+        tn."wrSEODescription" as "SEODescription",
+        tn."wrType" as "type",
+        tn."wrImagePath" as "imagePath",
+        tn."wrWhitelabelId" as "whitelabelId",
+        tn."wrDisplayOrder" as "displayOrder",
+        ed."wrValue" as "encryptWhitelabelId",
+        twl."wrDomain" as "domain"
+      FROM insert_data tn
+      LEFT JOIN "tblWhitelabel" twl 
+        ON tn."wrWhitelabelId" = twl."wrId"
+      LEFT JOIN "tblEncryptedData" ed 
+        ON tn."wrWhitelabelId" = ed."wrKey"
+      `,
       {
         type: fastify.db.QueryTypes.INSERT,
         bind: [
@@ -96,12 +108,18 @@ const insertNewsQuery = async (data, request, fastify) => {
           data.credit || null,
           data.SEO || null,
           data.SEODescription || null,
-          data.type || newsType.news,
+          data.type === "news"
+            ? newsType.news
+            : data.type === "article"
+              ? newsType.article
+              : Number(data.type) || newsType.news,
+
           data.imagePath || null,
           data.whitelabelId || null,
         ],
       }
     );
+
     return result[0];
   } catch (err) {
     errorLogger(
@@ -113,30 +131,31 @@ const insertNewsQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
+
 const updateNewsQuery = async (data, request, fastify) => {
   try {
     return await fastify.db.query(
       `
-                update "tblNews" set
-                "wrTitle" = $1,
-                "wrNews" = $2,
-                "wrImage" = $3,
-                "wrIsActive" = $4,
-                "wrIsPermanent" = $5,
-                "wrStartDate" = $6,
-                "wrEndDate" = $7,
-                "wrModifyBy" = $8,
-                "wrModifyDate" = now(),
-                "wrTags" = $10,
-                "wrViewerCount" = $11,
-                "wrCredit" = $12,
-                "wrSEO" = $13,
-                "wrSEODescription" = $14,
-                "wrType" = $15,
-                "wrImagePath" = $16,
-                "wrWhitelabelId" = $17
-                where "wrNewsId" = $9
-            `,
+      update "tblNews" set
+        "wrTitle" = $1,
+        "wrNews" = $2,
+        "wrImage" = $3,
+        "wrIsActive" = $4,
+        "wrIsPermanent" = $5,
+        "wrStartDate" = $6,
+        "wrEndDate" = $7,
+        "wrModifyBy" = $8,
+        "wrModifyDate" = now(),
+        "wrTags" = $10,
+        "wrViewerCount" = $11,
+        "wrCredit" = $12,
+        "wrSEO" = $13,
+        "wrSEODescription" = $14,
+        "wrType" = $15,
+        "wrImagePath" = $16,
+        "wrWhitelabelId" = $17
+      where "wrNewsId" = $9
+      `,
       {
         bind: [
           data.title,
@@ -240,11 +259,36 @@ const newsViewersCountQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 }
+
+const changeeDisplayOrderQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+      UPDATE "tblNews"
+      SET "wrDisplayOrder" = $1
+      WHERE "wrNewsId" = $2
+      `,
+      {
+        bind: [data.displayOrder, data.newsId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableNews/updateDisplayOrderNewsQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   insertNewsQuery,
   updateNewsQuery,
   deleteNewsQuery,
   getAllNewsQuery,
   activeInactiveNewsQuery,
-  newsViewersCountQuery
+  newsViewersCountQuery,
+  changeeDisplayOrderQuery
 };

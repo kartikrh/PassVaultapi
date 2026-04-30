@@ -110,7 +110,7 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
 const entitySportUpdateCommentary = async (commentaryData, checkCompetition, entitySportMatchResponse, isAutoUpdate = false, fastify) => {
     const request = {
         userTokenInfo: {
-            WrUserId: -2
+            WrUserId: isAutoUpdate ? -2 : -5
         }
     };
 
@@ -412,7 +412,7 @@ const entitySportUpdateCommentary = async (commentaryData, checkCompetition, ent
             fastify
         );
 
-        callClientAPI(
+        await callClientAPI(
             {
                 serviceType: ServiceType.clientAPI,
                 moduleType: APIEndpointModuleType.commentaryUpdate,
@@ -422,16 +422,9 @@ const entitySportUpdateCommentary = async (commentaryData, checkCompetition, ent
                 },
             },
             request,
-            fastify
-        ).catch((err) => {
-            console.log("call client api console", err);
-            errorLogger(
-                fastify,
-                err.message,
-                "utilities/entitySportAutoUpdateCommentary.js/entitySportUpdateCommentary",
-                request
-            );
-        });
+            fastify,
+          "utilities/entitySportAutoUpdateCommentary.js/entitySportUpdateCommentary"
+        );
 
         if (global?.clientSocketIo !== undefined && global?.clientSocketIo.length > 0) {
             global.clientSocketIo.forEach((socket) => {

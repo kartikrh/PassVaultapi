@@ -243,6 +243,17 @@ const wicketType = {
   9: "Hit Ball Twice",
   10: "Obstruct the Fielding",
 };
+const pushSessionData = (data) => {
+  const MAX_SESSION_DATA = 100;
+  if (!global.sessionData) {
+    global.sessionData = [];
+  }
+  global.sessionData.push(data);
+  if (global.sessionData.length > MAX_SESSION_DATA) {
+    global.sessionData.shift();
+  }
+};
+
 const BALL_TYPE = {
   OVER_COMPLETE: 0,
   REGULAR: 1,
@@ -580,49 +591,113 @@ const callDataProvider = async (data, fastify) => {
     console.log("error From callDataProvider", error);
   }
 };
-const callClientAPI = async (data, request, fastify) => {
-  try {
-    let clientServices = global.tblAPIs.filter(
-      (item) => item.type == data.serviceType && item.isActive == true
-    );
-    if (clientServices.length == 0) {
-      return true;
-    }
-    for (ser of clientServices) {
-      let endPoint = global.tblAPIEndpoints.find(
-        (item) =>
-          item.serviceType == ser.type &&
-          item.moduleType == data.moduleType &&
-          item.isActive == true
-      );
-      if (endPoint) {
-        let url = `${ser.api}${endPoint.endPoint}`;
-        let dataTosend = data.data;
-        const result = await axios.post(url, {
-          ...dataTosend,
-        });
-        // return result;
-      } else {
-        console.log(
-          "Endpoint not found for service type : ",
-          ser.type,
-          " and module type : ",
-          data.moduleType
-        );
-        // return;
-      }
-    }
-    return true;
-  } catch (error) {
-    errorLogger(
-      fastify,
-      error.message,
-      "DB ERROR --> utilities/index/callClientAPI",
-      request
-    );
-    // throw new Error(error.message);
+// const callClientAPI = async (data, request, fastify) => {
+//   try {
+//     let clientServices = global.tblAPIs.filter(
+//       (item) => item.type == data.serviceType && item.isActive == true
+//     );
+//     if (clientServices.length == 0) {
+//       return true;
+//     }
+//     for (ser of clientServices) {
+//       let endPoint = global.tblAPIEndpoints.find(
+//         (item) =>
+//           item.serviceType == ser.type &&
+//           item.moduleType == data.moduleType &&
+//           item.isActive == true
+//       );
+//       if (endPoint) {
+//         let url = `${ser.api}${endPoint.endPoint}`;
+//         let dataTosend = data.data;
+//         const result = await axios.post(url, {
+//           ...dataTosend,
+//         });
+//         // return result;
+//       } else {
+//         console.log(
+//           "Endpoint not found for service type : ",
+//           ser.type,
+//           " and module type : ",
+//           data.moduleType
+//         );
+//         // return;
+//       }
+//     }
+//     return true;
+//   } catch (error) {
+//     errorLogger(
+//       fastify,
+//       error.message,
+//       "DB ERROR --> utilities/index/callClientAPI",
+//       request
+//     );
+//     // throw new Error(error.message);
+//   }
+// }
+
+const callClientAPI = async (data, request, fastify, route) => {
+  const clientServices = global.tblAPIs.filter(
+    (item) => item.type === data.serviceType && item.isActive
+  );
+
+  if (clientServices.length === 0) {
+    return [];
   }
-}
+
+  const results = await Promise.allSettled(
+    clientServices.map((ser) => {
+      const endPoint = global.tblAPIEndpoints.find(
+        (item) =>
+          item.serviceType === ser.type &&
+          item.moduleType === data.moduleType &&
+          item.isActive
+      );
+
+      if (!endPoint) {
+        request.log.warn(
+          `Endpoint not found for service type: ${ser.type}, module: ${data.moduleType}`
+        );
+
+        // Return a rejected promise so it shows in allSettled
+        return Promise.reject(
+          new Error(`Missing endpoint for ${ser.type}`)
+        );
+      }
+
+      const url = `${ser.api}${endPoint.endPoint}`;
+
+      // IMPORTANT: return the promise
+      return axios.post(url, data.data, { timeout: 5000 });
+    })
+  );
+
+  // Format response
+  return results.map((r, i) => {
+    if (r.status === 'fulfilled') {
+      return {
+        api: clientServices[i].api,
+        success: true,
+        data: r.value.data
+      };
+    } else {
+      // log error properly
+      errorLogger(
+        fastify,
+        r.reason.message,
+        `CallClientAPI Error --> ${clientServices[i].api}`,
+        request,
+        r.reason.response?.data || null
+      );
+
+      return {
+        api: clientServices[i].api,
+        success: false,
+        error: r.reason.message
+      };
+    }
+  });
+};
+
 const callSocketCountClientAPI = async (request, fastify) => {
   try {
     const clientUrls = global.tblClientSocket.filter((c) => c.isActive === true);
@@ -2396,7 +2471,8 @@ const oversToBalls = (overs) => {
 const ClientAPIType = {
   Insert: 1,
   Update: 2,
-  Delete: 3
+  Delete: 3,
+  ChangeDisplayOrder: 4,
 }
 
 const normalizeText = (value) => {
@@ -2441,6 +2517,23 @@ const getOverCalculation = (totalOvers) => {
   } else {
     return null;
   }
+}
+
+const getDataFromTime = (data, globalType, startDate = "startDate", endDate = "endDate") => {
+  const now = Date.now();
+  return data.filter(item => {
+    if (item.isPermanent) return true;
+
+    const start = new Date(item[startDate]).getTime();
+    const end = new Date(item[endDate]).getTime();
+    const result = start <= now && end >= now;
+
+    if (!result) {
+      global[globalType].push(item);
+    }
+
+    return result;
+  });
 }
 
 module.exports = {    
@@ -2572,5 +2665,7 @@ module.exports = {
   ClientAPIType,
   normalizeText,
   normalizeCompetitionSeasonName,
-  getOverCalculation
+  getOverCalculation,
+  getDataFromTime,
+  pushSessionData
 };

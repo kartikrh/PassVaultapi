@@ -7,6 +7,8 @@ const { bannerViewersCountQuery } = require("../repository/TableBanner");
 const { newsViewersCountQuery } = require("../repository/TableNews");
 const { articleViewersCountQuery } = require("../repository/TableArticles");
 const { updateAdvertiseViewCountQuery } = require("../repository/TableAdvertise");
+const { updateVideoLibraryViewCountQuery } = require("../repository/TableVideoLibrary");
+const { updatePhotoLibraryViewCountQuery } = require("../repository/TablePhotoLibrary");
 
 const getAllActivityLogService = async (request, fastify) => {
   return global.tblActivityLogs;
@@ -78,6 +80,24 @@ const createActivityLogService = async (request, fastify) => {
       global.tblAdvertise[advertiseIndex].viewerCount = (global.tblAdvertise[advertiseIndex].viewerCount || 0) + 1;
       if (data && data.length === 1) {
         data[0].count = global.tblAdvertise[advertiseIndex].viewerCount;
+      }
+    }
+  } else if(request?.body?.activityType === 4) {
+    const videoLibraryIndex = global.tblVideoLibrary.findIndex((item)=> item.id === parseInt(request.body.refId));
+    await updateVideoLibraryViewCountQuery({ ...request.body },request,fastify);
+    if (videoLibraryIndex !== -1) {
+      global.tblVideoLibrary[videoLibraryIndex].viewCount = (global.tblVideoLibrary[videoLibraryIndex].viewCount || 0) + 1;
+      if (data && data.length === 1) {
+        data[0].count = global.tblVideoLibrary[videoLibraryIndex].viewCount;
+      }
+    }
+  } else if(request?.body?.activityType === 5) {
+    const photoLibraryIndex = global.tblPhotoLibrary.findIndex((item)=> item.photoLibraryId === parseInt(request.body.refId));
+    await updatePhotoLibraryViewCountQuery({ ...request.body },request,fastify);
+    if (photoLibraryIndex !== -1) {
+      global.tblPhotoLibrary[photoLibraryIndex].viewCount = (global.tblPhotoLibrary[photoLibraryIndex].viewCount || 0) + 1;
+      if (data && data.length === 1) {
+        data[0].count = global.tblPhotoLibrary[photoLibraryIndex].viewCount;
       }
     }
   } else {
