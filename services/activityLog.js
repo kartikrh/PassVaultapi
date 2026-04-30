@@ -8,6 +8,7 @@ const { newsViewersCountQuery } = require("../repository/TableNews");
 const { articleViewersCountQuery } = require("../repository/TableArticles");
 const { updateAdvertiseViewCountQuery } = require("../repository/TableAdvertise");
 const { updateVideoLibraryViewCountQuery } = require("../repository/TableVideoLibrary");
+const { updatePhotoLibraryViewCountQuery } = require("../repository/TablePhotoLibrary");
 
 const getAllActivityLogService = async (request, fastify) => {
   return global.tblActivityLogs;
@@ -88,6 +89,15 @@ const createActivityLogService = async (request, fastify) => {
       global.tblVideoLibrary[videoLibraryIndex].viewCount = (global.tblVideoLibrary[videoLibraryIndex].viewCount || 0) + 1;
       if (data && data.length === 1) {
         data[0].count = global.tblVideoLibrary[videoLibraryIndex].viewCount;
+      }
+    }
+  } else if(request?.body?.activityType === 5) {
+    const photoLibraryIndex = global.tblPhotoLibrary.findIndex((item)=> item.photoLibraryId === parseInt(request.body.refId));
+    await updatePhotoLibraryViewCountQuery({ ...request.body },request,fastify);
+    if (photoLibraryIndex !== -1) {
+      global.tblPhotoLibrary[photoLibraryIndex].viewCount = (global.tblPhotoLibrary[photoLibraryIndex].viewCount || 0) + 1;
+      if (data && data.length === 1) {
+        data[0].count = global.tblPhotoLibrary[photoLibraryIndex].viewCount;
       }
     }
   } else {
