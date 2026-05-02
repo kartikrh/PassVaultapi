@@ -101,7 +101,7 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
         "services/banner.js/createBannerService"
       );
     } else {
-      global.pendingBannerToClient(data);
+      global.pendingBannerToClient.push(data);
     }
   
     global.tblBanner.push(data[0]);
