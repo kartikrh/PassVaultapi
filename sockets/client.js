@@ -29,7 +29,7 @@ const connectClients = async (fastify, clientSocketId) => {
         reconnection: true,
         reconnectionDelay: config.reconnectDelay || 1000,
         reconnectionDelayMax: config.reconnectMaxDelay || 5000,
-        reconnectionAttempts: config.reconnectAttempts || Infinity,
+        reconnectionAttempts: config.reconnectAttempts || 10,
         timeout: 20000,
         pingInterval: 18000,
         pingTimeout: 10000,

@@ -1640,7 +1640,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           bowlerOver: tpBowler?.overs ?? null,
           bowlerRun: tpBowler?.runs_conceded  ?? null,
           bowlerTotalWicket: tpBowler?.wickets ?? null,
-          bowlerEconomy: parseFloat(tpBowler.econ) ?? "0",
+          bowlerEconomy: parseFloat(tpBowler?.econ) ?? "0",
           bowlerOrder,
           bowlerMaidenOver: tpBowler?.maidens ?? 0,
           bowlerWideBall : tpBowler?.wides ?? 0,
