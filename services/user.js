@@ -1519,7 +1519,7 @@ const registerClientAppService = async (request, fastify) => {
       clientId : result[0].encryptClientId,
       mobileNo : result[0].mobileNo,
       countryCode : result[0].countryCode,
-      otpExpired,
+      otpExpired : isSendOtp?.mobileOTPExpired || 0,
   }
 }
 

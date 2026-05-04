@@ -5,7 +5,7 @@ const {
   activeInactiveAdvertiseQuery,
   changeDisplayOrderQuery
 } = require("../repository/TableAdvertise");
-const { ServiceType, APIEndpointModuleType, callClientAPI, ClientAPIType } = require("../utilities");
+const { ServiceType, APIEndpointModuleType, callClientAPI, ClientAPIType, getDataFromTime } = require("../utilities");
 
 const {
   generateImageName,
@@ -43,19 +43,7 @@ const getAllAdvertiseService = async (request, fastify) => {
   }
 
   if (dateTime) {
-    const now = Date.now();
-    data = data.filter(item => {
-      if (item.isPermanent) return true;
-
-      const start = new Date(item.startDate).getTime();
-      const end = new Date(item.endDate).getTime();
-      const result = start <= now && end >= now;
-      if (!result) {
-        global.pendingAdvertiseToClient.push(item);
-      }
-
-      return result;
-    });
+    data = getDataFromTime(data, "pendingAdvertiseToClient");
   }
 
   return data;
@@ -121,7 +109,7 @@ const createAdvertiseService = async (request, fastify) => {
       }
     }
     if (sendToClient) {
-      callClientAPI(
+      await callClientAPI(
         {
           serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
@@ -131,16 +119,11 @@ const createAdvertiseService = async (request, fastify) => {
           }
         },
         request,
-        fastify
-      ).catch((err) => {
-        console.log("call client api console", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/advertise.js/createAdvertiseService",
-          request
-        );
-      });
+        fastify,
+        "services/advertise.js/createAdvertiseService"
+      );
+    } else {
+      global.pendingAdvertiseToClient.push(newAdvertise);
     }
 
     return newAdvertise;
@@ -239,7 +222,7 @@ const updateAdvertiseService = async (request, fastify) => {
 
   global.pendingAdvertiseToClient = global.pendingAdvertiseToClient.filter(item => item.advertiseId !== body.advertiseId);
 
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
@@ -249,16 +232,9 @@ const updateAdvertiseService = async (request, fastify) => {
       }
     },
     request,
-    fastify
-  ).catch((err) => {
-    console.log("call client api console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/advertise.js/updateAdvertiseService",
-      request
-    );
-  });
+    fastify,
+    "services/advertise.js/updateAdvertiseService"
+  );
 
   return body;
 };
@@ -282,7 +258,7 @@ const deleteAdvertiseService = async (request, fastify) => {
 
   global.pendingAdvertiseToClient = global.pendingAdvertiseToClient.filter(item => !advertiseId.includes(item.advertiseId));
 
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
@@ -292,16 +268,9 @@ const deleteAdvertiseService = async (request, fastify) => {
       }
     },
     request,
-    fastify
-  ).catch((err) => {
-    console.log("call client api console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/advertise.js/deleteAdvertiseService",
-      request
-    );
-  });
+    fastify,
+    "services/advertise.js/deleteAdvertiseService"
+  );
 
   return "Advertise deleted successfully";
 };
@@ -323,7 +292,7 @@ const activeInactiveAdvertiseService = async (request, fastify) => {
 
   global.pendingAdvertiseToClient = global.pendingAdvertiseToClient.filter(item => item.advertiseId !== advertiseId);
 
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
@@ -333,16 +302,9 @@ const activeInactiveAdvertiseService = async (request, fastify) => {
       }
     },
     request,
-    fastify
-  ).catch((err) => {
-    console.log("call client api console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/advertise.js/activeInactiveAdvertiseService",
-      request
-    );
-  });
+    fastify,
+    "services/advertise.js/activeInactiveAdvertiseService"
+  );
 
   return "Advertise updated successfully";
 };
@@ -366,7 +328,7 @@ const changeDisplayOrderService = async (request, fastify) => {
       )
     )
   );
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
@@ -376,16 +338,9 @@ const changeDisplayOrderService = async (request, fastify) => {
       }
     },
     request,
-    fastify
-  ).catch((err) => {
-    console.log("call client api console", err);
-    errorLogger(
-      fastify,
-      err.message,
-      "ERROR --> services/advertise.js/changeDisplayOrderService - callClientAPI",
-      request
-    );
-  });
+    fastify,
+    "services/advertise.js/changeDisplayOrderService"
+  );
  
   return true;
 };
@@ -399,7 +354,8 @@ const sendActiveAdvertiseToClientAPIService = async (fastify) => {
 
         const result = start <= now && end >= now;
         if (result) {
-          callClientAPI(
+          global.pendingAdvertiseToClient = global.pendingAdvertiseToClient.filter(item => item.advertiseId !== data.advertiseId);
+          await callClientAPI(
             {
               serviceType: ServiceType.clientAPI,
               moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
@@ -409,17 +365,9 @@ const sendActiveAdvertiseToClientAPIService = async (fastify) => {
               }
             },
             null,
-            fastify
-          ).then(res => {
-            global.pendingAdvertiseToClient = global.pendingAdvertiseToClient.filter(item => item.advertiseId !== data.advertiseId);
-          }).catch((err) => {
-            errorLogger(
-              fastify,
-              err.message,
-              "ERROR --> services/advertise.js/sendActiveAdvertiseToClientService - callClientAPI",
-              null
-            );
-          });
+            fastify,
+            "services/advertise.js/sendActiveAdvertiseToClientAPIService"
+          );
         }
       }
     }

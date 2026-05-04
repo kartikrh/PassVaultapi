@@ -69,7 +69,7 @@ const addPageFormatService = async (request, fastify) => {
   );
   global.tblPageFormats.push(data);
   if(data.isActive){
-    callClientAPI({
+    await callClientAPI({
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data: {
@@ -79,15 +79,9 @@ const addPageFormatService = async (request, fastify) => {
       },
     },
     request,
-    fastify
-    ).catch((error) => {
-      errorLogger(
-        fastify,
-        error.message ,
-        "services/pageFormate.js/addPageFormatService - callClientAPI",
-        request
-      );
-    });
+    fastify,
+      "services/pageFormate.js/addPageFormatService"
+    );
   }
   return data;
 };
@@ -152,7 +146,7 @@ const updatePageFormatService = async (request, fastify) => {
   global.tblPageFormats[index] = data;
 
   if(data.isActive){
-    callClientAPI({
+    await callClientAPI({
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data: {
@@ -162,15 +156,9 @@ const updatePageFormatService = async (request, fastify) => {
       },
     },
     request,
-    fastify
-    ).catch((error) => {
-      errorLogger(
-        fastify,
-        error.message ,
-        "services/pageFormate.js/updatePageFormatService - callClientAPI",
-        request
-      );
-    });
+    fastify,
+      "services/pageFormate.js/updatePageFormatService"
+    );
   }
   return data;
 };
@@ -207,7 +195,7 @@ const deletePageFormatService = async (request, fastify) => {
     (item) => !encryptedIds.includes(item.pageFormatId)
   );
 
-  callClientAPI({
+  await callClientAPI({
     serviceType: ServiceType.clientAPI,
     moduleType: APIEndpointModuleType.updateSeoModule,
     data: {
@@ -217,14 +205,9 @@ const deletePageFormatService = async (request, fastify) => {
         pageFormatId : request.body.pageFormatId,
       }
     },
-  }, request , fastify).catch((error) => {
-    errorLogger(
-      fastify,
-      error.message,
-      "services/pageFormate.js/deletePageFormatService - callClientAPI",
-      request
-    );
-  });
+  }, request , fastify,
+    "services/pageFormate.js/deletePageFormatService"
+  );
 
   return "Page formate(s) deleted successfully";
 };

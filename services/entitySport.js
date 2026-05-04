@@ -166,7 +166,7 @@ const saveCommentariesService = async (request , fastify) =>{
                 request,
                 fastify
               );
-              callClientAPI(
+              await callClientAPI(
                 {
                   serviceType: ServiceType.clientAPI,
                   moduleType: APIEndpointModuleType.commentaryUpdate,
@@ -177,16 +177,9 @@ const saveCommentariesService = async (request , fastify) =>{
                   },
                 },
                 request,
-                fastify
-              ).catch((err) => {
-                console.log("call client api console on entitySport", err);
-                errorLogger(
-                  fastify,
-                  err.message,
-                  "ERROR --> services/entitySport.js/saveCommentariesService",
-                  request
-                );
-              });
+                fastify,
+                "services/entitySport.js/saveCommentariesService"
+              );
             }
         }
     }
@@ -447,23 +440,16 @@ const setEntityCom2Service = async (request , fastify) =>{
         fastify
       );
 
-      callClientAPI(
+      await callClientAPI(
         {
           serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
           data: cData,
         },
         request,
-        fastify
-      ).catch((err) => {
-        console.log("call client api in setEntityCom2Service - 2", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/entitysport.js/serEntityCom2Service",
-          request
-        );
-      });
+        fastify,
+        "services/entitySport.js/setEntityCom2Service"
+      );
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       });
@@ -607,23 +593,16 @@ const setEntityCom2Service = async (request , fastify) =>{
           fastify
         );
 
-        callClientAPI(
+        await callClientAPI(
           {
             serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.commentaryUpdate,
             data: cData,
           },
           request,
-          fastify
-        ).catch((err) => {
-          console.log("call client api console in setEntityCom2Service", err);
-          errorLogger(
-            fastify,
-            err.message,
-            "ERROR --> services/entitysport.js/setEntityCom2Service",
-            request
-          );
-        });
+          fastify,
+          "services/entitySport.js/setEntityCom2Service"
+        );
       }
       if(comDetails.commentaryStatus == commentaryStatus.TOSSDONE){
         // check if getting same data from entity
@@ -1222,23 +1201,16 @@ const setEntityCom2Service = async (request , fastify) =>{
         fastify
       );
 
-      callClientAPI(
+      await callClientAPI(
         {
           serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
           data: cData,
         },
         request,
-        fastify
-      ).catch((err) => {
-        console.log("call client api in setEntityCom2Service - 2", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/entitysport.js/serEntityCom2Service",
-          request
-        );
-      });
+        fastify,
+        "services/entitySport.js/setEntityCom2Service"
+      );
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
       });
@@ -1537,14 +1509,15 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             ...comP,
             isPlay: isPlayData,
             onStrike: onStrikeData,
-            batRun: p.runs,
-            batBall: p.balls_faced,
-            batFour: p.fours,
-            batSix: p.sixes,
+            batRun: p.runs ?? 0,
+            batBall: p.balls_faced ?? 0,
+            batFour: p.fours  ?? 0,
+            batSix: p.sixes ?? 0,
             batterOrder,
             batsmanStrikeRate: parseFloat(p.strike_rate) ?? "0",
             isInPlayingEleven: true,
           };
+          
           currentPlayers.push(comP.commentaryPlayerId);
         }
       }
@@ -1662,17 +1635,17 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
         let tpBowler = bowlers.find((i)=>i.bowler_id == b);
         playersMap[b] = {
           ...comP,
-          isPlay : tpBowler.bowling == "true" ? true : null,
+          isPlay : tpBowler?.bowling == "true" ? true : null,
           onStrike : false,
-          bowlerOver: tpBowler.overs,
-          bowlerRun: tpBowler.runs_conceded,
-          bowlerTotalWicket: tpBowler.wickets,
+          bowlerOver: tpBowler?.overs ?? null,
+          bowlerRun: tpBowler?.runs_conceded  ?? null,
+          bowlerTotalWicket: tpBowler?.wickets ?? null,
           bowlerEconomy: parseFloat(tpBowler.econ) ?? "0",
           bowlerOrder,
           bowlerMaidenOver: tpBowler?.maidens ?? 0,
-          bowlerWideBall : tpBowler.wides,
-          bowlerNoBall : tpBowler.noballs,
-          bowlerDotBall : tpBowler.run0,
+          bowlerWideBall : tpBowler?.wides ?? 0,
+          bowlerNoBall : tpBowler?.noballs ?? 0,
+          bowlerDotBall : tpBowler?.run0 ?? 0,
           isInPlayingEleven: true,
           bowlerTotalBall: oversToBalls(tpBowler?.overs),
         }
@@ -2707,7 +2680,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               bowlerId: null,
               fielderId1: null,
               fielderId2: null,
-              batDotBall: (+playersMap[oldBatsman.tpId]?.batDotBall) - 1,
+              batDotBall: (+playersMap[oldBatsman.tpId]?.batDotBall) > 0 ? (+playersMap[oldBatsman.tpId]?.batDotBall) - 1 : +playersMap[oldBatsman.tpId]?.batDotBall,
             }
             w.batterId = playerTpIdObj[c.wicket_batsman_id]?.commentaryPlayerId;
             w.batterName = playerTpIdObj[c.wicket_batsman_id]?.playerName;
@@ -4608,23 +4581,16 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
         fastify
       );
 
-      callClientAPI(
+      await callClientAPI(
         {
           serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
           data: cData,
         },
         request,
-        fastify
-      ).catch((err) => {
-        console.log("call client api in storeInningData", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/entitysport.js/storeInningWiseEntityDataService",
-          request
-        );
-      });
+        fastify,
+        "services/entitySport.js/storeInningWiseEntityDataService"
+      );
 
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit("updateFullscore", sendDataForSocketUpdate);
@@ -6362,16 +6328,9 @@ const cancelCommentaryOnInningService  = async (commentaryId, request, fastify) 
           data: cData,
         },
         request,
-        fastify
-      ).catch((err) => {
-        console.log("call client api console in entitySport", err);
-        errorLogger(
-          fastify,
-          err.message,
-          "ERROR --> services/entitySport.js/cancelCommentaryOnInningService",
-          request
-        );
-      });
+        fastify,
+        "services/entitySport.js/cancelCommentaryOnInningService"
+      );
     }
     return true;
   } catch (error) {

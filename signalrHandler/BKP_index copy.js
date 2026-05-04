@@ -693,23 +693,16 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           fastify
         );
 
-        callClientAPI(
+        await callClientAPI(
           {
             serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.commentaryUpdate,
             data: cData
           },
           request,
-          fastify
-        ).catch((err) => {
-          console.log("call client api console", err);
-          errorLogger(
-            fastify,
-            err.message,
-            "ERROR --> services/commentary.js/syncCommentaryStatsWithAPIAndSocket",
-            request
-          );
-        });
+          fastify,
+          "signalrHandler/BKP_index copy.js/syncCommentaryStatsWithAPIAndSocket"
+        );
       }
       sendDataForSocketUpdate.dataToUpdate.push({
         module: "commentaryDetails",

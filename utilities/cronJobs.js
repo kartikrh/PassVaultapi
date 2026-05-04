@@ -144,7 +144,21 @@ const registerCronJobs = (fastify) => {
       }
     })
   );
+
+  cron.schedule(
+    "0 * * * *",
+    withSentryCronProfiling("log-memory-usage", "0 * * * *", async () => {
+      const memoryUsage = process.memoryUsage();
+      console.log(new Date(), "Memory Usage Log:", {
+        rss: `${(memoryUsage.rss / 1024 / 1024).toFixed(2)} MB`,
+        heapTotal: `${(memoryUsage.heapTotal / 1024 / 1024).toFixed(2)} MB`,
+        heapUsed: `${(memoryUsage.heapUsed / 1024 / 1024).toFixed(2)} MB`,
+        external: `${(memoryUsage.external / 1024 / 1024).toFixed(2)} MB`,
+      });
+    })
+  );
 }
+
 
 module.exports = {
   registerCronJobs,

@@ -54,7 +54,7 @@ const createBlockService = async (request, fastify) => {
   global.tblBlocks.push(data);
 
   if(data.isShowContent){
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
@@ -65,10 +65,9 @@ const createBlockService = async (request, fastify) => {
       }
     },
     request,
-    fastify
-  ).catch((err) => {
-    errorLogger(fastify, err.message, "services/blocks.js/createBlockService - callClientAPI", request);
-  });
+    fastify,
+    "services/blocks.js/createBlockService"
+  );
   }
   return data;
 };
@@ -119,7 +118,7 @@ const updateBlockService = async (request, fastify) => {
 
   global.tblBlocks[index] = { ...result, blockId: request.body.blockId };
 
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
@@ -130,10 +129,9 @@ const updateBlockService = async (request, fastify) => {
         }
       },
       request,
-      fastify
-    ).catch((err) => {
-      errorLogger(fastify, err.message, "services/blocks.js/updateBlockService - callClientAPI", request);
-    });
+      fastify,
+      "services/blocks.js/updateBlockService"
+    );
   
   return { ...result, blockId: request.body.blockId };
   
@@ -162,7 +160,7 @@ const deleteBlockService = async (request, fastify) => {
     (block) => !encryptedIds.includes(block.blockId)
   );
   
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
@@ -175,10 +173,9 @@ const deleteBlockService = async (request, fastify) => {
       }
     },
     request,
-    fastify
-  ).catch((err) => {
-    errorLogger(fastify, err.message, "services/blocks.js/deleteBlockService - callClientAPI", request);
-  });
+    fastify,
+    "services/blocks.js/deleteBlockService"
+  );
   return "Block(s) deleted successfully";
 };
 
