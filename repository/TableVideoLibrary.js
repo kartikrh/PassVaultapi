@@ -168,7 +168,7 @@ const updateVideoLibraryQuery = async (data, fastify, request) => {
               FROM "tblClientLikeDislikeActivity" t
               WHERE t."wrType" = 1
               GROUP BY t."wrRefId"
-            ) lc ON lc."wrRefId" = tvb."wrId";`,
+            ) lc ON lc."wrRefId" = u."wrId";`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
