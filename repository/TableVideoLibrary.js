@@ -130,45 +130,67 @@ const updateVideoLibraryQuery = async (data, fastify, request) => {
   try {
     const result = await fastify.db.query(
       `WITH updated AS (
-      Update "tblVideoLibrary" as tvb set 
-              "wrTitle" = $1, "wrIsPermanent" = $2, "wrFrom" = $3, "wrTo" = $4, "wrTag" = $5,
-              "wrSEO" = $6, "wrDescription" = $7, "wrVideo" = $8, "wrVideoURL" = $9, "wrType" = $10, "wrCommentaryId" = $11, "wrVideoPath" = $13, "wrIsActive" = $14,
-              "wrWhitelabelId" = $15
-            where "wrId" = $12
-            RETURNING *
-          )
-            SELECT 
-              u."wrId" AS "id",
-              u."wrTitle" AS "title",
-              u."wrIsPermanent" AS "isPermanent",
-              u."wrFrom" AS "from",
-              u."wrTo" AS "to",
-              u."wrTag" AS "tag",
-              u."wrSEO" AS "SEO",
-              u."wrDescription" AS "description",
-              u."wrVideo" AS "video",
-              u."wrVideoURL" AS "videoURL",
-              u."wrType" AS "type",
-              u."wrCommentaryId" AS "commentaryId",
-              u."wrVideoPath" AS "videoPath",
-              u."wrIsActive" AS "isActive",
-              u."wrDisplayOrder" AS "displayOrder",
-              u."wrWhitelabelId" AS "whitelabelId",
-              ed."wrValue" AS "encryptWhitelabelId",
-              twl."wrDomain" AS "domain",
-              u."wrViewCount" as "viewCount"
-            FROM updated u
-            LEFT JOIN "tblWhitelabel" twl ON u."wrWhitelabelId" = twl."wrId"
-            LEFT JOIN "tblEncryptedData" ed ON u."wrWhitelabelId" = ed."wrKey"
-            LEFT JOIN (
-              SELECT
-                t."wrRefId",
-                COUNT(*) FILTER (WHERE t."wrIsLike" = true)::int AS "likeCount",
-                COUNT(*) FILTER (WHERE t."wrIsLike" = false)::int AS "dislikeCount"
-              FROM "tblClientLikeDislikeActivity" t
-              WHERE t."wrType" = 1
-              GROUP BY t."wrRefId"
-            ) lc ON lc."wrRefId" = u."wrId";`,
+        UPDATE "tblVideoLibrary" AS tvb
+        SET 
+          "wrTitle" = $1,
+          "wrIsPermanent" = $2,
+          "wrFrom" = $3,
+          "wrTo" = $4,
+          "wrTag" = $5,
+          "wrSEO" = $6,
+          "wrDescription" = $7,
+          "wrVideo" = $8,
+          "wrVideoURL" = $9,
+          "wrType" = $10,
+          "wrCommentaryId" = $11,
+          "wrVideoPath" = $13,
+          "wrIsActive" = $14,
+          "wrWhitelabelId" = $15
+        WHERE "wrId" = $12
+        RETURNING *
+      )
+
+      SELECT 
+        u."wrId" AS "id",
+        u."wrTitle" AS "title",
+        u."wrIsPermanent" AS "isPermanent",
+        u."wrFrom" AS "from",
+        u."wrTo" AS "to",
+        u."wrTag" AS "tag",
+        u."wrSEO" AS "SEO",
+        u."wrDescription" AS "description",
+        u."wrVideo" AS "video",
+        u."wrVideoURL" AS "videoURL",
+        u."wrType" AS "type",
+        u."wrCommentaryId" AS "commentaryId",
+        u."wrVideoPath" AS "videoPath",
+        u."wrIsActive" AS "isActive",
+        u."wrDisplayOrder" AS "displayOrder",
+        u."wrWhitelabelId" AS "whitelabelId",
+        ed."wrValue" AS "encryptWhitelabelId",
+        twl."wrDomain" AS "domain",
+        u."wrViewCount" AS "viewCount",
+        lc."likeCount",
+        lc."dislikeCount"
+
+      FROM updated u
+
+      LEFT JOIN "tblWhitelabel" twl 
+        ON u."wrWhitelabelId" = twl."wrId"
+
+      LEFT JOIN "tblEncryptedData" ed 
+        ON u."wrWhitelabelId" = ed."wrKey"
+
+      LEFT JOIN (
+        SELECT
+          t."wrRefId",
+          COUNT(*) FILTER (WHERE t."wrIsLike" = true)::int AS "likeCount",
+          COUNT(*) FILTER (WHERE t."wrIsLike" = false)::int AS "dislikeCount"
+        FROM "tblClientLikeDislikeActivity" t
+        WHERE t."wrType" = 1
+        GROUP BY t."wrRefId"
+      ) lc 
+        ON lc."wrRefId" = u."wrId";`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
