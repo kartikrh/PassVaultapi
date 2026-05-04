@@ -143,7 +143,7 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       viewerCount: validateBannerId.viewerCount,
       imagePath: validateBannerId.imagePath,
       deviceTypeId: Number(request.body.deviceTypeId) || validateBannerId?.deviceTypeId,
-      whitelabelId: Number(request.body.whitelabelId) || validateBannerId?.whitelabelId,
+      whitelabelId: Number(request.body.whitelabelId) ?? validateBannerId?.whitelabelId,
       displayOrder: request.body.hasOwnProperty("displayOrder")
       ? request.body.displayOrder
       : (
