@@ -155,7 +155,9 @@ const updateAdvertiseService = async (request, fastify) => {
     startDate: request.body.startDate || validateAdvertise.startDate,
     endDate: request.body.endDate || validateAdvertise.endDate,
     viewerCount: validateAdvertise.viewerCount,
-    whitelabelId: Number(request.body.whitelabelId) || validateAdvertise.whitelabelId,
+    whitelabelId: request.body.hasOwnProperty("whitelabelId")
+    ? request.body.whitelabelId
+    : validateAdvertise.whitelabelId,
     displayOrder: request.body.hasOwnProperty("displayOrder")
   ? request.body.displayOrder
   : validateAdvertise.displayOrder,
