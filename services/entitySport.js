@@ -4996,8 +4996,11 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
               batter2Balls: cp2.balls_faced,
               isActive: activePartnership,
             }
-            partData.push({
-              ...partnership,
+            let par = await updateVirtualPartnershipQuery(partnership, fastify, request)
+            let pI = global.tblCommentaryPartnership.findIndex((i) => i.commentaryPartnershipId == partnership.commentaryPartnershipId)
+            global.tblCommentaryPartnership[pI] = par[0];
+            prtship.push({
+              ...par[0],
               type: "update"
             })
           } else {
@@ -5022,8 +5025,14 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
               commentaryDetails: comDetails,
               updateBattingTeam: battingTeam
             })
+            const createPart = await virtualPartnershipQuery(
+              newPart,
+              request,
+              fastify
+            );
+            global.tblCommentaryPartnership.push(createPart);
             partData.push({
-              ...newPart,
+              ...createPart,
               order: part?.order,
               type: "create"
             })
