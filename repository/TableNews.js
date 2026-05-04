@@ -21,7 +21,8 @@ const getAllNewsQuery = async (fastify) => {
             tn."wrDisplayOrder" as "displayOrder",
             tn."wrWhitelabelId" as "whitelabelId",
             ed."wrValue" as "encryptWhitelabelId",
-            twl."wrDomain" as "domain"
+            twl."wrDomain" as "domain",
+            tn."wrCommentaryId" as "commentaryId"
         FROM "tblNews" as tn
         LEFT JOIN "tblWhitelabel" twl 
             ON tn."wrWhitelabelId" = twl."wrId"
@@ -57,12 +58,14 @@ const insertNewsQuery = async (data, request, fastify) => {
           "wrType",
           "wrImagePath",
           "wrWhitelabelId",
-          "wrDisplayOrder"
+          "wrDisplayOrder",
+          "wrCommentaryId"
         )
         VALUES (
           $1, $2, $3, $4, $5, $6, $7, $8, now(),
           $9, $10, $11, $12, $13, $14, $15, $16,
-          (SELECT COALESCE(MAX("wrDisplayOrder"), 0) + 1 FROM "tblNews" WHERE "wrIsDeleted" = false)
+          (SELECT COALESCE(MAX("wrDisplayOrder"), 0) + 1 FROM "tblNews" WHERE "wrIsDeleted" = false),
+          $17
         )
         RETURNING *
       )
@@ -85,7 +88,8 @@ const insertNewsQuery = async (data, request, fastify) => {
         tn."wrWhitelabelId" as "whitelabelId",
         tn."wrDisplayOrder" as "displayOrder",
         ed."wrValue" as "encryptWhitelabelId",
-        twl."wrDomain" as "domain"
+        twl."wrDomain" as "domain",
+        tn."wrCommentaryId" as "commentaryId"
       FROM insert_data tn
       LEFT JOIN "tblWhitelabel" twl 
         ON tn."wrWhitelabelId" = twl."wrId"
@@ -116,6 +120,7 @@ const insertNewsQuery = async (data, request, fastify) => {
 
           data.imagePath || null,
           data.whitelabelId || null,
+          data.commentaryId || null,
         ],
       }
     );
@@ -153,7 +158,8 @@ const updateNewsQuery = async (data, request, fastify) => {
         "wrSEODescription" = $14,
         "wrType" = $15,
         "wrImagePath" = $16,
-        "wrWhitelabelId" = $17
+        "wrWhitelabelId" = $17,
+        "wrCommentaryId" = $18
       where "wrNewsId" = $9
       `,
       {
@@ -175,6 +181,7 @@ const updateNewsQuery = async (data, request, fastify) => {
           data.type,
           data.imagePath,
           data.whitelabelId || null,
+          data.commentaryId || null,
         ],
       }
     );
