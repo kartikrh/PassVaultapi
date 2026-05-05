@@ -6409,6 +6409,12 @@ const removeCommentaryOldDataOnInningService = async (request, fastify) => {
         isSuperOver: null,
         teamPredictionPercentage: null
       }));
+    // remove old teams for this commentaryId
+    global.tblCommentaryTeams = global.tblCommentaryTeams.filter(
+      ct => ct.commentaryId !== commentaryId
+    );
+    // add updated teams
+    global.tblCommentaryTeams.push(...comTeams);
 
     global.clientSocketIo.forEach((socket) => {
       socket.client.emit("removeCommentaryOldData", commentaryId);
