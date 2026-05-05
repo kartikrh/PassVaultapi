@@ -12,7 +12,7 @@ const {
   deleteCommentryOldDataQuery,
 } = require("../repository/TableCommentary")
 const { getAllTournamentTeamPlayerByIdsQuery } = require("../repository/TableTournamentsTeamPlayers")
-const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService,addSuperOverInEntity, insertComPlayerEntityService } = require("../services/commentry");
+const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService,addSuperOverInEntity, insertComPlayerEntityService, revertCommentaryService } = require("../services/commentry");
 const {
     callClientAPI,
     ServiceType,
@@ -6380,7 +6380,10 @@ const removeCommentaryOldDataOnInningService = async (request, fastify) => {
         ...oldScoreTypeData,
       }
     }
-
+    request.body.commentaryId = commentaryId;
+    await revertCommentaryService(request, fastify, 1);
+    return true;
+  /*
     await deleteCommentryOldDataQuery(request, fastify);
     global.tblOvers = global.tblOvers.filter(to => to.commentaryId !== commentaryId);
     global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(to => to.commentaryId !== commentaryId);
@@ -6419,6 +6422,7 @@ const removeCommentaryOldDataOnInningService = async (request, fastify) => {
     global.clientSocketIo.forEach((socket) => {
       socket.client.emit("removeCommentaryOldData", commentaryId);
     });
+    */
   } catch (error) {
     errorLogger(
       fastify,
