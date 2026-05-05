@@ -6386,6 +6386,29 @@ const removeCommentaryOldDataOnInningService = async (request, fastify) => {
     global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(to => to.commentaryId !== commentaryId);
     global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter(to => to.commentaryId !== commentaryId);
     global.tblCommentaryWicket = global.tblCommentaryWicket.filter(to => to.commentaryId !== commentaryId);
+    const comTeams = global.tblCommentaryTeams
+      .filter(ct => ct.commentaryId === commentaryId)
+      .map(tct => ({
+        ...tct,
+        teamScore: null,
+        teamOver: null,
+        teamWicket: null,
+        crr: null,
+        rrr: null,
+        teamStatus: null,
+        isWin: null,
+        isBattingComplete: null,
+        teamTrialRuns: 0,
+        teamLeadRuns: 0,
+        teamWideRuns: 0,
+        teamByRuns: 0,
+        teamLegByRuns: 0,
+        teamNoBallRuns: 0,
+        teamPenaltyRuns: 0,
+        teamBattingOrder: null,
+        isSuperOver: null,
+        teamPredictionPercentage: null
+      }));
 
     global.clientSocketIo.forEach((socket) => {
       socket.client.emit("removeCommentaryOldData", commentaryId);

@@ -9924,6 +9924,29 @@ const deleteCommentryOldDataQuery = async (request, fastify) => {
             "wrDeletedBy" = $2,
             "wrDeletedAt" = now()
         WHERE "wrCommentaryId" = $3
+      ),
+      revert_commentaryteams AS (
+        UPDATE "tblCommentaryTeams"
+        SET
+            "wrTeamScore" = NULL,
+            "wrTeamOver" = NULL,
+            "wrTeamWicket" = NULL,
+            "wrCrr" = NULL,
+            "wrRrr" = NULL,
+            "wrTeamStatus" = NULL,
+            "wrIsWin" = NULL,
+            "wrIsBattingComplete" = FALSE,
+            "wrTeamTrialRuns" = 0,
+            "wrTeamLeadRuns" = 0,
+            "wrTeamWideRuns" = 0,
+            "wrTeamByRuns" = 0,
+            "wrTeamLegByRuns" = 0,
+            "wrTeamPenaltyRuns" = 0,
+            "wrTeamNoBallRuns" = 0,
+            "wrTeamBattingOrder" = NULL,
+            "wrIsSuperOver" = NULL,
+            "wrTeamPredictionPercentage" = NULL
+        WHERE "wrCommentaryId" = $3
       )
       SELECT 1;
       `,
