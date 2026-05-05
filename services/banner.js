@@ -122,6 +122,9 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       throw new Error("Banner with this Id not found");
     }
     // if image is uploaded then upload it to server
+    const isPermanent = request.body.hasOwnProperty("isPermanent")
+      ? request.body.isPermanent
+      : validateBannerId.isPermanent;
     const body = {
       bannerId: request.body.bannerId,
       title: request.body.title || validateBannerId.title,
@@ -129,18 +132,18 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       isActive: request.body.hasOwnProperty("isActive")
         ? request.body.isActive
         : validateBannerId.isActive,
-      isPermanent: request.body.hasOwnProperty("isPermanent")
-        ? request.body.isPermanent
-        : validateBannerId.isPermanent,
-      startDate: request.body.startDate || validateBannerId.startDate,
-      endDate: request.body.endDate || validateBannerId.endDate,
+      isPermanent: isPermanent,
+      // startDate: request.body.startDate || validateBannerId.startDate,
+      // endDate: request.body.endDate || validateBannerId.endDate,
+      startDate: isPermanent ? null : (request.body.hasOwnProperty("startDate") ? request.body.startDate : validateBannerId.startDate),
+      endDate: isPermanent ? null : (request.body.hasOwnProperty("endDate") ? request.body.endDate : validateBannerId.endDate),
       image: validateBannerId.image,
       userId: request.userTokenInfo.WrUserId,
       link: request.body.link,
       viewerCount: validateBannerId.viewerCount,
       imagePath: validateBannerId.imagePath,
       deviceTypeId: Number(request.body.deviceTypeId) || validateBannerId?.deviceTypeId,
-      whitelabelId: Number(request.body.whitelabelId) || validateBannerId?.whitelabelId,
+      whitelabelId: Number(request.body.whitelabelId) ?? validateBannerId?.whitelabelId,
       displayOrder: request.body.hasOwnProperty("displayOrder")
       ? request.body.displayOrder
       : (

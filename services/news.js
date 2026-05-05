@@ -132,6 +132,9 @@ const updateNewsService = async (request, fastify) => {
     throw new Error("News with this Id not found");
   }
   // if image is uploaded then upload it to server
+  const isPermanent = request.body.hasOwnProperty("isPermanent")
+    ? request.body.isPermanent
+    : validateNewsId.isPermanent;
   const body = {
     newsId: request.body.newsId,
     title: request.body.title || validateNewsId.title,
@@ -139,11 +142,11 @@ const updateNewsService = async (request, fastify) => {
     isActive: request.body.hasOwnProperty("isActive")
       ? request.body.isActive
       : validateNewsId.isActive,
-    isPermanent: request.body.hasOwnProperty("isPermanent")
-      ? request.body.isPermanent
-      : validateNewsId.isPermanent,
-    startDate: request.body.startDate || validateNewsId.startDate,
-    endDate: request.body.endDate || validateNewsId.endDate,
+    isPermanent: isPermanent,
+    // startDate: request.body.startDate || validateNewsId.startDate,
+    // endDate: request.body.endDate || validateNewsId.endDate,
+    startDate: isPermanent ? null : (request.body.hasOwnProperty("startDate") ? request.body.startDate : validateNewsId.startDate),
+    endDate: isPermanent ? null : (request.body.hasOwnProperty("endDate") ? request.body.endDate : validateNewsId.endDate),
     image: validateNewsId.image,
     userId: request.userTokenInfo.WrUserId,
     tags: request.body.tags,
@@ -153,7 +156,8 @@ const updateNewsService = async (request, fastify) => {
     type: request.body.type || validateNewsId.type,
     SEODescription: request.body.SEODescription || validateNewsId.SEODescription,
     imagePath: validateNewsId.imagePath,
-    whitelabelId: Number(request.body.whitelabelId) || validateNewsId?.whitelabelId,
+    whitelabelId: Number(request.body.whitelabelId) ?? validateNewsId?.whitelabelId,
+    commentaryId: Number(request.body.commentaryId) ?? validateNewsId?.commentaryId,
 
     displayOrder: request.body.hasOwnProperty("displayOrder")
       ? request.body.displayOrder

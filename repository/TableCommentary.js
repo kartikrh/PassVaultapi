@@ -9892,6 +9892,57 @@ const abandonedCommentaryQuery = async (data, fastify, request) => {
   }
 };
 
+const deleteCommentryOldDataQuery = async (request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+      WITH delete_overs AS (
+        UPDATE "tblOvers"
+        SET "wrIsDelete" = $1,
+            "wrDeletedBy" = $2,
+            "wrDeletedAt" = now()
+        WHERE "wrCommentaryId" = $3
+      ),
+      delete_ball_by_ball AS (
+        UPDATE "tblCommentaryBallByBalls"
+        SET "wrIsDeletedStatus" = $1,
+            "wrDeletedBy" = $2,
+            "wrDeletedAt" = now()
+        WHERE "wrCommentaryId" = $3
+      ),
+      delete_partnership AS (
+        UPDATE "tblCommentaryPartnerships"
+        SET "wrIsDelete" = $1,
+            "wrDeletedBy" = $2,
+            "wrIsActive" = $4,
+            "wrDeletedAt" = now()
+        WHERE "wrCommentaryId" = $3
+      ),
+      delete_wicket AS (
+        UPDATE "tblCommentaryWickets"
+        SET "wrIsDeletedStatus" = $1,
+            "wrDeletedBy" = $2,
+            "wrDeletedAt" = now()
+        WHERE "wrCommentaryId" = $3
+      )
+      SELECT 1;
+      `,
+      {
+        type: fastify.db.QueryTypes.RAW,
+        bind: [true, request.userTokenInfo.WrUserId, request.body.commentaryData.commentaryId, false],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/deleteCommentryOldDataQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -10054,5 +10105,6 @@ module.exports = {
   getAllCommentaryByCompetitionIdQuery,
   updateCommentaryTeamColorQuery,
   deleteCommentaryTeamQuery,
-  abandonedCommentaryQuery
+  abandonedCommentaryQuery,
+  deleteCommentryOldDataQuery
 };

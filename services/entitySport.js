@@ -9,6 +9,7 @@ const {
   updateBallByBallFullCommentaryQuery,
   upComStatusQuery,
   cancelCommentaryQuery,
+  deleteCommentryOldDataQuery,
 } = require("../repository/TableCommentary")
 const { getAllTournamentTeamPlayerByIdsQuery } = require("../repository/TableTournamentsTeamPlayers")
 const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService,addSuperOverInEntity, insertComPlayerEntityService } = require("../services/commentry");
@@ -50,6 +51,7 @@ const { insertTournamentTeamPlayersQuery } = require("../repository/TableTournam
 const Sentry = require("@sentry/node");
 const { entitySportAPIEndPoint } = require("../utilities/entityConst")
 const { entitySportUpdateCommentary } = require("../utilities/entitySportAutoUpdateCommentary")
+const { getEventSnapByComService } = require("./competitionEventSnap")
 
 
 
@@ -1640,7 +1642,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           bowlerOver: tpBowler?.overs ?? null,
           bowlerRun: tpBowler?.runs_conceded  ?? null,
           bowlerTotalWicket: tpBowler?.wickets ?? null,
-          bowlerEconomy: parseFloat(tpBowler.econ) ?? "0",
+          bowlerEconomy: parseFloat(tpBowler?.econ) ?? "0",
           bowlerOrder,
           bowlerMaidenOver: tpBowler?.maidens ?? 0,
           bowlerWideBall : tpBowler?.wides ?? 0,
@@ -4438,6 +4440,13 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
       throw new Error("Commentary not found with this matchId");
     }
 
+    await removeCommentaryOldDataOnInningService({
+      ...request,
+      body: {
+        commentaryData: comDetails
+      }
+    }, fastify);
+
     let inningWiseRes = []
     let upComDetails = {};
     let url =  entitySportAPIEndPoint.getMatchData.replace('{mid}', matchId);
@@ -4996,8 +5005,11 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
               batter2Balls: cp2.balls_faced,
               isActive: activePartnership,
             }
-            partData.push({
-              ...partnership,
+            let par = await updateVirtualPartnershipQuery(partnership, fastify, request)
+            let pI = global.tblCommentaryPartnership.findIndex((i) => i.commentaryPartnershipId == partnership.commentaryPartnershipId)
+            global.tblCommentaryPartnership[pI] = par[0];
+            prtship.push({
+              ...par[0],
               type: "update"
             })
           } else {
@@ -5022,8 +5034,14 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
               commentaryDetails: comDetails,
               updateBattingTeam: battingTeam
             })
+            const createPart = await virtualPartnershipQuery(
+              newPart,
+              request,
+              fastify
+            );
+            global.tblCommentaryPartnership.push(createPart);
             partData.push({
-              ...newPart,
+              ...createPart,
               order: part?.order,
               type: "create"
             })
@@ -6338,6 +6356,42 @@ const cancelCommentaryOnInningService  = async (commentaryId, request, fastify) 
       fastify,
       error.message,
       "ERROR --> services/entitySport.js/cancelCommentaryOnInningService",
+      request
+    );
+  }
+}
+
+const removeCommentaryOldDataOnInningService = async (request, fastify) => {
+  try {
+    const { commentaryId, tpId } = request.body.commentaryData;
+    const oldScoreTypeData = {
+      commentaryId: commentaryId,
+      scoringType: ScoringTypes.Panel,
+      tpId: tpId
+    }
+    await scoringTypeCommentaryQuery(oldScoreTypeData, fastify, request);
+    const index = global.tblCommentaries.findIndex((c) => c.commentaryId == commentaryId);
+    if (index !== -1) {
+      global.tblCommentaries[index] = {
+        ...global.tblCommentaries[index],
+        ...oldScoreTypeData,
+      }
+    }
+
+    await deleteCommentryOldDataQuery(request, fastify);
+    global.tblOvers = global.tblOvers.filter(to => to.commentaryId !== commentaryId);
+    global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(to => to.commentaryId !== commentaryId);
+    global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter(to => to.commentaryId !== commentaryId);
+    global.tblCommentaryWicket = global.tblCommentaryWicket.filter(to => to.commentaryId !== commentaryId);
+
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("removeCommentaryOldData", commentaryId);
+    });
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> services/entitySport.js/removeCommentaryOldDataOnInningService",
       request
     );
   }
