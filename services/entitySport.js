@@ -4440,12 +4440,12 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
       throw new Error("Commentary not found with this matchId");
     }
 
-    await removeCommentaryOldDataOnInningService({
-      ...request,
-      body: {
-        commentaryData: comDetails
-      }
-    }, fastify);
+    // await removeCommentaryOldDataOnInningService({
+    //   ...request,
+    //   body: {
+    //     commentaryData: comDetails
+    //   }
+    // }, fastify);
 
     let inningWiseRes = []
     let upComDetails = {};
@@ -5008,7 +5008,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
             let par = await updateVirtualPartnershipQuery(partnership, fastify, request)
             let pI = global.tblCommentaryPartnership.findIndex((i) => i.commentaryPartnershipId == partnership.commentaryPartnershipId)
             global.tblCommentaryPartnership[pI] = par[0];
-            prtship.push({
+            partData.push({
               ...par[0],
               type: "update"
             })
