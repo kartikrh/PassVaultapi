@@ -367,69 +367,239 @@ const connectEntitySport = async (fastify, entitySocketId = undefined) => {
           null
         );
       });
+      const isSentryEnabled = process.env.ENABLE_SENTRY == "TRUE";
 
       client.on("entityScoreData", async (payload) => {
-        // let transaction;
-        // if (process.env.ENABLE_SENTRY === "TRUE") {
-        //   transaction = Sentry.startTransaction({
-        //     name: `entityScoreData:event:${payload.response?.match_id || 'unknown'}`,
-        //     op: "socket.event",
-        //     description: "Handle entityScoreData socket event",
-        //   });
-        //   transaction.setData("api_type", payload?.api_type);
-        //   transaction.setData("matchId", payload.response?.match_id);
-        // }
+        const executeHandler = async (span = null) => {
+          try {
+            span?.setAttribute("hasBallEvent", !!payload?.response?.ball_event);
 
-        try {
-          // console.log("🚀 ~ connectEntitySport ~ payload")
-          // console.log("Received entity data from Backend A:", payload);
-          const request = { body: payload };
-          if (payload.api_type && payload.api_type == "match_push_obj") {
-            let exist = global.tblCommentaries?.some(c => c.tpId == payload.response.match_id) || null;
-            if(!exist) {
+            if (payload.api_type === "match_push_obj") {
+              const exist =
+                global.tblCommentaries?.some(
+                  (c) => c.tpId == payload.response.match_id
+                ) || null;
+
+              span?.setAttribute("matchExists", !!exist);
+
+              if (!exist) {
+                span?.setStatus("ok");
+                return true;
+              }
+
+              const isLog =
+                global.tblConfigs.find(
+                  (c) => c.key == configConstants.ISENTITYDATALOG
+                )?.value || "false";
+
+              span?.setAttribute("isEntityLogEnabled", isLog);
+
+              if (isLog === "false") {
+                span?.setStatus("ok");
+                return true;
+              }
+
+              // DB call
+              if (isSentryEnabled) {
+                await Sentry.startSpan(
+                  { op: "db.query", name: "createDataQuery" },
+                  async () => {
+                    await createDataQuery(
+                      { data: payload, matchId: payload.response.match_id },
+                      fastify
+                    );
+                  }
+                );
+              } else {
+                await createDataQuery(
+                  { data: payload, matchId: payload.response.match_id },
+                  fastify
+                );
+              }
+
+              // Queue (fire & forget)
+              if (isSentryEnabled) {
+                Sentry.startSpan(
+                  { op: "queue.process", name: "addToQueue" },
+                  () => {
+                    try {
+                      addToQueue(payload, fastify);
+                    } catch (err) {
+                      Sentry.captureException(err);
+                    }
+                  }
+                );
+              } else {
+                try {
+                  addToQueue(payload, fastify);
+                } catch (err) {
+                  console.error(err);
+                }
+              }
+            } else if (
+              payload?.response?.ball_event &&
+              payload.response.ball_event.toLowerCase() === "playing-11 update"
+            ) {
+              const request = {
+                body: payload,
+                userTokenInfo: { WrUserId: -2 },
+              };
+
+              if (isSentryEnabled) {
+                await Sentry.startSpan(
+                  {
+                    op: "service.call",
+                    name: "updateCommentaryPlayersFromEntityService",
+                  },
+                  async () => {
+                    await updateCommentaryPlayersFromEntityService(
+                      request,
+                      fastify
+                    );
+                  }
+                );
+              } else {
+                await updateCommentaryPlayersFromEntityService(
+                  request,
+                  fastify
+                );
+              }
+
+              const isLog =
+                global.tblConfigs.find(
+                  (c) => c.key == configConstants.ISENTITYDATALOG
+                )?.value || "false";
+
+              span?.setAttribute("isEntityLogEnabled", isLog);
+
+              if (isLog === "false") {
+                span?.setStatus("ok");
+                return true;
+              }
+
+              if (isSentryEnabled) {
+                await Sentry.startSpan(
+                  { op: "db.query", name: "createDataQuery" },
+                  async () => {
+                    await createDataQuery(
+                      { data: payload, matchId: payload.response.match_id },
+                      fastify
+                    );
+                  }
+                );
+              } else {
+                await createDataQuery(
+                  { data: payload, matchId: payload.response.match_id },
+                  fastify
+                );
+              }
+            } else {
+              span?.setStatus("ok");
               return true;
             }
-            let isLog = global.tblConfigs.find((c) => c.key == configConstants.ISENTITYDATALOG)?.value || "false";
-            if (isLog == "false") { return true; }
-            await createDataQuery({ data: payload, matchId: payload.response.match_id }, fastify);
-            // await setEntityCom2Service(request, fastify);
-            // console.log("entityScoreData.....")
-            addToQueue(payload, fastify);
-          } else if (
-            payload?.response?.ball_event &&
-            payload.response.ball_event.toLowerCase() == "playing-11 update"
-          ) {
-            const request = { body: payload, userTokenInfo: { WrUserId: -2 } };
-            await updateCommentaryPlayersFromEntityService(request, fastify);
-            let isLog = global.tblConfigs.find((c) => c.key == configConstants.ISENTITYDATALOG)?.value || "false";
-            if (isLog == "false") { return true; }
-            await createDataQuery({ data: payload, matchId: payload.response.match_id }, fastify);
-          } else {
-            return true;
-          }
 
-          // if (transaction) {
-          //   transaction.setStatus("ok");
-          // }
-        } catch (err) {
-          console.error("Error saving entity data:", err);
-          // if (transaction) {
-          //   transaction.setStatus("internal_error");
-          //   Sentry.captureException(err);
-          // }
-          errorLogger(
-            fastify,
-            err.message,
-            "ERROR --> sockets/entitySports.js/connectEntitySport - entityScoreData",
-            null,
-            payload
+            span?.setStatus("ok");
+            return true;
+          } catch (err) {
+            span?.setStatus("internal_error");
+            span?.setAttribute("error.message", err.message);
+
+            if (isSentryEnabled) {
+              Sentry.captureException(err);
+            }
+
+            console.error("Error saving entity data:", err);
+
+            errorLogger(
+              fastify,
+              err.message,
+              "ERROR --> sockets/entitySports.js/connectEntitySport - entityScoreData",
+              null,
+              payload
+            );
+          }
+        };
+
+        // MAIN ENTRY
+        if (isSentryEnabled) {
+          return Sentry.startSpan(
+            {
+              op: "socket.event",
+              name: "entityScoreData",
+              attributes: {
+                matchId: payload?.response?.match_id,
+                apiType: payload?.api_type,
+              },
+            },
+            executeHandler
           );
-        } finally {
-          // if (transaction) {
-          //   transaction.finish();
-          // }
+        } else {
+          return executeHandler();
         }
       });
+
+      // client.on("entityScoreData", async (payload) => {
+      //   // let transaction;
+      //   // if (process.env.ENABLE_SENTRY === "TRUE") {
+      //   //   transaction = Sentry.startTransaction({
+      //   //     name: `entityScoreData:event:${payload.response?.match_id || 'unknown'}`,
+      //   //     op: "socket.event",
+      //   //     description: "Handle entityScoreData socket event",
+      //   //   });
+      //   //   transaction.setData("api_type", payload?.api_type);
+      //   //   transaction.setData("matchId", payload.response?.match_id);
+      //   // }
+
+      //   try {
+      //     // console.log("🚀 ~ connectEntitySport ~ payload")
+      //     // console.log("Received entity data from Backend A:", payload);
+      //     const request = { body: payload };
+      //     if (payload.api_type && payload.api_type == "match_push_obj") {
+      //       let exist = global.tblCommentaries?.some(c => c.tpId == payload.response.match_id) || null;
+      //       if(!exist) {
+      //         return true;
+      //       }
+      //       let isLog = global.tblConfigs.find((c) => c.key == configConstants.ISENTITYDATALOG)?.value || "false";
+      //       if (isLog == "false") { return true; }
+      //       await createDataQuery({ data: payload, matchId: payload.response.match_id }, fastify);
+      //       // await setEntityCom2Service(request, fastify);
+      //       // console.log("entityScoreData.....")
+      //       addToQueue(payload, fastify);
+      //     } else if (
+      //       payload?.response?.ball_event &&
+      //       payload.response.ball_event.toLowerCase() == "playing-11 update"
+      //     ) {
+      //       const request = { body: payload, userTokenInfo: { WrUserId: -2 } };
+      //       await updateCommentaryPlayersFromEntityService(request, fastify);
+      //       let isLog = global.tblConfigs.find((c) => c.key == configConstants.ISENTITYDATALOG)?.value || "false";
+      //       if (isLog == "false") { return true; }
+      //       await createDataQuery({ data: payload, matchId: payload.response.match_id }, fastify);
+      //     } else {
+      //       return true;
+      //     }
+
+      //     // if (transaction) {
+      //     //   transaction.setStatus("ok");
+      //     // }
+      //   } catch (err) {
+      //     console.error("Error saving entity data:", err);
+      //     // if (transaction) {
+      //     //   transaction.setStatus("internal_error");
+      //     //   Sentry.captureException(err);
+      //     // }
+      //     errorLogger(
+      //       fastify,
+      //       err.message,
+      //       "ERROR --> sockets/entitySports.js/connectEntitySport - entityScoreData",
+      //       null,
+      //       payload
+      //     );
+      //   } finally {
+      //     // if (transaction) {
+      //     //   transaction.finish();
+      //     // }
+      //   }
+      // });
     });
 
     await Promise.all(promisies);
