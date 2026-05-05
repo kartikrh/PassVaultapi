@@ -4440,12 +4440,12 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
       throw new Error("Commentary not found with this matchId");
     }
 
-    // await removeCommentaryOldDataOnInningService({
-    //   ...request,
-    //   body: {
-    //     commentaryData: comDetails
-    //   }
-    // }, fastify);
+    await removeCommentaryOldDataOnInningService({
+      ...request,
+      body: {
+        commentaryData: comDetails
+      }
+    }, fastify);
 
     let inningWiseRes = []
     let upComDetails = {};
@@ -4658,15 +4658,18 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
           }));
         }
       }
-      let batCompleteCheck = teams.find((t) =>
-        t.tpId == inningData?.batting_team_id &&
-        t.isBattingComplete == true
-      );
-      if (batCompleteCheck) {
-        continue;
-      }
-      let battingTeam = teams.find((i) => i.teamStatus == 1)
-      let bowlingTeam = teams.find((i) => i.teamStatus == 2)
+      // let batCompleteCheck = teams.find((t) =>
+      //   t.tpId == inningData?.batting_team_id &&
+      //   t.isBattingComplete == true
+      // );
+      // if (batCompleteCheck) {
+      //   continue;
+      // }
+
+      // let battingTeam = teams.find((i) => i.teamStatus == 1)
+      // let bowlingTeam = teams.find((i) => i.teamStatus == 2)
+      let battingTeam = teams.find((i) => i.tpId == inningData?.batting_team_id)
+      let bowlingTeam = teams.find((i) => i.tpId == inningData?.fielding_team_id)
 
       let batsmen = inningData?.batsmen || [];
       let bowlers = inningData?.bowlers || [];
