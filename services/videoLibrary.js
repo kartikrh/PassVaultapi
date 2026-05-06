@@ -136,6 +136,7 @@ const editVideoLibraryService = async (request, fastify, data) => {
     id: parseInt(request.body.id, 10),
     videoPath: request.body.videoPath ?? validateId.videoPath,
     whitelabelId: request.body.whitelabelId ?? validateId.whitelabelId,
+    isActive: request.body.isActive ?? validateId.isActive
   };
   if(updateData.type === 2) {
     updateData.video = null

@@ -2201,6 +2201,7 @@ const competitionImportService = async (data, fastify, request) => {
         responseData: entitySportMatch?.data?.result
       };
 
+      console.log("competitionImportService")
       const autoUpdateId = await insertAutoUpdateCommentaryDataQuery(insertDataInCommentaryUpdate, fastify);
 
       const matchPlaying11Squad = entitySportMatchResponse?.["match-playing11"];

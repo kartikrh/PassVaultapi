@@ -156,7 +156,8 @@ const updateNewsService = async (request, fastify) => {
     type: request.body.type || validateNewsId.type,
     SEODescription: request.body.SEODescription || validateNewsId.SEODescription,
     imagePath: validateNewsId.imagePath,
-    whitelabelId: Number(request.body.whitelabelId) || validateNewsId?.whitelabelId,
+    whitelabelId: Number(request.body.whitelabelId) ?? validateNewsId?.whitelabelId,
+    commentaryId: Number(request.body.commentaryId) ?? validateNewsId?.commentaryId,
 
     displayOrder: request.body.hasOwnProperty("displayOrder")
       ? request.body.displayOrder
