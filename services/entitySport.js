@@ -4636,6 +4636,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
 
       if (!entitySportMatchResponse?.commentaries?.length) continue;
       const commentaries = entitySportMatchResponse?.commentaries;
+      let previousInning = comDetails.currentInnings - 1;
 
       if (upComDetails?.commentaryStatus == commentaryStatus.TOSSDONE ||
         comDetails?.commentaryStatus == commentaryStatus.TOSSDONE ||
@@ -4655,7 +4656,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
             ...item,
             teamStatus: item.tpId == inningData?.batting_team_id ? 1 : 2,
             subInning: item.tpId == inningData?.batting_team_id ? 1 + (previousComInning * 2) : 2 + (previousComInning * 2),
-            teamBattingOrder: item.tpId == inningData?.batting_team_id ? 1 : 2,
+            teamBattingOrder: item.tpId == inningData?.batting_team_id ? 1 + (previousInning * 2) : 2 + (previousInning * 2),
           }));
         }
       }
