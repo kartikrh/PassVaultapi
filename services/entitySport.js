@@ -373,8 +373,8 @@ const setEntityCom2Service = async (request , fastify) =>{
     const eventDate = new Date(response.match_info.date_start.replace(" ", "T") + "Z");
     const currentDate = new Date();
     const diffHours = (currentDate - eventDate) / (1000 * 60 * 60);
-    console.log("🚀 ~ setEntityCom2Service ~ dateTime:", matchID, response.match_info.date_start, eventDate, currentDate, diffHours)
     if (diffHours > 48) {
+      console.log("🚀 ~ setEntityCom2Service ~ dateTime:", matchID, response.match_info.date_start, eventDate, currentDate, diffHours)
       let commentaryData = global.tblCommentaries.find(tc => tc.tpId === response.match_id);
       const checkCompetition = global.tblCompetitions.find(item => item.tpId === response.match_info?.competition?.cid);
       if (!checkCompetition) {
