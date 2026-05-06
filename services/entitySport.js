@@ -372,7 +372,8 @@ const setEntityCom2Service = async (request , fastify) =>{
     const {response} = request.body
     const eventDate = new Date(response.match_info.date_start.replace(" ", "T"));
     const currentDate = new Date();
-    if (Math.abs(currentDate - eventDate) > 48 * 60 * 60 * 1000) {
+    const checkDate = currentDate - eventDate;
+    if (checkDate > 48 * 60 * 60 * 1000) {
       let commentaryData = global.tblCommentaries.find(tc => tc.tpId === response.match_id);
       const checkCompetition = global.tblCompetitions.find(item => item.tpId === response.match_info?.competition?.cid);
       if (!checkCompetition) {

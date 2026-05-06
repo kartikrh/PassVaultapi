@@ -61,7 +61,6 @@ const entitySportAutoUpdateCommentary = async (fastify) => {
                                     responseData: entitySportMatchResponse
                                 };
 
-                                console.log("entitySportAutoUpdateCommentary1")
                                 insertAutoUpdateCommentaryData = await insertAutoUpdateCommentaryDataQuery(insertData, fastify);
 
                                 const isChanged = await entitySportUpdateCommentary(commentary, checkCompetition, entitySportMatchResponse, true, fastify);
@@ -456,7 +455,6 @@ const entitySportUpdateCommentary = async (commentaryData, checkCompetition, ent
             responseData: entitySportMatchResponse,
         };
 
-        console.log("entitySportAutoUpdateCommentary2")
         await insertAutoUpdateCommentaryDataQuery(insertDataInCommentaryUpdate, fastify);
     }
     return isChanged;
