@@ -4435,18 +4435,18 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
     request.body.isImportStart = true;
     request.body.importStartTime = new Date();
     importData = await insertAutoImportDataQuery(request.body, fastify, request);
-    let comDetails = global.tblCommentaries.find(item => item.tpId == matchId);
-    if (!comDetails) {
+    let validateCommentary = global.tblCommentaries.find(item => item.tpId == matchId);
+    if (!validateCommentary) {
       throw new Error("Commentary not found with this matchId");
     }
 
     await removeCommentaryOldDataOnInningService({
       ...request,
       body: {
-        commentaryData: comDetails
+        commentaryData: validateCommentary
       }
     }, fastify);
-
+    let comDetails = global.tblCommentaries.find(item => item.tpId == matchId);
     let inningWiseRes = []
     let upComDetails = {};
     let url =  entitySportAPIEndPoint.getMatchData.replace('{mid}', matchId);
