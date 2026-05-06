@@ -370,9 +370,9 @@ const setEntityCom2Service = async (request , fastify) =>{
   try {
     transaction?.setStatus('ok');
     const {response} = request.body
-    const eventDate = new Date(response.match_info.date_start.replace(" ", "T"));
-    const currentDate = new Date();
-    if (Math.abs(currentDate - eventDate) > 48 * 60 * 60 * 1000) {
+    const eventDate = new Date(response.match_info.date_start.replace(" ", "T") + "Z");
+    const diffHours = (eventDate.getTime() - Date.now()) / (1000 * 60 * 60);
+    if (diffHours > 48) {
       let commentaryData = global.tblCommentaries.find(tc => tc.tpId === response.match_id);
       const checkCompetition = global.tblCompetitions.find(item => item.tpId === response.match_info?.competition?.cid);
       if (!checkCompetition) {
@@ -4635,6 +4635,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
 
       if (!entitySportMatchResponse?.commentaries?.length) continue;
       const commentaries = entitySportMatchResponse?.commentaries;
+      let previousInning = comDetails.currentInnings - 1;
 
       if (upComDetails?.commentaryStatus == commentaryStatus.TOSSDONE ||
         comDetails?.commentaryStatus == commentaryStatus.TOSSDONE ||
@@ -4654,7 +4655,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
             ...item,
             teamStatus: item.tpId == inningData?.batting_team_id ? 1 : 2,
             subInning: item.tpId == inningData?.batting_team_id ? 1 + (previousComInning * 2) : 2 + (previousComInning * 2),
-            teamBattingOrder: item.tpId == inningData?.batting_team_id ? 1 : 2,
+            teamBattingOrder: item.tpId == inningData?.batting_team_id ? 1 + (previousInning * 2) : 2 + (previousInning * 2),
           }));
         }
       }
