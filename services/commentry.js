@@ -24022,6 +24022,7 @@ const matchImportService = async (data, fastify, request = null) => {
       responseData: entitySportMatchResponse,
     };
 
+    console.log("matchImportService")
     await insertAutoUpdateCommentaryDataQuery(insertDataInCommentaryUpdate, fastify);
   }
 
@@ -25333,6 +25334,7 @@ const updateCommentaryPlayersFromEntityService = async (request, fastify) => {
     responseData: entitySportMatchResponse,
   };
 
+  console.log("updateCommentaryPlayersFromEntityService")
   await insertAutoUpdateCommentaryDataQuery(insertDataInCommentaryUpdate, fastify);
   if (!entitySportMatchResponse) {
     errorLogger(
