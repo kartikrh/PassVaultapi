@@ -12042,14 +12042,16 @@ const saveComTemplatesService = async (request, fastify) => {
   await saveComTemplateQuery({ saveTemplates, dltTemplate }, request, fastify);
   return "Commentary Template saved successfully";
 };
-const revertCommentaryService = async (request, fastify) => {
+const revertCommentaryService = async (request, fastify, status = undefined) => {
   const startTime = new Date();
   const { commentaryId, password } = request.body;
-  let pass = global.tblConfigs.find(
-    (item) => item.key === configConstants.REVERTCOMPASS
-  );
-  if (pass && pass.value != password) {
-    throw new Error("Invalid Password.");
+  if (status == undefined) {
+    let pass = global.tblConfigs.find(
+      (item) => item.key === configConstants.REVERTCOMPASS
+    );
+    if (pass && pass.value != password) {
+      throw new Error("Invalid Password.");
+    }
   }
   const index = global.tblCommentaries.findIndex(
     (item) => item?.commentaryId === commentaryId

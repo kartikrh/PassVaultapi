@@ -29,6 +29,24 @@ const errorLogger = async (fastify, errMessage, errStack, request , data = null)
   }
 };
 
+const oomLogger = async (fastify, reason, detail = null, data = null) => {
+  try {
+    if (!fastify || !fastify.db) {
+      console.warn("oomLogger: fastify.db not available, skipping DB write", reason, detail);
+      return;
+    }
+    return await errorLogger(
+      fastify,
+      reason,
+      detail || "Server memory usage warning near OOM",
+      null,
+      data ?? JSON.stringify({ reason, detail, timestamp: new Date() })
+    );
+  } catch (err) {
+    console.warn("oomLogger failed:", err?.message || err);
+  }
+};
+
 const responseLogger = async (request) => {
   try {
     await ResponseLog.create({
@@ -569,7 +587,7 @@ const getMemoryStatus = () => {
   }
 }
 
-module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,
+module.exports = { errorLogger, oomLogger, responseLogger ,responseLogInDB , marketLogger ,
   marketDataLogger,tblPredictorAPILogger,tblThirdPartyAPILogger,commentaryLogger,updateWebRequestLogs,
   eventMarketLogger, marektResultLogger,pythonSocketLogger,
 disMissalLogger, commActionLogger,cardLogger,

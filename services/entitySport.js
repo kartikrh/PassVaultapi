@@ -12,7 +12,7 @@ const {
   deleteCommentryOldDataQuery,
 } = require("../repository/TableCommentary")
 const { getAllTournamentTeamPlayerByIdsQuery } = require("../repository/TableTournamentsTeamPlayers")
-const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService,addSuperOverInEntity, insertComPlayerEntityService } = require("../services/commentry");
+const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService,addSuperOverInEntity, insertComPlayerEntityService, revertCommentaryService } = require("../services/commentry");
 const {
     callClientAPI,
     ServiceType,
@@ -370,9 +370,10 @@ const setEntityCom2Service = async (request , fastify) =>{
   try {
     transaction?.setStatus('ok');
     const {response} = request.body
-    const eventDate = new Date(response.match_info.date_start.replace(" ", "T"));
+    const eventDate = new Date(response.match_info.date_start.replace(" ", "T") + "Z");
     const currentDate = new Date();
-    if (Math.abs(currentDate - eventDate) > 48 * 60 * 60 * 1000) {
+    const diffHours = (currentDate - eventDate) / (1000 * 60 * 60);
+    if (diffHours > 48) {
       let commentaryData = global.tblCommentaries.find(tc => tc.tpId === response.match_id);
       const checkCompetition = global.tblCompetitions.find(item => item.tpId === response.match_info?.competition?.cid);
       if (!checkCompetition) {
@@ -4435,18 +4436,18 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
     request.body.isImportStart = true;
     request.body.importStartTime = new Date();
     importData = await insertAutoImportDataQuery(request.body, fastify, request);
-    let comDetails = global.tblCommentaries.find(item => item.tpId == matchId);
-    if (!comDetails) {
+    let validateCommentary = global.tblCommentaries.find(item => item.tpId == matchId);
+    if (!validateCommentary) {
       throw new Error("Commentary not found with this matchId");
     }
 
-    // await removeCommentaryOldDataOnInningService({
-    //   ...request,
-    //   body: {
-    //     commentaryData: comDetails
-    //   }
-    // }, fastify);
-
+    await removeCommentaryOldDataOnInningService({
+      ...request,
+      body: {
+        commentaryData: validateCommentary
+      }
+    }, fastify);
+    let comDetails = global.tblCommentaries.find(item => item.tpId == matchId);
     let inningWiseRes = []
     let upComDetails = {};
     let url =  entitySportAPIEndPoint.getMatchData.replace('{mid}', matchId);
@@ -4635,6 +4636,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
 
       if (!entitySportMatchResponse?.commentaries?.length) continue;
       const commentaries = entitySportMatchResponse?.commentaries;
+      let previousInning = comDetails.currentInnings - 1;
 
       if (upComDetails?.commentaryStatus == commentaryStatus.TOSSDONE ||
         comDetails?.commentaryStatus == commentaryStatus.TOSSDONE ||
@@ -4654,19 +4656,22 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
             ...item,
             teamStatus: item.tpId == inningData?.batting_team_id ? 1 : 2,
             subInning: item.tpId == inningData?.batting_team_id ? 1 + (previousComInning * 2) : 2 + (previousComInning * 2),
-            teamBattingOrder: item.tpId == inningData?.batting_team_id ? 1 : 2,
+            teamBattingOrder: item.tpId == inningData?.batting_team_id ? 1 + (previousInning * 2) : 2 + (previousInning * 2),
           }));
         }
       }
-      let batCompleteCheck = teams.find((t) =>
-        t.tpId == inningData?.batting_team_id &&
-        t.isBattingComplete == true
-      );
-      if (batCompleteCheck) {
-        continue;
-      }
-      let battingTeam = teams.find((i) => i.teamStatus == 1)
-      let bowlingTeam = teams.find((i) => i.teamStatus == 2)
+      // let batCompleteCheck = teams.find((t) =>
+      //   t.tpId == inningData?.batting_team_id &&
+      //   t.isBattingComplete == true
+      // );
+      // if (batCompleteCheck) {
+      //   continue;
+      // }
+
+      // let battingTeam = teams.find((i) => i.teamStatus == 1)
+      // let bowlingTeam = teams.find((i) => i.teamStatus == 2)
+      let battingTeam = teams.find((i) => i.tpId == inningData?.batting_team_id)
+      let bowlingTeam = teams.find((i) => i.tpId == inningData?.fielding_team_id)
 
       let batsmen = inningData?.batsmen || [];
       let bowlers = inningData?.bowlers || [];
@@ -6377,16 +6382,49 @@ const removeCommentaryOldDataOnInningService = async (request, fastify) => {
         ...oldScoreTypeData,
       }
     }
-
+    request.body.commentaryId = commentaryId;
+    await revertCommentaryService(request, fastify, 1);
+    return true;
+  /*
     await deleteCommentryOldDataQuery(request, fastify);
     global.tblOvers = global.tblOvers.filter(to => to.commentaryId !== commentaryId);
     global.tblCommentaryBallByBall = global.tblCommentaryBallByBall.filter(to => to.commentaryId !== commentaryId);
     global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter(to => to.commentaryId !== commentaryId);
     global.tblCommentaryWicket = global.tblCommentaryWicket.filter(to => to.commentaryId !== commentaryId);
+    const comTeams = global.tblCommentaryTeams
+      .filter(ct => ct.commentaryId === commentaryId)
+      .map(tct => ({
+        ...tct,
+        teamScore: null,
+        teamOver: null,
+        teamWicket: null,
+        crr: null,
+        rrr: null,
+        teamStatus: null,
+        isWin: null,
+        isBattingComplete: null,
+        teamTrialRuns: 0,
+        teamLeadRuns: 0,
+        teamWideRuns: 0,
+        teamByRuns: 0,
+        teamLegByRuns: 0,
+        teamNoBallRuns: 0,
+        teamPenaltyRuns: 0,
+        teamBattingOrder: null,
+        isSuperOver: null,
+        teamPredictionPercentage: null
+      }));
+    // remove old teams for this commentaryId
+    global.tblCommentaryTeams = global.tblCommentaryTeams.filter(
+      ct => ct.commentaryId !== commentaryId
+    );
+    // add updated teams
+    global.tblCommentaryTeams.push(...comTeams);
 
     global.clientSocketIo.forEach((socket) => {
       socket.client.emit("removeCommentaryOldData", commentaryId);
     });
+    */
   } catch (error) {
     errorLogger(
       fastify,

@@ -6,13 +6,13 @@ const fsequelize = require("fastify-sequelize");
 const dbPg = require("./sequelize/config/config")();
 const swagger = require("@fastify/swagger");
 const swaggerUi = require("@fastify/swagger-ui");
-const { fetchAllDataFromDb } = require("./utilities/fetchAllData");
+const { fetchAllDataFromDb, globalMemoryDatas } = require("./utilities/fetchAllData");
 const { registerCronJobs } = require("./utilities/cronJobs");
 // const fetchAllData = require("./utilities/fetchAllData");
 const { Server } = require("socket.io"); // Import Socket.IO
 const { connection, socketMiddleware } = require("./socketIo");
 const { fastifyRateLimit } = require("@fastify/rate-limit");
-const { responseLogger, responseLogInDB } = require("./utilities/logger");
+const { responseLogger, responseLogInDB, oomLogger } = require("./utilities/logger");
 const fastifyMultipart = require("@fastify/multipart");
 const fastifyStatic = require("@fastify/static");
 const { generateToken } = require("./utilities/tokenization");
@@ -72,12 +72,71 @@ if (process.env.ENABLE_SENTRY === "TRUE") {
     includeLocalVariables: true,
   });
 }
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-});
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-});
+const { getMemoryStatus } = require("./utilities/logger");
+
+const MEMORY_WARNING_THRESHOLD = 85;
+const OOM_WARNING_INTERVAL_MS = 5 * 60 * 1000;
+let lastOomWarningAt = 0;
+const recordMemoryWarning = async (fastify, heapPercent, memory, globalMemory) => {
+  const reason = `High memory usage detected: ${heapPercent}%`;
+  const detail = `Heap used ${memory.process.heapUsed}, heap total ${memory.process.heapTotal}`;
+  try {
+    if (fastify && fastify.db) {
+      await oomLogger(
+        fastify,
+        reason,
+        detail,
+        JSON.stringify({ memory, globalMemory, heapPercent, threshold: MEMORY_WARNING_THRESHOLD, createdAt: new Date() })
+      );
+      // console.warn(`Persisted OOM warning to DB: ${reason}`);
+    } else {
+      console.warn("OOM warning DB logging skipped: fastify.db not available", reason);
+    }
+  } catch (err) {
+    console.warn('Failed to persist OOM warning:', err?.message || err);
+  }
+};
+
+const logMemoryUsage = async (fastify) => {
+  try {
+    const memory = getMemoryStatus();
+    const globalMemory = await globalMemoryDatas();
+    const heapUsed = parseFloat(memory.process.heapUsed);
+    const heapTotal = parseFloat(memory.process.heapTotal);
+    const heapPercent = heapTotal > 0 ? ((heapUsed / heapTotal) * 100).toFixed(1) : "0";
+    // console.log(`Memory status: heapUsed=${memory.process.heapUsed}, heapTotal=${memory.process.heapTotal}, heapPct=${heapPercent}%`);
+    // console.log("globalMemory", globalMemory);
+    if (heapPercent >= MEMORY_WARNING_THRESHOLD) {
+      console.warn(`High heap usage detected: ${heapPercent}%`);
+      if (Date.now() - lastOomWarningAt > OOM_WARNING_INTERVAL_MS) {
+        lastOomWarningAt = Date.now();
+        await recordMemoryWarning(fastify, heapPercent, memory, globalMemory);
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to log memory usage:', err?.message || err);
+  }
+};
+
+const setupMemoryMonitor = (fastify) => {
+  setInterval(() => logMemoryUsage(fastify), 300000);
+  process.on('warning', async (warning) => {
+    const message = `${warning.name}: ${warning.message}`;
+    console.warn('Process warning:', message, warning.code);
+    if (!fastify || !fastify.db) {
+      return;
+    }
+    const globalMemory = await globalMemoryDatas();
+    // console.log("globalMemory", globalMemory);
+    await oomLogger(
+      fastify,
+      `Process warning: ${warning.name}`,
+      `${warning.message} code=${warning.code}`,
+      JSON.stringify({ warning, globalMemory, timestamp: new Date() })
+    );
+  });
+
+}
 // process.on("uncaughtException", (err) => {
 //   console.error("Uncaught Exception occurred:", err);
 //   // Log additional diagnostic information
@@ -130,6 +189,7 @@ module.exports = async function (fastify, opts) {
         try {
           // await featchData(fastify);
           await fetchAllDataFromDb(fastify);
+          setupMemoryMonitor(fastify);
 
           // await disConnectClientSocketQuery(fastify);
           // await disConnectEntitySocketQuery(fastify);
