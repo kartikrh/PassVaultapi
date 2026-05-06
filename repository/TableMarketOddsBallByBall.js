@@ -1,7 +1,7 @@
 const { errorLogger } = require("../utilities/logger");
 
 
-const getAllMarketOddsBallByBall = async (fastify) => {
+const getAllMarketOddsBallByBall = async (fastify, commentaryIds) => {
   try {
     return await fastify.db.query(
       `SELECT 
@@ -23,7 +23,9 @@ const getAllMarketOddsBallByBall = async (fastify) => {
           "tblMarketOddsBallByBall" AS mobb
       LEFT JOIN "tblEventMarkets" em ON mobb."wrEventMarketId" = em."wrID"
       LEFT JOIN "tblMarketTypes" mty ON em."wrMarketTypeId" = mty."wrId"
-      WHERE mobb."wrIsDeleted" = false AND em."wrIsDeleted" = false`,
+      WHERE mobb."wrIsDeleted" = false AND em."wrIsDeleted" = false
+      AND mobb."wrCommentaryId" IN (${commentaryIds})
+    `,
       {
         type: fastify.db.QueryTypes.SELECT,
       }
