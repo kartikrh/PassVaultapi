@@ -161,7 +161,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllMatchTypePredictor = await getAllMatchTypePredictorQuery(
       fastify
     );
-    const getAllEventMarkets = await getAllEventMarketsQuery(fastify);
+    // const getAllEventMarkets = await getAllEventMarketsQuery(fastify);
     const getAllMarketTemplate = await getAllMarketTemplateQuery(fastify);
     const getAllMarketTypeCategories = await getAllMarketTypeCategoriesQuery(
       fastify
@@ -181,7 +181,6 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllOtp = await getAllOtpQuery(fastify);
     const getAllClient = await getAllClientQuery(fastify);
     const getAllMailSettings = await allMailSettingsQuery(fastify);
-    const marketOddBallByBall = await getAllMarketOddsBallByBall(fastify);
     const thirdPartyApis = await allThirdPartyApisQuery(fastify);
     const clientVideos = await allClientVideoQuery(fastify);
     // const responseLogs = await allResponseLogsQuery(fastify);
@@ -216,6 +215,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const allCommentaryIds = getAllCommentary.map((item) => item.commentaryId);
     let getAllEventMarketsV2 = [];
     let getEventMarketRunnerV2 = [];
+    let marketOddBallByBall = [];
     if (allCommentaryIds.length > 0) {
         getAllEventMarketsV2 = await getAllEventMarketsV2Query(fastify, allCommentaryIds.join(", "));
         if (getAllEventMarketsV2.length > 0) {
@@ -225,6 +225,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
               getEventMarketRunnerV2 = await getAllMarketRunnersQuery(fastify, eventMarketIds.join(", "));
           }
         }
+      marketOddBallByBall = await getAllMarketOddsBallByBall(fastify, allCommentaryIds.join(", "));
     }
     // const getAllEventMarketsV2 = await getAllEventMarketsV2Query(fastify, 
     //   getAllCommentary.map((item) => item.commentaryId).join(", ")
@@ -279,7 +280,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblSubScribesSubDomain = getAllsubScribesSubDomain;
     global.tblMatchTypePredictor = getAllMatchTypePredictor;
     global.tblMarketTemplate = getAllMarketTemplate;
-    global.tblEventMarkets = getAllEventMarkets;
+    // global.tblEventMarkets = getAllEventMarkets;
+    global.tblEventMarkets = []
     global.tblMarketTypeCategories = getAllMarketTypeCategories;
     global.tblMarketTypes = getAllMarketType;
     global.tblMarketTemplateRunners = getAllMarketTemplateRunner;
@@ -384,6 +386,7 @@ const FetchingCommentariesDataFromCron = async (fastify) => {
     global.tblOvers = global.tblOvers.filter((item) => commentaryIds.includes(item.commentaryId));
     global.tblCommentaryWicket = global.tblCommentaryWicket.filter((item) => commentaryIds.includes(item.commentaryId));
     global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter((item) => commentaryIds.includes(item.commentaryId));
+    global.tblMarketOddsBallByBall = global.tblMarketOddsBallByBall.filter((item) => commentaryIds.includes(item.commentaryId));
 
     global.tblEventMarketsV2 = global.tblEventMarketsV2.filter((item) => commentaryIds.includes(item.commentaryId));
     const marketIds = new Set(global.tblEventMarketsV2.map((elem) => elem.eventMarketId));
