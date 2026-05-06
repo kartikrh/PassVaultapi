@@ -371,8 +371,7 @@ const setEntityCom2Service = async (request , fastify) =>{
     transaction?.setStatus('ok');
     const {response} = request.body
     const eventDate = new Date(response.match_info.date_start.replace(" ", "T") + "Z");
-    const currentDate = new Date();
-    const diffHours = (currentDate - eventDate) / (1000 * 60 * 60);
+    const diffHours = (eventDate.getTime() - Date.now()) / (1000 * 60 * 60);
     if (diffHours > 48) {
       let commentaryData = global.tblCommentaries.find(tc => tc.tpId === response.match_id);
       const checkCompetition = global.tblCompetitions.find(item => item.tpId === response.match_info?.competition?.cid);
