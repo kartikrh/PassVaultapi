@@ -955,7 +955,7 @@ function getHeapSize(obj) {
     return 'N/A';
   }
 }  
-const globalMemoryDatas = async(request , fastify) =>{
+const globalMemoryDatas = async(request = null , fastify = null) =>{
   let result = [];
 
   for (const key of Object.keys(global)) {
