@@ -340,8 +340,17 @@ const callPredictorMarket = async (
     }
     const url = `${predictorURL}${endpoint}`;
     const result = await axios.post(url, {
-      ...data,
-    });
+        ...data,
+      },
+      {
+        timeout: 120000,
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
+        headers: {
+          Connection: "keep-alive",
+        },
+      }
+    );
 
     if (loggerConfig == "true") {
       tblPredictorAPILogger(
