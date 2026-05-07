@@ -5,7 +5,7 @@ const {
   activeInactiveNewsQuery,
   changeeDisplayOrderQuery
 } = require("../repository/TableNews");
-const { callClientAPI, ServiceType, APIEndpointModuleType, getDataFromTime } = require("../utilities");
+const { callClientAPI, ServiceType, APIEndpointModuleType, getDataFromTime, checkDataSendToClient } = require("../utilities");
 const {
   generateImageName,
   storeImageOnServer,
@@ -95,15 +95,7 @@ const createNewsService = async (request, fastify) => {
 
   // await handleSitemapUpdate(`news/${urlId}/${urlEndPoint}`)
 
-  const now = Date.now();
-  let sendToClient = false;
-  if (data[0].isActive) {
-    if (data[0].isPermanent) {
-      sendToClient = true;
-    } else if (data[0].startDate <= now && data[0].endDate >= now) {
-      sendToClient = true;
-    }
-  }
+  const sendToClient = checkDataSendToClient(data[0]);
   if (sendToClient) {
     await callClientAPI(
       {

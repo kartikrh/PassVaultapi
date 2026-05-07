@@ -16,7 +16,7 @@ const {
   storeImageOnServer,
   removeImageFromServer,
 } = require("../utilities/Images");
-const { commentaryStatus, getDataFromTime } = require("../utilities/index");
+const { commentaryStatus, getDataFromTime, checkDataSendToClient } = require("../utilities/index");
 const { errorLogger } = require("../utilities/logger");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
@@ -30,15 +30,7 @@ const savePhotoLibraryService = async (request, fastify) => {
   );
   global.tblPhotoLibrary.push(saveData);
 
-  const now = Date.now();
-  let sendToClient = false;
-  if (saveData.isActive) {
-    if (saveData.isPermanent) {
-      sendToClient = true;
-    } else if (saveData.startDate <= now && saveData.endDate >= now) {
-      sendToClient = true;
-    }
-  }
+  const sendToClient = checkDataSendToClient(saveData);
   if (sendToClient) {
     await callClientAPI(
       {

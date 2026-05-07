@@ -6,7 +6,7 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
   } = require("../utilities/Images");
   const { PROJECT_NAME } = require("../utilities/configConstants");
   const { ImgModuleConfig } = require("../utilities/imageConstant");
-  const { APIEndpointModuleType, ServiceType, callClientAPI, getDataFromTime } = require("../utilities");
+  const { APIEndpointModuleType, ServiceType, callClientAPI, getDataFromTime, checkDataSendToClient } = require("../utilities");
   // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
   
   const getAllBannerService = async (request, fastify) => {
@@ -80,28 +80,20 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       fastify
     );
 
-    const now = Date.now();
-    let sendToClient = false;
-    if (data.isActive) {
-      if (data.isPermanent) {
-        sendToClient = true;
-      } else if (data.startDate <= now && data.endDate >= now) {
-        sendToClient = true;
-      }
-    }
+    const sendToClient = checkDataSendToClient(data[0]);
     if (sendToClient) {
       await callClientAPI(
         {
           serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.updateBanner,
-          data: data
+          data: data[0]
         },
         request,
         fastify,
         "services/banner.js/createBannerService"
       );
     } else {
-      global.pendingBannerToClient.push(data);
+      global.pendingBannerToClient.push(data[0]);
     }
   
     global.tblBanner.push(data[0]);
