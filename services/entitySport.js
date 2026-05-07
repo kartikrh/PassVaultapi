@@ -2707,8 +2707,9 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
       updateFullCommentaryOfBallService(fullCommentaries, comDetails, request, fastify);
     }
 
-  if (strikeRuns != null && strikeRuns % 2 !== 0 ||
-    strikeRuns != null && strikeRuns % 2 == 0 && isOverEnd
+  if (
+    (strikeRuns != null && strikeRuns % 2 !== 0) ||
+    (strikeRuns != null && strikeRuns % 2 == 0 && isOverEnd)
   ) {
     let onStrikePlayer = Object.values(playersMap).find(
       (item) =>
