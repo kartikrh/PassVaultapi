@@ -12,7 +12,7 @@ const {
 } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
-const { VideoLibraryType, getDataFromTime } = require("../utilities/index");
+const { VideoLibraryType, getDataFromTime, checkDataSendToClient } = require("../utilities/index");
 const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
 
 const saveVideoLibraryService = async (request, fastify) => {
@@ -53,16 +53,7 @@ const saveVideoLibraryService = async (request, fastify) => {
   );
   global.tblVideoLibrary.push(saveData);
 
-  const now = Date.now();
-  let sendToClient = false;
-  if (saveData.isActive) {
-    if (saveData.isPermanent) {
-      sendToClient = true;
-    } else if (saveData.from <= now && saveData.to >= now) {
-      sendToClient = true;
-    }
-  }
-
+  const sendToClient = checkDataSendToClient(saveData, "from", "to");
   if (sendToClient) {
     await callClientAPI(
       {
