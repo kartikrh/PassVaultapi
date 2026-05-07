@@ -1425,6 +1425,8 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     let ltSetOrder = 0;
     // Find the current max batter order from global data
     let currentPlayers = []
+    let strikeRuns;
+    let isOverEnd = false;
     const existingBatters = global.tblCommentaryPlayers.filter(i =>
       i.commentaryId === comDetails.commentaryId &&
       i.currentInnings === comDetails.currentInnings &&
@@ -1766,6 +1768,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               isWide = true;
               const runToUpdate = Number(c?.bat_run || 0) + Number(c?.legbye_run || 0) + Number(c?.bye_run || 0);
               const wideRun = Number(c?.wide_run) ?? 0;
+              strikeRuns = runToUpdate;
               if(!over) {
                 over = global.tblOvers.find((i)=> i.commentaryId == comDetails.commentaryId && i.currentInnings == comDetails.currentInnings
                   && i.over == c.over
@@ -1875,6 +1878,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             } else if (c.score && String(c.score).includes('nb')) {
               const runToUpdate = Number(c?.bat_run || 0) + Number(c?.legbye_run || 0) + Number(c?.bye_run || 0);
               const noBallRun = Number(c?.noball_run) ?? 0;
+              strikeRuns = runToUpdate;
               if(!over) {
                 over = global.tblOvers.find((i)=> i.commentaryId == comDetails.commentaryId && i.currentInnings == comDetails.currentInnings
                   && i.over == c.over
@@ -2056,6 +2060,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               } else if (Number(c?.bye_run) > 0) {
                 ball_Type = BALL_TYPE.BYE;
               }
+              strikeRuns = c.run;
               updateBall = {
                   ballIsCount : true,
                   ballType : ball_Type,
@@ -2212,6 +2217,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             over.isMaiden = getBowlerOnlyRuns(over) < 1;
             over.teamScore = c.score;
             over.totalRun = c?.runs
+            isOverEnd = true
           }
           else {
             const overET = global.tblOvers.find(i =>
@@ -2701,7 +2707,37 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
       updateFullCommentaryOfBallService(fullCommentaries, comDetails, request, fastify);
     }
 
-    // console.log(oversMap)
+  if (strikeRuns != null && strikeRuns % 2 !== 0 ||
+    strikeRuns != null && strikeRuns % 2 == 0 && isOverEnd
+  ) {
+    let onStrikePlayer = Object.values(playersMap).find(
+      (item) =>
+        item.commentaryId == comDetails.commentaryId &&
+        item.isPlay === true &&
+        item.onStrike === true &&
+        item.currentInnings == comDetails.currentInnings &&
+        item.teamId == battingTeam.teamId
+    );
+    let nonStrikePlayer = Object.values(playersMap).find(
+      (item) =>
+        item.commentaryId == comDetails.commentaryId &&
+        item.isPlay === true &&
+        item.onStrike === false &&
+        item.currentInnings == comDetails.currentInnings &&
+        item.teamId == battingTeam.teamId
+    );
+    if (onStrikePlayer && nonStrikePlayer) {
+      playersMap[onStrikePlayer.tpId] = {
+        ...playersMap[onStrikePlayer.tpId],
+        onStrike: false,
+      };
+
+      playersMap[nonStrikePlayer.tpId] = {
+        ...playersMap[nonStrikePlayer.tpId],
+        onStrike: true,
+      };
+    }
+  }
     let plyArr = Object.values(playersMap);
     let overArr = Object.values(oversMap)
     if (commentaries?.length > 0) {
@@ -4635,7 +4671,6 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
 
       if (!entitySportMatchResponse?.commentaries?.length) continue;
       const commentaries = entitySportMatchResponse?.commentaries;
-      let previousInning = comDetails.currentInnings - 1;
 
       if (upComDetails?.commentaryStatus == commentaryStatus.TOSSDONE ||
         comDetails?.commentaryStatus == commentaryStatus.TOSSDONE ||
@@ -4655,7 +4690,7 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
             ...item,
             teamStatus: item.tpId == inningData?.batting_team_id ? 1 : 2,
             subInning: item.tpId == inningData?.batting_team_id ? 1 + (previousComInning * 2) : 2 + (previousComInning * 2),
-            teamBattingOrder: item.tpId == inningData?.batting_team_id ? 1 + (previousInning * 2) : 2 + (previousInning * 2),
+            teamBattingOrder: item.tpId == inningData?.batting_team_id ? 1 + (previousComInning * 2) : 2 + (previousComInning * 2),
           }));
         }
       }
