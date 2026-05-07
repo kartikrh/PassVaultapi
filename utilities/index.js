@@ -2536,6 +2536,19 @@ const getDataFromTime = (data, globalType, startDate = "startDate", endDate = "e
   });
 }
 
+const checkDataSendToClient = (data, startDate = "startDate", endDate = "endDate") => {
+  if (!data?.isActive) return false;
+
+  if (data.isPermanent) return true;
+
+  const now = Date.now();
+
+  return (
+    new Date(data[startDate]).getTime() <= now &&
+    new Date(data[endDate]).getTime() >= now
+  );
+}
+
 module.exports = {    
   ERROR_CODES,
   error,
@@ -2667,5 +2680,6 @@ module.exports = {
   normalizeCompetitionSeasonName,
   getOverCalculation,
   getDataFromTime,
-  pushSessionData
+  pushSessionData,
+  checkDataSendToClient
 };
