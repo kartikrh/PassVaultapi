@@ -60,6 +60,11 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: DataTypes.NOW,
       },
+      wrPrevGroupId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: null
+      }
     },
     {
       timestamps: false,
