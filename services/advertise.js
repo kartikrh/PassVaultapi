@@ -5,7 +5,7 @@ const {
   activeInactiveAdvertiseQuery,
   changeDisplayOrderQuery
 } = require("../repository/TableAdvertise");
-const { ServiceType, APIEndpointModuleType, callClientAPI, ClientAPIType, getDataFromTime } = require("../utilities");
+const { ServiceType, APIEndpointModuleType, callClientAPI, ClientAPIType, getDataFromTime, checkDataSendToClient } = require("../utilities");
 
 const {
   generateImageName,
@@ -99,15 +99,7 @@ const createAdvertiseService = async (request, fastify) => {
     const newAdvertise = data[0];
     global.tblAdvertise.push(newAdvertise);
 
-    const now = Date.now();
-    let sendToClient = false;
-    if (newAdvertise.isActive) {
-      if (newAdvertise.isPermanent) {
-        sendToClient = true;
-      } else if (newAdvertise.startDate <= now && newAdvertise.endDate >= now) {
-        sendToClient = true;
-      }
-    }
+    const sendToClient = checkDataSendToClient(newAdvertise);
     if (sendToClient) {
       await callClientAPI(
         {
