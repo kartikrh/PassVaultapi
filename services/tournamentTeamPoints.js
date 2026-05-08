@@ -56,6 +56,12 @@ const createTblTournamentTeamPointsService = async (request, fastify) => {
       throw new Error('TeamId does not existed');
   }
 
+  if(!request.body.groupName) {
+    let where = `"wrIsDeleted" = false AND "wrCompetitionId" = ${request.body.competitionId} AND "wrGroupId" = ${request.body.groupId}`;
+    const validateSameGroup = await getTournamentPointsByGroupNameQuery(where, request, fastify);
+    request.body.groupName = validateSameGroup?.groupName ?? null;
+  }
+
   if(request.body.groupId) {
     //validate team in same groupId
     let where = `"wrIsDeleted" = false AND "wrCompetitionId" = ${request.body.competitionId} AND "wrTeamId" = ${request.body.teamId} AND "wrGroupId" = ${request.body.groupId}`;
@@ -75,6 +81,11 @@ const createTblTournamentTeamPointsService = async (request, fastify) => {
       if (request.body.prevGroupId === request.body.groupId) {
         throw new Error(`Previous group id and current group id are the same for team id ${request.body.teamId} in this competition id ${request.body.competitionId}`);
       }
+
+      if (request.body.prevGroupId >= request.body.groupId) {
+        throw new Error(`Previous group id should be less than current group id for team id ${request.body.teamId} in this competition id ${request.body.competitionId}`);
+      }
+
       let where = `"wrIsDeleted" = false AND "wrCompetitionId" = ${request.body.competitionId} AND "wrTeamId" = ${request.body.teamId} AND "wrGroupId" = ${request.body.prevGroupId}`;
       const checkPreviousGroupExists = await getTournamentPointsByGroupNameQuery(where, request, fastify);
       if (!checkPreviousGroupExists) {
@@ -137,12 +148,18 @@ const updateTblTournamentTeamPointsService = async (request, fastify) => {
   }
 
   if (request.body.prevGroupId) {
-    if (request.body.prevGroupId !== request.body.groupId) {
-      let where = `"wrIsDeleted" = false AND "wrCompetitionId" = ${request.body.competitionId} AND "wrTeamId" = ${request.body.teamId} AND "wrGroupId" = ${request.body.prevGroupId}`;
-      const checkPreviousGroupExists = await getTournamentPointsByGroupNameQuery(where, request, fastify);
-      if (!checkPreviousGroupExists) {
-        throw new Error(`Previous group id ${request.body.prevGroupId} is not available for team id ${request.body.teamId} in this competition id ${request.body.competitionId}`);
-      }
+    if (request.body.prevGroupId === request.body.groupId) {
+      throw new Error(`Previous group id and current group id are the same for team id ${request.body.teamId} in this competition id ${request.body.competitionId}`);
+    }
+
+    if (request.body.prevGroupId >= request.body.groupId) {
+      throw new Error(`Previous group id should be less than current group id for team id ${request.body.teamId} in this competition id ${request.body.competitionId}`);
+    }
+
+    let where = `"wrIsDeleted" = false AND "wrCompetitionId" = ${request.body.competitionId} AND "wrTeamId" = ${request.body.teamId} AND "wrGroupId" = ${request.body.prevGroupId}`;
+    const checkPreviousGroupExists = await getTournamentPointsByGroupNameQuery(where, request, fastify);
+    if (!checkPreviousGroupExists) {
+      throw new Error(`Previous group id ${request.body.prevGroupId} is not available for team id ${request.body.teamId} in this competition id ${request.body.competitionId}`);
     }
   }
 
