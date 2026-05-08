@@ -2708,8 +2708,11 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     }
 
   if (
-    (strikeRuns != null && strikeRuns % 2 !== 0) ||
-    (strikeRuns != null && strikeRuns % 2 == 0 && isOverEnd)
+    strikeRuns != null &&
+    (
+      (strikeRuns % 2 !== 0 && !isOverEnd) ||
+      (strikeRuns % 2 === 0 && isOverEnd)
+    )
   ) {
     let onStrikePlayer = Object.values(playersMap).find(
       (item) =>
