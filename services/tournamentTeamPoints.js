@@ -70,6 +70,17 @@ const createTblTournamentTeamPointsService = async (request, fastify) => {
     if(validateOtherGroup) {
       throw new Error(`Team already existed with another groupId`)
     }
+
+    if (request.body.prevGroupId) {
+      if (request.body.prevGroupId === request.body.groupId) {
+        throw new Error(`Previous group id and current group id are the same for team id ${request.body.teamId} in this competition id ${request.body.competitionId}`);
+      }
+      let where = `"wrIsDeleted" = false AND "wrCompetitionId" = ${request.body.competitionId} AND "wrTeamId" = ${request.body.teamId} AND "wrGroupId" = ${request.body.prevGroupId}`;
+      const checkPreviousGroupExists = await getTournamentPointsByGroupNameQuery(where, request, fastify);
+      if (!checkPreviousGroupExists) {
+        throw new Error(`Previous group id ${request.body.prevGroupId} is not available for team id ${request.body.teamId} in this competition id ${request.body.competitionId}`);
+      }
+    }
   } else {
      const existedValues = await getTournamentPointsByTeamIdQuery(
         {competitionId: request.body.competitionId, teamId: request.body.teamId}, 
@@ -125,6 +136,16 @@ const updateTblTournamentTeamPointsService = async (request, fastify) => {
       throw new Error('TeamId does not existed');
   }
 
+  if (request.body.prevGroupId) {
+    if (request.body.prevGroupId !== request.body.groupId) {
+      let where = `"wrIsDeleted" = false AND "wrCompetitionId" = ${request.body.competitionId} AND "wrTeamId" = ${request.body.teamId} AND "wrGroupId" = ${request.body.prevGroupId}`;
+      const checkPreviousGroupExists = await getTournamentPointsByGroupNameQuery(where, request, fastify);
+      if (!checkPreviousGroupExists) {
+        throw new Error(`Previous group id ${request.body.prevGroupId} is not available for team id ${request.body.teamId} in this competition id ${request.body.competitionId}`);
+      }
+    }
+  }
+
   const updateData = {
     groupId: request.body.groupId === undefined ? validateId.groupId : request.body.groupId,
     teamId: request.body.teamId === undefined ? validateId.teamId : request.body.teamId,
@@ -141,6 +162,7 @@ const updateTblTournamentTeamPointsService = async (request, fastify) => {
     tpId: request.body.tpId === undefined ? validateId.tpId : request.body.tpId,
     groupName: request.body.groupName === undefined ? validateId.groupName : request.body.groupName,
     position: request.body.position === undefined ? validateId.position : request.body.position,
+    prevGroupId: request.body.prevGroupId === undefined ? validateId.prevGroupId : request.body.prevGroupId
   };
 
   await updateTournamentTeamPointsQuery(updateData, fastify, request);
