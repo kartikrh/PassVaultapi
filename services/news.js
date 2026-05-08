@@ -186,20 +186,18 @@ const updateNewsService = async (request, fastify) => {
   );
   global.tblNews[index] = body;
   global.pendingNewsToClient = global.pendingNewsToClient.filter(item => item.newsId !== body.newsId);
-  if(body.isActive){
-    await callClientAPI(
-      {
-        serviceType: ServiceType.clientAPI,
-        moduleType: APIEndpointModuleType.updateSeoModule,
-        data: {
-          module: 'news',
-          type: "update",
-          data: body
-        }
-      }, request, fastify,
-      "services/news.js/updateNewsService"
-    );
-  }
+  await callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.updateSeoModule,
+      data: {
+        module: 'news',
+        type: "update",
+        data: body
+      }
+    }, request, fastify,
+    "services/news.js/updateNewsService"
+  );
   return body;
 };
 const deleteNewsService = async (request, fastify) => {
