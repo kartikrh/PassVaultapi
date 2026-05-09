@@ -9002,6 +9002,29 @@ const TournamentTeamPoints = {
       },
     },
   },
+  changeDisplayOrder: {
+    schema: {
+      tags: ["Tournament Team Points"],
+      description: "change display order of Tournament Team Points",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+          displayOrderData: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                groupId: { type: "integer" },
+                displayOrder: { type: "integer" },
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 };
 const PlayerHistory = {
   getAll: {
