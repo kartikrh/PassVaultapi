@@ -13,6 +13,7 @@ const {
   getTournamentTeamsByCompIdQuery,
   getTournamentPointsByGroupNameQuery,
   getTournamentTeamPointsQuery,
+  changeDisplayOrderQuery,
 } = require("../repository/TableTournmentTeamPoints");
 const { callClientAPI, ServiceType, APIEndpointModuleType, callEntitySportAPI, extractGroupDataFromArray, teamRemarkType, compStatus, RefType } = require("../utilities");
 const { nullTeamtpIds, entitySportAPIEndPoint } = require("../utilities/entityConst");
@@ -818,6 +819,23 @@ const insertTournamentTeamPointInAutoImportService = async (fastify) => {
   }
 }
 
+const changeDisplayOrderService = async (request, fastify) => {
+  const competitionId = request.body.competitionId;
+  const validateCompetition = global.tblCompetitions.find(item => item.competitionId === competitionId);
+  if (!validateCompetition) {
+    throw new Error(`Competition not found for id: ${competitionId}`);
+  }
+  for (const item of request.body.displayOrderData) {
+    const queryData = {
+      groupId: item.groupId,
+      groupDisplayOrder: item.displayOrder,
+      competitionId: request.body.competitionId
+    }
+    await changeDisplayOrderQuery(queryData, request, fastify);
+  }
+  return "Display order updated successfully";
+}
+
 module.exports = {
   allTournamentTeamPointsService,
   saveTournamentTeamPointsService,
@@ -830,5 +848,6 @@ module.exports = {
   getAllTournamentTeamPointsService,
   addEditTournamentTeamPointDataService,
   importUpdateTournamentTeamPointFromEntitySportService,
-  insertTournamentTeamPointInAutoImportService
+  insertTournamentTeamPointInAutoImportService,
+  changeDisplayOrderService
 };
