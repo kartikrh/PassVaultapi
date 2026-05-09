@@ -52,7 +52,8 @@ const insertTournamentTeamPointsQuery = async (data, fastify, request) => {
             "wrTpId",
             "wrGroupName",
             "wrPosition",
-            "wrPrevGroupId"
+            "wrPrevGroupId",
+            "wrGroupDisplayOrder"
           ) values (
               $1,
               $2,
@@ -69,7 +70,8 @@ const insertTournamentTeamPointsQuery = async (data, fastify, request) => {
               $12,
               $13,
               $14,
-              $15
+              $15,
+              $16
           ) returning *
       )
       select 
@@ -110,7 +112,8 @@ const insertTournamentTeamPointsQuery = async (data, fastify, request) => {
           data.tpId === undefined ? null : data.tpId,
           data.groupName === undefined ? null : data.groupName,
           data.position === undefined ? null : data.position,
-          data.prevGroupId === undefined ? null : data.prevGroupId
+          data.prevGroupId === undefined ? null : data.prevGroupId,
+          data.groupDisplayOrder === undefined ? null : data.groupDisplayOrder
         ],
       }
     );
@@ -146,7 +149,8 @@ const updateTournamentTeamPointsQuery = async (data, fastify, request) => {
         "wrTpId" = $12,
         "wrGroupName" = $13,
         "wrPosition" = $14,
-        "wrPrevGroupId" = $16
+        "wrPrevGroupId" = $16,
+        "wrGroupDisplayOrder" = $17
       WHERE "wrId" = $15
       RETURNING 
         "wrId" AS "id",
@@ -187,7 +191,8 @@ const updateTournamentTeamPointsQuery = async (data, fastify, request) => {
         data.groupName,
         data.position,
         data.id,
-        data.prevGroupId
+        data.prevGroupId,
+        data.groupDisplayOrder
       ],
     });
 
