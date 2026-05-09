@@ -105,6 +105,14 @@ const createTblTournamentTeamPointsService = async (request, fastify) => {
   }
 
   request.body.tpId = validateTeamId?.tpId ?? null;
+
+  if (request.body.groupId) {
+    let where = `"wrIsDeleted" = false AND "wrCompetitionId" = ${request.body.competitionId} AND "wrGroupId" = ${request.body.groupId}`;
+    const checkGroupExists = await getTournamentPointsByGroupNameQuery(where, request, fastify);
+    if (checkGroupExists) {
+      request.body.groupDisplayOrder = checkGroupExists.groupDisplayOrder;
+    }
+  }
     
   const saveData = await insertTournamentTeamPointsQuery(request.body, fastify, request);
   if (validateCompetitionId && validateCompetitionId.isActive == true) {
@@ -164,6 +172,14 @@ const updateTblTournamentTeamPointsService = async (request, fastify) => {
     }
   }
 
+  if (request.body.groupId) {
+    let where = `"wrIsDeleted" = false AND "wrCompetitionId" = ${request.body.competitionId} AND "wrGroupId" = ${request.body.groupId}`;
+    const checkGroupExists = await getTournamentPointsByGroupNameQuery(where, request, fastify);
+    if (checkGroupExists) {
+      request.body.groupDisplayOrder = checkGroupExists.groupDisplayOrder;
+    }
+  }
+
   const updateData = {
     groupId: request.body.groupId === undefined ? validateId.groupId : request.body.groupId,
     teamId: request.body.teamId === undefined ? validateId.teamId : request.body.teamId,
@@ -180,7 +196,8 @@ const updateTblTournamentTeamPointsService = async (request, fastify) => {
     tpId: request.body.tpId === undefined ? validateId.tpId : request.body.tpId,
     groupName: request.body.groupName === undefined ? validateId.groupName : request.body.groupName,
     position: request.body.position === undefined ? validateId.position : request.body.position,
-    prevGroupId: request.body.prevGroupId === undefined ? validateId.prevGroupId : request.body.prevGroupId
+    prevGroupId: request.body.prevGroupId === undefined ? validateId.prevGroupId : request.body.prevGroupId,
+    groupDisplayOrder: request.body.groupDisplayOrder === undefined ? validateId.groupDisplayOrder : request.body.groupDisplayOrder
   };
 
   await updateTournamentTeamPointsQuery(updateData, fastify, request);
