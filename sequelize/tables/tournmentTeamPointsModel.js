@@ -64,6 +64,11 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
         defaultValue: null
+      },
+      wrGroupDisplayOrder: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: null
       }
     },
     {
