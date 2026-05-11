@@ -1154,7 +1154,7 @@ const setEntityCom2Service = async (request , fastify) =>{
     //   // }
     // }
     const entityStatus = response?.match_info?.status
-    if (gameState == EntityCommentaryStatus.DEFAULT && entityStatus != EntityMatchStatus.SCHEDULED &&
+    if (gameState == EntityCommentaryStatus.DEFAULT && entityStatus == EntityMatchStatus.COMPLETED &&
       comDetails.commentaryStatus != commentaryStatus.COMPLETED) {
       await matchCompleteService(request.body, fastify, comDetails)
     }
