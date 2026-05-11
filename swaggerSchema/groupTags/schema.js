@@ -9024,6 +9024,22 @@ const TournamentTeamPoints = {
         }
       }
     }
+  },
+  changeGroupVisibleStatus: {
+    schema: {
+      tags: ["Tournament Team Points"],
+      description: "Update group visible status of Tournament Team Points",
+      security: [{ bearerAuth: [] }],
+      body: {
+          type: "object",
+          properties: {
+            competitionId: { type: "integer" },
+            groupId: { type: "integer" },
+            isClientVisible: { type: "boolean" }
+          },
+          required: ["competitionId", "groupId", "isClientVisible"],
+      },
+    },
   }
 };
 const PlayerHistory = {

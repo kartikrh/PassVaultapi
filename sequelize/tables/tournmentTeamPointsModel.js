@@ -69,6 +69,11 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
         defaultValue: null
+      },
+      wrIsClientVisible: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+        defaultValue: true
       }
     },
     {
