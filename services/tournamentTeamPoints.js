@@ -14,6 +14,7 @@ const {
   getTournamentPointsByGroupNameQuery,
   getTournamentTeamPointsQuery,
   changeDisplayOrderQuery,
+  updateTournamentTeamPointGroupVisibleStatusQuery,
 } = require("../repository/TableTournmentTeamPoints");
 const { callClientAPI, ServiceType, APIEndpointModuleType, callEntitySportAPI, extractGroupDataFromArray, teamRemarkType, compStatus, RefType } = require("../utilities");
 const { nullTeamtpIds, entitySportAPIEndPoint } = require("../utilities/entityConst");
@@ -853,6 +854,23 @@ const changeDisplayOrderService = async (request, fastify) => {
   return "Display order updated successfully";
 }
 
+const updateTournamentTeamPointGroupVisibleStatusService = async (request, fastify) => {
+  const { competitionId, groupId } = request.body;
+  const validateCompetition = global.tblCompetitions.find(item => item.competitionId === competitionId);
+  if (!validateCompetition) {
+    throw new Error(`Competition not found for id: ${competitionId}`);
+  }
+
+  let where = `"wrIsDeleted" = false AND "wrCompetitionId" = ${competitionId} AND "wrGroupId" = ${groupId}`;
+  const validateGroup = await getTournamentPointsByGroupNameQuery(where, request, fastify);
+  if (!validateGroup) {
+    throw new Error(`Group not found for id: ${groupId} in competition id: ${competitionId}`);
+  }
+
+  await updateTournamentTeamPointGroupVisibleStatusQuery(request, fastify);
+  return "Client visibility status updated successfully";
+}
+
 module.exports = {
   allTournamentTeamPointsService,
   saveTournamentTeamPointsService,
@@ -866,5 +884,6 @@ module.exports = {
   addEditTournamentTeamPointDataService,
   importUpdateTournamentTeamPointFromEntitySportService,
   insertTournamentTeamPointInAutoImportService,
-  changeDisplayOrderService
+  changeDisplayOrderService,
+  updateTournamentTeamPointGroupVisibleStatusService
 };
