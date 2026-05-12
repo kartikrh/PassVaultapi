@@ -1963,6 +1963,7 @@ const competitionImportService = async (data, fastify, request) => {
           countryId: countryData.find(c => c.countryName?.toLowerCase() === match?.venue?.country?.toLowerCase())?.id || null,
           venueId: getVenueData?.id,
           scoringType: EntitlyLiveStates.includes(match?.game_state) ? ScoringTypes.Panel : ScoringTypes.Entity,
+          statusNote: match?.game_state_str ?? null,
         }
 
         if (!checkCompetition?.matchTypeId) {

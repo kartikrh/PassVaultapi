@@ -7039,6 +7039,7 @@ const commentaryDetailsByEventIdService = async (
     overDelay: result?.overDelay,
     inningDelay: result?.inningDelay,
     tossDelay: result?.tossDelay,
+    statusNote: result?.statusNote,
   };
   let eid;
   let til;
@@ -7245,6 +7246,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.overDelay = result?.overDelay;
     resultArr.inningDelay = result?.inningDelay;
     resultArr.tossDelay = result?.tossDelay;
+    resultArr.statusNote = result?.statusNote;
   }
   if (getstatus == 2) {
     const _tosswonby = result.tossWonBy;
@@ -7319,6 +7321,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.overDelay = result?.overDelay;
     resultArr.inningDelay = result?.inningDelay;
     resultArr.tossDelay = result?.tossDelay;
+    resultArr.statusNote = result?.statusNote;
   }
   if (getstatus >= 3) {
     const _tosswonby = result.tossWonBy;
@@ -7444,6 +7447,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.overDelay = result?.overDelay;
     resultArr.inningDelay = result?.inningDelay;
     resultArr.tossDelay = result?.tossDelay;
+    resultArr.statusNote = result?.statusNote;
 
     // get team score
     if (currentInning > 1) {
@@ -7649,6 +7653,7 @@ const commentaryDetailsByEventIdService = async (
       isvirtual: result.isVirtual,
       cid : result.commentaryId,
       eventNo: result?.eventNo,
+      statusNote: result?.statusNote,
       ...weatherAndPitchData,
     },
     cbb,
@@ -8664,6 +8669,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       inningDelay: item?.inningDelay || 0,
       tossDelay: item?.tossDelay || 0,
       eventNo: item?.eventNo || "",
+      statusNote: item?.statusNote || "",
       ...weatherAndPitchData,
       // mr: mr
       // bowT : item.bowlingTeam || null,
@@ -8874,6 +8880,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
     isActive: com.isActive,
     etyId: eventType?.eventTypeId,
     eventNo: com?.eventNo,
+    statusNote: com?.statusNote || "",
     ...weatherAndPitchData,
   };
   return comDetails;
@@ -9236,6 +9243,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       ics: commentary.isClientShow,
       cci: commentary.currentInnings,
       utc: commentary.eventDate,
+      statusNote: commentary?.statusNote || "",
     };
 
     dataToreturn.es = es;
@@ -22886,6 +22894,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                 tossRmk: commentaryDetails.tossRmk,
                 pitchAge: commentaryDetails.pitchAge,
                 session: commentaryDetails.session,
+                statusNote: commentaryDetails.statusNote,
             };
             const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
             response.commentaryDetails = {
@@ -22908,6 +22917,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                 rmk: commentaryDetails.rmk,
                 winRmk: commentaryDetails.winRmk,
                 tossRmk: commentaryDetails.tossRmk,
+                statusNote: commentaryDetails.statusNote,
                 ...weatherAndPitchData
             };
             if (commentaryDetails.commentaryStatus == 2) {
@@ -23684,6 +23694,7 @@ const matchImportService = async (data, fastify, request = null) => {
         countryId: checkCountry?.id,
         venueId: checkVenue?.id,
         scoringType: EntitlyLiveStates.includes(matchInfoResponse?.game_state) ? ScoringTypes.Panel : ScoringTypes.Entity,
+        statusNote: matchInfoResponse?.game_state_str ?? null,
       }
 
       if (!checkCompetition?.matchTypeId) {
