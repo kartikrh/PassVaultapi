@@ -112,6 +112,7 @@ const createTblTournamentTeamPointsService = async (request, fastify) => {
     const checkGroupExists = await getTournamentPointsByGroupNameQuery(where, request, fastify);
     if (checkGroupExists) {
       request.body.groupDisplayOrder = checkGroupExists.groupDisplayOrder;
+      request.body.isPlayOffGroup = checkGroupExists.isPlayOffGroup;
     }
   }
     

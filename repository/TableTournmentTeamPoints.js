@@ -54,7 +54,8 @@ const insertTournamentTeamPointsQuery = async (data, fastify, request) => {
             "wrGroupName",
             "wrPosition",
             "wrPrevGroupId",
-            "wrGroupDisplayOrder"
+            "wrGroupDisplayOrder",
+            "wrIsPlayOffGroup"
           ) values (
               $1,
               $2,
@@ -72,7 +73,8 @@ const insertTournamentTeamPointsQuery = async (data, fastify, request) => {
               $13,
               $14,
               $15,
-              $16
+              $16,
+              $17
           ) returning *
       )
       select 
@@ -115,7 +117,8 @@ const insertTournamentTeamPointsQuery = async (data, fastify, request) => {
           data.groupName === undefined ? null : data.groupName,
           data.position === undefined ? null : data.position,
           data.prevGroupId === undefined ? null : data.prevGroupId,
-          data.groupDisplayOrder === undefined ? null : data.groupDisplayOrder
+          data.groupDisplayOrder === undefined ? null : data.groupDisplayOrder,
+          data.isPlayOffGroup === undefined ? false : data.isPlayOffGroup
         ],
       }
     );
