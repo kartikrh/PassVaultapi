@@ -103,7 +103,7 @@ const insertTournamentTeamPointsQuery = async (data, fastify, request) => {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
           data.groupId === undefined ? null : data.groupId,
-          data.teamId,
+          data.teamId ?? null,
           data.competitionId,
           data.totalMatches === undefined ? 0 : data.totalMatches,
           data.totalWin === undefined ? 0 : data.totalWin,
