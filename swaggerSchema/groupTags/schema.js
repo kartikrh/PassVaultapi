@@ -8917,7 +8917,7 @@ const TournamentTeamPoints = {
             id: { type: "integer" },
             prevGroupId: { type: ["integer", "null"] }
           },
-          required: ["groupId", "competitionId", "teamId", "id"],
+          required: ["groupId", "competitionId", "id"],
       },
     },
   },
