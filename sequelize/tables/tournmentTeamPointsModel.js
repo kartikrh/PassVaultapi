@@ -70,7 +70,7 @@ module.exports = (sequelize) => {
         allowNull: true,
         defaultValue: null
       },
-      wrIsClientVisible: {
+      wrIsPlayOffGroup: {
         type: DataTypes.BOOLEAN,
         allowNull: true,
         defaultValue: true

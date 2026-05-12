@@ -9035,9 +9035,9 @@ const TournamentTeamPoints = {
           properties: {
             competitionId: { type: "integer" },
             groupId: { type: "integer" },
-            isClientVisible: { type: "boolean" }
+            isPlayOffGroup: { type: "boolean" }
           },
-          required: ["competitionId", "groupId", "isClientVisible"],
+          required: ["competitionId", "groupId", "isPlayOffGroup"],
       },
     },
   }
