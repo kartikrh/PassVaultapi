@@ -81,9 +81,17 @@ const createTblTournamentTeamPointsService = async (request, fastify) => {
     if (prevGroupId === groupId) {
       throw new Error(`Previous group id and current group id are the same`);
     }
+
     const checkPreviousGroupExists = getTournamentTeamPointData.find(item => item.groupId === prevGroupId);
     if (!checkPreviousGroupExists) {
       throw new Error(`Previous group id ${prevGroupId} is not available in this competition id ${competitionId}`);
+    }
+
+    if (teamId) {
+      const checkTeamExistsInPrevGroup = getTournamentTeamPointData.find(item => item.teamId === teamId && item.groupId === prevGroupId);
+      if (!checkTeamExistsInPrevGroup) {
+        throw new Error(`Team id ${teamId} is not available in the previous group id ${prevGroupId}`);
+      }
     }
   }
 
@@ -114,7 +122,7 @@ const createTblTournamentTeamPointsService = async (request, fastify) => {
 }
 
 const updateTblTournamentTeamPointsService = async (request, fastify) => {
-  const { competitionId, id, groupId, prevGroupId } = request.body;
+  const { competitionId, id, groupId, teamId, prevGroupId } = request.body;
   const validateCompetitionId = global.tblCompetitions.find(tc => tc.competitionId === competitionId);
   if (!validateCompetitionId) {
     throw new Error('CompetitionId does not existed');
@@ -143,13 +151,21 @@ const updateTblTournamentTeamPointsService = async (request, fastify) => {
     request.body.isPlayOffGroup = getGroupData.isPlayOffGroup;
   }
 
-  if (checkTournamentTeamPointExists.prevGroupId !== prevGroupId) {
+  if (prevGroupId && checkTournamentTeamPointExists.prevGroupId !== prevGroupId) {
     if (prevGroupId === groupId) {
       throw new Error(`Previous group id and current group id are the same`);
     }
+
     const checkPreviousGroupExists = getTournamentTeamPointData.find(item => item.groupId === prevGroupId);
     if (!checkPreviousGroupExists) {
       throw new Error(`Previous group id ${prevGroupId} is not available in this competition id ${competitionId}`);
+    }
+
+    if (teamId) {
+      const checkTeamExistsInPrevGroup = getTournamentTeamPointData.find(item => item.teamId === teamId && item.groupId === prevGroupId);
+      if (!checkTeamExistsInPrevGroup) {
+        throw new Error(`Team id ${teamId} is not available in the previous group id ${prevGroupId}`);
+      }
     }
   }
 
