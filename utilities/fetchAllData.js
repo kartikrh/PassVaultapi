@@ -199,8 +199,6 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     // const getEventMarketRunnerV1 = await getMarketRunnerQueryV1(fastify);
     const getAllPlayerBattingHistory = await getAllBattingHistory(fastify);
     const getAllPlayerBowlingHistory = await getAllBowlingHistory(fastify);
-    const getAllCommentaryPlayersBattingHistory = await getAllCommentaryBattingHistory(fastify);
-    const getAllCommentaryPlayersBowlingHistroy = await getAllCommentaryBowlingHistory(fastify);
     const getAllPhotoLibrary = await getAllPhotoLibraryQuery(fastify);
     const getAllLibraryImages = await getAllLibraryImagesQuery(fastify);
     const getAllVideoLibrary = await getAllVideoLibraryQuery(fastify);
@@ -215,7 +213,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const allCommentaryIds = getAllCommentary.map((item) => item.commentaryId);
     let getAllEventMarketsV2 = [];
     let getEventMarketRunnerV2 = [];
-    let marketOddBallByBall = [];
+    let marketOddBallByBall, getAllCommentaryPlayersBattingHistory, getAllCommentaryPlayersBowlingHistroy = [];
     if (allCommentaryIds.length > 0) {
         getAllEventMarketsV2 = await getAllEventMarketsV2Query(fastify, allCommentaryIds.join(", "));
         if (getAllEventMarketsV2.length > 0) {
@@ -225,7 +223,10 @@ const fetchAllDataFromDb = async (fastify, reply) => {
               getEventMarketRunnerV2 = await getAllMarketRunnersQuery(fastify, eventMarketIds.join(", "));
           }
         }
-      marketOddBallByBall = await getAllMarketOddsBallByBall(fastify, allCommentaryIds.join(", "));
+      marketOddBallByBall = await getAllMarketOddsBallByBall(fastify, [].join(", "));
+      getAllCommentaryPlayersBattingHistory = await getAllCommentaryBattingHistory(fastify, null, allCommentaryIds.join(", ") );
+      getAllCommentaryPlayersBowlingHistroy = await getAllCommentaryBowlingHistory(fastify, null, allCommentaryIds.join(", "));
+
     }
     // const getAllEventMarketsV2 = await getAllEventMarketsV2Query(fastify, 
     //   getAllCommentary.map((item) => item.commentaryId).join(", ")
@@ -387,6 +388,8 @@ const FetchingCommentariesDataFromCron = async (fastify) => {
     global.tblCommentaryWicket = global.tblCommentaryWicket.filter((item) => commentaryIds.includes(item.commentaryId));
     global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter((item) => commentaryIds.includes(item.commentaryId));
     global.tblMarketOddsBallByBall = global.tblMarketOddsBallByBall.filter((item) => commentaryIds.includes(item.commentaryId));
+    global.tblCommPlayerBatHist = global.tblCommPlayerBatHist.filter((item) => commentaryIds.includes(item.commentaryId));
+    global.tblCommPlayerBowlHist = global.tblCommPlayerBowlHist.filter((item) => commentaryIds.includes(item.commentaryId));
 
     global.tblEventMarketsV2 = global.tblEventMarketsV2.filter((item) => commentaryIds.includes(item.commentaryId));
     const marketIds = new Set(global.tblEventMarketsV2.map((elem) => elem.eventMarketId));
