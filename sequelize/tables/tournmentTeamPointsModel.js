@@ -60,6 +60,21 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: DataTypes.NOW,
       },
+      wrPrevGroupId: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: null
+      },
+      wrGroupDisplayOrder: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        defaultValue: null
+      },
+      wrIsPlayOffGroup: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+        defaultValue: true
+      }
     },
     {
       timestamps: false,

@@ -7,6 +7,8 @@ const {
   teamsListService,
   netRunRateRe_calculationService,
   getAllTournamentTeamPointsService,
+  changeDisplayOrderService,
+  updateTournamentTeamPointGroupVisibleStatusService,
 } = require("../../../../services/tournamentTeamPoints");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -84,6 +86,26 @@ const getTournamentTeamPoints = async (request, reply, fastify) => {
   }
 };
 
+const changeDisplayOrder = async (request, reply, fastify) => {
+  try {
+    const result = await changeDisplayOrderService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/changeDisplayOrder", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const updateTournamentTeamPointGroupVisibleStatus = async (request, reply, fastify) => {
+  try {
+    const result = await updateTournamentTeamPointGroupVisibleStatusService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/updateTournamentTeamPointGroupVisibleStatus", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
+
 module.exports = {
   getAllTournamentTeamPoints,
   saveTournamentTeamPoints,
@@ -91,5 +113,7 @@ module.exports = {
   activeInactiveTournamentTeamPoints,
   teamsList,
   netRunRateRecalculation,
-  getTournamentTeamPoints
+  getTournamentTeamPoints,
+  changeDisplayOrder,
+  updateTournamentTeamPointGroupVisibleStatus
 };

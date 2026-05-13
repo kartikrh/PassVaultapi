@@ -64,7 +64,6 @@ const getAllCommentaryQuery = async (fastify) => {
     tc."wrLawnStriping" as "lawnStriping",
     tc."wrPitchAge" as "pitchAge",
     tc."wrIsVirtual" as "isVirtual",
-    tc."wrTestDayCount" as "testDayCount",
     tc."wrOnfieldUmpires" as "onfieldUmpires",
     tc."wrThirdUmpire" as "thirdUmpire",
     tc."wrMatchReferee" as "matchReferee",
@@ -83,7 +82,8 @@ const getAllCommentaryQuery = async (fastify) => {
     tc."wrStreamingUrl" as "streamingUrl",
     tc."wrStreamingType" as "streamingType",
     tc."wrShuffle" as "shuffle",
-    tc."wrSetOfRules" as "setOfRules"
+    tc."wrSetOfRules" as "setOfRules",
+    tc."wrStatusNote" as "statusNote"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -178,7 +178,6 @@ const getCommentariesDataQuery = async (fastify , where = null) => {
     tc."wrLawnStriping" as "lawnStriping",
     tc."wrPitchAge" as "pitchAge",
     tc."wrIsVirtual" as "isVirtual",
-    tc."wrTestDayCount" as "testDayCount",
     tc."wrOnfieldUmpires" as "onfieldUmpires",
     tc."wrThirdUmpire" as "thirdUmpire",
     tc."wrMatchReferee" as "matchReferee",
@@ -195,9 +194,9 @@ const getCommentariesDataQuery = async (fastify , where = null) => {
     tc."wrCancelTime" as "cancelTime",
     tc."wrStreamingUrl" as "streamingUrl",
     tc."wrViews" as "views",
-    tc."wrStreamingType" as "streamingType"
+    tc."wrStreamingType" as "streamingType",
+    tc."wrStatusNote" as "statusNote"
     from "tblCommentaries" tc
-
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
     LEFT JOIN "tblMatchTypes" mt ON tc."wrMatchTypeId" = mt."wrMatchTypeId"
@@ -224,8 +223,8 @@ const insertCommentaryQuery = async (request, fastify) => {
         "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitchCracks","wrDisplayStatus","wrTarget","wrMarketID","wrTpId", "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket",
         "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest", "wrEventNo",
         "wrDifficulty", "wrPitchHardness", "wrPitchWareSpeed", "wrPitchType", "wrLawnStriping", "wrPitchAge", "wrIsVirtual",
-        "wrOnfieldUmpires", "wrThirdUmpire", "wrMatchReferee", "wrSession", "wrTestDayCount", "wrPythonId", "wrPythonURI",
-        "wrCountryId", "wrVenueId", "wrScoringType", "wrStreamingUrl", "wrStreamingType","wrShuffle"
+        "wrOnfieldUmpires", "wrThirdUmpire", "wrMatchReferee", "wrSession", "wrPythonId", "wrPythonURI",
+        "wrCountryId", "wrVenueId", "wrScoringType", "wrStreamingUrl", "wrStreamingType","wrShuffle", "wrStatusNote"
         ) values (
           $1,
           $2,
@@ -331,7 +330,6 @@ const insertCommentaryQuery = async (request, fastify) => {
     tc."wrThirdUmpire" as "thirdUmpire",
     tc."wrMatchReferee" as "matchReferee",
     tc."wrSession" as "session",
-    tc."wrTestDayCount" as "testDayCount",
     tc."wrCountryId" as "countryId",
     tc."wrVenueId" as "venueId",
     tc."wrScoringType" as "scoringType",
@@ -342,7 +340,8 @@ const insertCommentaryQuery = async (request, fastify) => {
     tc."wrViews" as "views",
     "wrStreamingType" as "streamingType",
     tc."wrShuffle" as "shuffle",
-    tc."wrSetOfRules" as "setOfRules"
+    tc."wrSetOfRules" as "setOfRules",
+    tc."wrStatusNote" as "statusNote"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -391,7 +390,6 @@ const insertCommentaryQuery = async (request, fastify) => {
           data.thirdUmpire || null,
           data.matchReferee || null,
           data.session || null,
-          data.testDayCount || null,
           data.pythonId || null,
           data.pythonURI || null,
           data.countryId || null,
@@ -399,7 +397,8 @@ const insertCommentaryQuery = async (request, fastify) => {
           data.scoringType || null,
           data.streamingUrl || null,
           data.streamingType || null,
-          data.shuffle || null
+          data.shuffle || null,
+          data.statusNote || null,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -988,7 +987,6 @@ const updateCommentaryQuery = async (request, fastify) => {
           tc."wrThirdUmpire" as "thirdUmpire",
           tc."wrMatchReferee" as "matchReferee",
           tc."wrSession" as "session",
-          tc."wrTestDayCount" as "testDayCount",
           tc."wrCountryId" as "countryId",
           tc."wrVenueId" as "venueId",
           tc."wrScoringType" as "scoringType",
@@ -998,7 +996,8 @@ const updateCommentaryQuery = async (request, fastify) => {
           tc."wrViews" as "views",
           "wrStreamingUrl" as "streamingUrl",
           "wrStreamingType" as "streamingType",
-          tc."wrShuffle" as "shuffle"
+          tc."wrShuffle" as "shuffle",
+          tc."wrStatusNote" as "statusNote"
         from "update_data" tc
         left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
         left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -1483,7 +1482,6 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       tc."wrLawnStriping" as "lawnStriping",
       tc."wrPitchAge" as "pitchAge",
       tc."wrIsVirtual" as "isVirtual",
-      tc."wrTestDayCount" as "testDayCount",
       tc."wrOnfieldUmpires" as "onfieldUmpires",
       tc."wrThirdUmpire" as "thirdUmpire",
       tc."wrMatchReferee" as "matchReferee",
@@ -1501,7 +1499,8 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       tc."wrStreamingUrl" as "streamingUrl",
       tc."wrViews" as "views",
       tc."wrStreamingType" as "streamingType",
-      tc."wrShuffle" as "shuffle"
+      tc."wrShuffle" as "shuffle",
+      tc."wrStatusNote" as "statusNote"
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -4383,7 +4382,8 @@ const getCommentaryDetailByIdQuery = async (data, fastify) => {
               tc."wrIsVirtual" as "isVirtual",
               tc."wrViews" as "views",
               "wrIsPredictMarket" as "isPredictMarket",
-              tc."wrCommentaryCloseTime" as "commentaryCloseTime"
+              tc."wrCommentaryCloseTime" as "commentaryCloseTime",
+              tc."wrStatusNote" as "statusNote"
           FROM "tblCommentaries" tc
           LEFT JOIN "tblMatchTypes" tm ON tc."wrMatchTypeId" = tm."wrMatchTypeId"
           LEFT JOIN "tblEventTypes" te ON tc."wrEventTypeId" = te."wrEventTypeId"
@@ -5333,7 +5333,6 @@ const getCommentariesResultQuery = async (request, fastify) => {
       tc."wrLawnStriping" as "lawnStriping",
       tc."wrPitchAge" as "pitchAge",
       tc."wrIsVirtual" as "isVirtual",
-      tc."wrTestDayCount" as "testDayCount",
       tc."wrOnfieldUmpires" as "onfieldUmpires",
       tc."wrThirdUmpire" as "thirdUmpire",
       tc."wrMatchReferee" as "matchReferee",
@@ -5348,7 +5347,8 @@ const getCommentariesResultQuery = async (request, fastify) => {
       tc."wrVenueId" as "venueId",
       tc."wrPythonURI" as "pythonURI",
       tc."wrViews" as "views",
-      tc."wrCancelTime" as "cancelTime"
+      tc."wrCancelTime" as "cancelTime",
+      tc."wrStatusNote" as "statusNote"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -5475,7 +5475,6 @@ const getAllCommentaryHistoryQuery = async (whereCondition, fastify, request) =>
             tc."wrLawnStriping" as "lawnStriping",
             tc."wrPitchAge" as "pitchAge",
             tc."wrIsVirtual" as "isVirtual",
-            tc."wrTestDayCount" as "testDayCount",
             tc."wrOnfieldUmpires" as "onfieldUmpires",
             tc."wrThirdUmpire" as "thirdUmpire",
             tc."wrMatchReferee" as "matchReferee",
@@ -5490,7 +5489,8 @@ const getAllCommentaryHistoryQuery = async (whereCondition, fastify, request) =>
             tc."wrVenueId" as "venueId",
             tc."wrPythonURI" as "pythonURI",
             tc."wrViews" as "views",
-            tc."wrCancelTime" as "cancelTime"
+            tc."wrCancelTime" as "cancelTime",
+            tc."wrStatusNote" as "statusNote"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -5680,7 +5680,6 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           tc."wrIsActive" AS "isActive",
           tet."wrEventTypeId" AS "etyId",
           tc."wrIsVirtual" as "isVirtual",
-          tc."wrTestDayCount" as "testDayCount",
           tc."wrOnfieldUmpires" as "onfieldUmpires",
           tc."wrThirdUmpire" as "thirdUmpire",
           tc."wrMatchReferee" as "matchReferee",
@@ -5696,7 +5695,8 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           tc."wrPythonURI" as "pythonURI",
           tc."wrViews" as "views",
           tc."wrEventNo" as "eventNo",
-          tc."wrCancelTime" as "cancelTime"
+          tc."wrCancelTime" as "cancelTime",
+          tc."wrStatusNote" as "statusNote"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 ON tt1."wrTeamId" = tc."wrTeam1Id" AND tt1."wrIsDeleted" = false
       LEFT JOIN "tblTeams" tt2 ON tt2."wrTeamId" = tc."wrTeam2Id" AND tt2."wrIsDeleted" = false
@@ -5804,7 +5804,6 @@ const getCommentariesDataByDifferentIdsQuery = async (whereCondition, request, f
           tc."wrLawnStriping" as "lawnStriping",
           tc."wrPitchAge" as "pitchAge",
           tc."wrIsVirtual" as "isVirtual",
-          tc."wrTestDayCount" as "testDayCount",
           tc."wrOnfieldUmpires" as "onfieldUmpires",
           tc."wrThirdUmpire" as "thirdUmpire",
           tc."wrMatchReferee" as "matchReferee",
@@ -5819,7 +5818,8 @@ const getCommentariesDataByDifferentIdsQuery = async (whereCondition, request, f
           tc."wrPythonId" as "pythonId",
           tc."wrPythonURI" as "pythonURI",
           tc."wrViews" as "views",
-          tc."wrCancelTime" as "cancelTime"
+          tc."wrCancelTime" as "cancelTime",
+          tc."wrStatusNote" as "statusNote"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -5907,7 +5907,6 @@ const getCommentariesDataQueryV1 = async (fastify) => {
         tc."wrLawnStriping" as "lawnStriping",
         tc."wrPitchAge" as "pitchAge",
         tc."wrIsVirtual" as "isVirtual",
-        tc."wrTestDayCount" as "testDayCount",
         tc."wrOnfieldUmpires" as "onfieldUmpires",
         tc."wrThirdUmpire" as "thirdUmpire",
         tc."wrMatchReferee" as "matchReferee",
@@ -5922,7 +5921,8 @@ const getCommentariesDataQueryV1 = async (fastify) => {
         tc."wrPythonId" as "pythonId",
         tc."wrPythonURI" as "pythonURI",
         tc."wrViews" as "views",
-        tc."wrCancelTime" as "cancelTime"
+        tc."wrCancelTime" as "cancelTime",
+        tc."wrStatusNote" as "statusNote"
     FROM "tblCommentaries" tc
     LEFT JOIN "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     LEFT JOIN "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -6514,7 +6514,8 @@ const insertVirtualEventQuery = async (data, request, fastify) => {
     tc."wrViews" as "views",
     tc."wrPythonURI" as "pythonURI",
     tc."wrShuffle" as "shuffle",
-    tc."wrSetOfRules" as "setOfRules"
+    tc."wrSetOfRules" as "setOfRules",
+    tc."wrStatusNote" as "statusNote"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -7842,7 +7843,7 @@ const insertCommentaryWithImportQuery = async (data, request, fastify) => {
         "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitchCracks","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate", "wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket",
         "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest", "wrEventNo",
         "wrDifficulty", "wrPitchHardness", "wrPitchWareSpeed", "wrPitchType", "wrLawnStriping", "wrPitchAge", "wrIsVirtual",
-        "wrOnfieldUmpires", "wrThirdUmpire", "wrMatchReferee", "wrSession", "wrTestDayCount", "wrTossWonBy",
+        "wrOnfieldUmpires", "wrThirdUmpire", "wrMatchReferee", "wrSession", "wrTossWonBy",
         "wrChoseTo", "wrCommentaryStatus", "wrPythonId", "wrPythonURI", "wrCountryId", "wrVenueId", "wrScoringType"
         ) values (
           $1,
@@ -7882,8 +7883,7 @@ const insertCommentaryWithImportQuery = async (data, request, fastify) => {
           $45,
           $46,
           $47,
-          $48,
-          $49
+          $48
         ) returning *         
       )
 
@@ -7949,14 +7949,14 @@ const insertCommentaryWithImportQuery = async (data, request, fastify) => {
     tc."wrThirdUmpire" as "thirdUmpire",
     tc."wrMatchReferee" as "matchReferee",
     tc."wrSession" as "session",
-    tc."wrTestDayCount" as "testDayCount",
     tc."wrPythonId" as "pythonId",
     tc."wrPythonURI" as "pythonURI",
     tc."wrCountryId" as "countryId",
     tc."wrVenueId" as "venueId",
     tc."wrViews" as "views",
     tc."wrScoringType" as "scoringType",
-    tc."wrCancelTime" as "cancelTime"
+    tc."wrCancelTime" as "cancelTime",
+    tc."wrStatusNote" as "statusNote"
     from "insert_data" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
     left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"  
@@ -8007,7 +8007,6 @@ const insertCommentaryWithImportQuery = async (data, request, fastify) => {
           data.thirdUmpire || null,
           data.matchReferee || null,
           data.session || null,
-          data.testDayCount || null,
           data.tossWonBy || null,
           data.choseTo || null,
           data.commentaryStatus || 1,
@@ -8310,7 +8309,6 @@ const getComEntityQuery = async (data,request,fastify) => {
       tc."wrLawnStriping" as "lawnStriping",
       tc."wrPitchAge" as "pitchAge",
       tc."wrIsVirtual" as "isVirtual",
-      tc."wrTestDayCount" as "testDayCount",
       tc."wrOnfieldUmpires" as "onfieldUmpires",
       tc."wrThirdUmpire" as "thirdUmpire",
       tc."wrMatchReferee" as "matchReferee",
@@ -8325,7 +8323,8 @@ const getComEntityQuery = async (data,request,fastify) => {
       tc."wrScoringType" as "scoringType",
       tc."wrPythonURI" as "pythonURI",
       tc."wrViews" as "views",
-      tc."wrCancelTime" as "cancelTime"
+      tc."wrCancelTime" as "cancelTime",
+      tc."wrStatusNote" as "statusNote"
       from "tblCommentaries" tc
       left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
       left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -8977,7 +8976,6 @@ const updateCommentaryDateByCommentaryIdQuery = async (request, fastify) => {
         tc."wrThirdUmpire" AS "thirdUmpire",
         tc."wrMatchReferee" AS "matchReferee",
         tc."wrSession" AS "session",
-        tc."wrTestDayCount" AS "testDayCount",
         tc."wrCountryId" AS "countryId",
         tc."wrVenueId" AS "venueId",
         tc."wrScoringType" AS "scoringType",
@@ -8987,7 +8985,8 @@ const updateCommentaryDateByCommentaryIdQuery = async (request, fastify) => {
         tc."wrViews" AS "views",
         tc."wrStreamingUrl" AS "streamingUrl",
         tc."wrStreamingType" AS "streamingType",
-        tc."wrShuffle" AS "shuffle"
+        tc."wrShuffle" AS "shuffle",
+        tc."wrStatusNote" as "statusNote"
       FROM update_data tc
       LEFT JOIN "tblTeams" tt1 ON tt1."wrTeamId" = tc."wrTeam1Id"
       LEFT JOIN "tblTeams" tt2 ON tt2."wrTeamId" = tc."wrTeam2Id"
@@ -9381,7 +9380,6 @@ const getAllCommentaryByCompetitionIdForClientQuery = async (request, fastify) =
         tc."wrIsActive" AS "isActive",
         tet."wrEventTypeId" AS "etyId",
         tc."wrIsVirtual" as "isVirtual",
-        tc."wrTestDayCount" as "testDayCount",
         tc."wrOnfieldUmpires" as "onfieldUmpires",
         tc."wrThirdUmpire" as "thirdUmpire",
         tc."wrMatchReferee" as "matchReferee",
@@ -9397,7 +9395,8 @@ const getAllCommentaryByCompetitionIdForClientQuery = async (request, fastify) =
         tc."wrPythonURI" as "pythonURI",
         tc."wrViews" as "views",
         tc."wrEventNo" as "eventNo",
-        tc."wrCancelTime" as "cancelTime"
+        tc."wrCancelTime" as "cancelTime",
+        tc."wrStatusNote" as "statusNote"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 ON tt1."wrTeamId" = tc."wrTeam1Id" AND tt1."wrIsDeleted" = false
       LEFT JOIN "tblTeams" tt2 ON tt2."wrTeamId" = tc."wrTeam2Id" AND tt2."wrIsDeleted" = false
@@ -9712,7 +9711,6 @@ const getAllCommentaryByCompetitionIdQuery = async (competitionId, request, fast
         tc."wrLawnStriping" as "lawnStriping",
         tc."wrPitchAge" as "pitchAge",
         tc."wrIsVirtual" as "isVirtual",
-        tc."wrTestDayCount" as "testDayCount",
         tc."wrOnfieldUmpires" as "onfieldUmpires",
         tc."wrThirdUmpire" as "thirdUmpire",
         tc."wrMatchReferee" as "matchReferee",
@@ -9731,7 +9729,8 @@ const getAllCommentaryByCompetitionIdQuery = async (competitionId, request, fast
         tc."wrStreamingUrl" as "streamingUrl",
         tc."wrStreamingType" as "streamingType",
         tc."wrShuffle" as "shuffle",
-        tc."wrSetOfRules" as "setOfRules"
+        tc."wrSetOfRules" as "setOfRules",
+        tc."wrStatusNote" as "statusNote"
         from "tblCommentaries" tc
         left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
         left join "tblTeams" tt2 on tt2."wrTeamId" = tc."wrTeam2Id"
@@ -9965,7 +9964,31 @@ const deleteCommentryOldDataQuery = async (request, fastify) => {
     throw new Error(err.message);
   }
 };
-
+const updateCommentaryStatusNoteQuery = async (data, fastify, request) => {
+  try {
+    const result = await fastify.db.query(
+      `update "tblCommentaries" set
+        "wrDisplayStatus" = $1,
+        "wrModifyDate" = now(),
+        "wrUpdateTime" = now(),
+        "wrStatusNote" = $3
+        where "wrCommentaryId" = $2 and "wrIsDelete" = false
+      `,
+      {
+        bind: [data.displayStatus, data.commentaryId, data?.statusNote || null],
+      }
+    );
+    return result;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/updateCommentaryStatusNoteQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   getAllCommentaryQuery,
   insertCommentaryQuery,
@@ -10129,5 +10152,6 @@ module.exports = {
   updateCommentaryTeamColorQuery,
   deleteCommentaryTeamQuery,
   abandonedCommentaryQuery,
-  deleteCommentryOldDataQuery
+  deleteCommentryOldDataQuery,
+  updateCommentaryStatusNoteQuery,
 };

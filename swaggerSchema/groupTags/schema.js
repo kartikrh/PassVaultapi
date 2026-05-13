@@ -8915,8 +8915,9 @@ const TournamentTeamPoints = {
             totalPoint: { type: "integer" },
             isActive: { type: "boolean" },
             id: { type: "integer" },
+            prevGroupId: { type: ["integer", "null"] }
           },
-          required: ["groupId", "competitionId", "teamId", "id"],
+          required: ["groupId", "competitionId", "id"],
       },
     },
   },
@@ -9001,6 +9002,45 @@ const TournamentTeamPoints = {
       },
     },
   },
+  changeDisplayOrder: {
+    schema: {
+      tags: ["Tournament Team Points"],
+      description: "change display order of Tournament Team Points",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          competitionId: { type: "integer" },
+          displayOrderData: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                groupId: { type: "integer" },
+                displayOrder: { type: "integer" },
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  changeGroupVisibleStatus: {
+    schema: {
+      tags: ["Tournament Team Points"],
+      description: "Update group visible status of Tournament Team Points",
+      security: [{ bearerAuth: [] }],
+      body: {
+          type: "object",
+          properties: {
+            competitionId: { type: "integer" },
+            groupId: { type: "integer" },
+            isPlayOffGroup: { type: "boolean" }
+          },
+          required: ["competitionId", "groupId", "isPlayOffGroup"],
+      },
+    },
+  }
 };
 const PlayerHistory = {
   getAll: {
