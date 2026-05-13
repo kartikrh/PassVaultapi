@@ -189,7 +189,7 @@ module.exports = async function (fastify, opts) {
         try {
           // await featchData(fastify);
           await fetchAllDataFromDb(fastify);
-          setupMemoryMonitor(fastify);
+          // setupMemoryMonitor(fastify);
 
           // await disConnectClientSocketQuery(fastify);
           // await disConnectEntitySocketQuery(fastify);
