@@ -64,7 +64,6 @@ const getAllCommentaryQuery = async (fastify) => {
     tc."wrLawnStriping" as "lawnStriping",
     tc."wrPitchAge" as "pitchAge",
     tc."wrIsVirtual" as "isVirtual",
-    tc."wrTestDayCount" as "testDayCount",
     tc."wrOnfieldUmpires" as "onfieldUmpires",
     tc."wrThirdUmpire" as "thirdUmpire",
     tc."wrMatchReferee" as "matchReferee",
@@ -179,7 +178,6 @@ const getCommentariesDataQuery = async (fastify , where = null) => {
     tc."wrLawnStriping" as "lawnStriping",
     tc."wrPitchAge" as "pitchAge",
     tc."wrIsVirtual" as "isVirtual",
-    tc."wrTestDayCount" as "testDayCount",
     tc."wrOnfieldUmpires" as "onfieldUmpires",
     tc."wrThirdUmpire" as "thirdUmpire",
     tc."wrMatchReferee" as "matchReferee",
@@ -225,7 +223,7 @@ const insertCommentaryQuery = async (request, fastify) => {
         "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitchCracks","wrDisplayStatus","wrTarget","wrMarketID","wrTpId", "wrCreatedBy" , "wrCreatedDate","wrCommentaryStatus","wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket",
         "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest", "wrEventNo",
         "wrDifficulty", "wrPitchHardness", "wrPitchWareSpeed", "wrPitchType", "wrLawnStriping", "wrPitchAge", "wrIsVirtual",
-        "wrOnfieldUmpires", "wrThirdUmpire", "wrMatchReferee", "wrSession", "wrTestDayCount", "wrPythonId", "wrPythonURI",
+        "wrOnfieldUmpires", "wrThirdUmpire", "wrMatchReferee", "wrSession", "wrPythonId", "wrPythonURI",
         "wrCountryId", "wrVenueId", "wrScoringType", "wrStreamingUrl", "wrStreamingType","wrShuffle", "wrStatusNote"
         ) values (
           $1,
@@ -266,8 +264,7 @@ const insertCommentaryQuery = async (request, fastify) => {
           $44,
           $45,
           $46,
-          $47,
-          $48
+          $47
         ) returning *         
       )
 
@@ -333,7 +330,6 @@ const insertCommentaryQuery = async (request, fastify) => {
     tc."wrThirdUmpire" as "thirdUmpire",
     tc."wrMatchReferee" as "matchReferee",
     tc."wrSession" as "session",
-    tc."wrTestDayCount" as "testDayCount",
     tc."wrCountryId" as "countryId",
     tc."wrVenueId" as "venueId",
     tc."wrScoringType" as "scoringType",
@@ -394,7 +390,6 @@ const insertCommentaryQuery = async (request, fastify) => {
           data.thirdUmpire || null,
           data.matchReferee || null,
           data.session || null,
-          data.testDayCount || null,
           data.pythonId || null,
           data.pythonURI || null,
           data.countryId || null,
@@ -992,7 +987,6 @@ const updateCommentaryQuery = async (request, fastify) => {
           tc."wrThirdUmpire" as "thirdUmpire",
           tc."wrMatchReferee" as "matchReferee",
           tc."wrSession" as "session",
-          tc."wrTestDayCount" as "testDayCount",
           tc."wrCountryId" as "countryId",
           tc."wrVenueId" as "venueId",
           tc."wrScoringType" as "scoringType",
@@ -1488,7 +1482,6 @@ const getCommentaryByIdQuery = async (request, fastify) => {
       tc."wrLawnStriping" as "lawnStriping",
       tc."wrPitchAge" as "pitchAge",
       tc."wrIsVirtual" as "isVirtual",
-      tc."wrTestDayCount" as "testDayCount",
       tc."wrOnfieldUmpires" as "onfieldUmpires",
       tc."wrThirdUmpire" as "thirdUmpire",
       tc."wrMatchReferee" as "matchReferee",
@@ -5340,7 +5333,6 @@ const getCommentariesResultQuery = async (request, fastify) => {
       tc."wrLawnStriping" as "lawnStriping",
       tc."wrPitchAge" as "pitchAge",
       tc."wrIsVirtual" as "isVirtual",
-      tc."wrTestDayCount" as "testDayCount",
       tc."wrOnfieldUmpires" as "onfieldUmpires",
       tc."wrThirdUmpire" as "thirdUmpire",
       tc."wrMatchReferee" as "matchReferee",
@@ -5483,7 +5475,6 @@ const getAllCommentaryHistoryQuery = async (whereCondition, fastify, request) =>
             tc."wrLawnStriping" as "lawnStriping",
             tc."wrPitchAge" as "pitchAge",
             tc."wrIsVirtual" as "isVirtual",
-            tc."wrTestDayCount" as "testDayCount",
             tc."wrOnfieldUmpires" as "onfieldUmpires",
             tc."wrThirdUmpire" as "thirdUmpire",
             tc."wrMatchReferee" as "matchReferee",
@@ -5689,7 +5680,6 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           tc."wrIsActive" AS "isActive",
           tet."wrEventTypeId" AS "etyId",
           tc."wrIsVirtual" as "isVirtual",
-          tc."wrTestDayCount" as "testDayCount",
           tc."wrOnfieldUmpires" as "onfieldUmpires",
           tc."wrThirdUmpire" as "thirdUmpire",
           tc."wrMatchReferee" as "matchReferee",
@@ -5814,7 +5804,6 @@ const getCommentariesDataByDifferentIdsQuery = async (whereCondition, request, f
           tc."wrLawnStriping" as "lawnStriping",
           tc."wrPitchAge" as "pitchAge",
           tc."wrIsVirtual" as "isVirtual",
-          tc."wrTestDayCount" as "testDayCount",
           tc."wrOnfieldUmpires" as "onfieldUmpires",
           tc."wrThirdUmpire" as "thirdUmpire",
           tc."wrMatchReferee" as "matchReferee",
@@ -5918,7 +5907,6 @@ const getCommentariesDataQueryV1 = async (fastify) => {
         tc."wrLawnStriping" as "lawnStriping",
         tc."wrPitchAge" as "pitchAge",
         tc."wrIsVirtual" as "isVirtual",
-        tc."wrTestDayCount" as "testDayCount",
         tc."wrOnfieldUmpires" as "onfieldUmpires",
         tc."wrThirdUmpire" as "thirdUmpire",
         tc."wrMatchReferee" as "matchReferee",
@@ -7855,7 +7843,7 @@ const insertCommentaryWithImportQuery = async (data, request, fastify) => {
         "wrEventDate","wrEventName","wrEventRefId","wrTeam1Id","wrTeam2Id","wrLocation","wrWeather","wrPitchCracks","wrDisplayStatus","wrTarget","wrMarketID","wrTpId","isSignalROn","isMatchTypeUpdated" , "wrCreatedBy" , "wrCreatedDate", "wrCurrentInnings", "wrSystemPlayerCount","wrIsPredictMarket",
         "wrDelay", "wrIsActive", "wrIsClientShow","wrIsTeamPredictionOn", "wrHistoryMatchTypeId", "wrIsCountInPoint","wrIsTest", "wrEventNo",
         "wrDifficulty", "wrPitchHardness", "wrPitchWareSpeed", "wrPitchType", "wrLawnStriping", "wrPitchAge", "wrIsVirtual",
-        "wrOnfieldUmpires", "wrThirdUmpire", "wrMatchReferee", "wrSession", "wrTestDayCount", "wrTossWonBy",
+        "wrOnfieldUmpires", "wrThirdUmpire", "wrMatchReferee", "wrSession", "wrTossWonBy",
         "wrChoseTo", "wrCommentaryStatus", "wrPythonId", "wrPythonURI", "wrCountryId", "wrVenueId", "wrScoringType"
         ) values (
           $1,
@@ -7895,8 +7883,7 @@ const insertCommentaryWithImportQuery = async (data, request, fastify) => {
           $45,
           $46,
           $47,
-          $48,
-          $49
+          $48
         ) returning *         
       )
 
@@ -7962,7 +7949,6 @@ const insertCommentaryWithImportQuery = async (data, request, fastify) => {
     tc."wrThirdUmpire" as "thirdUmpire",
     tc."wrMatchReferee" as "matchReferee",
     tc."wrSession" as "session",
-    tc."wrTestDayCount" as "testDayCount",
     tc."wrPythonId" as "pythonId",
     tc."wrPythonURI" as "pythonURI",
     tc."wrCountryId" as "countryId",
@@ -8021,7 +8007,6 @@ const insertCommentaryWithImportQuery = async (data, request, fastify) => {
           data.thirdUmpire || null,
           data.matchReferee || null,
           data.session || null,
-          data.testDayCount || null,
           data.tossWonBy || null,
           data.choseTo || null,
           data.commentaryStatus || 1,
@@ -8324,7 +8309,6 @@ const getComEntityQuery = async (data,request,fastify) => {
       tc."wrLawnStriping" as "lawnStriping",
       tc."wrPitchAge" as "pitchAge",
       tc."wrIsVirtual" as "isVirtual",
-      tc."wrTestDayCount" as "testDayCount",
       tc."wrOnfieldUmpires" as "onfieldUmpires",
       tc."wrThirdUmpire" as "thirdUmpire",
       tc."wrMatchReferee" as "matchReferee",
@@ -8992,7 +8976,6 @@ const updateCommentaryDateByCommentaryIdQuery = async (request, fastify) => {
         tc."wrThirdUmpire" AS "thirdUmpire",
         tc."wrMatchReferee" AS "matchReferee",
         tc."wrSession" AS "session",
-        tc."wrTestDayCount" AS "testDayCount",
         tc."wrCountryId" AS "countryId",
         tc."wrVenueId" AS "venueId",
         tc."wrScoringType" AS "scoringType",
@@ -9397,7 +9380,6 @@ const getAllCommentaryByCompetitionIdForClientQuery = async (request, fastify) =
         tc."wrIsActive" AS "isActive",
         tet."wrEventTypeId" AS "etyId",
         tc."wrIsVirtual" as "isVirtual",
-        tc."wrTestDayCount" as "testDayCount",
         tc."wrOnfieldUmpires" as "onfieldUmpires",
         tc."wrThirdUmpire" as "thirdUmpire",
         tc."wrMatchReferee" as "matchReferee",
@@ -9729,7 +9711,6 @@ const getAllCommentaryByCompetitionIdQuery = async (competitionId, request, fast
         tc."wrLawnStriping" as "lawnStriping",
         tc."wrPitchAge" as "pitchAge",
         tc."wrIsVirtual" as "isVirtual",
-        tc."wrTestDayCount" as "testDayCount",
         tc."wrOnfieldUmpires" as "onfieldUmpires",
         tc."wrThirdUmpire" as "thirdUmpire",
         tc."wrMatchReferee" as "matchReferee",
