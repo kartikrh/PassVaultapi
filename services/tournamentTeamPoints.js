@@ -163,6 +163,11 @@ const updateTblTournamentTeamPointsService = async (request, fastify) => {
     if (!checkTeamExistsInPrevGroup) {
       throw new Error(`Team id ${teamId} is not available in the previous group id ${prevGroupId}`);
     }
+
+    const checkTeamExistsInGroup = getTournamentTeamPointData.find(item => item.teamId === teamId && item.groupId === groupId);
+    if (checkTeamExistsInGroup) {
+      throw new Error(`Team already existed with this groupId`);
+    }
   }
 
   const getGroupData = getTournamentTeamPointData.find(item => item.groupId === groupId);
