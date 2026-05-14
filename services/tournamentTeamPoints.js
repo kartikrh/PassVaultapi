@@ -140,17 +140,6 @@ const updateTblTournamentTeamPointsService = async (request, fastify) => {
     throw new Error(`TournamentTeamPoints with this id ${id} not Found`);
   }
 
-  const getGroupData = getTournamentTeamPointData.find(item => item.groupId === groupId);
-  if (!getGroupData) {
-    throw new Error(`Group id ${groupId} is not available in this competition id ${competitionId}`);
-  }
-
-  if (getGroupData) {
-    request.body.groupName = getGroupData.groupName;
-    request.body.groupDisplayOrder = getGroupData.groupDisplayOrder;
-    request.body.isPlayOffGroup = getGroupData.isPlayOffGroup;
-  }
-
   if (prevGroupId && checkTournamentTeamPointExists.prevGroupId !== prevGroupId) {
     if (prevGroupId === groupId) {
       throw new Error(`Previous group id and current group id are the same`);
@@ -167,6 +156,24 @@ const updateTblTournamentTeamPointsService = async (request, fastify) => {
         throw new Error(`Team id ${teamId} is not available in the previous group id ${prevGroupId}`);
       }
     }
+  }
+
+  if (prevGroupId && teamId && checkTournamentTeamPointExists.teamId !== teamId) {
+    const checkTeamExistsInPrevGroup = getTournamentTeamPointData.find(item => item.teamId === teamId && item.groupId === prevGroupId);
+    if (!checkTeamExistsInPrevGroup) {
+      throw new Error(`Team id ${teamId} is not available in the previous group id ${prevGroupId}`);
+    }
+  }
+
+  const getGroupData = getTournamentTeamPointData.find(item => item.groupId === groupId);
+  if (!getGroupData) {
+    throw new Error(`Group id ${groupId} is not available in this competition id ${competitionId}`);
+  }
+
+  if (getGroupData) {
+    request.body.groupName = getGroupData.groupName;
+    request.body.groupDisplayOrder = getGroupData.groupDisplayOrder;
+    request.body.isPlayOffGroup = getGroupData.isPlayOffGroup;
   }
 
   const updateData = {
