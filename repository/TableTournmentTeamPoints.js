@@ -478,6 +478,8 @@ const getClientTournamentTeamPointsQuery = async (request, fastify) => {
           tp."wrTeamName" as "teamName",
           tp."wrTeamShortName" as "teamShortName",
           tp."wrImage" as "teamImage",
+          tp."wrTeamColor" as "teamColor",
+          tp."wrBackgroundColor" as "backgroundColor",
           ttp."wrPrevGroupId" as "prevGroupId",
           ttp."wrGroupDisplayOrder" as "groupDisplayOrder",
           ttp."wrIsPlayOffGroup" as "isPlayOffGroup"
