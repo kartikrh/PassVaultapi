@@ -1760,6 +1760,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           const overKey = `${comDetails.commentaryId}-${comDetails.currentInnings}-${battingTeam.teamId}-${overNumber}`;
           let over = oversMap[overKey];
           let run = c.run || 0;
+          isOverEnd = false;
           let isBoundary = c.run == 4 || c.run ==6 ? true : false
           let strikePId = playerTpIdObj[c.batsman_id]?.commentaryPlayerId
           let bowlerPId = playerTpIdObj[c.bowler_id]?.commentaryPlayerId
@@ -2232,7 +2233,6 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
             over.isMaiden = getBowlerOnlyRuns(over) < 1;
             over.teamScore = c.score;
             over.totalRun = c?.runs
-            isOverEnd = true
           }
           else {
             const overET = global.tblOvers.find(i =>
@@ -2252,6 +2252,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               oversMap[overKey] = overET; // store reference
             }
           }
+          isOverEnd = true
           for(let p of c.bats){
             if(playersMap[p.batsman_id]){
               playersMap[p.batsman_id].runs = p.runs;
@@ -2306,6 +2307,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           let bowlerPId = playerTpIdObj[c.bowler_id]?.commentaryPlayerId
           let nonStrike = response.live.batsmen.find((i)=> i.batsman_id != c.batsman_id).batsman_id
           let nonStrikePId = playerTpIdObj[nonStrike]?.commentaryPlayerId;
+          isOverEnd = false;
           // if(playersMap[c.bowler_id]){
           //   // playersMap[c.bowler_id].bowlerOver = ((playersMap[c.bowler_id].bowlerOver || 0) + 0.1).toFixed(1) 
           //   // playersMap[c.bowler_id].bowlerTotalWicket = (playersMap[c.bowler_id].bowlerTotalWicket || 0) + 1
@@ -2697,7 +2699,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               ...playersMap[oldBatsman.tpId],
               isBatterOut: false,
               isPlay: true,
-              onStrike: onStrikeData,
+              // onStrike: onStrikeData,
               isBatterRetir: null,
               wicketType: null,
               bowlerId: null,
