@@ -218,6 +218,7 @@ module.exports = async function (fastify, opts) {
     });
 
   if (process.env.IS_CRON_ENABLE && process.env.IS_CRON_ENABLE === "true") {
+    console.log("Registering cron jobs...");
     registerCronJobs(fastify);
   }
 
