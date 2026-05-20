@@ -12,7 +12,7 @@ const {
   deleteCommentryOldDataQuery,
 } = require("../repository/TableCommentary")
 const { getAllTournamentTeamPlayerByIdsQuery } = require("../repository/TableTournamentsTeamPlayers")
-const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService,addSuperOverInEntity, insertComPlayerEntityService, revertCommentaryService } = require("../services/commentry");
+const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService,addSuperOverInEntity, insertComPlayerEntityService, revertCommentaryService, commentaryDetailsByEventIdService } = require("../services/commentry");
 const {
     callClientAPI,
     ServiceType,
@@ -1223,9 +1223,36 @@ const setEntityCom2Service = async (request , fastify) =>{
         fastify,
         "services/entitySport.js/setEntityCom2Service"
       );
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      if (
+        global?.clientSocketIo !== undefined &&
+        global?.clientSocketIo.length > 0
+      ) {
+        global.clientSocketIo.forEach((socket) => {
+          socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+        });
+        commentaryDetailsByEventIdService(
+          {
+            ...request,
+            body: {
+              eventId: global.tblCommentaries[index].eventRefId,
+              commentaryId: global.tblCommentaries[index].commentaryId
+            },
+          },
+          fastify,
+          "callFromSocket"
+        ).catch((err) => {
+          console.log(
+            "err in commentaryDetailsByEventIdService/setEntityCom2Service",
+            err
+          );
+          errorLogger(
+            fastify,
+            err.message,
+            "ERROR --> services/entitysport.js/setEntityCom2Service",
+            request
+          );
+        });
+      }
     }
 
     if (response?.man_of_the_match?.pid) {
