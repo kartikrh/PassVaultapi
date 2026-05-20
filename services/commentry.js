@@ -22661,7 +22661,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
             pythonURI = commentaryData.pythonURI ?? null;
         }
 
-        let previousCommentaryStatus, statusToUpdate;
+        let previousCommentaryStatus, statusToUpdate, previousStatusNote;
         if (isEndInnings && isEndInnings == true) {
             strikeTeamForEndInnings = global.tblCommentaryTeams.find(
                 (item) =>
@@ -22680,6 +22680,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
         if (commentaryDetails) {
             previousCommentaryStatus = commentaryData?.commentaryStatus;
             statusToUpdate = commentaryDetails?.commentaryStatus;
+            previousStatusNote = commentaryData?.statusNote;
         }
         // validate commentaryTeams
         if (commentaryTeams && commentaryTeams.length >0) {
@@ -22931,7 +22932,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                 );
             }
 
-            if (previousCommentaryStatus != statusToUpdate) {
+            if (previousCommentaryStatus != statusToUpdate || previousStatusNote != commentaryDetails?.statusNote) {
                 const cData = await getMatchDataByCId(
                     {
                         commentaryId: commentaryId,
