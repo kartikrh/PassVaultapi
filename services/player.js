@@ -270,12 +270,16 @@ const insertPlayerService = async (request, fastify) => {
     Object.assign(request.body, trimData);
   }
 
-  if (
-    request.body.description &&
-    request.body.description.length > 1000
-  ) {
-    throw new Error("Description can not exceed 1000 characters");
+  if (request.body.description) {
+      request.body.description = request.body.description.trim();
   }
+
+  // if (
+  //   request.body.description &&
+  //   request.body.description.length > 1000
+  // ) {
+  //   throw new Error("Description can not exceed 1000 characters");
+  // }
 
   // const validatePlayerName = global.tblPlayers.find(
   //   (item) =>
@@ -433,12 +437,12 @@ const updatePlayerService = async (request, fastify) => {
     Object.assign(request.body, trimData);
   }
 
-  if (
-    request.body.description &&
-    request.body.description.length > 1000
-  ) {
-    throw new Error("Description can not exceed 1000 characters");
-  }
+  // if (
+  //   request.body.description &&
+  //   request.body.description.length > 1000
+  // ) {
+  //   throw new Error("Description can not exceed 1000 characters");
+  // }
   // const validatePlayerName = global.tblPlayers.find(
   //   (item) =>
   //     item.playerName.trim().toLowerCase() === request.body.playerName.trim().toLowerCase() &&
@@ -490,7 +494,7 @@ const updatePlayerService = async (request, fastify) => {
     countryId: request.body.countryId || checkPlayerId.countryId,
     birthDate: request.body.birthDate || checkPlayerId.birthDate,
     birthPlace: request.body.birthPlace || checkPlayerId.birthPlace,
-    description: request.body.description || checkPlayerId.description,
+    description: request.body.description?.trim() || checkPlayerId.description,
   };
 
   if ("isActive" in request.body) {

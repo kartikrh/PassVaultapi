@@ -1,6 +1,6 @@
 const { errorLogger } = require("../utilities/logger");
 
-const getAllCommentaryBattingHistory = async (fastify, playerId = null) => {
+const getAllCommentaryBattingHistory = async (fastify, playerId = null, commentaryIds = null) => {
   try {
     const query =
       `
@@ -57,6 +57,7 @@ const getAllCommentaryBattingHistory = async (fastify, playerId = null) => {
       LEFT JOIN "tblTeams" AS tvs1 ON tvs1."wrTeamId" = tc."wrTeam1Id" AND tvs1."wrIsDeleted" = false
       LEFT JOIN "tblTeams" AS tvs2 ON tvs2."wrTeamId" = tc."wrTeam2Id" AND tvs2."wrIsDeleted" = false
       WHERE tcpbh."wrIsDeleted" = FALSE ${playerId ? ` AND tcpbh."wrPlayerId" = $1` : ''}
+      ${commentaryIds? ` AND tcpbh."wrCommentaryId" IN (${commentaryIds})` : ''}
     `;
 
     return await fastify.db.query(query,
@@ -76,7 +77,7 @@ const getAllCommentaryBattingHistory = async (fastify, playerId = null) => {
   }
 };
 
-const getAllCommentaryBowlingHistory = async (fastify, playerId = null) => {
+const getAllCommentaryBowlingHistory = async (fastify, playerId = null, commentaryIds = null) => {
   try {
     const query =
       `
@@ -132,6 +133,7 @@ const getAllCommentaryBowlingHistory = async (fastify, playerId = null) => {
       LEFT JOIN "tblTeams" AS tvs1 ON tvs1."wrTeamId" = tc."wrTeam1Id" AND tvs1."wrIsDeleted" = false
       LEFT JOIN "tblTeams" AS tvs2 ON tvs2."wrTeamId" = tc."wrTeam2Id" AND tvs2."wrIsDeleted" = false
         WHERE tcpbh."wrIsDeleted" = FALSE ${playerId ? ` AND tcpbh."wrPlayerId" = $1` : ''}
+        ${commentaryIds ? ` AND tcpbh."wrCommentaryId" IN (${commentaryIds})` : ''}
       `;
 
     return await fastify.db.query(query,

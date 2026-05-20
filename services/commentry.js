@@ -22895,6 +22895,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                 pitchAge: commentaryDetails.pitchAge,
                 session: commentaryDetails.session,
                 statusNote: commentaryDetails.statusNote,
+                isMatchDraw: commentaryDetails?.isMatchDraw ?? false,
             };
             const weatherAndPitchData = await weatherAndPitchDataService(commentaryId);
             response.commentaryDetails = {
@@ -22918,6 +22919,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                 winRmk: commentaryDetails.winRmk,
                 tossRmk: commentaryDetails.tossRmk,
                 statusNote: commentaryDetails.statusNote,
+                isMatchDraw: commentaryDetails?.isMatchDraw ?? false,
                 ...weatherAndPitchData
             };
             if (commentaryDetails.commentaryStatus == 2) {
