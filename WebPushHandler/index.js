@@ -1,7 +1,23 @@
 const configConstants = require('../utilities/configConstants');
 const { default: axios } = require("axios");
 const {JWT} = require('google-auth-library');
-const Json_keys = require('../jwt.keys.json');
+
+function loadServiceAccountKeys() {
+  if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+    try {
+      return JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+    } catch (err) {
+      console.error('Invalid GOOGLE_SERVICE_ACCOUNT_JSON env var:', err.message);
+    }
+  }
+  try {
+    return require('../jwt.keys.json');
+  } catch (err) {
+    console.warn('jwt.keys.json not found and GOOGLE_SERVICE_ACCOUNT_JSON not set; mobile push disabled');
+    return null;
+  }
+}
+const Json_keys = loadServiceAccountKeys();
 
 async function _sendNotification(title, message, url, image, icon) {
     const payload = JSON.stringify({ title, message, url, image, icon });
@@ -154,6 +170,10 @@ async function sendNotification(title, message, url, image, icon) {
 
   function getAccessToken() {
     return new Promise(function(resolve, reject) {
+      if (!Json_keys) {
+        reject(new Error('Service-account credentials not configured (set GOOGLE_SERVICE_ACCOUNT_JSON)'));
+        return;
+      }
       const jwtClient = new JWT(
         Json_keys.client_email,
         null,
