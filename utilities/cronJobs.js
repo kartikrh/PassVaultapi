@@ -57,6 +57,7 @@ const registerCronJobs = (fastify) => {
     withSentryCronProfiling("entitysport-auto-import", "0,30 * * * * *", async () => {
       try {
         if (!isAutoImportProcessRunning && global.isAllDataLoadedInGlobal && global.tblEntitySockets?.[0]?.isActive) {
+          console.log("Starting entitySportAutoImportProcess...");
           isAutoImportProcessRunning = true;
           await entitySportAutoImportProcess(fastify);
           isAutoImportProcessRunning = false;
