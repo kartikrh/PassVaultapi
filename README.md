@@ -8,8 +8,6 @@ Project: scoreapi
 
 
 
-
-
 - [Getting Started](#getting-started)
 - [Major Version](#Major-Version)
 - [Minor Version](#Minor-Version)

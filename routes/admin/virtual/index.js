@@ -7,6 +7,8 @@ const {
   ballByBallVirtualEvent,
   ballByBallChange,
   suffleCardAPI,
+  cancelEventAPI,
+  serverTimeAPI,
 } = require("../../../controller/users/admin/virtual");
 const { VirtualEvent } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -40,5 +42,14 @@ module.exports = async (fastify, opts) => {
     // handler: (request, reply) => ballByBallVirtualEvent(request, reply, fastify),
     handler: (request, reply) => suffleCardAPI(request, reply, fastify),
   });
+   fastify.post("/cancelEvent", {
+    schema: VirtualEvent.cancelEvent.schema,
+    // handler: (request, reply) => ballByBallVirtualEvent(request, reply, fastify),
+    handler: (request, reply) => cancelEventAPI(request, reply, fastify),
+  });  
+  fastify.get("/serverTime", {
+    schema: VirtualEvent.cancelEvent.schema,
+    handler: (request, reply) => serverTimeAPI(request, reply, fastify),
+  }); 
   
 };

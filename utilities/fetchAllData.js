@@ -1,4 +1,5 @@
-const { ModuleTypes, EventName } = require("../utilities/index");
+const { ModuleTypes, EventName, GlobalModuleType, StoreTypes } = require("../utilities/index");
+const { errorLogger } = require("./logger");
 const { getAllActiveInactiveTabsQuery } = require("../repository/TableTabs");
 const { getAllBlocksQuery } = require("../repository/TableBlock");
 const { getAllMenuTypesQuery } = require("../repository/TableMenuTypes");
@@ -9,18 +10,19 @@ const { allPageAliases } = require("../repository/TablePageAlias");
 const { allMenuItemsQuery } = require("../repository/TableMenuItem");
 const { getAllRolesQuery } = require("../repository/TableRoles");
 const { allEventTypesQuery } = require("../repository/TableEventType");
-const { allTeamQuery } = require("../repository/TableTeams");
+const { allTeamQuery, getAllTeamsByIdsQuery } = require("../repository/TableTeams");
 const { allPaneltyRunsQuery } = require("../repository/TablePaneltyRun");
 const {
   getAllPlayersQuery,
   getAllPlayerTypeQuery,
   getAllBowlingTypeQuery,
+  getAllPlayersByIdsQuery,
 } = require("../repository/TablePlayer");
 const { getAllMatchTypeQuery } = require("../repository/TableMatchType");
 const { getAllUsersQuery } = require("../repository/TableUser");
 const { getAllCongigQuery } = require("../repository/TableConfig");
 const { getAllDevicesQuery } = require("../repository/TableDevice");
-const { getAllCompititionQuery } = require("../repository/TableCompitition");
+const { getAllCompititionQuery, getAllCompetitionByIdsQuery } = require("../repository/TableCompitition");
 const { getAllEventsQuery } = require("../repository/TableEvent");
 const {
   getAllCommentaryQuery,
@@ -62,6 +64,7 @@ const { getAllVendorIpsQuery } = require("../repository/TableVendorIp");
 const { allDisplayStatusesQuery } = require("../repository/TableDisplayStatus");
 const { getAllClientSocketQuery } = require("../repository/TableClientSocket");
 const { getAllBannerQuery } = require("../repository/TableBanner");
+const { getAllAdvertiseQuery } = require("../repository/TableAdvertise");
 const { getAllActivityLogQuery } = require("../repository/TableActivityLog");
 const { getAllAPI } = require("../repository/TableAPI");
 const { getAllAPIEndPoint } = require("../repository/TableAPIEndPoint");
@@ -100,10 +103,17 @@ const { getAllWhitelabelsQuery } = require("../repository/TableWhitelabel");
 const { getAllNotificationConfigsQuery, getNotificationConfigsByEventNameQuery } = require("../repository/TableNotificationConfig");
 const { notiConfigContentReplaceService } = require("../services/commentry");
 const { getAllHideEventsQuery } = require("../repository/TableHideEvents");
-const { getAllVenuesQuery } = require("../repository/TableVenue");
+const { getAllVenuesQuery, getVenuesByIdsQuery } = require("../repository/TableVenue");
 const { getAllCardTypeQuery } = require("../repository/TableCardType");
 const { getAllWeathersQuery } = require("../repository/TableWeather")
 const { getAllPitchConditionsQuery } = require("../repository/TablePitchCondition")
+const { getAllPythonAPIsQuery } = require("../repository/TablePythonAPI");
+const { getAllMatchTypeTemplatesQuery } = require("../repository/TableMatchTypeTemplates");
+const { getAllOverTypesQuery } = require("../repository/TableOverType");
+const { getAllICCRankingQuery } = require("../repository/TableICCRanking");
+const { getAllEntitySocketsQuery } = require("../repository/TableEntitySockets");
+const { getAllCompetitionStatisticsTypeQuery } = require("../repository/TableCompetitionStatisticsType");
+const { getAllCompetitionStatisticsQuery } = require("../repository/TableCompetitionStatistics");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -142,6 +152,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     );
     const getAllNews = await getAllNewsQuery(fastify);
     const getAllBanners = await getAllBannerQuery(fastify);
+    const getAllAdvertise = await getAllAdvertiseQuery(fastify);
     const getAllActivityLog = await getAllActivityLogQuery(fastify);
     const getAllsubScribesDomain = await getAllSubScribesDomainQuery(fastify);
     const getAllsubScribesSubDomain = await getAllSubScribesSubDomainQuery(
@@ -150,7 +161,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllMatchTypePredictor = await getAllMatchTypePredictorQuery(
       fastify
     );
-    const getAllEventMarkets = await getAllEventMarketsQuery(fastify);
+    // const getAllEventMarkets = await getAllEventMarketsQuery(fastify);
     const getAllMarketTemplate = await getAllMarketTemplateQuery(fastify);
     const getAllMarketTypeCategories = await getAllMarketTypeCategoriesQuery(
       fastify
@@ -170,7 +181,6 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllOtp = await getAllOtpQuery(fastify);
     const getAllClient = await getAllClientQuery(fastify);
     const getAllMailSettings = await allMailSettingsQuery(fastify);
-    const marketOddBallByBall = await getAllMarketOddsBallByBall(fastify);
     const thirdPartyApis = await allThirdPartyApisQuery(fastify);
     const clientVideos = await allClientVideoQuery(fastify);
     // const responseLogs = await allResponseLogsQuery(fastify);
@@ -189,8 +199,6 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     // const getEventMarketRunnerV1 = await getMarketRunnerQueryV1(fastify);
     const getAllPlayerBattingHistory = await getAllBattingHistory(fastify);
     const getAllPlayerBowlingHistory = await getAllBowlingHistory(fastify);
-    const getAllCommentaryPlayersBattingHistory = await getAllCommentaryBattingHistory(fastify);
-    const getAllCommentaryPlayersBowlingHistroy = await getAllCommentaryBowlingHistory(fastify);
     const getAllPhotoLibrary = await getAllPhotoLibraryQuery(fastify);
     const getAllLibraryImages = await getAllLibraryImagesQuery(fastify);
     const getAllVideoLibrary = await getAllVideoLibraryQuery(fastify);
@@ -205,6 +213,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const allCommentaryIds = getAllCommentary.map((item) => item.commentaryId);
     let getAllEventMarketsV2 = [];
     let getEventMarketRunnerV2 = [];
+    let marketOddBallByBall, getAllCommentaryPlayersBattingHistory, getAllCommentaryPlayersBowlingHistroy = [];
     if (allCommentaryIds.length > 0) {
         getAllEventMarketsV2 = await getAllEventMarketsV2Query(fastify, allCommentaryIds.join(", "));
         if (getAllEventMarketsV2.length > 0) {
@@ -214,6 +223,10 @@ const fetchAllDataFromDb = async (fastify, reply) => {
               getEventMarketRunnerV2 = await getAllMarketRunnersQuery(fastify, eventMarketIds.join(", "));
           }
         }
+      marketOddBallByBall = await getAllMarketOddsBallByBall(fastify, [].join(", "));
+      getAllCommentaryPlayersBattingHistory = await getAllCommentaryBattingHistory(fastify, null, allCommentaryIds.join(", ") );
+      getAllCommentaryPlayersBowlingHistroy = await getAllCommentaryBowlingHistory(fastify, null, allCommentaryIds.join(", "));
+
     }
     // const getAllEventMarketsV2 = await getAllEventMarketsV2Query(fastify, 
     //   getAllCommentary.map((item) => item.commentaryId).join(", ")
@@ -226,6 +239,13 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllVenues = await getAllVenuesQuery(fastify);
     const getAllWeatherData = await getAllWeathersQuery(fastify);
     const getAllPitchConditions = await getAllPitchConditionsQuery(fastify);
+    const getAllPythonAPIs = await getAllPythonAPIsQuery(fastify);
+    const getAllMatchTypeTemplates = await getAllMatchTypeTemplatesQuery(fastify);
+    const getAllOverTypes = await getAllOverTypesQuery(fastify);
+    const getAllICCRanking = await getAllICCRankingQuery(fastify);
+    const getAllEntitySockets = await getAllEntitySocketsQuery(fastify);
+    const getAllCompetitionStatisticsType = await getAllCompetitionStatisticsTypeQuery(fastify);
+    const getAllCompetitionStatistics = await getAllCompetitionStatisticsQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -261,7 +281,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblSubScribesSubDomain = getAllsubScribesSubDomain;
     global.tblMatchTypePredictor = getAllMatchTypePredictor;
     global.tblMarketTemplate = getAllMarketTemplate;
-    global.tblEventMarkets = getAllEventMarkets;
+    // global.tblEventMarkets = getAllEventMarkets;
+    global.tblEventMarkets = []
     global.tblMarketTypeCategories = getAllMarketTypeCategories;
     global.tblMarketTypes = getAllMarketType;
     global.tblMarketTemplateRunners = getAllMarketTemplateRunner;
@@ -270,6 +291,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblClientSocket = getAllClientSocket;
     global.tblActivityLogs = getAllActivityLog;
     global.tblBanner = getAllBanners;
+    global.tblAdvertise = getAllAdvertise;
     global.tblAPIs = getAllAPIs;
     global.tblAPIEndpoints = getAllAPIEndpoints;
     global.tblTeamCompetition = getAllTeamCompetition;
@@ -309,6 +331,14 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblVenues = getAllVenues;
     global.tblWeather = getAllWeatherData;
     global.tblPitchConditions = getAllPitchConditions;
+    global.tblPythonAPI = getAllPythonAPIs;
+    global.tblMatchTypeTemplates = getAllMatchTypeTemplates;
+    global.tblOverTypes = getAllOverTypes;
+    global.tblICCRanking = getAllICCRanking;
+    global.tblEntitySockets = getAllEntitySockets;
+    global.tblCompetitionStatisticsType = getAllCompetitionStatisticsType;
+    global.tblCompetitionStatistics = getAllCompetitionStatistics;
+
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
     // global.predictorAPILogs = predictorAPILogs;
@@ -316,8 +346,10 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     // global.errorLogs = errorLogs
 
     console.log("Okkkk - Data Synchronized successfully");
+    global.isAllDataLoadedInGlobal = true;
 
     if (reply) {
+      
       reply.status(200).send({
         status: 200,
         message: "Data fetched successfully",
@@ -325,6 +357,12 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     }
   } catch (error) {
     console.log("error in fetchAllDataFromDb", error.message,error);
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> utilities/fetchAllData.js/fetchDataFromDb",
+      null
+    );
     if (reply) {
       reply.status(200).send({
         status: 200,
@@ -349,15 +387,45 @@ const FetchingCommentariesDataFromCron = async (fastify) => {
     global.tblOvers = global.tblOvers.filter((item) => commentaryIds.includes(item.commentaryId));
     global.tblCommentaryWicket = global.tblCommentaryWicket.filter((item) => commentaryIds.includes(item.commentaryId));
     global.tblCommentaryPartnership = global.tblCommentaryPartnership.filter((item) => commentaryIds.includes(item.commentaryId));
+    global.tblMarketOddsBallByBall = global.tblMarketOddsBallByBall.filter((item) => commentaryIds.includes(item.commentaryId));
+    global.tblCommPlayerBatHist = global.tblCommPlayerBatHist.filter((item) => commentaryIds.includes(item.commentaryId));
+    global.tblCommPlayerBowlHist = global.tblCommPlayerBowlHist.filter((item) => commentaryIds.includes(item.commentaryId));
 
     global.tblEventMarketsV2 = global.tblEventMarketsV2.filter((item) => commentaryIds.includes(item.commentaryId));
     const marketIds = new Set(global.tblEventMarketsV2.map((elem) => elem.eventMarketId));
     global.tblMarketRunnerV2 = global.tblMarketRunnerV2.filter((item) => marketIds.has(item.eventMarketId));
 
-    console.log("Commentary data updated in via node-cron successfully");
+    if (global.processedUpcomingCommentaries?.size > 0) {
+      const commentaryIdSet = new Set(commentaryIds);
+      for (const id of global.processedUpcomingCommentaries) {
+        if (!commentaryIdSet.has(id)) {
+          global.processedUpcomingCommentaries.delete(id);
+        }
+      }
+    }
+
+    // Fix: Prune global.selectionData for commentary IDs no longer in active memory.
+    if (global.selectionData) {
+      const activeCommentaryIds = new Set(commentaryIds.map(id => String(id)));
+      for (const key in global.selectionData) {
+        const commentaryId = global.selectionData[key]?.commentaryId;
+        if (commentaryId && !activeCommentaryIds.has(String(commentaryId))) {
+          delete global.selectionData[key];
+        }
+      }
+    }
+
+
+    console.log(new Date(), "Commentary data updated in via node-cron successfully");
 
   } catch (error) {
-    console.log("error in FetchingCommentariesDataFromCron", error.message,error);
+    console.log(new Date(), "error in FetchingCommentariesDataFromCron:", error.message,error);
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> utilities/fetchAllData.js/FetchingCommentariesDataFromCron",
+      null
+    );
   }
 }
 
@@ -406,7 +474,13 @@ const upcomingCommentaries = async (fastify) => {
         // }
       }
   } catch (error) {
-    console.error("Error in upcomingCommentaries:", error.message, error);
+    console.error(new Date(), "Error in upcomingCommentaries:", error.message, error);
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> utilities/fetchAllData.js/upcomingCommentaries",
+      null
+    );
   }
 };
 
@@ -479,6 +553,11 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
         case ModuleTypes.Banners: {
           const getAllBanners = await getAllBannerQuery(fastify);
           global.tblBanner = getAllBanners;
+          break;
+        }
+         case ModuleTypes.Advertise: {
+          const getAllAdvertise = await getAllAdvertiseQuery(fastify);
+          global.tblAdvertise = getAllAdvertise;
           break;
         }
         case ModuleTypes.Awards: {
@@ -661,14 +740,17 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
         }
         case ModuleTypes.CommentaryById: {
           if(commentaryId) {
-            let whereCondition = `"wrCommentaryId" = ${commentaryId}`
+            let whereCondition = `"wrCommentaryId" = ${commentaryId} AND "wrIsDelete" = FALSE`
+            let teamCondition = `tct."wrCommentaryId" = ${commentaryId} AND tct."wrIsDelete" = FALSE`
+            let playerCondition = `tcp."wrCommentaryId" = ${commentaryId} AND tcp."wrIsDelete" = FALSE`
+            let whereCond = `"wrCommentaryId" = ${commentaryId} AND "wrIsDeletedStatus" = FALSE`
 
             const getCommentary = await getCommentaryByIdQuery(request, fastify);
-            const getCommentaryTeams = await getAllCommentaryTeamsDataQuery(whereCondition, fastify);
-            const getCommentaryPlayers = await getAllCommentaryPlayerDataQuery(whereCondition, fastify);
-            const getCommentaryBallByBalls = await getAllCommentaryBallByBallDataQuery(whereCondition, fastify);
+            const getCommentaryTeams = await getAllCommentaryTeamsDataQuery(teamCondition, fastify);
+            const getCommentaryPlayers = await getAllCommentaryPlayerDataQuery(playerCondition, fastify);
+            const getCommentaryBallByBalls = await getAllCommentaryBallByBallDataQuery(whereCond, fastify);
             const getOvers = await getAllOversDataQuery(whereCondition, fastify);
-            const getCommentaryWickets = await getAllCommentaryWicketDataQuery(whereCondition, fastify);
+            const getCommentaryWickets = await getAllCommentaryWicketDataQuery(whereCond, fastify);
             const getCommentaryPartnerships = await getAllCommentaryPartnershipDataQuery(whereCondition, fastify);
 
             const commentaryIndex = global.tblCommentaries.findIndex(item => item.commentaryId == commentaryId);
@@ -708,6 +790,26 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           }
           break;
         }
+        case ModuleTypes.PythonAPI: {
+          const pythonData =  await getAllPythonAPIsQuery(fastify);
+          global.tblPythonAPI = pythonData;
+          break;
+        }
+        case ModuleTypes.EntitySocket: {
+          const getAllEntitySockets = await getAllEntitySocketsQuery(fastify);
+          global.tblEntitySockets = getAllEntitySockets;
+          break;
+        }
+        case ModuleTypes.CompetitionStatisticsType: {
+          const getAllCompetitionStatisticsType = await getAllCompetitionStatisticsTypeQuery(fastify);
+          global.tblCompetitionStatisticsType = getAllCompetitionStatisticsType;
+          break;
+        }
+        case ModuleTypes.CompetitionStatistics: {
+          const getAllCompetitionStatistics = await getAllCompetitionStatisticsQuery(fastify);
+          global.tblCompetitionStatistics = getAllCompetitionStatistics;
+          break;
+        }
         default:
           break;
       }
@@ -720,7 +822,7 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
       });
     }
   } catch (error) {
-    console.log("error in panelLoadDataByEnum", error.message,error);
+    console.log(new Date(), "error in panelLoadDataByEnum", error.message,error);
     if (reply) {
       reply.status(200).send({
         status: 200,
@@ -730,4 +832,151 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
   }
 }
 
-module.exports = { fetchAllDataFromDb, FetchingCommentariesDataFromCron, panelLoadDataByEnum, upcomingCommentaries };
+
+const loadEnityDataOnGlobal = async (request, fastify, reply) => {
+  const { data, storeType, moduleType: mod, commentaryId } = request.body;
+  try {
+    switch (storeType) {
+      case StoreTypes.Insert: {
+        switch (mod) {
+          case GlobalModuleType.Competition:
+            global.tblCompetitions.push(data);
+            break;
+
+          case GlobalModuleType.Commentary:
+            global.tblCommentaries.push(data);
+            break;
+
+          case GlobalModuleType.Players:
+            global.tblPlayers.push(data);
+            break;
+
+          case GlobalModuleType.Teams:
+            global.tblTeams.push(data);
+            break;
+
+          case GlobalModuleType.TeamCompetiton:
+            global.tblTeamCompetition.push(data);
+            break;
+
+          case GlobalModuleType.MatchTypes:
+            global.tblMatchTypes.push(data);
+            break;
+
+          case GlobalModuleType.CountryCode:
+            global.tblCountryCodes.push(data);
+            break;
+
+          case GlobalModuleType.Venue:
+            global.tblVenues.push(data);
+            break;
+
+          case GlobalModuleType.Weather:
+            global.tblWeather.push(data);
+            break;
+
+          case GlobalModuleType.PitchConditon:
+            global.tblPitchConditions.push(data);
+            break;
+
+          case GlobalModuleType.TournamentTeamPlayers:
+            global.tblTournamentTeamPlayers.push(data);
+            break;
+
+          default:
+        }
+        break;
+      }
+
+      case StoreTypes.Update: {
+        switch (mod) {
+          case GlobalModuleType.Venue: {
+            const whereCondition = `tv."wrIsDeleted" = FALSE AND tv."wrId" = ${data}`;
+            const venueData = await getVenuesByIdsQuery(whereCondition, fastify);
+            const index = global.tblVenues.findIndex(item => item.id === data);
+            if (index !== -1) global.tblVenues[index] = venueData;
+            break;
+          }
+
+          case GlobalModuleType.Teams: {
+            const whereCondi = `tt."wrIsDeleted" = false AND tt."wrTeamId" = ${data}`;
+            const teamData = await getAllTeamsByIdsQuery(whereCondi, fastify);
+            const index = global.tblTeams.findIndex(item => item.teamId === data);
+            if (index !== -1) global.tblTeams[index] = teamData;
+            break;
+          }
+
+          case GlobalModuleType.Players: {
+            const condition = `tp."wrIsDeleted" = false AND tp."wrPlayerId" = ${data}`;
+            const playerData = await getAllPlayersByIdsQuery(condition, fastify);
+            const index = global.tblPlayers.findIndex(item => item.playerId === data);
+            if (index !== -1) global.tblPlayers[index] = playerData;
+            break;
+          }
+
+          case GlobalModuleType.Competition: {
+            const cond = `tc."wrIsDeleted" = false AND tev."wrIsDeleted" = false AND tc."wrCompetitionId" = ${data}`;
+            const compData = await getAllCompetitionByIdsQuery(cond, fastify);
+            const index = global.tblCompetitions.findIndex(item => item.competitionId === data);
+            if (index !== -1) global.tblCompetitions[index] = compData;
+            break;
+          }
+          default:
+        }
+        break;
+      }
+
+      default:
+    }
+
+    if (commentaryId) {
+      const teamCondition = `tct."wrCommentaryId" = ${commentaryId} AND tct."wrIsDelete" = FALSE`;
+      const playerCondition = `tcp."wrCommentaryId" = ${commentaryId} AND tcp."wrIsDelete" = FALSE`;
+
+      const getCommentaryTeams = await getAllCommentaryTeamsDataQuery(teamCondition, fastify);
+      const getCommentaryPlayers = await getAllCommentaryPlayerDataQuery(playerCondition, fastify);
+
+      global.tblCommentaryTeams = getCommentaryTeams;
+      global.tblCommentaryPlayers = getCommentaryPlayers;
+    }
+
+    // console.log("Data updated in global memory.");
+  } catch (error) {
+    console.error("Error in loadEnityDataOnGlobal:", error.message, error);
+    if (reply) {
+      reply.status(500).send({
+        status: 500,
+        error: error.message,
+      });
+    }
+  }
+};
+const v8 = require('v8');
+
+function getHeapSize(obj) {
+  try {
+    const serialized = v8.serialize(obj);
+    return (serialized.length / (1024 * 1024)).toFixed(2);
+  } catch (e) {
+    return 'N/A';
+  }
+}  
+const globalMemoryDatas = async(request = null , fastify = null) =>{
+  let result = [];
+
+  for (const key of Object.keys(global)) {
+    // if (key.startsWith('tbl')) {
+      result.push({
+        key,
+        size : parseFloat(getHeapSize(global[key])) || 0,
+        sizeinMb: `${parseFloat(getHeapSize(global[key])) || 0 } MB`
+      });
+    // }
+  }
+
+  result = result.sort((a, b) => b.size - a.size)
+  // .forEach(i => console.log(`${i.key}: ${i.size} MB`));
+  return result;
+}  
+      
+module.exports = { fetchAllDataFromDb, FetchingCommentariesDataFromCron, panelLoadDataByEnum, upcomingCommentaries, loadEnityDataOnGlobal, globalMemoryDatas };

@@ -7,7 +7,11 @@ const {
     allUndoLogsQuery,
     allResultLogsQuery,
     allEMLogsQuery,
+    allAutoImportDataLogsQuery,
+    allEntityUpdateLogsQuery,
+    actionLogsQuery,
 } = require("../repository/TableLogs");
+const { allCommentaryDRSLogsQuery } = require("../repository/TableCommentaryDRSLogs");
 
 const applyFiltersAndPagination = (logs, filters) => {
     const { startDate, endDate, page = 1, limit = 20, commentaryId } = filters;
@@ -104,16 +108,37 @@ const getEMLogsService = async(request,fastify)=>{
     }
     if(eventTypeId && eventTypeId != 0){
         let com = global.tblCommentaries.filter((c)=> c.eventTypeId == eventTypeId).map((e)=>e.commentaryId)
-        cId = com;
+        if (com.length > 0) {
+            cId = com;
+        } else {
+            cId = [0]
+        }
     }
     if(competitionId && competitionId !=0){
         let com = global.tblCommentaries.filter((c)=> c.competitionId == competitionId).map((e)=>e.commentaryId)
-        cId = com;
+        // cId = com;
+        if (com.length > 0) {
+            cId = com;
+        } else {
+            cId = [0]
+        }
     }
     
     const rs = await allEMLogsQuery({...request.body,cId} || {} , request , fastify);
     return rs;
 }
+const allCommentaryDRSLogsService = async(request, fastify) => {
+    return await allCommentaryDRSLogsQuery(request.body || {},request, fastify);
+};
+const allAutoImportDataLogsService = async(request, fastify) => {
+    return await allAutoImportDataLogsQuery(request.body || {},request, fastify);
+};
+const allEntityUpdateLogsService = async (request, fastify) => {
+    return await allEntityUpdateLogsQuery(request.body || {},request, fastify);
+};
+const actionLogsService = async (request, fastify) => {
+    return await actionLogsQuery(request.body || {},request, fastify);
+};
 module.exports = {
     allResponseLogs,
     allThirdPartyApiLogs,
@@ -124,5 +149,9 @@ module.exports = {
     getComByEventId,
     allUndoLogs,
     allResultLogsService,
-    getEMLogsService
+    getEMLogsService,
+    allCommentaryDRSLogsService,
+    allAutoImportDataLogsService,
+    allEntityUpdateLogsService,
+    actionLogsService,
 };

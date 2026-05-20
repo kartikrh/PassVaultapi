@@ -11,6 +11,8 @@ const getAllMatchTypePredictorQuery = async (fastify) => {
                 "wrRunPerBall" as "runPerBall",
                 "wrOrder" as "order"
             FROM "tblMatchTypePredictors"
+            WHERE "wrIsDeleted" = false
+            
         `;
 
         const data = await fastify.db.query(

@@ -1,18 +1,23 @@
 const jwt = require("jsonwebtoken");
 const { errorLogger, pythonSocketLogger } = require("./utilities/logger");
 const { getEventMarketByIdsQuery, insertTimeLogs, updateTimeLogs, socketMarketRunnerDataQuery, openMarketScoketConnectionDataQuery, getMnMarketByCId, getMarketByComIdQuery } = require("./repository/TableEventMarkets");
-const { MarketActionType, callTPAPI } = require("./utilities");
+const { MarketActionType, callTPAPI, pushSessionData } = require("./utilities");
 const {createMarketOddsBallByBallBYIDFromSocketIo,createMarketOddsBallInSaveDetails,CheckAndCreateMarketOddsBallInSaveDetails} = require("./repository/TableMarketOddsBallByBall")
 const configConstants = require('./utilities/configConstants');
 const { getAllEventMarketsV2ByIdQuery } = require("./repository/TableEventMarkets");
 const { getAllMarketRunnersV2ByIdQuery } = require("./repository/TableMarketRunner");
 
 global.sessionData = []
+
 const connection = (socket , fastify) => {
+  if (socket.isInternal) {
+    console.log("🐍 Python connected socket:", socket.id, new Date());
+  }   
   const { userId, allowMultipleLogin, wrToken } = socket;
   if (userId) {
     const user = global.tblUsers.find((user) => user.userId === userId);
-
+    // console.log("New client connected:", socket.id, new Date(), "UserId:", userId);
+      
     // Check if token is not of latest login and multiple login is false
     if (wrToken !== user?.loginToken && !allowMultipleLogin) {
       global.socketIo
@@ -39,14 +44,14 @@ const connection = (socket , fastify) => {
         global.socketIo.to(commentaryId).emit("updateMarketData", marketData);
       }
       let ballbybllId;
-      global.sessionData.push({type: "before socket", data: marketData})
+      pushSessionData({type: "before socket", data: marketData})
       const marketIdArr = marketData.map((item) => {
         const mark = JSON.parse(item);
         MarketArr.push(mark);
         ballbybllId = mark.ballByBallId;
         return mark.marketId;
       });
-      global.sessionData.push({type: "after socket", data: marketIdArr})
+      pushSessionData({type: "after socket", data: marketIdArr})
       const inninRunData = MarketArr.filter((item) => item?.isInningRun === true);
       const roomName = `mnMarket-${commentaryId}`;
       const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(roomName);
@@ -121,7 +126,7 @@ const connection = (socket , fastify) => {
       }
     }
 
-      global.sessionData.push({type: "marketToUpdate", data: marketToUpdate})
+      pushSessionData({type: "marketToUpdate", data: marketToUpdate})
       let LDOMARKETSIDS;
       try {
         LDOMARKETSIDS = global.tblConfigs
@@ -136,7 +141,7 @@ const connection = (socket , fastify) => {
           !LDOMARKETSIDS.includes(market.marketTypeCategoryId.toString()) &&
           market.status === 1
       );
-      global.sessionData.push({type: "filteredMarkets", data: filteredMarkets})
+      pushSessionData({type: "filteredMarkets", data: filteredMarkets})
       if (ballbybllId && filteredMarkets.length > 0) {
         const result = [];
   
@@ -170,7 +175,7 @@ const connection = (socket , fastify) => {
             });
           }
         });
-        global.sessionData.push({type: "Result", data: result})
+        pushSessionData({type: "Result", data: result})
         // Convert data to JSON strings
         result.forEach((event) => {
           event.data = JSON.stringify(event.data);
@@ -189,9 +194,9 @@ const connection = (socket , fastify) => {
             );
           }
 
-          const tblMarketOddsIndex = global.tblMarketOddsBallByBall.findIndex(item => item.commentaryId === res.commentaryId
-            && item.eventMarketId === res.eventMarketId
-            && item.commentaryBallByBallId === res.commentaryBallByBallId
+          const tblMarketOddsIndex = global.tblMarketOddsBallByBall.findIndex(item => item?.commentaryId === res.commentaryId
+            && item?.eventMarketId === res.eventMarketId
+            && item?.commentaryBallByBallId === res.commentaryBallByBallId
           );
 
           if (tblMarketOddsIndex !== -1) {
@@ -240,10 +245,11 @@ const connection = (socket , fastify) => {
       //     }
       //   ];
       // }
-  
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
-      });
+      if (marketOdd.length > 0) {
+        global.clientSocketIo.forEach((socket) => {
+          socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+        });
+      }
       // await updateTimeLogs(timeLogs.wrId, fastify);
       // console.log("Event Market Updated successfully");
       return true;
@@ -363,8 +369,13 @@ const connection = (socket , fastify) => {
   
   socket.on("connectEventMarket", async (data) => {
     const { commentaryId } = data;
+    // ignore the marketTypeCategoryId
+     let ignoreCategory = global.tblConfigs.find(
+    (item) => item.key.toLowerCase() === configConstants.IGNOREMARKETINOPEN.toLowerCase()
+    );
+    ignoreCategory = ignoreCategory ? ignoreCategory.value.split(",").map(Number) : [];
     socket.join(commentaryId);
-    const markets = await getMarketByComIdQuery({commentaryId : commentaryId}, fastify);
+    const markets = await getMarketByComIdQuery({commentaryId : commentaryId, ignoreMarkets : ignoreCategory}, fastify);
     const clientInRoom = global.socketIo.sockets.adapter.rooms.get(commentaryId);
     if (clientInRoom?.size) {
       global.socketIo.to(commentaryId).emit("updateMarket", markets);
@@ -430,6 +441,32 @@ const connection = (socket , fastify) => {
     }
   });
   socket.on("disconnect", () => {
+    if(socket.isInternal) {
+      console.log("❌ Python disconnected:", socket.id, new Date());
+    }
+    else {
+      // console.log("Client disconnected:", socket.id, new Date());
+    }
+    
+    // Clean up all event listeners to prevent memory leaks
+    try {
+      socket.removeAllListeners("updatedEventMarket");
+      socket.removeAllListeners("marketRunnerConnection");
+      socket.removeAllListeners("marketRunnerUpdate");
+      socket.removeAllListeners("marketRunnerDisconnect");
+      socket.removeAllListeners("isInningsConnection");
+      socket.removeAllListeners("conMnMarket");
+      socket.removeAllListeners("disConMnMarket");
+      socket.removeAllListeners("ping");
+      socket.removeAllListeners("connectEventMarket");
+      socket.removeAllListeners("conCommentary");
+      socket.removeAllListeners("betAllow");
+      socket.removeAllListeners("comUpdate");
+      socket.removeAllListeners("disconnectCom");
+      socket.removeAllListeners("updateMarketDisconnect");
+    } catch (error) {
+      console.error("Error cleaning up socket listeners:", error);
+    }
   });
 };
 
@@ -442,6 +479,12 @@ const socketMiddleware = async (socket, next) => {
       return next(new Error("Token Not Found"));
     }
     const PYTHONSOCKETKEY = global.tblConfigs.find(config => config.key === "PYTHONSOCKETKEY")?.value;
+    if (PYTHONSOCKETKEY && PYTHONSOCKETKEY === token) {
+      // console.log("🐍 Python socket connected:", socket.id , new Date());
+      socket.isInternal = true; // optional flag
+      return next();
+    }
+
 
     if (!PYTHONSOCKETKEY || PYTHONSOCKETKEY !== token) {
       const verifyToken = jwt.verify(

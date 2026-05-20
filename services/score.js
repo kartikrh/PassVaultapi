@@ -18,11 +18,161 @@ const {
     getAllCommentaryWicketDataQueryV1,
     getAllCommentaryPartnershipDataQueryV1,
 } = require("../repository/TableCommentary");
+const { dltDeviceQuery, saveDeviceQuery } = require("../repository/TableDevice");
+const { weatherAndPitchDataService } = require("../services/commentry");
+const { getIdByValue } = require("../repository/TableUser");
+const { getEventSnapByComService } = require("./competitionEventSnap");
 
+// const getAllCommentariesDataService = async (request,fastify) => {
+//     try {
+//         let commentaries = {};
+//         let where = null
+//         if(request.body.eventId){
+//             where = `tc."wrEventRefId" = '${request.body.eventId}'`;
+//         }
+//         else if(request.body.commentaryId){
+//             where = `tc."wrCommentaryId" = ${request.body.commentaryId}`;
+//         }
+//         else{
+//          where = `tc."wrCommentaryStatus" != 4`;
+//         }
+//         let commentaryData = await getCommentariesDataQuery(fastify, where);
+//         let com = commentaryData.filter((c) => {
+//             if (request.body.eventId) {
+//                 return c.eventRefId == request.body.eventId;
+//             } else if (request.body.commentaryId){
+//                 return c.commentaryId == request.body.commentaryId;
+//             } else {
+//                 return c.commentaryStatus != 4;
+//             }
+//         })
+//         for (c of com) {
+//             let whereCondition = `"wrIsDelete" = false AND "wrCommentaryId" = ${c.commentaryId}`
+//                 let teams = await getAllCommentaryTeamsDataQuery(whereCondition, fastify);
+//                 try {
+//                     // teams?.forEach(async (team) => {
+//                     for (let team of teams){
+//                         const _teamsC1 = global.tblTeams.filter((item) => item.teamId === team.teamId);
+//                         if (_teamsC1.length > 0) {
+//                             team.image = _teamsC1[0].image;
+//                             team.jersey = _teamsC1[0].jersey;
+//                             team.nimage = _teamsC1[0].imagePath;
+//                             team.njersey =  _teamsC1[0].jerseyPath;
+//                         }
+//                     }
+//                     // });   
+//                 } catch (error) {
+                    
+//                 }
+//                 let condi = `tcp."wrIsDelete" = false AND tcp."wrCommentaryId" = ${c.commentaryId}`
+//                 let players = await getAllCommentaryPlayerDataQuery(condi, fastify);
+//                 try {
+//                     // players?.forEach(async (player) => {
+//                     for (let player of players){
+//                         if (player.bowlerOver !== null && player.bowlerOver !== undefined) {
+//                             player.bowlerOver = player.bowlerOver.toString();
+//                         }
+//                         if (player.bowlerEconomy === "NaN") {
+//                             player.bowlerEconomy = null;
+//                         }
+//                         const _player = global.tblPlayers.filter((item) => item.playerId === player.playerId);
+//                         if (_player.length > 0) {
+//                             player.playerimage = _player[0].image;
+//                             player.playerType = _player[0].playerType;
+//                             player.isKipper = _player[0].isKipper;
+//                         }
+//                     }
+                
+//                     // });   
+//                 } catch (error) {
+                    
+//                 }
+//                 let overs = await getAllOversDataQuery(whereCondition, fastify);
+
+//                 let whereCond = `"wrIsDeletedStatus" = false AND "wrCommentaryId" = ${c.commentaryId}`
+
+//                 let ballByBall = await getAllCommentaryBallByBallDataQuery(whereCond, fastify);
+//                 ballByBall?.forEach(async (ball) => {
+//                     if (ball.overCount !== null && ball.overCount !== undefined) {
+//                         ball.overCount = ball.overCount.toString();
+//                     }
+//                 });
+                
+//                 let wickets = await getAllCommentaryWicketDataQuery(whereCond, fastify);
+
+//                 let partnerships = await getAllCommentaryPartnershipDataQuery(whereCondition, fastify);
+//                 try {
+//                     // partnerships?.forEach(async (partnership) => {
+//                     for (let partnership of partnerships){
+//                         const _player1 = players.filter((item) => item.commentaryPlayerId === partnership.batter1Id);
+            
+//                         if (_player1.length > 0) {
+//                             partnership.player1image = _player1[0].playerimage;
+//                             partnership.player1jerseyandimage = _player1[0].jerseyPlayerImage;
+//                             partnership.player1jerseyandimagepath = _player1[0].jerseyPlayerImagePath;
+//                         }
+//                         const _player2 = players.filter((item) => item.commentaryPlayerId === partnership.batter2Id);
+//                         if (_player2.length > 0) {
+//                             partnership.player2image = _player2[0].playerimage;
+//                             partnership.player2jerseyandimage = _player2[0].jerseyPlayerImage;
+//                             partnership.player2jerseyandimagepath = _player2[0].jerseyPlayerImagePath;
+//                         }
+//                     }
+//                     // });   
+//                 } catch (error) {
+                    
+//                 }
+//                 let marketOddsBallByBall = await getAllMarketOddsBallByBallByCommentaryId({
+//                     commentaryId: c.commentaryId
+//                 },fastify) || [];
+
+//                 commentaries[c.eventRefId] = {
+//                     commentaryId : c.commentaryId,
+//                     eventrefId : c.eventRefId,
+//                     commentaryStatus : c.commentaryStatus,
+//                     commentaryDetails: c,
+//                     commentaryTeams: teams,
+//                     commentaryPlayers: players,
+//                     commentaryOver: overs,
+//                     commentaryBallByBall: ballByBall,
+//                     commentaryWicket: wickets,
+//                     commentaryPartnership: partnerships,
+//                     marketOddsBallByBall : marketOddsBallByBall,
+//                 };
+//         }
+    
+//         return commentaries;
+//     } catch (error) {
+//         throw new Error(error);
+//     }
+// }
 const getAllCommentariesDataService = async (request,fastify) => {
     try {
         let commentaries = {};
-        let commentaryData = await getCommentariesDataQuery(fastify);
+        let commentaryData;
+        let commData = [];
+        if(request.body.eventId){
+            commData = global.tblCommentaries.filter(item => item.eventRefId == request.body.eventId) || [];
+            if(commData.length == 0) {
+                let where = `tc."wrEventRefId" = '${request.body.eventId}'`;
+                commentaryData = await getCommentariesDataQuery(fastify, where);
+            } else {
+                commentaryData = commData
+            }
+        }
+        else if(request.body.commentaryId){
+            commData = global.tblCommentaries.filter(item => item.commentaryId == request.body.commentaryId) || [];
+            if(commData.length == 0) {
+                let where = `tc."wrCommentaryId" = ${request.body.commentaryId}`;
+                commentaryData = await getCommentariesDataQuery(fastify, where);
+            } else {
+                commentaryData = commData
+            }
+        }
+        else {
+            commentaryData = global.tblCommentaries.filter(item => item.commentaryStatus != 4) || [];
+        }
+
         let com = commentaryData.filter((c) => {
             if (request.body.eventId) {
                 return c.eventRefId == request.body.eventId;
@@ -33,10 +183,32 @@ const getAllCommentariesDataService = async (request,fastify) => {
             }
         })
         for (c of com) {
-            let whereCondition = `"wrIsDelete" = false AND "wrCommentaryId" = ${c.commentaryId}`
-                let teams = await getAllCommentaryTeamsDataQuery(whereCondition, fastify);
+            let teams, players, overs, ballByBall, wickets, partnerships, marketOddsBallByBall;
+            
+            // Queries custom where condition
+            let whereCondition = `"wrIsDelete" = false AND "wrCommentaryId" = ${c.commentaryId}`;
+            let condi = `tcp."wrIsDelete" = false AND tcp."wrCommentaryId" = ${c.commentaryId}`;
+            let whereCond = `"wrIsDeletedStatus" = false AND "wrCommentaryId" = ${c.commentaryId}`
+
+            if (commData.length == 0) {
+                teams = await getAllCommentaryTeamsDataQuery(whereCondition, fastify);
+                players = await getAllCommentaryPlayerDataQuery(condi, fastify);
+                overs = await getAllOversDataQuery(whereCondition, fastify);
+                ballByBall = await getAllCommentaryBallByBallDataQuery(whereCond, fastify);
+                wickets = await getAllCommentaryWicketDataQuery(whereCond, fastify);
+                partnerships = await getAllCommentaryPartnershipDataQuery(whereCondition, fastify);
+                marketOddsBallByBall = await getAllMarketOddsBallByBallByCommentaryId({commentaryId: c.commentaryId},fastify) || [];
+            } else {
+                teams = global.tblCommentaryTeams.filter(item => item.commentaryId == c.commentaryId);
+                players = global.tblCommentaryPlayers.filter(item => item.commentaryId == c.commentaryId);
+                overs = global.tblOvers.filter(item => item.commentaryId == c.commentaryId);
+                ballByBall = global.tblCommentaryBallByBall.filter(item => item.commentaryId == c.commentaryId);
+                wickets = global.tblCommentaryWicket.filter(item => item.commentaryId == c.commentaryId);
+                partnerships = global.tblCommentaryPartnership.filter(item => item.commentaryId == c.commentaryId);
+                marketOddsBallByBall = global.tblMarketOddsBallByBall.filter(item => item?.commentaryId == c.commentaryId) || [];
+            }
                 try {
-                    teams?.forEach(async (team) => {
+                    for (let team of teams){
                         const _teamsC1 = global.tblTeams.filter((item) => item.teamId === team.teamId);
                         if (_teamsC1.length > 0) {
                             team.image = _teamsC1[0].image;
@@ -44,14 +216,9 @@ const getAllCommentariesDataService = async (request,fastify) => {
                             team.nimage = _teamsC1[0].imagePath;
                             team.njersey =  _teamsC1[0].jerseyPath;
                         }
-                    });   
-                } catch (error) {
-                    
-                }
-                let condi = `tcp."wrIsDelete" = false AND tcp."wrCommentaryId" = ${c.commentaryId}`
-                let players = await getAllCommentaryPlayerDataQuery(condi, fastify);
-                try {
-                    players?.forEach(async (player) => {
+                    }
+
+                    for (let player of players){
                         if (player.bowlerOver !== null && player.bowlerOver !== undefined) {
                             player.bowlerOver = player.bowlerOver.toString();
                         }
@@ -64,50 +231,39 @@ const getAllCommentariesDataService = async (request,fastify) => {
                             player.playerType = _player[0].playerType;
                             player.isKipper = _player[0].isKipper;
                         }
-                    });   
-                } catch (error) {
-                    
-                }
-                let overs = await getAllOversDataQuery(whereCondition, fastify);
-
-                let whereCond = `"wrIsDeletedStatus" = false AND "wrCommentaryId" = ${c.commentaryId}`
-
-                let ballByBall = await getAllCommentaryBallByBallDataQuery(whereCond, fastify);
-                ballByBall?.forEach(async (ball) => {
-                    if (ball.overCount !== null && ball.overCount !== undefined) {
-                        ball.overCount = ball.overCount.toString();
                     }
-                });
-                
-                let wickets = await getAllCommentaryWicketDataQuery(whereCond, fastify);
 
-                let partnerships = await getAllCommentaryPartnershipDataQuery(whereCondition, fastify);
-                try {
-                    partnerships?.forEach(async (partnership) => {
+                    for (let ball of ballByBall) {
+                        if (ball.overCount != null && ball.overCount !== undefined) {
+                            ball.overCount = String(ball.overCount);
+                        }
+                    }
+
+                    for (let partnership of partnerships){
                         const _player1 = players.filter((item) => item.commentaryPlayerId === partnership.batter1Id);
             
                         if (_player1.length > 0) {
                             partnership.player1image = _player1[0].playerimage;
                             partnership.player1jerseyandimage = _player1[0].jerseyPlayerImage;
+                            partnership.player1jerseyandimagepath = _player1[0].jerseyPlayerImagePath;
                         }
                         const _player2 = players.filter((item) => item.commentaryPlayerId === partnership.batter2Id);
                         if (_player2.length > 0) {
                             partnership.player2image = _player2[0].playerimage;
                             partnership.player2jerseyandimage = _player2[0].jerseyPlayerImage;
+                            partnership.player2jerseyandimagepath = _player2[0].jerseyPlayerImagePath;
                         }
-                    });   
+                    }
                 } catch (error) {
                     
                 }
-                let marketOddsBallByBall = await getAllMarketOddsBallByBallByCommentaryId({
-                    commentaryId: c.commentaryId
-                },fastify) || [];
+                const weatherAndPitchData = await weatherAndPitchDataService(c.commentaryId);
 
                 commentaries[c.eventRefId] = {
                     commentaryId : c.commentaryId,
                     eventrefId : c.eventRefId,
                     commentaryStatus : c.commentaryStatus,
-                    commentaryDetails: c,
+                    commentaryDetails: { ...c, ...weatherAndPitchData },
                     commentaryTeams: teams,
                     commentaryPlayers: players,
                     commentaryOver: overs,
@@ -115,6 +271,305 @@ const getAllCommentariesDataService = async (request,fastify) => {
                     commentaryWicket: wickets,
                     commentaryPartnership: partnerships,
                     marketOddsBallByBall : marketOddsBallByBall,
+                };
+        }
+    
+        return commentaries;
+    } catch (error) {
+        throw new Error(error);
+    }
+}
+// const getAllCommentariesDataV2Service = async (request,fastify) => {
+//     try {
+//         let commentaries = {};
+//         let where = null
+//         if(request.body.eventId){
+//             where = `tc."wrEventRefId" = '${request.body.eventId}'`;
+//         }
+//         else if(request.body.commentaryId){
+//             where = `tc."wrCommentaryId" = ${request.body.commentaryId}`;
+//         }
+//         else{
+//          where = `tc."wrCommentaryStatus" != 4`;
+//         }
+//         let commentaryData = await getCommentariesDataQuery(fastify, where);
+//         let com = commentaryData.filter((c) => {
+//             if (request.body.eventId) {
+//                 return c.eventRefId == request.body.eventId;
+//             } else if (request.body.commentaryId){
+//                 return c.commentaryId == request.body.commentaryId;
+//             } else {
+//                 return c.commentaryStatus != 4;
+//             }
+//         })
+//         for (c of com) {
+//             let whereCondition = `"wrIsDelete" = false AND "wrCommentaryId" = ${c.commentaryId}`
+//                 let teams = await getAllCommentaryTeamsDataQuery(whereCondition, fastify);
+//                 try {
+//                     // teams?.forEach(async (team) => {
+//                     for (let team of teams){
+//                         const _teamsC1 = global.tblTeams.filter((item) => item.teamId === team.teamId);
+//                         if (_teamsC1.length > 0) {
+//                             team.image = _teamsC1[0].image;
+//                             team.jersey = _teamsC1[0].jersey;
+//                             team.nimage = _teamsC1[0].imagePath;
+//                             team.njersey =  _teamsC1[0].jerseyPath;
+//                         }
+//                     }
+//                     // });   
+//                 } catch (error) {
+                    
+//                 }
+//                 let condi = `tcp."wrIsDelete" = false AND tcp."wrCommentaryId" = ${c.commentaryId}`
+//                 let players = await getAllCommentaryPlayerDataQuery(condi, fastify);
+//                 try {
+//                     // players?.forEach(async (player) => {
+//                     for (let player of players){
+//                         if (player.bowlerOver !== null && player.bowlerOver !== undefined) {
+//                             player.bowlerOver = player.bowlerOver.toString();
+//                         }
+//                         if (player.bowlerEconomy === "NaN") {
+//                             player.bowlerEconomy = null;
+//                         }
+//                         const _player = global.tblPlayers.filter((item) => item.playerId === player.playerId);
+//                         if (_player.length > 0) {
+//                             player.playerimage = _player[0].image;
+//                             player.playerType = _player[0].playerType;
+//                             player.isKipper = _player[0].isKipper;
+//                         }
+//                     }
+                
+//                     // });   
+//                 } catch (error) {
+                    
+//                 }
+//                 let overs = await getAllOversDataQuery(whereCondition, fastify);
+
+//                 let whereCond = `"wrIsDeletedStatus" = false AND "wrCommentaryId" = ${c.commentaryId}`
+
+//                 let ballByBall = await getAllCommentaryBallByBallDataQuery(whereCond, fastify);
+//                 ballByBall?.forEach(async (ball) => {
+//                     if (ball.overCount !== null && ball.overCount !== undefined) {
+//                         ball.overCount = ball.overCount.toString();
+//                     }
+//                 });
+                
+//                 let wickets = await getAllCommentaryWicketDataQuery(whereCond, fastify);
+
+//                 let partnerships = await getAllCommentaryPartnershipDataQuery(whereCondition, fastify);
+//                 try {
+//                     // partnerships?.forEach(async (partnership) => {
+//                     for (let partnership of partnerships){
+//                         const _player1 = players.filter((item) => item.commentaryPlayerId === partnership.batter1Id);
+            
+//                         if (_player1.length > 0) {
+//                             partnership.player1image = _player1[0].playerimage;
+//                             partnership.player1jerseyandimage = _player1[0].jerseyPlayerImage;
+//                             partnership.player1jerseyandimagepath = _player1[0].jerseyPlayerImagePath;
+//                         }
+//                         const _player2 = players.filter((item) => item.commentaryPlayerId === partnership.batter2Id);
+//                         if (_player2.length > 0) {
+//                             partnership.player2image = _player2[0].playerimage;
+//                             partnership.player2jerseyandimage = _player2[0].jerseyPlayerImage;
+//                             partnership.player2jerseyandimagepath = _player2[0].jerseyPlayerImagePath;
+//                         }
+//                     }
+//                     // });   
+//                 } catch (error) {
+                    
+//                 }
+//                 let marketOddsBallByBall = await getAllMarketOddsBallByBallByCommentaryId({
+//                     commentaryId: c.commentaryId
+//                 },fastify) || [];
+
+//                 commentaries[c.commentaryId] = {
+//                     commentaryId : c.commentaryId,
+//                     eventRefId : c.eventRefId,
+//                     commentaryStatus : c.commentaryStatus,
+//                     commentaryDetails: c,
+//                     commentaryTeams: teams,
+//                     commentaryPlayers: players,
+//                     commentaryOver: overs,
+//                     commentaryBallByBall: ballByBall,
+//                     commentaryWicket: wickets,
+//                     commentaryPartnership: partnerships,
+//                     marketOddsBallByBall : marketOddsBallByBall,
+//                 };
+//         }
+    
+//         return commentaries;
+//     } catch (error) {
+//         throw new Error(error);
+//     }
+// }
+async function asyncFilter(array, predicate, chunkSize = 100) {
+  const results = [];
+  let index = 0;
+
+  return new Promise((resolve) => {
+    function processChunk() {
+      const end = Math.min(index + chunkSize, array.length);
+
+      for (; index < end; index++) {
+        if (predicate(array[index], index, array)) {
+          results.push(array[index]);
+        }
+      }
+
+      if (index < array.length) {
+        setImmediate(processChunk); // let event loop breathe
+      } else {
+        resolve(results);
+      }
+    }
+
+    processChunk();
+  });
+}
+function sortDesc(arr, key) {
+  return arr.sort((a, b) => (b[key] || 0) - (a[key] || 0));
+}
+const getAllCommentariesDataV2Service = async (request,fastify) => {
+    try {
+        let commentaries = {};
+        let commentaryData
+        let commData = [];
+        if(request.body.eventId){
+            commData = global.tblCommentaries.filter(item => item.eventRefId == request.body.eventId) || [];
+            if(commData.length == 0) {
+                let where = `tc."wrEventRefId" = '${request.body.eventId}'`;
+                commentaryData = await getCommentariesDataQuery(fastify, where);
+            } else {
+                commentaryData = commData
+            }
+        }
+        else if(request.body.commentaryId){
+            commData = global.tblCommentaries.filter(item => item.commentaryId == request.body.commentaryId) || [];
+            if(commData.length == 0) {
+                let where = `tc."wrCommentaryId" = ${request.body.commentaryId}`;
+                commentaryData = await getCommentariesDataQuery(fastify, where);
+            } else {
+                commentaryData = commData
+            }
+        }
+        else {
+            commentaryData = global.tblCommentaries.filter(item => item.commentaryStatus != 4) || [];
+        }
+        let com = commentaryData.filter((c) => {
+            if (request.body.eventId) {
+                return c.eventRefId == request.body.eventId;
+            } else if (request.body.commentaryId){
+                return c.commentaryId == request.body.commentaryId;
+            } else {
+                return c.commentaryStatus != 4;
+            }
+        })
+        if(!request.body.eventId  && !request.body.commentaryId){
+            commData = [2]
+        }
+        for (c of com) {
+            let teams, players, overs, ballByBall, wickets, partnerships, marketOddsBallByBall;
+            
+            // Queries custom where condition
+            let whereCondition = `"wrIsDelete" = false AND "wrCommentaryId" = ${c.commentaryId}`;
+            let condi = `tcp."wrIsDelete" = false AND tcp."wrCommentaryId" = ${c.commentaryId}`;
+            let whereCond = `"wrIsDeletedStatus" = false AND "wrCommentaryId" = ${c.commentaryId}`
+
+            if (commData.length == 0) {
+                teams = await getAllCommentaryTeamsDataQuery(whereCondition, fastify);
+                players = await getAllCommentaryPlayerDataQuery(condi, fastify);
+                overs = await getAllOversDataQuery(whereCondition, fastify);
+                ballByBall = await getAllCommentaryBallByBallDataQuery(whereCond, fastify);
+                wickets = await getAllCommentaryWicketDataQuery(whereCond, fastify);
+                partnerships = await getAllCommentaryPartnershipDataQuery(whereCondition, fastify);
+                marketOddsBallByBall = await getAllMarketOddsBallByBallByCommentaryId({commentaryId: c.commentaryId},fastify) || [];
+            } else {
+               teams = await asyncFilter(global.tblCommentaryTeams, item => item.commentaryId == c.commentaryId);
+                players = await asyncFilter(global.tblCommentaryPlayers, item => item.commentaryId == c.commentaryId);
+                overs = sortDesc(await asyncFilter(global.tblOvers, item => item?.commentaryId == c.commentaryId), "overId");
+                ballByBall = sortDesc(await asyncFilter(global.tblCommentaryBallByBall, item => item?.commentaryId == c.commentaryId), "commentaryBallByBallId");
+                wickets = sortDesc(await asyncFilter(global.tblCommentaryWicket, item => item?.commentaryId == c.commentaryId), "commentaryWicketId");
+                partnerships = sortDesc(await asyncFilter(global.tblCommentaryPartnership, item => item?.commentaryId == c.commentaryId), "commentaryPartnershipId");
+                marketOddsBallByBall = await asyncFilter(global.tblMarketOddsBallByBall, item => item?.commentaryId == c.commentaryId) || [];
+
+            }
+
+                try {
+                    for (let team of teams) {
+                        const _teamsC1 = global.tblTeams.filter((item) => item.teamId === team.teamId);
+                        if (_teamsC1.length > 0) {
+                            team.image = _teamsC1[0].image;
+                            team.jersey = _teamsC1[0].jersey;
+                            team.nimage = _teamsC1[0].imagePath;
+                            team.njersey =  _teamsC1[0].jerseyPath;
+                        }
+                    }
+
+                    for (let player of players){
+                        if (player.bowlerOver !== null && player.bowlerOver !== undefined) {
+                            player.bowlerOver = player.bowlerOver.toString();
+                        }
+                        if (player.bowlerEconomy === "NaN") {
+                            player.bowlerEconomy = null;
+                        }
+                        const _player = global.tblPlayers.filter((item) => item.playerId === player.playerId);
+                        if (_player.length > 0) {
+                            player.playerimage = _player[0].image;
+                            player.playerType = _player[0].playerType;
+                            player.isKipper = _player[0].isKipper;
+                        }
+                    }
+
+                    for (let ball of ballByBall) {
+                        if (ball.overCount != null && ball.overCount !== undefined) {
+                            ball.overCount = String(ball.overCount);
+                        }
+                    }
+
+                    for (let partnership of partnerships){
+                        const _player1 = players.filter((item) => item.commentaryPlayerId === partnership.batter1Id);
+            
+                        if (_player1.length > 0) {
+                            partnership.player1image = _player1[0].playerimage;
+                            partnership.player1jerseyandimage = _player1[0].jerseyPlayerImage;
+                            partnership.player1jerseyandimagepath = _player1[0].jerseyPlayerImagePath;
+                        }
+                        const _player2 = players.filter((item) => item.commentaryPlayerId === partnership.batter2Id);
+                        if (_player2.length > 0) {
+                            partnership.player2image = _player2[0].playerimage;
+                            partnership.player2jerseyandimage = _player2[0].jerseyPlayerImage;
+                            partnership.player2jerseyandimagepath = _player2[0].jerseyPlayerImagePath;
+                        }
+                    }
+                } catch (error) {
+                    console.log("error on getAllCommentariesDataV2Service: ", error.message);
+                }
+
+                const weatherAndPitchData = await weatherAndPitchDataService(c.commentaryId);
+                const getCompetitionImage = global.tblCompetitions.find(tc => tc.competitionId === c.competitionId);
+                const venueReportData = global.tblVenues.find(v => v.id == c?.venueId);
+                const commentaryEventSnapData = await getEventSnapByComService({
+                    ...request,
+                    body: {
+                        commentaryId: c.commentaryId
+                    }
+                }, fastify);
+
+                commentaries[c.commentaryId] = {
+                    commentaryId : c.commentaryId,
+                    eventRefId : c.eventRefId,
+                    totalViews : c.views,
+                    commentaryStatus : c.commentaryStatus,
+                    commentaryDetails: { ...c, ...weatherAndPitchData, competitionImage: getCompetitionImage?.image ?? null },
+                    commentaryTeams: teams,
+                    commentaryPlayers: players,
+                    commentaryOver: overs,
+                    commentaryBallByBall: ballByBall,
+                    commentaryWicket: wickets,
+                    commentaryPartnership: partnerships,
+                    marketOddsBallByBall : marketOddsBallByBall,
+                    venueReportData: venueReportData || {},
+                    commentaryEventSnapData: commentaryEventSnapData || {}
                 };
         }
     
@@ -260,10 +715,27 @@ const getAllCommentariesDataService = async (request,fastify) => {
 const getMarketsByCommentaryIdService =async (request , fastify) => {
     // vlaidate commentry id
     // console.log("called getMarketsByCommentaryIdService")
-    let commentaryData = await getCommentariesDataQuery(fastify);
-    const commentary = commentaryData.find((c) => {
-        return c.eventRefId === request.body.eventId;
-    });    
+    let where = null;
+    let commentaryData = []; 
+    if(request.body.commentaryId && request.body.commentaryId != null){
+        commentaryData = global.tblCommentaries.filter((i)=> i.commentaryId == request.body.commentaryId)
+    }
+    else if(request.body.eventId && request.body.eventId != null){
+        commentaryData = global.tblCommentaries.filter((i)=> i.eventRefId == request.body.eventId)
+    }
+    if(commentaryData.length == 0){
+        if(request.body.commentaryId){
+            where = `tc."wrCommentaryId" = ${request.body.commentaryId}`
+        }
+        else if(request.body.eventId){
+            where = `tc."wrEventRefId" = '${request.body.eventId}'`
+        }
+        else {
+            where = `tc."wrEventRefId" = '${request.body.eventId}'`
+        }
+        commentaryData = await getCommentariesDataQuery(fastify , where);
+    }
+    const commentary = commentaryData[0];
     // if (!commentary && request.body.status === undefined) {
     //     return null;
     // }
@@ -408,11 +880,13 @@ const getAllCommentariesDataServiceV1 = async (request,fastify) => {
                     commentaryId: c.cid
                 },fastify) || [];
 
+                const weatherAndPitchData = await weatherAndPitchDataService(c.cid);
+
                 commentaries[c.erefid] = {
                     cid : c.cid,
                     erefid : c.erefid,
                     cs : c.cs,
-                    commentaryDetails: c,
+                    commentaryDetails: { ...c, ...weatherAndPitchData },
                     commentaryTeams: teams,
                     commentaryPlayers: players,
                     commentaryOver: overs,
@@ -460,6 +934,49 @@ const getMarketsByCommentaryIdServiceV1 =async (request , fastify) => {
         dataProviderUrl: datProviderUrl.value
     };
 }
+const saveDeviceDataService = async (request, fastify) => {
+    const devices = global.tblDevices || [];
+    // go accroding to device type and then userId at the time only one data will be saved with one device type and userId or devictype and tempCId if not logged in
+    let { deviceType, userId, tempCId } = request.body;
+    if (userId && typeof userId === "string") {
+      let checkExist = await getIdByValue({ clientId: userId }, request, fastify);
+      userId = checkExist?.clientId ?? 0;
+    }
+    let deviceData = devices.filter((d) => d.deviceType === deviceType && (d.userId === userId || d.tempCId === tempCId));
+    if(deviceData.length > 0){
+        // delete the old device data
+        let ids = deviceData.map((d) => d.deviceId);
+        await dltDeviceQuery(
+            ids,
+            fastify,
+            request
+        );
+        global.tblDevices = global.tblDevices.filter((d) => !ids.includes(d.deviceId));
+        // save the new device data
+        let dData = await saveDeviceQuery(
+            { ...request.body, userId },
+            fastify,
+            request
+        );
+        global.tblDevices.push(dData);
+        return dData;
+    }
+    else {
+        // save the new device data
+        let dData = await saveDeviceQuery(
+            { ...request.body, userId },
+            fastify,
+            request
+        );
+        global.tblDevices.push(dData);
+        return dData;
+    }
+    return true;
+}
+
+const checkPanelLoadDataService = () => {
+  return global?.isAllDataLoadedInGlobal ?? false;
+}
 
 module.exports = { 
     getAllCommentariesDataService,
@@ -469,4 +986,7 @@ module.exports = {
     getMarketByGraphByRefIdService,
     getAllCommentariesDataServiceV1,
     getMarketsByCommentaryIdServiceV1,
+    saveDeviceDataService,
+    getAllCommentariesDataV2Service,
+    checkPanelLoadDataService
  };

@@ -224,7 +224,11 @@ module.exports = (sequelize) => {
         type: DataTypes.DOUBLE,
         allowNull: true,
         defaultValue: 0,
-      }
+      },
+      wrIsPlayInEvent: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+      },
     },
     {
       timestamps: false,

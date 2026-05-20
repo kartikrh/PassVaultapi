@@ -1,7 +1,7 @@
 const { checkPermission, authorize } = require("../../../controller/middleware");
 const { getCompetitionListByeventTypeId } = require("../../../controller/users/admin/competition");
 const { getEventTypeList } = require("../../../controller/users/admin/eventTypes");
-const { getAllResponseLogs, getAllThirdPartyApiLogs, getAllPredictorAPILogs, getAllCommentaryLogs, getAllErrorLogs, getEventByCompetition, getComByEvent, getUndoLogs, getAllResultLogs, getEMLogs } = require("../../../controller/users/admin/log/index");
+const { getAllResponseLogs, getAllThirdPartyApiLogs, getAllPredictorAPILogs, getAllCommentaryLogs, getAllErrorLogs, getEventByCompetition, getComByEvent, getUndoLogs, getAllResultLogs, getEMLogs, getCommentaryDRSLogs, allAutoImportDataLogs, getAllEntityUpdateLogs, getActionLogs } = require("../../../controller/users/admin/log/index");
 const { Commentary, Logs } = require("../../../swaggerSchema/groupTags/schema");
 
 module.exports = async (fastify, opts) => {
@@ -139,4 +139,50 @@ module.exports = async (fastify, opts) => {
         ],
         handler : (request,reply) => getEMLogs(request,reply,fastify)
     })
+    fastify.post("/DRSLogs",{
+        schema : Logs.DRSLogs.schema,
+        preHandler : [
+            (request,reply) => authorize(request,reply,fastify),
+            (request,reply) => checkPermission(request,reply,fastify,{
+                tabName : "Logs",
+                mode : "view"
+            })
+        ],
+        handler : (request,reply) => getCommentaryDRSLogs(request,reply,fastify)
+    })
+    fastify.post("/autoImportDataLogs",{
+        schema : Logs.autoImportData.schema,
+        preHandler : [
+            (request,reply) => authorize(request,reply,fastify),
+            (request,reply) => checkPermission(request,reply,fastify,{
+                tabName : "Logs",
+                mode : "view"
+            })
+        ],
+        handler : (request,reply) => allAutoImportDataLogs(request,reply,fastify)
+    })
+    fastify.post("/entityUpdateLogs", {
+        schema : Logs.responseLogs.schema,
+        preHandler : [
+            (request, reply) => authorize(request,reply,fastify),
+            (request , reply)=> 
+                checkPermission(request, reply , fastify,{
+                    tabName : "Logs",
+                    mode : "view"
+                })
+        ],
+        handler: (request, reply) => getAllEntityUpdateLogs(request, reply, fastify)
+    });
+    fastify.post("/actionLogs", {
+        schema : Logs.responseLogs.schema,
+        preHandler : [
+            (request, reply) => authorize(request,reply,fastify),
+            (request , reply)=> 
+                checkPermission(request, reply , fastify,{
+                    tabName : "Logs",
+                    mode : "view"
+                })
+        ],
+        handler: (request, reply) => getActionLogs(request, reply, fastify)
+    });
 };

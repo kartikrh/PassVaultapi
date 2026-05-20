@@ -7,13 +7,16 @@ const {
   updateCommPlayerBowlingHistoryQuery,
   getAllCommentaryBattingHistory,
   getAllCommentaryBowlingHistory,
+  getAllCommentaryBattingHistoryQueryForClient,
+  getAllCommentaryBowlingHistoryQueryForClient,
 } = require("../repository/TableCommPlayerHistory");
+const { playerByIdService } = require("./player");
 
 const getAllCommentaryPlayerHistoryService = async (request, fastify) => {
-  const whereCondition = `tcpbh."wrIsDeleted" = false AND tcpbh."wrPlayerId" = ${request.body.playerId}`
+  const playerId = request.body.playerId;
 
-  const battingHistory = await getAllCommentaryBattingHistory(fastify, whereCondition);
-  const bowlingHistory = await getAllCommentaryBowlingHistory(fastify, whereCondition);
+  const battingHistory = await getAllCommentaryBattingHistory(fastify, playerId);
+  const bowlingHistory = await getAllCommentaryBowlingHistory(fastify, playerId);
 
   return { battingHistory, bowlingHistory };
 };
@@ -60,6 +63,8 @@ const updateCommPlayerBatHistoryService = async (request, fastify) => {
       catchCount: batHist.catchCount !== undefined ? parseInt(batHist.catchCount) : existingData.catchCount,
       stumpCount: batHist.stumpCount !== undefined ? parseInt(batHist.stumpCount) : existingData.stumpCount,
       outCount: batHist.outCount !== undefined ? parseInt(batHist.outCount) : existingData.outCount,
+      fastest50Balls: batHist.fastest50Balls !== undefined ? parseInt(batHist.fastest50Balls) : existingData.fastest50Balls,
+      fastest100Balls: batHist.fastest100Balls !== undefined ? parseInt(batHist.fastest100Balls) : existingData.fastest100Balls,
     }
     await updateCommPlayerBattingHistoryQuery(updateData, fastify, request);
 
@@ -98,6 +103,9 @@ const updateCommPlayerBowlHistoryService = async (request, fastify) => {
       wickets4: bowlHist.wickets4 !== undefined ? parseInt(bowlHist.wickets4) : existingData.wickets4,
       wickets5: bowlHist.wickets5 !== undefined ? parseInt(bowlHist.wickets5) : existingData.wickets5,
       wickets10: bowlHist.wickets10 !== undefined ? parseInt(bowlHist.wickets10) : existingData.wickets10,
+      overCount: bowlHist.overCount !== undefined ? parseInt(bowlHist.overCount) : existingData.overCount,
+      hattrickCount: bowlHist.hattrickCount !== undefined ? parseInt(bowlHist.hattrickCount) : existingData.hattrickCount,
+      expensiveOverRuns: bowlHist.expensiveOverRuns !== undefined ? parseInt(bowlHist.expensiveOverRuns) : existingData.expensiveOverRuns,
     }
     await updateCommPlayerBowlingHistoryQuery(updateData, fastify, request);
 
@@ -130,6 +138,21 @@ const deleteCommentaryBowlingHistoryService = async (request, fastify) => {
   return `Commentary Player Bowling History data deleted successfully`;
 };
 
+const getCommentaryPlayerHistoryByPlayerIdForClientService = async (request, fastify) => {
+  const playerId = request.body.playerId;
+  const player = global.tblPlayers.find(tp => tp.playerId === playerId);
+  if (!player) {
+    return `Player with id ${playerId} not found`;
+  }
+
+  const playerTeamData = await playerByIdService(request, fastify);
+
+  const playerBatHistory = await getAllCommentaryBattingHistoryQueryForClient(fastify, playerId);
+  const playerBallHistory = await getAllCommentaryBowlingHistoryQueryForClient(fastify, playerId);
+
+  return { player: playerTeamData, playerBatHistory, playerBallHistory };
+}
+
 module.exports = {
     getAllCommentaryPlayerHistoryService,
     getCommentaryPlayerHistoryService,
@@ -137,4 +160,5 @@ module.exports = {
     updateCommPlayerBowlHistoryService,
     deleteCommentaryBattingHistoryService,
     deleteCommentaryBowlingHistoryService,
+    getCommentaryPlayerHistoryByPlayerIdForClientService
 };

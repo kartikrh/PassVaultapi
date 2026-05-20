@@ -40,7 +40,7 @@ const saveWhitelabelService = async (request, fastify) => {
   const saveData = await insertWhitelabelQuery(request.body, fastify, request);
   global.tblWhitelabels.push(saveData);
   if(saveData.isActive){
-      callClientAPI(
+      await callClientAPI(
        {
           serviceType : ServiceType.clientAPI,
           moduleType : APIEndpointModuleType.updateSeoModule,
@@ -49,15 +49,9 @@ const saveWhitelabelService = async (request, fastify) => {
             type : "add",
             data : saveData
           }
-       }, request, fastify)
-      .catch((err) => {
-        errorLogger(
-          fastify,
-          err.message,
-          "services/whitelabel.js/saveWhitelabelService - callClientAPI",
-          request
-        );
-      });
+       }, request, fastify,
+        "services/whitelabel.js/saveWhitelabelService"
+      );
     }
   return saveData;
 };
@@ -126,10 +120,13 @@ const editWhitelabelService = async (request, fastify) => {
   );
 
   if (index != -1) {
-    global.tblWhitelabels[index] = modifiedData[0];
+    global.tblWhitelabels[index] = {
+      ...global.tblWhitelabels[index],
+      ...modifiedData[0],
+    };
   }
   
-   callClientAPI(
+   await callClientAPI(
      {
        serviceType : ServiceType.clientAPI,
        moduleType : APIEndpointModuleType.updateSeoModule,
@@ -138,15 +135,9 @@ const editWhitelabelService = async (request, fastify) => {
          type : "update",
          data : updateData
        }
-     }, request, fastify)
-   .catch((err) => {
-     errorLogger(
-       fastify,
-       err.message,
-       "services/whitelabel.js/editWhitelabelService - callClientAPI",
-       request
-     );
-   });
+     }, request, fastify,
+     "services/whitelabel.js/editWhitelabelService"
+   );
 
 
   return modifiedData[0];
@@ -196,7 +187,7 @@ const deleteWhitelabelService = async (request, fastify) => {
     (item) => !id.includes(item.id)
   );
 
-  callClientAPI({
+  await callClientAPI({
     serviceType : ServiceType.clientAPI,
     moduleType : APIEndpointModuleType.updateSeoModule,
     data : {
@@ -206,15 +197,9 @@ const deleteWhitelabelService = async (request, fastify) => {
         id : id
       }
     }
-  }, request, fastify)
-  .catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "services/whitelabel.js/deleteWhitelabelService - callClientAPI",
-      request
-    );
-  });
+  }, request, fastify,
+    "services/whitelabel.js/deleteWhitelabelService"
+  );
   return `Whitelabel(s) data deleted successfully`;
 };
 
@@ -237,7 +222,7 @@ const activeInactiveWhitelabelService = async (request, fastify) => {
   if (index != -1) {
     global.tblWhitelabels[index].isActive = isActive;
   }
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType : ServiceType.clientAPI,
       moduleType : APIEndpointModuleType.updateSeoModule,
@@ -246,15 +231,9 @@ const activeInactiveWhitelabelService = async (request, fastify) => {
         type : isActive ? "active" : "inactive",
         data : global.tblWhitelabels[index]
       }
-    }, request, fastify)
-  .catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "services/whitelabel.js/activeInactiveWhitelabelService - callClientAPI",
-      request
-    );
-  });
+    }, request, fastify,
+    "services/whitelabel.js/activeInactiveWhitelabelService"
+  );
   return `Whitelabel data updated successfully`;
 };
 const upIsDefaultAPIService = async (request, fastify) => {
@@ -285,7 +264,7 @@ const upIsDefaultAPIService = async (request, fastify) => {
     if (index != -1) {
       global.tblWhitelabels[index].isDefault = isDefault;
     }
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType : ServiceType.clientAPI,
         moduleType : APIEndpointModuleType.updateSeoModule,
@@ -294,14 +273,16 @@ const upIsDefaultAPIService = async (request, fastify) => {
           type : isDefault ? "isDefault" : "isNotDefault",  
           data : [id]
         }
-      }, request, fastify)
+      }, request, fastify,
+      "services/whitelabel.js/upIsDefaultAPIService"
+    )
     // other set to false
     let otherIndex = global.tblWhitelabels.filter((item) => item.id != id && item.isDefault == true);
     if(otherIndex.length > 0){
       otherIndex.forEach((item) => {
         item.isDefault = false;
       })
-      callClientAPI(
+      await callClientAPI(
         {
           serviceType : ServiceType.clientAPI,
           moduleType : APIEndpointModuleType.updateSeoModule,
@@ -310,7 +291,9 @@ const upIsDefaultAPIService = async (request, fastify) => {
             type : "isNotDefault",
             data : otherIndex.map((item) => item.id)
           }
-        }, request, fastify)
+        }, request, fastify,
+        "services/whitelabel.js/upIsDefaultAPIService"
+      )
       }
   } 
   else {
@@ -326,7 +309,7 @@ const upIsDefaultAPIService = async (request, fastify) => {
     if (index != -1) {
       global.tblWhitelabels[index].isDefault = isDefault;
     }
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType : ServiceType.clientAPI,
         moduleType : APIEndpointModuleType.updateSeoModule,
@@ -335,7 +318,9 @@ const upIsDefaultAPIService = async (request, fastify) => {
           type : "isNotDefault",
           data : [id]
         }
-      }, request, fastify)
+      }, request, fastify,
+      "services/whitelabel.js/upIsDefaultAPIService"
+    )
   }
   return `Whitelabel data updated successfully`;
 };
@@ -359,7 +344,7 @@ const demoClientEnableInIOSWhitelabelService = async (request, fastify) => {
   if (index != -1) {
     global.tblWhitelabels[index].isDemoClientEnableInIOS = isDemoClientEnableInIOS;
   }
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType : ServiceType.clientAPI,
       moduleType : APIEndpointModuleType.updateSeoModule,
@@ -368,15 +353,9 @@ const demoClientEnableInIOSWhitelabelService = async (request, fastify) => {
         type : "isDemoClientEnableInIOS",
         data : global.tblWhitelabels[index]
       }
-    }, request, fastify)
-  .catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "services/whitelabel.js/demoClientEnableInIOSWhitelabelService - callClientAPI",
-      request
-    );
-  });
+    }, request, fastify,
+    "services/whitelabel.js/demoClientEnableInIOSWhitelabelService"
+  );
   return `Whitelabel data updated successfully`;
 };
 const isDemoClientLoginService = async (request, fastify) => {
@@ -398,7 +377,7 @@ const isDemoClientLoginService = async (request, fastify) => {
   if (index != -1) {
     global.tblWhitelabels[index].isDemoClientLogin = isDemoClientLogin;
   }
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType : ServiceType.clientAPI,
       moduleType : APIEndpointModuleType.updateSeoModule,
@@ -407,15 +386,9 @@ const isDemoClientLoginService = async (request, fastify) => {
         type : "isDemoClientLogin",
         data : global.tblWhitelabels[index]
       }
-    }, request, fastify)
-  .catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "services/whitelabel.js/demoClientEnableInIOSWhitelabelService - callClientAPI",
-      request
-    );
-  });
+    }, request, fastify,
+    "services/whitelabel.js/isDemoClientLoginService"
+  );
   return `Whitelabel data updated successfully`;
 };
 
@@ -473,7 +446,7 @@ const hideEventsService = async (request, fastify) => {
     refId : refId
   }, request, fastify);
   global.tblHideEvents.push(hideEvent);
-  callClientAPI(
+  await callClientAPI(
     {
        serviceType : ServiceType.clientAPI,
        moduleType : APIEndpointModuleType.updateSeoModule,
@@ -482,15 +455,9 @@ const hideEventsService = async (request, fastify) => {
          type : "hide",
          data : hideEvent
        }
-    }, request, fastify)
-    .catch((err) => {
-     errorLogger(
-       fastify,
-       err.message,
-       "services/whitelabel.js/hideEventsService - callClientAPI",
-       request
-     );
-  });
+    }, request, fastify,
+    "services/whitelabel.js/hideEventsService"
+  );
   return "Event hidden successfully";
 }
 const unhideEventsService = async (request, fastify) => {
@@ -504,7 +471,7 @@ const unhideEventsService = async (request, fastify) => {
   if (result) {
     global.tblHideEvents.splice(he, 1);
   }
-  callClientAPI({
+  await callClientAPI({
     serviceType : ServiceType.clientAPI,
     moduleType : APIEndpointModuleType.updateSeoModule,
     data : {
@@ -514,15 +481,9 @@ const unhideEventsService = async (request, fastify) => {
         id : hideEventId
       }
     }
-  }, request, fastify)
-  .catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "services/whitelabel.js/unhideEventsService - callClientAPI",
-      request
-    );
-  });
+  }, request, fastify,
+    "services/whitelabel.js/unhideEventsService"
+  );
   return "Event unhidden successfully";
 }
 const getEventTypesService = async (request, fastify) => {

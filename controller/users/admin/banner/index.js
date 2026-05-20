@@ -1,4 +1,4 @@
-const { getAllBannerService, bannerByIdService, saveBannerService, deleteBannerService, activeInactiveBannerService } = require("../../../../services/banner");
+const { getAllBannerService, bannerByIdService, saveBannerService, deleteBannerService, activeInactiveBannerService, updateDisplayOrderBannerService } = require("../../../../services/banner");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 let commonPath = "controller/users/admin/news/index.js";
@@ -50,10 +50,20 @@ const activeInactiveBanner = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const updateDisplayOrderBanner = async (request, reply, fastify) => {
+  try {
+    const result = await updateDisplayOrderBannerService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/updateDisplayOrderBanner", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 module.exports = {
     getAllBanners,
     getBannerById,
     saveBanner,
     deleteBanner,
-    activeInactiveBanner
+    activeInactiveBanner,
+    updateDisplayOrderBanner
 };

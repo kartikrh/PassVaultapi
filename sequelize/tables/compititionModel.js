@@ -60,8 +60,14 @@ module.exports = (sequelize) => {
         allowNull: true,
         defaultValue: 0
       },
-
-
+      wrSetOfRules: {
+        type: DataTypes.STRING(1000),
+        allowNull: true,
+      },
+      wrIsCompetitionStatisticsCalculation: {
+        type: DataTypes.BOOLEAN,
+        allowNull: true,
+      }
     },
     {
       timestamps: false,

@@ -1,4 +1,4 @@
-const { allSubScribesDomainService ,subScribeDomainByIdService, saveSubScribeDomainService, deleteSubScribeDomainService, approveDomainService} = require("../../../../services/subScribesDomain");
+const { allSubScribesDomainService ,subScribeDomainByIdService, saveSubScribeDomainService, deleteSubScribeDomainService, approveDomainService, activeInactiveVideoApprovedService, getAllSubDomainDataService, insertSubDomainsService, insertDomainsService} = require("../../../../services/subScribesDomain");
 const { error, success,ERROR_CODES } = require("../../../../utilities");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -12,7 +12,33 @@ const getAllSubScribesDomain = async (request, reply, fastify) => {
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 };
-
+const getAllSubDomainData = async (request, reply, fastify) => {
+    try {
+        const result = await getAllSubDomainDataService(request);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/getAllSubDomainData", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+const insertSubDomains = async (request, reply, fastify) => {
+    try {
+        const result = await insertSubDomainsService(request,fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/insertSubDomains", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+const insertDomains = async (request, reply, fastify) => {
+    try {
+        const result = await insertDomainsService(request,fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/insertDomains", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
 const getSubscribeDomainById = async (request, reply, fastify) => {
     try {
         const result = await subScribeDomainByIdService(request,fastify);
@@ -49,10 +75,24 @@ const approveDomain = async (request, reply, fastify) => {
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 };
+
+const activeInactiveVideoApproved = async (request, reply, fastify) => {
+    try {
+        const result = await activeInactiveVideoApprovedService(request,fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/activeInactiveVideoApproved", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
 module.exports = {
     getAllSubScribesDomain,
     getSubscribeDomainById,
     saveSubScribeDomain,
     deleteSubScribeDomain,
-    approveDomain
+    approveDomain,
+    activeInactiveVideoApproved,
+    getAllSubDomainData,
+    insertSubDomains,
+    insertDomains
 }

@@ -6,14 +6,22 @@ const {
   updatePlayerStatsQuery,
   updateIsSystemPlayerQuery,
   getTeamPlayerQuery,
+  activeInactivePlayerQuery,
+  updateExchangePlayerQuery,
+  getPlayerCompetitionListByPlayerIdQuery,
+  getPlayerCreatedDetailsQuery,
 } = require("../repository/TablePlayer");
 const {
   insertTeamPlayerQuery,
   deleteTeamPlayerByPlayerIdQuery,
   getTeamPlayerByPlayerIdQuery,
   getTeamListByPlayerIdQuery,
+  updateTeamPlayerHomeTeamQuery,
+  updateTeamPlayerHomeTeamByTeamPlayerIdQuery,
+  deleteTeamPlayerByTeamAndPlayerIdQuery,
+  getTeamPlayersByTeamIdAndPlayerIdQuery,
 } = require("../repository/TableTeamPlayer");
-const { getAllPlayersByTeamIdQuery, getAllPlayersByCompetitionIdTeamIdQuery } = require("../repository/TableTeams");
+const { getAllPlayersByTeamIdQuery, getAllPlayersByCompetitionIdTeamIdQuery, getAllPlayersByTeamIdAndMatchTypeIdQuery, getTeamPlayersByTeamIdAndMatchTypeIdQuery } = require("../repository/TableTeams");
 const {
   storeImageOnServer,
   generateImageName,
@@ -23,11 +31,22 @@ const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { deleteTournamentPlayersByPlayerIdQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteAwardsByPlayerIdQuery } = require("../repository/TableCommentaryAward");
+const { bowlingStyleChangeOnCommPlayersQuery, deleteCommentaryPlayerById } = require("../repository/TableCommentary");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const configConstants = require("../utilities/configConstants");
+const { trimTextData, callEntitySportAPI, APIEndpointModuleType, ServiceType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, RefType, EventType, ICCMatchType } = require("../utilities/index");
+const { errorLogger } = require("../utilities/logger");
+const { playersMergeImageService, callClientAPI } = require("../utilities/index");
+const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
+const { savePlayerBatHistQuery, savePlayerBallHistQuery, getAllCommentaryBattingHistory, getAllCommentaryBowlingHistory, deleteCommentaryPlayerBowlingHistoryQuery, deleteCommentaryPlayerBattingHistoryQuery } = require("../repository/TableCommPlayerHistory");
+const { fieldNamesService } = require("../services/fieldNamesService");
+const { getAllPlayersBattingHistory, insertPlayerBattingHistoryQuery, updatePlayerBattingHistoryQuery, getAllPlayerBowlingHistory, updatePlayerBowlingHistoryQuery, insertPlayerBowlingHistoryQuery } = require("../repository/TablePlayerHistory");
+const { insertAutoImportDataService } = require("./autoImportData");
+const { getTeamMatchTypeByTeamQuery } = require("../repository/TableTeamMatchType");
+const { entitySportAPIEndPoint } = require("../utilities/entityConst");
 
 const allPlayerService = async (request,fastify) => {
-  const { isActive, eventTypeId , teamId} = request.body;
+  const { isActive, eventTypeId, teamId, isMen } = request.body;
   const body = {
     isActive: isActive === undefined ? true : isActive,
     eventTypeId: eventTypeId === undefined ? 0 : eventTypeId,
@@ -49,11 +68,25 @@ const allPlayerService = async (request,fastify) => {
     let players = await getAllPlayersByTeamIdQuery(teamId, fastify, request);
     players = players.map((item) => item.playerId);
     _player = _player.filter((item) => players.includes(item.playerId));
-    return _player;
+    // return _player;
   }
-  else {
-    return _player;
+  // else {
+  //   return _player;
+  // }
+
+  if ("isMen" in request.body && isMen !== null) {
+    _player = _player.filter(_p => _p.isMen === isMen);
   }
+
+  const updatedPlayers = _player.map((item) => {
+    const country = global.tblCountryCodes.find(elem => elem.id === item.countryId);
+    return {
+      ...item,
+      countryName: country?.countryName ?? null
+    };
+  });
+
+  return updatedPlayers;
 };
 
 const allPlayerTypeService = async () => {
@@ -90,12 +123,24 @@ const allPlayerByCompetitionAndTeamService = async (request, fastify) => {
   );
 
   if(tournamentTeamPlayers.length > 0) {
-    return tournamentTeamPlayers.map((player) => ({
+    const playersData = Object.values(
+      tournamentTeamPlayers.reduce((acc, player) => {
+        acc[player.playerId] = player;
+        return acc;
+      }, {})
+    );
+    return playersData.map(player => ({
       playerId: player.playerId,
       playerName: player.playerName,
       playerTypeId: player.playerTypeId,
       playerType: player.playerType,
     }));
+    // return tournamentTeamPlayers.map((player) => ({
+    //   playerId: player.playerId,
+    //   playerName: player.playerName,
+    //   playerTypeId: player.playerTypeId,
+    //   playerType: player.playerType,
+    // }));
   }
   
   const result = await getAllPlayersByCompetitionIdTeamIdQuery(teamId, fastify, request);
@@ -110,20 +155,84 @@ const playerByIdService = async (request, fastify) => {
   if (!result) {
     return null;
   } else {
-    const playersInTeams = await getAllTeamsByPlayerIdQuery(
-      playerId,
-      fastify,
-      request
-    );
+    const playersInTeams = await getTeamPlayerByPlayerIdQuery(playerId, fastify, request);
+    const teams = playersInTeams?.filter(tp => tp.matchTypeId === -1)?.map(tp => tp.teamId);
 
     const data = {
       ...result,
-      teams: playersInTeams,
+      bowlingStyle: result.bowlingStyleId === 1 ? "Pace" : (result.bowlingStyleId === 2 ? "Spin" : null),
+      birthDate: result.birthDate ? String(result.birthDate).split('T')[0] : result.birthDate,
+      teams: global.tblTeams.filter(tt => teams?.includes(tt.teamId)),
+      teamMatchType: playersInTeams?.filter(tp => tp.matchTypeId === -1),
+      teamMatchTypeForClient: playersInTeams?.filter(tp => tp.matchTypeId !== -1),
+      countryData: result?.countryId ? (global.tblCountryCodes.find(tcc => tcc.id === result.countryId) || null) : null
     };
 
     return data;
   }
 };
+
+const getPlayerCreatedDetailsService = async (request, fastify) => {
+  const { playerId } = request.body;
+
+  if (!playerId) {
+    return null;
+  }
+
+  // Fetch createdDate & createdBy from DB
+  const createdDetails = await getPlayerCreatedDetailsQuery(
+    playerId,
+    fastify,
+    request
+  );
+
+  if (!createdDetails) {
+    return null;
+  }
+
+  return {
+    ...createdDetails,
+  };
+};
+
+const upsertPlayerWithMatchTypeService = async (request, fastify) => {
+  const { upsertTeamPlayers } = require("./teams");
+  const player = request.body.player;
+  const teamIds = request.body.teamId[0]?.split(',').map(Number);
+  const entitySocketData = global.tblEntitySockets[0];
+  let playersInTeams = await getAllTeamsByPlayerIdQuery(
+    player.playerId,
+    fastify,
+    request
+  );
+  playersInTeams = playersInTeams?.filter(tp => tp.matchTypeId === -1);
+  const oldTeamIds = [...new Set(playersInTeams.map(item => item.teamId))];
+  const newlyAdded = teamIds.filter(id => !oldTeamIds.includes(id));
+  const removed = oldTeamIds.filter(id => !teamIds.includes(id));
+  const teams = global.tblTeams.filter(team => teamIds.includes(team.teamId));
+  for (const teamId of newlyAdded) {
+    const getTeamPlayer = playersInTeams.find(p => p.teamId === teamId);
+    const team = teams.find(t => t.teamId === teamId);
+    if (team) {
+      await upsertTeamPlayers(getTeamPlayer, team, player, -1, null, entitySocketData, request, fastify);
+    }
+  }
+
+  for (const teamId of removed) {
+    const removedTeamPlayer = await deleteTeamPlayerByTeamAndPlayerIdQuery(fastify, {
+      ...request,
+      body: {
+        teamId: teamId,
+        playerId: player.playerId
+      }
+    });
+    for (const teamPlayer of removedTeamPlayer?.[0] ?? []) {
+      await removeImageFromServer({
+        path: teamPlayer.jerseyPlayerImagePath
+      });
+    }
+  }
+}
 
 const insertPlayerService = async (request, fastify) => {
   if (request.body.eventTypeId) {
@@ -153,14 +262,36 @@ const insertPlayerService = async (request, fastify) => {
     }
   }
 
-  const validatePlayerName = global.tblPlayers.find(
-    (item) =>
-      item.playerName.trim().toLowerCase() === request.body.playerName.trim().toLowerCase()
-  );
-
-  if (validatePlayerName) {
-    throw new Error("Player Name already exist");
+  const trimData = await trimTextData({
+    playerName: request.body.playerName,
+    displayName: request.body.displayName,
+  }, request, fastify);
+  if(trimData) {
+    Object.assign(request.body, trimData);
   }
+
+  if (request.body.description) {
+      request.body.description = request.body.description.trim();
+  }
+
+  // if (
+  //   request.body.description &&
+  //   request.body.description.length > 1000
+  // ) {
+  //   throw new Error("Description can not exceed 1000 characters");
+  // }
+
+  // const validatePlayerName = global.tblPlayers.find(
+  //   (item) =>
+  //     item.playerName.trim().toLowerCase() === request.body.playerName.trim().toLowerCase() &&
+  //     item.displayName.trim().toLowerCase () === request.body.displayName.trim().toLowerCase() 
+  // );
+
+
+
+  // if (validatePlayerName) {
+  //   throw new Error("Player Name already exist");
+  // }
   const validateTpId = global.tblPlayers.find(
     (item) =>
       item.tpId == request.body?.tpId && item.tpId != null
@@ -169,7 +300,7 @@ const insertPlayerService = async (request, fastify) => {
   if (validateTpId) {
     throw new Error("TpId already exist");
   }
-  request.body.playerName = request.body.playerName.trim();
+  // request.body.playerName = request.body.playerName.trim();
   if (request.body.image && request.body.image.length) {
     // generate image name
     const imgName = generateImageName({ name: request.body.playerName });
@@ -193,43 +324,74 @@ const insertPlayerService = async (request, fastify) => {
   );
 
   if (request.body.teamId) {
-    const hashString = request.body.teamId;
-    if (typeof hashString === "object") {
-      // Split the string into an array using commas as the delimiter
-      const jsonString = JSON.stringify(hashString);
-      // Convert the string back to an array of values
-      const hashArray = jsonString.split(",");
-      if (hashArray.length) {
-        for (let i = 0; i < hashArray.length; i++) {
-          if (hashArray[i]) {
-            const teamID = hashArray[i].replace(/[\[\]"]/g, "");
-            if(teamID !== "") {
-             const teamPlayerData = await insertTeamPlayerQuery(
-              {
-                teamId: parseInt(teamID),
-                refPlayerId: result.playerId,
-                userId: request.userTokenInfo.WrUserId,
-              },
-              fastify,
-              request
-            );
-            const teamData = global.tblTeams.find((item) => item.teamId == teamID);
-            if(request.body.image && teamData.jersey) {
-              mergeAndSaveImage({
-                playerImage: request.body.image,
-                jersey: teamData.jersey,
-                playerName: request.body.playerName,
-                teamName: teamData.teamName,
-                teamPlayerId: teamPlayerData.teamPlayerId,
-                commentaryPlayerId: null,
-              }, fastify);
-            }
-            }
-          }
-        }
-      }
-    }
+    request.body.player = result;
+    await upsertPlayerWithMatchTypeService(request, fastify);
   }
+
+  // if (request.body.teamId) {
+  //   const hashString = request.body.teamId;
+  //   if (typeof hashString === "object") {
+  //     // Split the string into an array using commas as the delimiter
+  //     const jsonString = JSON.stringify(hashString);
+  //     // Convert the string back to an array of values
+  //     const hashArray = jsonString.split(",");
+  //     if (hashArray.length) {
+  //       for (let i = 0; i < hashArray.length; i++) {
+  //         if (hashArray[i]) {
+  //           const teamID = hashArray[i].replace(/[\[\]"]/g, "");
+  //           if(teamID !== "") {
+  //            const teamPlayerData = await insertTeamPlayerQuery(
+  //             {
+  //               teamId: parseInt(teamID),
+  //               refPlayerId: result.playerId,
+  //               tpId: result?.tpId ?? null,
+  //               userId: request.userTokenInfo.WrUserId,
+  //             },
+  //             fastify,
+  //             request
+  //           );
+  //           const teamData = global.tblTeams.find((item) => item.teamId == teamID);
+  //           if(request.body.image && teamData.jersey) {
+  //             request.body.jersey = teamData.jersey;
+  //             request.body.playerId = result?.playerId;
+  //             request.body.teamName = teamData.teamName;
+  //             request.body.teamPlayerId = teamPlayerData.teamPlayerId;
+  //             runMergePlayerImageJob(2, request, fastify)
+  //               .catch(err => {
+  //                 errorLogger(
+  //                   fastify,
+  //                   err.message,
+  //                   "services/player.js/insertPlayerService",
+  //                   null
+  //                 );
+  //               });
+  //             // mergeAndSaveImage({
+  //             //   playerImage: request.body.image,
+  //             //   jersey: teamData.jersey,
+  //             //   playerName: request.body.playerName,
+  //             //   teamName: teamData.teamName,
+  //             //   teamPlayerId: teamPlayerData.teamPlayerId,
+  //             //   commentaryPlayerId: null,
+  //             //   commentaryId: null,
+  //             // }, fastify);
+  //           }
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+
+  // if(request.body?.homeTeamId !== null && request.body?.homeTeamId !== undefined) {
+  //   await updateTeamPlayerHomeTeamQuery(
+  //     {
+  //       refPlayerId: result?.playerId,
+  //       teamId: parseInt(request.body.homeTeamId),
+  //     },
+  //     fastify,
+  //     request
+  //   );
+  // }
 
   if (!result) {
     return null;
@@ -243,8 +405,19 @@ const insertPlayerService = async (request, fastify) => {
 
     const data = {
       ...result,
-      teams: playersInTeams,
+      teams: Array.from(
+        playersInTeams.reduce((map, team) => {
+          const existing = map.get(team.teamId);
+
+          if (!existing || team.homeTeam) {
+            map.set(team.teamId, team);
+          }
+
+          return map;
+        }, new Map()).values()
+      )
     };
+
     return data;
   }
 };
@@ -256,16 +429,29 @@ const updatePlayerService = async (request, fastify) => {
   if (!checkPlayerId) {
     throw new Error("Player with this id not Found");
   }
-
-  const validatePlayerName = global.tblPlayers.find(
-    (item) =>
-      item.playerName.trim().toLowerCase() === request.body.playerName.trim().toLowerCase() &&
-      item.playerId !== request.body.playerId
-  );
-
-  if (validatePlayerName) {
-    throw new Error("Player Name already exist");
+  const trimData = await trimTextData({
+    playerName: request.body?.playerName,
+    displayName: request.body?.displayName,
+  }, request, fastify);
+  if(trimData) {
+    Object.assign(request.body, trimData);
   }
+
+  // if (
+  //   request.body.description &&
+  //   request.body.description.length > 1000
+  // ) {
+  //   throw new Error("Description can not exceed 1000 characters");
+  // }
+  // const validatePlayerName = global.tblPlayers.find(
+  //   (item) =>
+  //     item.playerName.trim().toLowerCase() === request.body.playerName.trim().toLowerCase() &&
+  //     item.playerId !== request.body.playerId
+  // );
+
+  // if (validatePlayerName) {
+  //   throw new Error("Player Name already exist");
+  // }
   if(checkPlayerId) {
     const validateTpId = global.tblPlayers.find(
       (item) =>
@@ -278,13 +464,13 @@ const updatePlayerService = async (request, fastify) => {
     }
   }
   const body = {
-    country: request.body.country || checkPlayerId.country,
+    // country: request.body.country || checkPlayerId.country,
     playerName: request.body.playerName.trim() || checkPlayerId.playerName,
     eventTypeId: checkPlayerId.eventTypeId,
     playerTypeId: checkPlayerId.playerTypeId,
     userId: request.userTokenInfo.WrUserId,
     image: checkPlayerId.image,
-    bowlingStyle: request.body.bowlingTypeId || checkPlayerId.bowlingTypeId,
+    bowlingStyleId: request.body.bowlingStyleId || checkPlayerId.bowlingStyleId,
     isActive: checkPlayerId.isActive,
     isKipper: checkPlayerId.isKipper,
     isLeftHandedBatting: checkPlayerId.isLeftHandedBatting,
@@ -299,10 +485,16 @@ const updatePlayerService = async (request, fastify) => {
     playerType: checkPlayerId.playerType,
     eventType: checkPlayerId.eventType,
     bowlingTypeId: checkPlayerId.bowlingTypeId,
-    bowlingStyle: checkPlayerId.bowlingTypeId,
     isSystemPlayer: request.body.hasOwnProperty("isSystemPlayer") ? request.body.isSystemPlayer : checkPlayerId.isSystemPlayer,
     imagePath : checkPlayerId.imagePath,
-    tpId: 'tpId' in request.body ? request.body.tpId : checkPlayerId.tpId,
+    // tpId: request.body.tpId || checkPlayerId.tpId,
+    tpId: request.body.tpId === undefined ? checkPlayerId.tpId
+      : [0, '', 'null'].includes(request.body.tpId) ? null
+      : request.body.tpId,
+    countryId: request.body.countryId || checkPlayerId.countryId,
+    birthDate: request.body.birthDate || checkPlayerId.birthDate,
+    birthPlace: request.body.birthPlace || checkPlayerId.birthPlace,
+    description: request.body.description?.trim() || checkPlayerId.description,
   };
 
   if ("isActive" in request.body) {
@@ -319,6 +511,10 @@ const updatePlayerService = async (request, fastify) => {
 
   if ("isLeftArmFielding" in request.body) {
     body.isLeftArmFielding = request.body.isLeftArmFielding;
+  }
+
+  if ("isMen" in request.body) {
+    body.isMen = request.body?.isMen;
   }
 
   if (request.body.eventTypeId) {
@@ -371,9 +567,29 @@ const updatePlayerService = async (request, fastify) => {
     });
     body.image = fullPath;
     body.imagePath = imagePath;
+
+    const teamPlayersData = await getTeamPlayerByPlayerIdQuery(request.body.playerId, fastify, request);
+
+    const entitySocketData = global.tblEntitySockets[0];
+    const { upsertTeamPlayers } = require("./teams");
+    for (const playerData of teamPlayersData) {
+      const teamData = global.tblTeams.find(
+        (item) => item.teamId == playerData.teamId
+      );
+      if (teamData) {
+        if (playerData.matchTypeId === -1) {
+          await upsertTeamPlayers(playerData, teamData, body, playerData.matchTypeId, null, entitySocketData, request, fastify);
+        } else {
+          const teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" = ${playerData.teamId} AND ttmt."wrMatchTypeId" = ${playerData.matchTypeId}`);
+          for (const tmp of teamMatchType) {
+            await upsertTeamPlayers(playerData, teamData, body, playerData.matchTypeId, tmp, entitySocketData, request, fastify);
+          }
+        }
+      }
+    }
   }
 
-  await updatePlayerQuery(body, fastify, request);
+  const result = await updatePlayerQuery(body, fastify, request);
 
   delete body.userId;
 
@@ -381,56 +597,132 @@ const updatePlayerService = async (request, fastify) => {
     (item) => item.playerId === request.body.playerId
   );
 
-  global.tblPlayers[index] = body;
+  global.tblPlayers[index] = result[0];
+  const player = global.tblPlayers[index];
 
   if (request.body.teamId) {
-    const teamPlayersData = await getTeamPlayerByPlayerIdQuery(request.body.playerId, fastify, request);
-    for (const playerData of teamPlayersData) {
-      if (playerData && playerData?.jerseyPlayerImage) {
-        await removeImageFromServer({
-          path: playerData.jerseyPlayerImage,
-        });
+    request.body.player = player;
+    await upsertPlayerWithMatchTypeService(request, fastify);
+    if (request.body.homeTeamId) {
+      const teamPlayers = await getTeamPlayersByTeamIdAndPlayerIdQuery({
+        ...request,
+        body: {
+          teamId: Number(request.body.homeTeamId),
+          playerId: player.playerId
+        }
+      }, fastify);
+      const teamPlayer = teamPlayers.find(tp => tp.matchTypeId === -1);
+      if (teamPlayer) {
+        await updateTeamPlayerHomeTeamByTeamPlayerIdQuery({
+          teamPlayerId: teamPlayer.teamPlayerId,
+          playerId: player.playerId
+        }, fastify, request);
       }
     }
-    await deleteTeamPlayerByPlayerIdQuery(
-      request.body.playerId,
-      fastify,
+  }
+  // if (request.body.teamId) {
+  //   const teamPlayersData = await getTeamPlayerByPlayerIdQuery(request.body.playerId, fastify, request);
+  //   for (const playerData of teamPlayersData) {
+  //     if (playerData && playerData?.jerseyPlayerImage) {
+  //       await removeImageFromServer({
+  //         path: playerData.jerseyPlayerImage,
+  //       });
+  //     }
+  //   }
+  //   await deleteTeamPlayerByPlayerIdQuery(
+  //     request.body.playerId,
+  //     fastify,
+  //     request
+  //   );
+  //   const hashString = request.body.teamId;
+  //   if (typeof hashString === "object") {
+  //     // Split the string into an array using commas as the delimiter
+  //     const jsonString = JSON.stringify(hashString);
+  //     // Convert the string back to an array of values
+  //     const hashArray = jsonString.split(",");
+  //     if (hashArray.length) {
+  //       for (let i = 0; i < hashArray.length; i++) {
+  //         if (hashArray[i]) {
+  //           const teamID = hashArray[i].replace(/[\[\]"]/g, "");
+  //           if(teamID !== ""){
+  //             const playerTpId = global.tblPlayers.find(elem => elem.playerId == request.body.playerId);
+  //             const teamPlayerData = await insertTeamPlayerQuery(
+  //               {
+  //                 teamId: parseInt(teamID),
+  //                 refPlayerId: request.body.playerId,
+  //                 userId: request.userTokenInfo.WrUserId,
+  //                 tpId: playerTpId?.tpId ?? null
+  //               },
+  //               fastify,
+  //               request
+  //             );
+  //             const teamData = global.tblTeams.find((item) => item.teamId == teamID);
+  //             if (body.image && teamData.jersey) {
+  //               request.body.playerImage = body.image;
+  //               request.body.playerId = body?.playerId;
+  //               request.body.jersey = teamData.jersey;
+  //               request.body.playerName = body.playerName;
+  //               request.body.teamName = teamData.teamName;
+  //               request.body.teamPlayerId = teamPlayerData.teamPlayerId;
+  //               runMergePlayerImageJob(2, request, fastify)
+  //                 .catch(err => {
+  //                   errorLogger(
+  //                     fastify,
+  //                     err.message,
+  //                     "services/player.js/updatePlayerService",
+  //                     null
+  //                   );
+  //                 });
+  //               // mergeAndSaveImage({
+  //               //   playerImage: body.image,
+  //               //   jersey: teamData.jersey,
+  //               //   playerName: body.playerName,
+  //               //   teamName: teamData.teamName,
+  //               //   teamPlayerId: teamPlayerData.teamPlayerId,
+  //               //   commentaryPlayerId: null,
+  //               //   commentaryId: null,
+  //               // }, fastify);
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }
+  // }
+  // if(request.body?.homeTeamId !== null && request.body?.homeTeamId !== undefined) {
+  //   await updateTeamPlayerHomeTeamQuery(
+  //     {
+  //       refPlayerId: parseInt(request.body.playerId),
+  //       teamId: parseInt(request.body.homeTeamId),
+  //     },
+  //     fastify,
+  //     request
+  //   );
+  // }
+  const openCommentaryIds = global.tblCommentaries.filter(item => item.commentaryStatus == 1)
+    .map(item => item.commentaryId);
+
+  if(checkPlayerId?.bowlingTypeId != body?.bowlingTypeId && openCommentaryIds.length > 0) {
+    await bowlingStyleChangeOnCommPlayersQuery(
+      {
+        bowlingType: body.bowlingTypeId,
+        commentaryId: openCommentaryIds,
+        playerId: body.playerId,
+      },
+      fastify, 
       request
     );
-    const hashString = request.body.teamId;
-    if (typeof hashString === "object") {
-      // Split the string into an array using commas as the delimiter
-      const jsonString = JSON.stringify(hashString);
-      // Convert the string back to an array of values
-      const hashArray = jsonString.split(",");
-      if (hashArray.length) {
-        for (let i = 0; i < hashArray.length; i++) {
-          if (hashArray[i]) {
-            const teamID = hashArray[i].replace(/[\[\]"]/g, "");
-            if(teamID !== ""){
-              const teamPlayerData = await insertTeamPlayerQuery(
-                {
-                  teamId: parseInt(teamID),
-                  refPlayerId: request.body.playerId,
-                  userId: request.userTokenInfo.WrUserId,
-                },
-                fastify,
-                request
-              );
-              const teamData = global.tblTeams.find((item) => item.teamId == teamID);
-              if(body.image && teamData.jersey) {
-                mergeAndSaveImage({
-                  playerImage: body.image,
-                  jersey: teamData.jersey,
-                  playerName: body.playerName,
-                  teamName: teamData.teamName,
-                  teamPlayerId: teamPlayerData.teamPlayerId,
-                  commentaryPlayerId: null,
-                }, fastify);
-              }
-            }
-          }
-        }
+    const updateData = global.tblCommentaryPlayers.filter(
+      item =>
+        openCommentaryIds.includes(item.commentaryId) &&
+        item.playerId === body.playerId
+    );
+    for (const elem of updateData) {
+      const index = global.tblCommentaryPlayers.findIndex(item => 
+        item.commentaryPlayerId == elem.commentaryPlayerId
+      );
+      if(index !== -1) {
+        global.tblCommentaryPlayers[index].bowlingType = body.bowlingTypeId
       }
     }
   }
@@ -443,8 +735,19 @@ const updatePlayerService = async (request, fastify) => {
 
   const data = {
     ...body,
-    teams: playersInTeams,
+    teams: Array.from(
+      playersInTeams.reduce((map, team) => {
+        const existing = map.get(team.teamId);
+
+        if (!existing || team.homeTeam) {
+          map.set(team.teamId, team);
+        }
+
+        return map;
+      }, new Map()).values()
+    ),
   };
+
   return data;
   //return body;
 };
@@ -474,6 +777,19 @@ const updateIsSystemPlayerService = async (request, fastify) => {
 const deletePlayerService = async (request, fastify) => {
   const { playerId } = request.body;
 
+  for (const pId of playerId) {
+    const getPlayerData = global.tblPlayers.find(tp => tp.playerId === pId);
+    const checkCommentaryPlayer = global.tblCommentaryPlayers.find(tcp => tcp.playerId === pId);
+    if (checkCommentaryPlayer) {
+      throw new Error(`'${getPlayerData?.playerName}' player is in commentary/s and cannot be deleted at this moment`);
+    }
+
+    const checkTournamentTeamPlayer = global.tblTournamentTeamPlayers.find(tttp => tttp.playerId === playerId);
+    if (checkTournamentTeamPlayer) {
+      throw new Error(`'${getPlayerData?.playerName}' player is in tournament/s and cannot be deleted at this moment`);
+    }
+  }
+
   for (const id of playerId) {
   const teamPlayersData = await getTeamPlayerByPlayerIdQuery(id, fastify, request);
     for (const playerData of teamPlayersData) {
@@ -494,6 +810,21 @@ const deletePlayerService = async (request, fastify) => {
       });
     }
   }
+
+  const getPlayerCommentary = global.tblCommentaryPlayers.filter(tcp => playerId.includes(tcp.playerId));
+  for (const commentary of getPlayerCommentary) {
+    await deleteCommentaryPlayerById({
+      commentaryPlayerId: commentary.commentaryPlayerId
+    }, request, fastify);
+    global.tblCommentaryPlayers = global.tblCommentaryPlayers.filter(tcp => !(tcp.commentaryPlayerId === commentary.commentaryPlayerId));
+
+    if (commentary?.jerseyPlayerImage) {
+      await removeImageFromServer({
+        path: commentary.jerseyPlayerImage,
+      });
+    }
+  }
+
   await deleteTournamentPlayersByPlayerIdQuery(playerId, request, fastify);
   await deleteAwardsByPlayerIdQuery(playerId, request, fastify);
   await deletePlayerQuery(playerId, fastify, request);
@@ -539,8 +870,9 @@ const updatePlayerStatsService = async (request, fastify) => {
         const index = global.tblPlayers.findIndex(
           (item) => item.playerId === request.body[i].playerId
         );
+
         const _p = {
-          country: checkPlayerId.country,
+          // country: checkPlayerId.country,
           playerName: checkPlayerId.playerName,
           eventTypeId: checkPlayerId.eventTypeId,
           playerTypeId: checkPlayerId.playerTypeId,
@@ -562,6 +894,9 @@ const updatePlayerStatsService = async (request, fastify) => {
           bowlingStyle: checkPlayerId.bowlingTypeId,
           imagePath: checkPlayerId.imagePath,
           tpId: checkPlayerId.tpId,
+          countryId: checkPlayerId.countryId,
+          isSystemPlayer: checkPlayerId.isSystemPlayer,
+          birthPlace: checkPlayerId.birthPlace
         };
         global.tblPlayers[index] = _p;
       }
@@ -576,28 +911,9 @@ const updatePlayerStatsService = async (request, fastify) => {
 };
 
 const mergePlayerImageAndJerseyService = async (request, fastify) => {
-  for(const player of request.body.playerId){
-    const checkPlayerId = global.tblPlayers.find(
-      (item) => item.playerId === player
-    );
-    if (!checkPlayerId) {
-      continue;
-    }
-    const teamPlayersData = await getTeamPlayerByPlayerIdQuery(player, fastify, request);
-    if (teamPlayersData.length > 0) {
-      for (const playerData of teamPlayersData) {
-        const teamData = global.tblTeams.find((item) => item.teamId == playerData.teamId);
-        if(checkPlayerId?.image && teamData?.jersey) {
-          mergeAndSaveImage({
-            playerImage: checkPlayerId.image,
-            jersey: teamData.jersey,
-            playerName: checkPlayerId.playerName,
-            teamName: teamData.teamName,
-            teamPlayerId: playerData.teamPlayerId,
-            commentaryPlayerId: null,
-          }, fastify);
-        }
-      }
+  if (request?.body?.playerId?.length > 0) {
+    for (const playerId of request?.body?.playerId) {
+      await runMergePlayerImageJob(playerId, request, fastify);
     }
   }
   return "Player image(s) and Jersey image(s) merged successfully";
@@ -628,6 +944,7 @@ const setTeamPlayerImgService = async (request, fastify) => {
       teamName: p.teamName,
       teamPlayerId: p.teamPlayerId,
       commentaryPlayerId: null,
+      commentaryId: null,
     }, fastify);
 
   }
@@ -636,9 +953,667 @@ const setTeamPlayerImgService = async (request, fastify) => {
 
 const getTeamListPlayerIdService = async (request, fastify) => {
   const { playerId } = request.body;
-  const result = await getTeamListByPlayerIdQuery(playerId, fastify, request);
+  let result = await getTeamListByPlayerIdQuery(playerId, fastify, request);
   return result;
 };
+
+const activeInactivePlayerService = async (request, fastify) => {
+  const { playerId, isActive } = request.body;
+  const index = global.tblPlayers.findIndex(
+    (item) => item.playerId === playerId
+  );
+  if (index === -1) {
+    throw new Error("Player with this id not Found");
+  }
+  await activeInactivePlayerQuery({playerId, isActive}, request, fastify);
+  global.tblPlayers[index].isActive = isActive;
+
+  return `Player data updated successfully`;
+};
+
+const updatePlayerBatBowlHistory = async (playerId, playerBattingData, playerBowlingData, request, fastify) => {
+  const playerData = global.tblPlayers.find(item => item.playerId === playerId);
+  const isMen = playerData?.isMen;
+
+  // batting
+  const commentaryPlayerBattingHistory = await getAllCommentaryBattingHistory(fastify, playerId);
+
+  const playerBattingHistory = await getAllPlayersBattingHistory(playerId, fastify);
+
+  for (const esMatchType of Object.keys(playerBattingData)) {
+    const matchType = global.tblMatchTypes.find(item => item.entityEnum === ICCMatchType[isMen ? "men" : "women"][esMatchType]);
+    const matchTypeId = matchType?.matchTypeId;
+    if (matchTypeId) {
+      Object.keys(playerBattingData[esMatchType]).forEach(key => {
+        playerBattingData[esMatchType][key] = Number(playerBattingData[esMatchType][key]) || 0;
+      })
+
+      const { matches, innings, notout, runs, balls, highest, run100, run50, run4, run6, average, strike, catches, stumpings, fastest50balls, fastest100balls } = playerBattingData[esMatchType];
+      let newPlayerBattingData = {
+        matchCount: matches || 0,
+        inningsCount: innings || 0,
+        notOut: notout || 0,
+        totalRuns: runs || 0,
+        ballsFacedCount: balls || 0,
+        highestScore: highest || 0,
+        countOf100: run100 || 0,
+        countOf50: run50 || 0,
+        countOf4: run4 || 0,
+        countOf6: run6 || 0,
+        average: average || 0,
+        strikeRate: strike || 0,
+        catchCount: catches || 0,
+        stumpCount: stumpings || 0,
+        fastest50Balls: fastest50balls || 0,
+        fastest100Balls: fastest100balls || 0,
+        outCount: 0,
+      }
+
+      const checkData = Object.values(newPlayerBattingData).every(value => value === 0);
+      if (!checkData) {
+        newPlayerBattingData = {
+          matchTypeId,
+          matchTypeName: matchType?.matchType,
+          playerId,
+          ...newPlayerBattingData
+        }
+
+        const matchTypeCommentaryBattingHistory = commentaryPlayerBattingHistory.filter(cpbh => cpbh.matchTypeId === matchTypeId);
+        if (matchTypeCommentaryBattingHistory && matchTypeCommentaryBattingHistory.length > 0) {
+          await deleteCommentaryPlayerBattingHistoryQuery(
+            matchTypeCommentaryBattingHistory?.map(mtcbh => mtcbh.id),
+            fastify,
+            request);
+        }
+
+        await savePlayerBatHistQuery(newPlayerBattingData, request, fastify);
+
+        const matchTypeBattingHistory = playerBattingHistory.find(pbh => pbh.matchTypeId === matchTypeId);
+        if (matchTypeBattingHistory?.battingHistoryId) {
+          await updatePlayerBattingHistoryQuery({
+            battingHistoryId: matchTypeBattingHistory?.battingHistoryId,
+            ...newPlayerBattingData
+          }, request, fastify);
+        } else {
+          await insertPlayerBattingHistoryQuery(newPlayerBattingData, fastify, request);
+        }
+      }
+    }
+  }
+
+  // bowling
+  const commentaryPlayerBowlingHistory = await getAllCommentaryBowlingHistory(fastify, playerId);
+
+  const playerBowlingHistory = await getAllPlayerBowlingHistory(playerId, fastify);
+
+  for (const esMatchType of Object.keys(playerBowlingData)) {
+    const matchType = global.tblMatchTypes.find(item => item.entityEnum === ICCMatchType[isMen ? "men" : "women"][esMatchType]);
+    const matchTypeId = matchType?.matchTypeId;
+    if (matchTypeId) {
+      Object.keys(playerBowlingData[esMatchType]).forEach(key => {
+        playerBowlingData[esMatchType][key] = Number(playerBowlingData[esMatchType][key]) || 0;
+      })
+
+      const { matches, innings, balls, runs, wickets, average, bestinning, bestmatch, econ, strike, wicket4i, wicket5i, wicket10m, overs, hattrick, expensive_over_runs } = playerBowlingData[esMatchType];
+      let newPlayerBowlingData = {
+        bowlerPlayedMatchCount: matches || 0,
+        bowlerPlayedInningsCount: innings || 0,
+        ballCount: balls || 0,
+        runsFromBowler: runs || 0,
+        wicketsCount: wickets || 0,
+        bowlerAverage: average || 0,
+        economy: econ || 0,
+        bowlerStrikeRate: parseInt(strike) || 0,
+        wickets4: wicket4i || 0,
+        wickets5: wicket5i || 0,
+        wickets10: wicket10m || 0,
+        overCount: overs || 0,
+        hattrickCount: hattrick || 0,
+        expensiveOverRuns: expensive_over_runs || 0
+      }
+
+      const checkData = Object.values(newPlayerBowlingData).every(value => value === 0);
+      if (!checkData) {
+        newPlayerBowlingData = {
+          matchTypeId,
+          playerId,
+          bestBowlingInInnings: bestinning || "",
+          bestBowlingInMatch: bestmatch || "",
+          ...newPlayerBowlingData
+        }
+
+        const matchTypeCommentaryBowlingHistory = commentaryPlayerBowlingHistory.filter(cpbh => cpbh.matchTypeId === matchTypeId);
+        if (matchTypeCommentaryBowlingHistory && matchTypeCommentaryBowlingHistory.length > 0) {
+          await deleteCommentaryPlayerBowlingHistoryQuery(
+            matchTypeCommentaryBowlingHistory?.map(mtcbh => mtcbh.id),
+            fastify,
+            request);
+        }
+
+        await savePlayerBallHistQuery(newPlayerBowlingData, request, fastify);
+
+        const matchTypeBowlingHistory = playerBowlingHistory.find(pbh => pbh.matchTypeId === matchTypeId);
+        if (matchTypeBowlingHistory?.bowlingHistoryId) {
+          await updatePlayerBowlingHistoryQuery({
+            bowlingHistoryId: matchTypeBowlingHistory?.bowlingHistoryId,
+            ...newPlayerBowlingData
+          }, request, fastify);
+        } else {
+          await insertPlayerBowlingHistoryQuery(newPlayerBowlingData, fastify, request);
+        }
+      }
+    }
+  }
+}
+
+const UpdatePlayerFromEntityService = async (data, fastify, request) => {
+  let checkPlayerData = global.tblPlayers.find(item => item.playerId === data.pid);
+  if (!checkPlayerData) {
+    errorLogger(fastify, `Player not found. playerId: ${data.pid}`, "/services/player.js/UpdatePlayerFromEntityService - checkPlayerData", request);
+    return false;
+  }
+
+  let playerNewTpId = null;
+
+  if (!checkPlayerData.tpId) {
+    let url2 = `${entitySportAPIEndPoint.searchPlayerData}?search=${encodeURIComponent(checkPlayerData.playerName)}`;
+
+    const getCountryShortName = global.tblCountryCodes.find(item => item.id === checkPlayerData.countryId)?.shortName;
+    if (getCountryShortName) {
+      url2 += "&country=" + getCountryShortName.substring(0, 2);
+    }
+    const entitySportSearchPlayer = await callEntitySportAPI(url2, request, fastify);
+
+    if (!entitySportSearchPlayer?.data?.result) {
+      errorLogger(
+        fastify,
+        `Invalid response from Entit-Sport API for url ${url2}`,
+        "/services/player.js/UpdatePlayerFromEntityService - entitySportSearchPlayer", {
+        ...request,
+        originalUrl: url2
+      }, entitySportSearchPlayer?.data);
+      return false;
+    }
+
+    if (entitySportSearchPlayer?.data?.result?.total_items === "1") {
+      playerNewTpId = entitySportSearchPlayer?.data?.result?.items[0]?.pid;
+    } else if (Number(entitySportSearchPlayer?.data?.result?.total_items) > 1) {
+      const birthDate = checkPlayerData?.birthDate ? new Date(checkPlayerData?.birthDate).toISOString().split('T')[0] : null;
+      const entityPlayerData = entitySportSearchPlayer?.data?.result?.items.filter(item => item.title === checkPlayerData.playerName && item.short_name === checkPlayerData.displayName && ((birthDate && item.birthdate) ? new Date(item.birthdate).toISOString().split('T')[0] === birthDate : true));
+      if (entityPlayerData?.length === 1) {
+        playerNewTpId = entityPlayerData[0]?.pid;
+      }
+    }
+  }
+
+  if (!checkPlayerData.tpId) {
+    if (!playerNewTpId) {
+      errorLogger(fastify, `Player data not found for playerId: ${checkPlayerData.playerId}`, "/services/player.js/UpdatePlayerFromEntityService - checkPlayerData.tpId", request, checkPlayerData);
+      return false;
+    }
+  } else {
+    playerNewTpId = checkPlayerData.tpId;
+  }
+
+  const url =  entitySportAPIEndPoint.getPlayerAndStatisticsData.replace('{pid}', playerNewTpId);
+  const entitySportPlayer = await callEntitySportAPI(url, request, fastify);
+
+  if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
+    global.autoImportData.esApiResponseData = entitySportPlayer?.data?.result;
+  }
+
+  const entitySportPlayerResponse = entitySportPlayer?.data?.result;
+  if (!entitySportPlayerResponse) {
+    errorLogger(
+      fastify,
+      `Invalid response from Entit-Sport API for url ${url}`,
+      "/services/player.js/UpdatePlayerFromEntityService - entitySportPlayerResponse", {
+      ...request,
+      originalUrl: url
+    }, entitySportPlayer?.data);
+    return false;
+  }
+
+  const entitySportPlayerInfoResponse = entitySportPlayerResponse?.player;
+  if (!entitySportPlayerInfoResponse) {
+    errorLogger(
+      fastify,
+      `Invalid response from Entit-Sport API for url ${url}`,
+      "/services/player.js/UpdatePlayerFromEntityService - entitySportPlayerInfoResponse", {
+      ...request,
+      originalUrl: url
+    }, entitySportPlayer?.data);
+    return false;
+  }
+
+  const { playerId, playerTypeId, playerName, displayName, isKipper, isLeftHandedBatting, isLeftArmFielding, bowlingStyleId, bowlingTypeId, countryId, tpId, birthDate, birthPlace } = checkPlayerData;
+  const { playing_role, title, short_name, batting_style, bowling_style, bowling_type, nationality, birthdate, birthplace } = entitySportPlayerInfoResponse;
+
+  let changedValues = { ...checkPlayerData };
+
+  if (!tpId && playerNewTpId) {
+    changedValues.tpId = playerNewTpId;
+  }
+
+  if (playing_role) {
+    const entityPlayerTypeId = EntityPlayerType[playing_role];
+    if (entityPlayerTypeId && playerTypeId !== entityPlayerTypeId) {
+      changedValues.playerTypeId = entityPlayerTypeId;
+    }
+
+    const entityIsKeeper = playing_role === "wk";
+    if ("isKipper" in checkPlayerData && isKipper !== entityIsKeeper) {
+      changedValues.isKipper = entityIsKeeper;
+    }
+  }
+
+  if (title && playerName !== title) {
+    changedValues.playerName = title;
+  }
+
+  if (short_name && displayName !== short_name) {
+    changedValues.displayName = short_name;
+  }
+
+  const entityBattingStyle = batting_style?.toLowerCase().includes("left");
+  if ("isLeftHandedBatting" in checkPlayerData && isLeftHandedBatting !== entityBattingStyle) {
+    changedValues.isLeftHandedBatting = entityBattingStyle;
+  }
+
+  const entityBowlingStyle = bowling_style?.toLowerCase().includes("left");
+  if ("isLeftArmFielding" in checkPlayerData && isLeftArmFielding !== entityBowlingStyle) {
+    changedValues.isLeftArmFielding = entityBowlingStyle;
+  }
+
+  const EntityBowlingStyleTypeId = EntityBowlingStyleType[bowling_type?.toLowerCase()];
+  if (EntityBowlingStyleTypeId && bowlingStyleId !== EntityBowlingStyleTypeId) {
+    changedValues.bowlingStyleId = EntityBowlingStyleTypeId;
+  }
+
+  const entityBowlingStyleId = extractBowlingStyle(bowling_type, bowling_style);
+  if (entityBowlingStyleId && bowlingTypeId !== entityBowlingStyleId) {
+    changedValues.bowlingTypeId = entityBowlingStyleId;
+  }
+
+  const countryData = global.tblCountryCodes.find(item => item.countryName.toLowerCase() === nationality?.toLowerCase());
+  if (nationality && countryId !== countryData?.id) {
+    const checkCountry = global.tblCountryCodes.find(item => item.countryName.toLowerCase() === nationality?.toLowerCase());
+    if (checkCountry) {
+      changedValues.countryId = checkCountry?.id
+    } else {
+      const insertCountryData = {
+        countryName: nationality || null,
+        isActive: true,
+      };
+      const insertCountryCode = await insertCountryCodeQuery(insertCountryData, fastify, request);
+      global.tblCountryCodes.push(insertCountryCode);
+      changedValues.countryId = insertCountryCode?.id
+    }
+  }
+
+  if (birthdate && (!birthDate || (new Date(birthDate).toISOString().split('T')[0] !== new Date(birthdate).toISOString().split('T')[0]))) {
+    changedValues.birthDate = birthdate;
+  }
+
+  if (birthplace && birthPlace !== birthplace) {
+    changedValues.birthPlace = birthplace;
+  }
+
+  const isChanged = (
+    changedValues.playerTypeId !== playerTypeId ||
+    changedValues.playerName !== playerName ||
+    changedValues.displayName !== displayName ||
+    changedValues.isKipper !== isKipper ||
+    changedValues.isLeftHandedBatting !== isLeftHandedBatting ||
+    changedValues.isLeftArmFielding !== isLeftArmFielding ||
+    changedValues.bowlingStyleId !== bowlingStyleId ||
+    changedValues.bowlingTypeId !== bowlingTypeId ||
+    changedValues.countryId !== countryId ||
+    changedValues.tpId !== tpId ||
+    changedValues.birthDate !== birthDate ||
+    changedValues.birthPlace !== birthPlace
+  );
+
+  // const playerTeams = await getAllTeamsByPlayerIdQuery(playerId, fastify, request);
+  // if (playerTeams && playerTeams.length === 1 && playerTeams.filter(pt => pt.homeTeam)?.length === 0) {
+  //   await updateTeamPlayerHomeTeamQuery({
+  //     refPlayerId: playerTeams[0].refPlayerId,
+  //     teamId: playerTeams[0]?.teamId
+  //   }, fastify, request);
+    // await playerImageChangeOnClientAPIService(playerId, fastify);
+  // }
+
+  await updatePlayerBatBowlHistory(playerId, entitySportPlayerResponse?.batting, entitySportPlayerResponse?.bowling, request, fastify);
+
+  if (isChanged) {
+    changedValues.userId = request.userTokenInfo.WrUserId;
+    try {
+      const updatePlayerData = await updatePlayerQuery(changedValues, fastify, request);
+      delete changedValues.userId;
+      const index = global.tblPlayers.findIndex(
+        (item) => item.playerId === checkPlayerData.playerId
+      );
+      if (index !== -1) {
+        global.tblPlayers[index] = updatePlayerData[0];
+      }
+    } catch (err) {
+      errorLogger(fastify, `Failed to update player id: ${checkPlayerData.playerId} error: ${err.message}`, "/services/player.js/UpdatePlayerFromEntityService", request);
+      return false;
+    }
+  }
+
+  return `Player data updated successfully`;
+};
+
+const playerImportService = async (data, fastify, request) => {
+  const url =  entitySportAPIEndPoint.getPlayerAndStatisticsData.replace('{pid}', data.pid);
+  const entitySportPlayer = await callEntitySportAPI(url, request, fastify);
+
+  if (data?.autoImportId && data?.autoImportId === global?.autoImportData?.id) {
+    global.autoImportData.esApiResponseData = entitySportPlayer?.data?.result;
+  }
+
+  let entitySportPlayerResponse = entitySportPlayer?.data?.result?.player;
+  let entitySportPlayerStatisticsResponse = entitySportPlayer?.data?.result;
+  if (!entitySportPlayerResponse) {
+    errorLogger(
+      fastify,
+      `Invalid response from Entit-Sport API for url ${url}`,
+      "/services/player.js/playerImportService - entitySportPlayerStatisticsResponse", {
+      ...request,
+      originalUrl: url
+    }, entitySportPlayer?.data);
+    return false;
+  }
+
+  const entitySocketData = global.tblEntitySockets[0];
+  let checkPlayer = global.tblPlayers.find(item => item.tpId == entitySportPlayerResponse?.pid);
+  if (!checkPlayer) {
+    checkPlayer = global.tblPlayers.find((item) => item.tpId == null
+      && item.playerName.toLowerCase() === entitySportPlayerResponse?.title.replace(/'/g, "''").toLowerCase() &&
+      item.displayName.trim().replace(/'/g, "''").toLowerCase() == entitySportPlayerResponse?.short_name.toLowerCase())
+    if (!checkPlayer) {
+      let getCountry = null;
+      if (entitySportPlayerResponse?.nationality) {
+        getCountry = global.tblCountryCodes.find(item => item.countryName.toLowerCase() === entitySportPlayerResponse?.nationality.toLowerCase());
+        if (!getCountry) {
+          const insertCountryData = {
+            countryName: entitySportPlayerResponse?.nationality || null,
+            isActive: true,
+          };
+          const insertCountryCode = await insertCountryCodeQuery(insertCountryData, fastify, request);
+          global.tblCountryCodes.push(insertCountryCode);
+          getCountry = insertCountryCode;
+        }
+      }
+      let insertPlayerData = {
+        eventTypeId: EventType['Cricket'],
+        playerTypeId: EntityPlayerType[entitySportPlayerResponse?.playing_role],
+        playerName: entitySportPlayerResponse?.title,
+        displayName: entitySportPlayerResponse?.short_name,
+        countryId: getCountry?.id,
+        isActive: true,
+        isKipper: entitySportPlayerResponse?.playing_role === 'wk' ? true : false,
+        isLeftHandedBatting: !entitySportPlayerResponse.batting_style.includes('Right'),
+        isLeftArmFielding: !entitySportPlayerResponse.bowling_style.includes('Right'),
+        userId: -2,
+        batsmanAverage: 0.0,
+        batsmanStrikeRate: 0.0,
+        bowlerAverage: 0.0,
+        bowlerEconomy: 0.0,
+        tpId: entitySportPlayerResponse?.pid || null,
+        bowlingStyleId: entitySportPlayerResponse.bowling_type ? EntityBowlingStyleType[entitySportPlayerResponse.bowling_type.toLowerCase()] : null,
+        bowlingTypeId: extractBowlingStyle(entitySportPlayerResponse.bowling_type, entitySportPlayerResponse.bowling_style),
+        image: entitySocketData?.defaultPlayerImage || null,
+        imagePath: entitySocketData?.defaultPlayerImagePath || null,
+        birthDate: entitySportPlayerResponse?.birthdate,
+        birthPlace: entitySportPlayerResponse?.birthplace
+      };
+      const insertPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
+      global.tblPlayers.push(insertPlayer);
+      checkPlayer = insertPlayer;
+    }
+    else if (checkPlayer?.tpId === null || !checkPlayer?.tpId || checkPlayer?.tpId !== entitySportPlayerResponse?.pid) {
+      const data = {
+        userId: -2,
+        tpId: entitySportPlayerResponse?.pid || null,
+        playerId: checkPlayer.playerId,
+      };
+      const updatePlayer = await updateExchangePlayerQuery(data, fastify, request);
+      let index = global.tblPlayers.findIndex((i) => i.playerId == checkPlayer.playerId)
+      if (index != -1) {
+        global.tblPlayers[index] = updatePlayer
+      }
+      checkPlayer = updatePlayer
+    }
+  }
+
+  await updatePlayerBatBowlHistory(checkPlayer?.playerId, entitySportPlayerStatisticsResponse?.batting, entitySportPlayerStatisticsResponse?.bowling, request, fastify);
+
+  return checkPlayer;
+}
+
+const allPlayersMergeImageService = async (request, fastify) => {
+  const result = await playersMergeImageService(1, request, fastify)
+  return result;
+};
+
+const mergePlayerNullImageService = async (request, fastify) => {
+  const result = await playersMergeImageService(2, request, fastify)
+  return result;
+};
+
+const updatePlayerHomeTeamService = async (request, fastify) => {
+  const { teamPlayerId, playerId } = request.body;
+
+  await updateTeamPlayerHomeTeamByTeamPlayerIdQuery(
+    {
+      teamPlayerId: parseInt(teamPlayerId),
+      playerId: parseInt(playerId)
+    },
+    fastify,
+    request
+  );
+  // await playerImageChangeOnClientAPIService(parseInt(playerId), fastify);
+  return "Player Home Team updated successfully";
+};
+
+const getPlayerCompetitionListByIdService = async (request, fastify) => {
+  const playerId = request.body.playerId;
+
+  const checkPlayer = global.tblPlayers.find(p => p.playerId === playerId);
+  if (!checkPlayer) {
+    throw new Error(`Player with this id: ${playerId} not Found`);
+  }
+
+  const result = await fastify.db.query(
+    `SELECT * FROM fn_get_player_competition_list_by_id(:playerId)`,
+    {
+      replacements: {
+        playerId: playerId
+      },
+      type: fastify.db.QueryTypes.SELECT
+    }
+  );
+
+  return result?.[0]?.fn_get_player_competition_list_by_id ?? [];
+};
+
+const getPlayerPlayInCommentaryListByIdService = async (request, fastify) => {
+  const playerId = request.body.playerId;
+
+  const checkPlayer = global.tblPlayers.find(p => p.playerId === playerId);
+  if (!checkPlayer) {
+    throw new Error(`Player with this id: ${playerId} not Found`);
+  }
+
+  const result = await fastify.db.query(
+    `SELECT * FROM fn_get_player_play_in_commentary_list(:playerId)`,
+    {
+      replacements: {
+        playerId: playerId
+      },
+      type: fastify.db.QueryTypes.SELECT
+    }
+  );
+
+  return result ?? [];
+};
+
+const runMergePlayerImageJob = async (playerId, request, fastify) => {
+  const player = global.tblPlayers.find(tp => tp.playerId === playerId);
+  if (!player) {
+    errorLogger(
+      fastify,
+      `Player with this id ${playerId} not found`,
+      "ERROR --> services/player.js/runMergePlayerImageJob",
+      request
+    );
+    return true;
+  }
+  if (!player?.image) {
+    errorLogger(
+      fastify,
+      `Player image with this id ${playerId} not found`,
+      "ERROR --> services/player.js/runMergePlayerImageJob",
+      request
+    );
+    return true;
+  }
+
+  const playersInTeams = await getTeamPlayerByPlayerIdQuery(playerId, fastify, request);
+  if (playersInTeams?.length > 0) {
+    const uniqueTeamIds = [...new Set(playersInTeams.map(item => item.teamId))];
+    const teams = global.tblTeams.filter(tt => uniqueTeamIds.includes(tt.teamId));
+    const uniqueMatchTypeIds = [...new Set(playersInTeams.map(item => item.matchTypeId))];
+    const teamMatchType = await getTeamMatchTypeByTeamQuery(request, fastify, `ttmt."wrTeamId" IN (${uniqueTeamIds}) AND ttmt."wrMatchTypeId" IN (${uniqueMatchTypeIds})`);
+    for (const teamPlayer of playersInTeams) {
+      let jersey = null;
+      const team = teams.find(t => t.teamId === teamPlayer.teamId);
+      if (team) {
+        if (teamPlayer?.matchTypeId === -1) {
+          jersey = team?.jersey;
+        } else {
+          jersey = teamMatchType?.find(tmt => tmt.teamId === teamPlayer.teamId && tmt.matchTypeId === teamPlayer.matchTypeId)?.teamJerseyImage;
+        }
+        if (jersey) {
+          await mergeAndSaveImage({
+            playerImage: player.image,
+            jersey: jersey,
+            playerName: player.playerName,
+            teamName: team.teamName,
+            teamPlayerId: teamPlayer.teamPlayerId,
+            commentaryPlayerId: null,
+            commentaryId: null,
+          }, fastify);
+
+          await removeImageFromServer({ path: teamPlayer.jerseyPlayerImage });
+        }
+      }
+    }
+  }
+};
+
+const playerImageChangeOnClientAPIService = async (teamPlayer, matchTypeId, fastify) => {
+  const { teamId, refPlayerId } = teamPlayer;
+  const rankingData = global.tblICCRanking.filter(item => item.teamId === teamId && item.playerId == refPlayerId && item.matchTypeId === matchTypeId && item.isActive == true);
+  const updatedData = await Promise.all(
+    rankingData
+      .map(async item => {
+        const fields = await fieldNamesService(item, fastify);
+        return { ...item, ...fields };
+      })
+  );
+  if (updatedData.length > 0) {
+    await callClientAPI(
+      {
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.updateSeoModule,
+        data: {
+          module: 'iccRankings',
+          type: "update",
+          data: updatedData
+        }
+      }, null, fastify,
+      "services/player.js/playerImageChangeOnClientAPIService"
+    );
+  }
+}
+
+const upsertPlayerOnImportService = async (esPlayer, entitySocketData, isMen, fastify, request) => {
+  let checkPlayer = global.tblPlayers.find(item => item.tpId === esPlayer.pid);
+  if (!checkPlayer) {
+    checkPlayer = global.tblPlayers.find((item) => item.tpId == null
+      && item.playerName.toLowerCase() === esPlayer?.title.replace(/'/g, "''").toLowerCase() &&
+      item.displayName.trim().replace(/'/g, "''").toLowerCase() == esPlayer?.short_name.toLowerCase())
+    if (!checkPlayer) {
+      let getCountry = null;
+      if (esPlayer?.nationality) {
+        getCountry = global.tblCountryCodes.find(item => item.countryName.toLowerCase() === esPlayer?.nationality.toLowerCase());
+        if (!getCountry) {
+          const insertCountryData = {
+            countryName: esPlayer?.nationality || null,
+            isActive: true,
+          };
+          const insertCountryCode = await insertCountryCodeQuery(insertCountryData, fastify, request);
+          global.tblCountryCodes.push(insertCountryCode);
+          getCountry = insertCountryCode;
+        }
+      }
+
+      let insertPlayerData = {
+        eventTypeId: EventType['Cricket'],
+        playerTypeId: EntityPlayerType[esPlayer?.playing_role],
+        playerName: esPlayer?.title,
+        displayName: esPlayer?.short_name,
+        countryId: getCountry?.id,
+        isActive: true,
+        isKipper: esPlayer?.playing_role === 'wk' ? true : false,
+        isLeftHandedBatting: esPlayer.batting_style ? !esPlayer.batting_style.includes('Right') : false,
+        isLeftArmFielding: esPlayer.bowling_style ? !esPlayer.bowling_style.includes('Right') : false,
+        userId: -2,
+        batsmanAverage: 0.0,
+        batsmanStrikeRate: 0.0,
+        bowlerAverage: 0.0,
+        bowlerEconomy: 0.0,
+        tpId: esPlayer?.pid || null,
+        bowlingStyleId: esPlayer.bowling_type ? EntityBowlingStyleType[esPlayer.bowling_type.toLowerCase()] : null,
+        bowlingTypeId: extractBowlingStyle(esPlayer.bowling_type, esPlayer.bowling_style),
+        image: entitySocketData?.defaultPlayerImage || null,
+        imagePath: entitySocketData?.defaultPlayerImagePath || null,
+        isMen,
+        birthDate: esPlayer?.birthdate || null,
+        birthPlace: esPlayer?.birthplace ?? null
+      };
+      checkPlayer = await insertPlayerQuery(insertPlayerData, fastify, request);
+      global.tblPlayers.push(checkPlayer);
+
+      await insertAutoImportDataService({
+        ...request,
+        body: {
+          refId: checkPlayer?.playerId,
+          refType: RefType.PlayerUpdate,
+          sourceId: 3
+        },
+        userTokenInfo: {
+          WrUserId: request?.userTokenInfo?.WrUserId ?? -2
+        }
+      }, fastify);
+    } else if (checkPlayer?.tpId === null || !checkPlayer?.tpId || checkPlayer?.tpId !== esPlayer?.pid) {
+      const data = {
+        userId: -2,
+        tpId: esPlayer.pid,
+        playerId: checkPlayer.playerId,
+      };
+      checkPlayer = await updateExchangePlayerQuery(data, fastify, request);
+      let index = global.tblPlayers.findIndex((i) => i.playerId == checkPlayer.playerId)
+      if (index != -1) {
+        global.tblPlayers[index] = checkPlayer
+      }
+    }
+  }
+  return checkPlayer;
+}
 
 module.exports = {
   allPlayerService,
@@ -654,4 +1629,15 @@ module.exports = {
   mergePlayerImageAndJerseyService,
   setTeamPlayerImgService,
   getTeamListPlayerIdService,
+  activeInactivePlayerService,
+  UpdatePlayerFromEntityService,
+  playerImportService,
+  allPlayersMergeImageService,
+  mergePlayerNullImageService,
+  updatePlayerHomeTeamService,
+  getPlayerCompetitionListByIdService,
+  getPlayerPlayInCommentaryListByIdService,
+  getPlayerCreatedDetailsService,
+  playerImageChangeOnClientAPIService,
+  upsertPlayerOnImportService
 };

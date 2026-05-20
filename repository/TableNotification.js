@@ -126,7 +126,7 @@ const updateNotificationQuery =async (data,request , fastify) =>{
             "wrUrl" as "url",
             "wrIsSend" as "isSend",
             "wrImagePath" as "imagePath",
-            "wrIconPath" as "iconPath",
+            "wrIconPath" as "iconPath"
         `;
 
         const result = await fastify.db.query(query,{

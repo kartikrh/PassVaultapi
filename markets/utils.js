@@ -214,24 +214,27 @@ function initializeBallToActionMap(markets, commentaryId, battingTeamId, current
             console.log(`[INIT] Mapped open action at ball ${openBall} for market "${market.marketName}" (team: ${teamId}, category: ${marketCategoryId})`);
         }
 
-        // Map when to close the market
+        // Map when to close the market - FIXED: Ensure it maps to .6 instead of .7
         const closeBall = getBallFromOver(market.beforeAutoClose, market.matchTypeID || 2);
         if (closeBall && (!minBallToConsider || compareBalls(closeBall, minBallToConsider) >= 0)) {
-            mapAction(commentaryId, closeBall, "close", marketId, marketMetadata);
-            console.log(`[INIT] Mapped close action at ball ${closeBall} for market "${market.marketName}" (team: ${teamId}, category: ${marketCategoryId})`);
+            // Fix: Ensure close action is mapped to .6 (last ball of over) instead of .7
+            const correctedCloseBall = correctCloseBall(closeBall);
+            mapAction(commentaryId, correctedCloseBall, "close", marketId, marketMetadata);
+            console.log(`[INIT] Mapped close action at ball ${correctedCloseBall} for market "${market.marketName}" (team: ${teamId}, category: ${marketCategoryId})`);
         }
 
-        // Map when to settle the market (for odd-even, lottery, and L.D.O markets)
+        // Map when to settle the market - FIXED: Use autoResultafterBall properly
         if ((marketCategoryId === 28 || marketCategoryId === 35 || marketCategoryId === 26) && market.isAutoResultSet) {
             // Calculate settlement ball based on the over and autoResultAfterBall
+            const autoResultAfterBall = parseInt(market.wrAutoResultafterBall || market.autoResultAfterBall || 0);
             const settleBall = getBallFromOver(
-                parseFloat(market.over) + (parseFloat(market.autoResultAfterBall || 0) / 10),
+                parseFloat(market.over) + (autoResultAfterBall / 10),
                 market.matchTypeID || 2
             );
 
             if (settleBall && (!minBallToConsider || compareBalls(settleBall, minBallToConsider) >= 0)) {
                 mapAction(commentaryId, settleBall, "settle", marketId, marketMetadata);
-                console.log(`[INIT] Mapped settle action at ball ${settleBall} for market "${market.marketName}" (team: ${teamId}, category: ${marketCategoryId})`);
+                console.log(`[INIT] Mapped settle action at ball ${settleBall} for market "${market.marketName}" (over: ${market.over}, autoResultAfterBall: ${autoResultAfterBall}, team: ${teamId}, category: ${marketCategoryId})`);
             }
         }
     });
@@ -239,6 +242,26 @@ function initializeBallToActionMap(markets, commentaryId, battingTeamId, current
     // Log the count of balls with actions
     const ballCount = Object.keys(global.marketData[commentaryId].ballToActionMap).length;
     console.log(`[INIT] Total balls mapped: ${ballCount}`);
+}
+
+/**
+ * Corrects close ball to ensure it's at .6 instead of .7
+ * @param {string} ball - Original ball number
+ * @returns {string} - Corrected ball number
+ */
+function correctCloseBall(ball) {
+    if (!ball) return ball;
+
+    const parts = ball.split('.');
+    const over = parseInt(parts[0]);
+    const ballInOver = parseInt(parts[1]);
+
+    // If it's .7, correct it to .6 (last valid ball of over)
+    if (ballInOver === 7) {
+        return `${over}.6`;
+    }
+
+    return ball;
 }
 
 // Add helper function to compare balls
@@ -922,13 +945,107 @@ function validateBallToActionMap(commentaryId) {
     return issues.length === 0;
 }
 
+
+/**
+ * Calculates total runs scored till the end of an over (cumulative) using global.tblOvers
+ * @param {number} commentaryId - The commentary ID
+ * @param {number} teamId - The team ID
+ * @param {string|number} over - The over number
+ * @returns {number} - Total runs till the end of the over
+ */
+function calculateOverRunsTillEnd(commentaryId, teamId, over) {
+    try {
+        const overNum = parseInt(over);
+        let totalRuns = 0;
+
+        console.log(`[CALC_CUMULATIVE] Starting calculation for commentary ${commentaryId}, team ${teamId}, till over ${overNum}`);
+
+        if (!global.tblOvers || !Array.isArray(global.tblOvers)) {
+            console.error(`[CALC_CUMULATIVE] global.tblOvers not found or not an array`);
+            return 0;
+        }
+
+        // Filter by commentaryId first
+        const commentaryOvers = global.tblOvers.filter(item => item.commentaryId === commentaryId);
+        console.log(`[CALC_CUMULATIVE] Found ${commentaryOvers.length} overs for commentary ${commentaryId}`);
+
+        // Filter by teamId
+        const teamOvers = commentaryOvers.filter(item => item.teamId !== teamId);
+        console.log(`[CALC_CUMULATIVE] Found ${teamOvers.length} overs for team ${teamId}`);
+
+        // Calculate cumulative runs from over 1 to overNum
+        // Note: item.over starts from 0, so for over 3 we check item.over === 2
+        for (let i = 1; i <= overNum; i++) {
+            const overData = teamOvers.find(item => item.over === (i - 1)); // over 1 = item.over 0, over 2 = item.over 1, etc.
+
+            if (overData && overData.totalRun !== undefined) {
+                totalRuns += overData.totalRun;
+                console.log(`[CALC_CUMULATIVE] Over ${i} (item.over ${i - 1}): ${overData.totalRun} runs`);
+            } else {
+                console.log(`[CALC_CUMULATIVE] No data found for over ${i} (item.over ${i - 1})`);
+            }
+        }
+
+        console.log(`[CALC_CUMULATIVE] Total cumulative runs till over ${overNum}: ${totalRuns}`);
+        return totalRuns;
+
+    } catch (error) {
+        console.error(`[CALC_CUMULATIVE] Error calculating cumulative runs till over ${over}:`, error);
+        return 0;
+    }
+}
+
+/**
+ * Calculates runs scored in a specific over only using global.tblOvers
+ * @param {number} commentaryId - The commentary ID
+ * @param {number} teamId - The team ID
+ * @param {string|number} over - The over number
+ * @returns {number} - Runs scored in that specific over
+ */
+function calculateRunsInSpecificOver(commentaryId, teamId, over) {
+    try {
+        const overNum = parseInt(over);
+
+        console.log(`[CALC_SPECIFIC] Starting calculation for commentary ${commentaryId}, team ${teamId}, over ${overNum}`);
+
+        if (!global.tblOvers || !Array.isArray(global.tblOvers)) {
+            console.error(`[CALC_SPECIFIC] global.tblOvers not found or not an array`);
+            return 0;
+        }
+
+        // Filter by commentaryId first
+        const commentaryOvers = global.tblOvers.filter(item => item.commentaryId === commentaryId);
+        console.log(`[CALC_SPECIFIC] Found ${commentaryOvers.length} overs for commentary ${commentaryId}`);
+
+        // Filter by teamId
+        const teamOvers = commentaryOvers.filter(item => item.teamId !== teamId);
+        console.log(`[CALC_SPECIFIC] Found ${teamOvers.length} overs for team ${teamId}`);
+
+        // Find the specific over data
+        // Note: item.over starts from 0, so for over 3 we check item.over === 2
+        const overData = teamOvers.find(item => item.over === (overNum - 1));
+
+        if (overData && overData.totalRun !== undefined) {
+            console.log(`[CALC_SPECIFIC] Found runs for over ${overNum} (item.over ${overNum - 1}): ${overData.totalRun}`);
+            return overData.totalRun;
+        } else {
+            console.log(`[CALC_SPECIFIC] No data found for over ${overNum} (item.over ${overNum - 1})`);
+            return 0;
+        }
+
+    } catch (error) {
+        console.error(`[CALC_SPECIFIC] Error calculating runs for specific over ${over}:`, error);
+        return 0;
+    }
+}
+
 module.exports = {
     normalizeBallToActionMap,
     formatMarketForSocket,
     sendSocketData,
     createMarketAndRunner,
     processMarketAndRunners,
-    generateMarketFromTemplate, 
+    generateMarketFromTemplate,
     generateExtraMarketFromTemplate,
     getMarketKey,
     mergeRunners,
@@ -936,5 +1053,7 @@ module.exports = {
     formatBallNumber,
     validateBallToActionMap,
     synchronizeMarketStatus,
-    logBallToActionMapSample
+    logBallToActionMapSample,
+    calculateOverRunsTillEnd,
+    calculateRunsInSpecificOver
 };

@@ -1,4 +1,4 @@
-const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveBannerQuery } = require("../repository/TableBanner");
+const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveBannerQuery, updateDisplayOrderBannerQuery } = require("../repository/TableBanner");
   const {
     generateImageName,
     storeImageOnServer,
@@ -6,15 +6,37 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
   } = require("../utilities/Images");
   const { PROJECT_NAME } = require("../utilities/configConstants");
   const { ImgModuleConfig } = require("../utilities/imageConstant");
-  const { APIEndpointModuleType, ServiceType, callClientAPI } = require("../utilities");
+  const { APIEndpointModuleType, ServiceType, callClientAPI, getDataFromTime, checkDataSendToClient } = require("../utilities");
   // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
   
   const getAllBannerService = async (request, fastify) => {
-    const { isActive } = request.body;
-    if (isActive == undefined) {
-      return global.tblBanner;
+    const { isActive, dateTime ,isPermanent , startDate, endDate} = request.body;
+    let data = global.tblBanner;
+    if(isActive != undefined){
+      data = data.filter((i)=> i.isActive == Boolean(isActive))
     }
-    return global.tblBanner.filter((item) => item.isActive === isActive);
+    if(isPermanent != undefined){
+      data = data.filter((i)=> i.isPermanent == Boolean(isPermanent))
+    }
+    if(startDate &&  endDate){
+      const start = new Date(startDate).getTime();
+      const end = new Date(endDate).getTime();
+
+      data = data.filter(item => {
+        if (item.isPermanent) return false; // optional
+        
+        const stDate = new Date(item.startDate).getTime();
+        const enDate = new Date(item.endDate).getTime();
+
+        return stDate <= end && enDate >= start;
+      });
+    }
+
+    if (dateTime) {
+      data = getDataFromTime(data, "pendingBannerToClient");
+    }
+
+    return data;
   };
   
   const bannerByIdService = async (request, fastify) => {
@@ -57,22 +79,22 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       request,
       fastify
     );
-    callClientAPI(
-      {
-        serviceType : ServiceType.clientAPI,
-        moduleType : APIEndpointModuleType.updateBanner,
-        data : data
-      },
-      request,
-      fastify
-    ).catch((err) => {
-      errorLogger(
+
+    const sendToClient = checkDataSendToClient(data[0]);
+    if (sendToClient) {
+      await callClientAPI(
+        {
+          serviceType: ServiceType.clientAPI,
+          moduleType: APIEndpointModuleType.updateBanner,
+          data: data[0]
+        },
+        request,
         fastify,
-        err.message,
-        "API ERROR --> services/banner/createBannerService",
-        request
-      )
-    });
+        "services/banner.js/createBannerService"
+      );
+    } else {
+      global.pendingBannerToClient.push(data[0]);
+    }
   
     global.tblBanner.push(data[0]);
 
@@ -92,6 +114,9 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       throw new Error("Banner with this Id not found");
     }
     // if image is uploaded then upload it to server
+    const isPermanent = request.body.hasOwnProperty("isPermanent")
+      ? request.body.isPermanent
+      : validateBannerId.isPermanent;
     const body = {
       bannerId: request.body.bannerId,
       title: request.body.title || validateBannerId.title,
@@ -99,16 +124,24 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       isActive: request.body.hasOwnProperty("isActive")
         ? request.body.isActive
         : validateBannerId.isActive,
-      isPermanent: request.body.hasOwnProperty("isPermanent")
-        ? request.body.isPermanent
-        : validateBannerId.isPermanent,
-      startDate: request.body.startDate || validateBannerId.startDate,
-      endDate: request.body.endDate || validateBannerId.endDate,
+      isPermanent: isPermanent,
+      // startDate: request.body.startDate || validateBannerId.startDate,
+      // endDate: request.body.endDate || validateBannerId.endDate,
+      startDate: isPermanent ? null : (request.body.hasOwnProperty("startDate") ? request.body.startDate : validateBannerId.startDate),
+      endDate: isPermanent ? null : (request.body.hasOwnProperty("endDate") ? request.body.endDate : validateBannerId.endDate),
       image: validateBannerId.image,
       userId: request.userTokenInfo.WrUserId,
       link: request.body.link,
-      viewerCount: request.body.viewerCount || validateBannerId.viewerCount,
+      viewerCount: validateBannerId.viewerCount,
       imagePath: validateBannerId.imagePath,
+      deviceTypeId: Number(request.body.deviceTypeId) || validateBannerId?.deviceTypeId,
+      whitelabelId: Number(request.body.whitelabelId) ?? validateBannerId?.whitelabelId,
+      displayOrder: request.body.hasOwnProperty("displayOrder")
+      ? request.body.displayOrder
+      : (
+          validateBannerId.displayOrder ??
+          Math.max(...global.tblBanner.map(item => item.displayOrder || 0)) + 1
+        )
     };
     if (request.body.image && request.body.image.length) {
       const imgName = generateImageName({
@@ -128,22 +161,24 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
     }
   
     await updateBannerQuery(body, request, fastify);
-    callClientAPI(
+    const whiteLabelData = global.tblWhitelabels.find(
+      (item) => item.id == body.whitelabelId
+    );
+    body.domain = whiteLabelData?.domain ?? null
+    body.encryptWhitelabelId = whiteLabelData?.whitelabelId ?? null
+
+    global.pendingBannerToClient = global.pendingBannerToClient.filter(item => item.bannerId !== body.bannerId);
+
+    await callClientAPI(
       {
         serviceType : ServiceType.clientAPI,
         moduleType : APIEndpointModuleType.updateBanner,
         data : body
       },
       request,
-      fastify
-    ).catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "API ERROR --> services/banner/updateBannerService",
-        request
-      )
-    });
+      fastify,
+      "services/banner.js/updateBannerService"
+    );
     const index = global.tblBanner.findIndex(
       (item) => item.bannerId === request.body.bannerId
     );
@@ -164,7 +199,10 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
     }
     // delete the banner
     await deleteBannerQuery(bannerId, request, fastify);
-    callClientAPI(
+
+    global.pendingBannerToClient = global.pendingBannerToClient.filter(item => item.bannerId !== bannerId);
+
+    await callClientAPI(
       {
         serviceType : ServiceType.clientAPI,
         moduleType : APIEndpointModuleType.updateBanner,
@@ -174,15 +212,9 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
         }
       },
       request,
-      fastify
-    ).catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "API ERROR --> services/banner/deleteBannerService",
-        request
-      )
-    });
+      fastify,
+      "services/banner.js/deleteBannerService"
+    );
     global.tblBanner = global.tblBanner.filter(
       (item) => !bannerId.includes(item.bannerId)
     );
@@ -204,7 +236,10 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       request,
       fastify
     );
-    callClientAPI(
+
+    global.pendingBannerToClient = global.pendingBannerToClient.filter(item => item.bannerId !== bannerId);
+
+    await callClientAPI(
       {
         serviceType : ServiceType.clientAPI,
         moduleType : APIEndpointModuleType.updateBanner,
@@ -215,26 +250,96 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
         }
       },
       request,
-      fastify
-    ).catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "API ERROR --> services/banner/activeInactiveBannerService",
-        request
-      )
-    });
+      fastify,
+      "services/banner.js/activeInactiveBannerService"
+    );
   
     const index = global.tblBanner.findIndex((item) => item.bannerId === bannerId);
     global.tblBanner[index].isActive = isActive;
   
     return `Banner updated successfully`;
   };
+
+  const updateDisplayOrderBannerService = async (request, fastify) => {
+  for (const item of request.body) {
+    await updateDisplayOrderBannerQuery(item, request, fastify);
+    let index = global.tblBanner.findIndex(
+      (elem) => elem.bannerId === item.bannerId
+    );
+    if (index !== -1) {
+      global.tblBanner[index].displayOrder = item.displayOrder;
+    }
+  }
+  const now = Date.now();
+  let allActiveData = global.tblBanner.filter(item => 
+    item.isActive === true && (item.isPermanent === true || 
+      (
+        new Date(item.startDate).getTime() <= now &&
+        new Date(item.endDate).getTime() >= now
+      )
+    )
+  );
+
+  global.pendingBannerToClient = global.pendingBannerToClient.filter(item => allActiveData.map(item => item.bannerId).includes(item.bannerId));
+
+  await callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.updateBanner,
+      data: {
+        type: "changeDisplayOrder",
+        data: allActiveData
+      }
+    },
+    request,
+    fastify,
+    "services/banner.js/updateDisplayOrderBannerService"
+  );
+
+  return `Display order updated successfully`;
+};
+
+const sendActiveBannerToClientAPIService = async (fastify) => {
+  try {
+    if (global.pendingBannerToClient.length > 0) {
+      const now = Date.now();
+      for (const data of global.pendingBannerToClient) {
+        const start = new Date(data.startDate).getTime();
+        const end = new Date(data.endDate).getTime();
+
+        const result = start <= now && end >= now;
+        if (result) {
+          global.pendingBannerToClient = global.pendingBannerToClient.filter(item => item.bannerId !== data.bannerId);
+          await callClientAPI(
+            {
+              serviceType: ServiceType.clientAPI,
+              moduleType: APIEndpointModuleType.updateBanner,
+              data: data
+            },
+            null,
+            fastify,
+            "services/banner.js/sendActiveBannerToClientAPIService"
+          );
+        }
+      }
+    }
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> services/banner.js/sendActiveBannerToClientAPIService",
+      null
+    )
+  }
+}
+
   module.exports = {
     getAllBannerService,
     bannerByIdService,
     saveBannerService,
     deleteBannerService,
     activeInactiveBannerService,
+    updateDisplayOrderBannerService,
+    sendActiveBannerToClientAPIService
   };
   

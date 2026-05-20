@@ -46,7 +46,7 @@ const saveTipsService = async (request, fastify) => {
   ) {
     global.tblTips.push(saveData);
 
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
@@ -57,15 +57,9 @@ const saveTipsService = async (request, fastify) => {
         },
       },
       request,
-      fastify
-    ).catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "services/tips.js/saveTipsService - callClientAPI",
-        request
-      );
-    });
+      fastify,
+      "services/tips.js/saveTipsService"
+    );
   }
 
   return `Tips data successfully created`;
@@ -110,7 +104,7 @@ const editTipsService = async (request, fastify) => {
     }
   }
 
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
@@ -121,15 +115,9 @@ const editTipsService = async (request, fastify) => {
       },
     },
     request,
-    fastify
-  ).catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "services/tips.js/editTipsService - callClientAPI",
-      request
-    );
-  });
+    fastify,
+    "services/tips.js/editTipsService"
+  );
 
   return modifiedData[0];
 };
@@ -162,7 +150,7 @@ const deleteTipsService = async (fastify, request) => {
 
   global.tblTips = global.tblTips.filter((item) => !id.includes(item.id));
 
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
@@ -175,15 +163,9 @@ const deleteTipsService = async (fastify, request) => {
       },
     },
     request,
-    fastify
-  ).catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "services/tips.js/deleteTipsService - callClientAPI",
-      request
-    );
-  });
+    fastify,
+    "services/tips.js/deleteTipsService"
+  );
 
   return `Tip(s) data deleted successfully`;
 };
@@ -210,7 +192,7 @@ const activeInactiveTipsService = async (request, fastify) => {
     }
   }
 
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
@@ -221,15 +203,9 @@ const activeInactiveTipsService = async (request, fastify) => {
       },
     },
     request,
-    fastify
-  ).catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "services/tips.js/activeInactiveTipsService - callClientAPI",
-      request
-    );
-  });
+    fastify,
+    "services/tips.js/activeInactiveTipsService"
+  );
 
   return `Tips data updated successfully`;
 };
@@ -262,7 +238,7 @@ const createTipsOnExternalService = async (request, fastify) => {
   ) {
     global.tblTips.push(saveData);
 
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
@@ -273,15 +249,9 @@ const createTipsOnExternalService = async (request, fastify) => {
         },
       },
       request,
-      fastify
-    ).catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "services/tips.js/createTipsOnExternalService - callClientAPI",
-        request
-      );
-    });
+      fastify,
+      "services/tips.js/createTipsOnExternalService"
+    );
   }
   return `Tips data successfully created`;
 };
@@ -309,7 +279,7 @@ const activeInactiveTipsOnExternalService = async (request, fastify) => {
     }
   }
 
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
@@ -320,15 +290,9 @@ const activeInactiveTipsOnExternalService = async (request, fastify) => {
       },
     },
     request,
-    fastify
-  ).catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "services/tips.js/activeInactiveTipsOnExternalService - callClientAPI",
-      request
-    );
-  });
+    fastify,
+    "services/tips.js/activeInactiveTipsOnExternalService"
+  );
 
   return `Tips data updated successfully`;
 };

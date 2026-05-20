@@ -3,7 +3,7 @@ const {
   updateConfigQuery,
   deleteConfigQuery,
 } = require("../repository/TableConfig");
-const { callClientAPI, ServiceType, APIEndpointModuleType, callEntitySportAPI } = require("../utilities");
+const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
 const configConstants = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { generateImageName, storeImageOnServer } = require("../utilities/Images");
@@ -53,42 +53,16 @@ const createConfigService = async (request, fastify) => {
     }, fastify, request);
 
   global.tblConfigs.push(data);
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType : ServiceType.clientAPI,
         moduleType : APIEndpointModuleType.updateConfig,
         data : data
       },
       request,
-      fastify
-    ).catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "API ERROR --> services/config/createConfigService",
-        request
-      )
-    });
-    callEntitySportAPI(
-      {
-        serviceType: ServiceType.entitySport,
-        moduleType: APIEndpointModuleType.configUpdate,
-        data: {
-          module : "config",
-          type : "add",
-          data : data
-        }
-      },
-      request,
-      fastify
-    ).catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "API ERROR --> services/config/createConfigService - callEntitySportAPI",
-        request
-      )
-    });
+      fastify,
+      "services/config.js/createConfigService"
+    );
   
   return data;
 };
@@ -140,43 +114,16 @@ const updateConfigService = async (request, fastify) => {
   const index = global.tblConfigs.findIndex((item) => item.configId === configId);
 
   global.tblConfigs[index] = data;
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType : ServiceType.clientAPI,
         moduleType : APIEndpointModuleType.updateConfig,
         data : data
       },
       request,
-      fastify
-    ).catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "API ERROR --> services/config/updateConfigService",
-        request
-      )
-    });
-
-    callEntitySportAPI(
-      {
-        serviceType: ServiceType.entitySport,
-        moduleType: APIEndpointModuleType.configUpdate,
-        data: {
-          module : "config",
-          type : "update",
-          data : data
-        }
-      },
-      request,
-      fastify
-    ).catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "API ERROR --> services/config/createConfigService - callEntitySportAPI",
-        request
-      )
-    });
+      fastify,
+      "services/config.js/updateConfigService"
+    );
 
   return data;
 };
@@ -198,7 +145,7 @@ const deleteConfigService = async (request, fastify) => {
 
   global.tblConfigs = global.tblConfigs.filter((item) => !configId.includes(item.configId));
 
-  callClientAPI(
+  await callClientAPI(
     {
       serviceType : ServiceType.clientAPI,
       moduleType : APIEndpointModuleType.updateConfig,
@@ -208,35 +155,9 @@ const deleteConfigService = async (request, fastify) => {
       }
     },
     request,
-    fastify
-  ).catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "API ERROR --> services/config/deleteConfigService",
-      request
-    )
-  });
-  callEntitySportAPI(
-      {
-        serviceType: ServiceType.entitySport,
-        moduleType: APIEndpointModuleType.configUpdate,
-        data: {
-          module : "config",
-          type : "delete",
-          data : configId
-        }
-      },
-      request,
-      fastify
-    ).catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "API ERROR --> services/config/createConfigService - callEntitySportAPI",
-        request
-      )
-    });
+    fastify,
+    "services/config.js/deleteConfigService"
+  );
 
   return `Config(s) deleted successfully`;
 };
@@ -250,11 +171,12 @@ const allConfigDetails = async (request) => {
   return result
 };
 const getInitConfigDetails = async (request,fastify) => {
-  const initKeys = [configConstants.DPAPIURL, configConstants.DPAPIXKEY , configConstants.DPSOCKETURL, configConstants.SCORECARDFRAMEURL, configConstants.ENABLELOGROCKET, configConstants.LOGROCKETAPPID];
+  const initKeys = [configConstants.DPAPIURL, configConstants.DPAPIXKEY , configConstants.DPSOCKETURL, configConstants.SCORECARDFRAMEURL, configConstants.ENABLELOGROCKET, configConstants.LOGROCKETAPPID ,
+    configConstants.ISAPPLYPLAYERSTRIKELOGIC, configConstants.ISAPPLYPARTNERSHIPLOGIC, configConstants.ENTITYSPORTURL,
+    configConstants.STREAMINGURL, configConstants.STREAMINGXKEY, configConstants.STREAMINGWATCHURL , configConstants.WRONGRATEREQUESTURL, configConstants.WRONGRATEREQUESTXKEY];
   let result = global.tblConfigs.filter(item => initKeys.includes(item.key));
   return result;
 }
-
 const getAllConfigService = async (request, fastify) => {
   const validKeys = ['repetitioncallinterval', 'ismarketrepetitioncall'];
   return global.tblConfigs.filter(item =>

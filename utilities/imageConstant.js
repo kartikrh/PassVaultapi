@@ -62,6 +62,13 @@ const ImgModuleConfig = {
     height: 0,
     width: 0,
   },
+  Advertise: { 
+    type: "advertise",
+    formate: ".jpg,.png,.jpeg,.avif,.webp",
+    size: 0,
+    height: 0,
+    width: 0,
+  },
   Notification: {
     type: "notification",
     formate: ".jpg,.png,.jpeg,.avif,.webp",
@@ -119,7 +126,7 @@ const ImgModuleConfig = {
     width: 0,
   },
   Flag: {
-    type: "FLAG",
+    type: "Flag",
     formate: ".jpg,.png,.jpeg,.avif,.webp",
     size: 0,
     height: 0,
@@ -139,8 +146,21 @@ const ImgModuleConfig = {
     height: 0,
     width: 0,
   },
+  TeamMatchType: {
+    type: "TeamMatchType",
+    formate: ".jpg,.png,.jpeg,.avif,.webp",
+    size: 0,
+    height: 0,
+    width: 0,
+  },
+   Default: {
+    type: "Default",
+    formate: ".jpg,.png,.jpeg,.avif,.webp",
+    size: 0,
+    height: 0,
+    width: 0,
+  },
 };
-
 module.exports = {
   ImgModuleConfig,
 };

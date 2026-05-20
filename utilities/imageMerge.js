@@ -7,14 +7,15 @@ const { PROJECT_NAME } = require("./configConstants");
 const { ImgModuleConfig } = require("./imageConstant");
 const { errorLogger } = require("./logger");
 const axios = require("axios");
+const https = require("https");
 const { updateTeamPlayerImageQuery } = require("../repository/TableTeamPlayer");
-const { updateCommentaryPlayerJerseyImageQuery } = require("../repository/TableCommentary");
+const { updateCommentaryPlayerJerseyImageQuery, updateCommPlayersImagePathQuery } = require("../repository/TableCommentary");
 const sharp = require("sharp");
 
-
-const convertToPng = async (imageUrl,fastify) => {
+const agent = new https.Agent({ keepAlive: true });
+const convertToPng = async (imageUrl, fastify, data) => {
   try {
-    const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
+    const response = await axios.get(imageUrl, { responseType: "arraybuffer", timeout: 10000, httpsAgent: agent });
     let imageBuffer = Buffer.from(response.data);
 
     if (!imageUrl.toLowerCase().endsWith(".png")) {
@@ -27,7 +28,7 @@ const convertToPng = async (imageUrl,fastify) => {
   } catch (error) {
     errorLogger(
       fastify,
-      error.message,
+      `${error.message} ${data?.playerName ? '- ' + data?.playerName : ""} ${data?.teamName ? ' and teamName ' + data?.teamName : ""} ${data?.commentaryId ? ' with ' + data?.commentaryId : " "}`,
       "ERROR --> utilities/imageMerge.js/convertToPng",
       null
     );
@@ -63,8 +64,14 @@ const resizeImage = async (imageBuffer, width, height, fastify) => {
 
 const mergeAndSaveImage = async (data, fastify) => {
   try {
-    let playerBuffer = await convertToPng(data.playerImage,fastify);
-    let jerseyBuffer =  await convertToPng(data.jersey,fastify);
+    if (!data.playerImage || !data.jersey) {
+      return;
+    }
+    let playerBuffer = await convertToPng(data.playerImage, fastify, data);
+    let jerseyBuffer =  await convertToPng(data.jersey, fastify, data);
+    if (!playerBuffer || !jerseyBuffer) {
+      return;
+    }
 
     const backgroundImage = path.resolve("bgMergeImage", "bgMergeImage.png");
     const CANVAS_WIDTH = parseInt(
@@ -116,7 +123,10 @@ const mergeAndSaveImage = async (data, fastify) => {
 
     const base64Data = base64Image.replace(/^data:image\/png;base64,/, "");
     const imageBuffer = Buffer.from(base64Data, "base64");
-    const imgName = generateImageName({ name: `${data.playerName.trim().toLowerCase()}-${data.teamName.trim().toLowerCase()}` });
+    // const imgName = generateImageName({ name: `${data.playerName.trim().toLowerCase()}-${data.teamName.trim().toLowerCase()}` });
+    const imgName = generateImageName({
+      name: `${data.playerName.trim().toLowerCase().replace(/\s|-/g, '')}-${data.teamName.trim().toLowerCase().replace(/\s|-/g, '')}`
+    });
     const fileUploadURL = global.tblConfigs.find((item) => item.key === configConstants.FILE_UPLOAD_URL)?.value;
 
     const projectName = global.tblConfigs.find(
@@ -140,15 +150,45 @@ const mergeAndSaveImage = async (data, fastify) => {
       ...ImgModuleConfig.PlayerAndJersey,
     });
     if(data.teamPlayerId){
-      await updateTeamPlayerImageQuery({ teamPlayerId: data.teamPlayerId, jerseyPlayerImage: fullPath, jerseyPlayerImagePath: imagePath }, fastify);
+      const updateData = await updateTeamPlayerImageQuery({ teamPlayerId: data.teamPlayerId, jerseyPlayerImage: fullPath, jerseyPlayerImagePath: imagePath }, fastify);
+      if (updateData && updateData.length > 0) {
+        const { refPlayerId, teamId, matchTypeId } = updateData[0];
+        if (matchTypeId !== -1) {
+          await updateCommPlayerImagePath(refPlayerId, teamId, fullPath, imagePath, matchTypeId, fastify);
+        }
+      }
     }
 
     if(data.commentaryPlayerId){
-      await updateCommentaryPlayerJerseyImageQuery(
-        { commentaryPlayerId: data.commentaryPlayerId, jerseyPlayerImage: fullPath, jerseyPlayerImagePath: imagePath },
-        fastify
+      const index = global.tblCommentaryPlayers.findIndex(
+        (item) => item.commentaryPlayerId === data.commentaryPlayerId
       );
+      if (index !== -1) {
+        const updateData = await updateCommentaryPlayerJerseyImageQuery({
+          commentaryPlayerId: data.commentaryPlayerId,
+          jerseyPlayerImage: fullPath,
+          jerseyPlayerImagePath: imagePath
+        }, fastify);
+        if (updateData && updateData.length > 0) {
+          const commentaryId = updateData[0].commentaryId;
+          const sendDataForSocketUpdate = {
+            commentaryId: commentaryId,
+            eventRefId: global.tblCommentaries.find(tc => tc.commentaryId === commentaryId)?.eventRefId,
+            dataToUpdate: [
+              {
+                module: "commentaryPlayers",
+                type: "update",
+                data: global.tblCommentaryPlayers.filter(tcp => tcp.commentaryId === commentaryId),
+              },
+            ],
+          };
+          global.clientSocketIo.forEach((socket) => {
+            socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+          });
+        }
+      }
     }
+    return { fullPath, imagePath };
   } catch (error) {
     console.log("mergeimage error", error)
     errorLogger(
@@ -157,6 +197,62 @@ const mergeAndSaveImage = async (data, fastify) => {
       "ERROR --> utilities/imageMerge.js/mergeAndSaveImage",
       null
     );
+  }
+};
+
+const updateCommPlayerImagePath = async (playerId, teamId, fullPath, imagePath, matchTypeId, fastify) => {
+  if (!playerId || !teamId || !fullPath || !imagePath) {
+    return;
+  }
+
+  const commPlayerData = global.tblCommentaryPlayers.filter(
+    (item) => item.playerId === playerId && item.teamId === teamId
+  );
+
+  const updateCommentaryIds = [];
+
+  for (const commPlayer of commPlayerData) {
+    const index = global.tblCommentaryPlayers.findIndex(
+      (item) => item.commentaryPlayerId === commPlayer.commentaryPlayerId
+    );
+
+    if (index !== -1) {
+      const commentaryId = commPlayer.commentaryId;
+      const commentary = global.tblCommentaries.find(tc => tc.commentaryId === commentaryId && tc.matchTypeId === matchTypeId);
+      if (commentary?.matchTypeId === matchTypeId) {
+        if (!updateCommentaryIds.includes(commentaryId)) {
+          updateCommentaryIds.push(commentaryId);
+        }
+        await updateCommentaryPlayerJerseyImageQuery({
+          commentaryPlayerId: commPlayer.commentaryPlayerId,
+          jerseyPlayerImage: fullPath,
+          jerseyPlayerImagePath: imagePath
+        }, fastify);
+
+        global.tblCommentaryPlayers[index] = {
+          ...global.tblCommentaryPlayers[index],
+          jerseyPlayerImage: fullPath,
+          jerseyPlayerImagePath: imagePath,
+        };
+      }
+    }
+  }
+
+  for (const cId of updateCommentaryIds) {
+    const sendDataForSocketUpdate = {
+      commentaryId: cId,
+      eventRefId: global.tblCommentaries.find(tc => tc.commentaryId === cId)?.eventRefId,
+      dataToUpdate: [
+        {
+          module: "commentaryPlayers",
+          type: "update",
+          data: global.tblCommentaryPlayers.filter(tcp => tcp.commentaryId === cId),
+        },
+      ],
+    };
+    global.clientSocketIo.forEach((socket) => {
+      socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+    });
   }
 };
 

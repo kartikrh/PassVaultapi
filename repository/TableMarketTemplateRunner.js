@@ -84,7 +84,7 @@ const createMarketTemplateRunnerQuery = async (request, fastify) => {
                     request.body.layPrice || 0,
                     request.body.backSize || 0,
                     request.body.laySize || 0,
-                    request.body.predefinedValue,
+                    request.body.predefinedValue || 0,
 
                 ],
                 type: fastify.db.QueryTypes.SELECT,
@@ -147,7 +147,7 @@ const updateMarketTemplateRunnerQuery   = async (request, fastify) => {
                     request.body.layPrice || 0,
                     request.body.backSize || 0,
                     request.body.laySize || 0,
-                    request.body.predefinedValue,
+                    request.body.predefinedValue || 0,
                 ],
                 type: fastify.db.QueryTypes.SELECT,
             }
@@ -242,6 +242,10 @@ const getTemplateRunnerQuery = async (data,request, fastify) => {
                 tmt."wrDefaultIsSendData" AS "defaultIsSendData",
                 tmt."wrHowManyOpenMarkets" AS "howManyOpenMarkets",
                 tmt."wrRateDiff" AS "rateDiff",
+                tmt."wrDevTemplateName" as "devTemplateName",
+                tmt."wrAutoSuspendAfterChase" as "autoSuspendAfterChase",
+                tmt."wrAutoNotCreateAfterChase" as "autoNotCreateAfterChase",
+                tmt."wrIsDefaultSetResult" as "isDefaultSetResult",
                 COALESCE(runner_data.runners, '[]') AS "runners"
             FROM "tblCommMatchTypeTemplate" AS cmtt
             LEFT JOIN "tblMarketTemplates" AS tmt ON tmt."wrID" = cmtt."wrMarketTemplateId"

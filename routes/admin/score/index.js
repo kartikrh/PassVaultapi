@@ -24,19 +24,37 @@ const {
   insertCommentaryConsoleFe,
   getAllCompletedCommentary,
   getAllCommentariesDataV1,
+  getAllCommentariesDataV2,
+  getHeadToHeadCommentary,
+  getCommentaryStatistics,
+  getAllCommentaryByCompetitionIdForClient,
+  getCommentaryScoreStats,
 } = require("../../../controller/users/admin/commentary/commentary");
 const { getAllEventMarketsAndRunners } = require('../../../controller/users/admin/eventMarket');
 const { getAllMenuItems } = require("../../../controller/users/admin/menuItem");
 const { getMenuItemList, getAllMenuTypes } = require("../../../controller/users/admin/menuType");
 const { getAllNews, getNewsById } = require("../../../controller/users/admin/news");
-const { getMarketsByCommentaryId, getNotificationByClient, markReadNotification ,getMarketByGraphByRefId, getMarketsByCommentaryIdV1 } = require("../../../controller/users/admin/score");
+const { 
+  getMarketsByCommentaryId,
+  getNotificationByClient,
+  markReadNotification,
+  getMarketByGraphByRefId,
+  getMarketsByCommentaryIdV1,
+  saveDeviceData,
+  allCommentaryAwards,
+  checkPanelLoadData,
+} = require("../../../controller/users/admin/score");
 const {
   saveSubScribeDomain,
+  getAllSubScribesDomain,
+  getAllSubDomainData,
+  insertSubDomains,
+  insertDomains,
 } = require("../../../controller/users/admin/subScribesDomain");
 const { allCongifService } = require("../../../services/config");
 const { getAllBanners } = require("../../../controller/users/admin/banner");
 const { getMarketTypeAndCategoryByMarketType } = require("../../../controller/users/admin/marketTemplate");
-const { getAllCompetition } = require("../../../controller/users/admin/competition");
+const { getAllCompetitions, getAllSeasonOfCompetitions } = require("../../../controller/users/admin/competition");
 const { getAllVideoLibrary } = require("../../../controller/users/admin/videoLibrary/index");
 const { getAllPhotoLibrary, allLibraryImages } = require("../../../controller/users/admin/photoLibrary/index");
 const { getAllTipsClientAPI } = require("../../../controller/users/admin/tips/index");
@@ -53,6 +71,7 @@ const {
   deleteFavCommentary,
 } = require("../../../controller/users/admin/clientFavCommentary");
 const { getAllCardType } = require("../../../controller/users/admin/cardType/index")
+const { getTournamentTeamPoints } = require("../../../controller/users/admin/tournamentTeamPoints/index");
 
 const {
   Score,
@@ -66,6 +85,13 @@ const {
 const { getAllSocialMedia } = require("../../../controller/users/admin/socialMedia");
 const { clientApiWhitelabels, getHideEvent } = require("../../../controller/users/admin/whitelabel");
 const { deleteClient, deleteClientByEncrypt } = require("../../../controller/users/admin/client");
+const { AllICCRankings } = require("../../../controller/users/admin/iccRanking/index");
+const { getPlayerById } = require("../../../controller/users/admin/teamsAndPlayer/players");
+const { getCompetitionStatisticsByCompetitionId } = require("../../../controller/users/admin/competitionStatistics");
+const { getPlayerHistoryByPlayerIdForClient } = require("../../../controller/users/admin/playerHistory");
+const { getCommentaryPlayerHistoryByPlayerIdForClient } = require("../../../controller/users/admin/commPlayerHistory");
+const { getTournamentTeamPlayersByCompetitionIdForClient } = require("../../../controller/users/admin/tournamentTeamPlayers");
+const { getAllAdvertise } = require("../../../controller/users/admin/advertise");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/getscore", {
@@ -268,6 +294,10 @@ module.exports = async (fastify, opts) => {
     schema: Commentary.getLiveCommentaries.schema,
     handler: (request, reply) => getAllCommentariesDataV1(request, reply, fastify),
   })
+  fastify.post("/getLiveCommentariesV2", {
+    schema: Commentary.getLiveCommentaries.schema,
+    handler: (request, reply) => getAllCommentariesDataV2(request, reply, fastify),
+  })
 
   fastify.post("/getMarketsByCId" , {
     schema: Score.getMarkets.schema,
@@ -319,7 +349,7 @@ module.exports = async (fastify, opts) => {
     handler: (request, reply) => getMarketTypeAndCategoryByMarketType(request, reply, fastify),
   });
   fastify.post("/getCompetitions", {
-    handler: (request, reply) => getAllCompetition(request, reply, fastify)
+    handler: (request, reply) => getAllCompetitions(request, reply, fastify)
   });
   fastify.post("/videoLibrary", {
     handler: (request, reply) => getAllVideoLibrary(request, reply, fastify)
@@ -400,6 +430,80 @@ module.exports = async (fastify, opts) => {
   });
    fastify.post("/allCardTypes", {
     handler: (request, reply) => getAllCardType(request, reply, fastify),
+  });
+   fastify.post("/saveDeviceData", {
+    handler: (request, reply) => saveDeviceData(request, reply, fastify),
+  });
+   fastify.post("/tournamentTeamPoints", {
+    handler: (request, reply) => getTournamentTeamPoints(request, reply, fastify),
+  });
+  fastify.post("/iccRanking", {
+    handler: (request, reply) => AllICCRankings(request, reply, fastify),
+  });
+  fastify.post("/commAwards", {
+    handler: (request, reply) => allCommentaryAwards(request, reply, fastify),
+  });
+  fastify.post("/playerInfo", {
+    schema: Score.getPlayerByPlayerId.schema,
+    handler: (request, reply) => getPlayerById(request, reply, fastify),
+  });
+  fastify.post("/getPlayerHistoryByPlayerId", {
+    schema: Score.getPlayerByPlayerId.schema,
+    handler: (request, reply) => getPlayerHistoryByPlayerIdForClient(request, reply, fastify),
+  });
+  fastify.post("/getPlayerCommentaryHistoryByPlayerId", {
+    schema: Score.getPlayerByPlayerId.schema,
+    handler: (request, reply) => getCommentaryPlayerHistoryByPlayerIdForClient(request, reply, fastify),
+  });
+  fastify.post("/getCompetitionStatisticsById", {
+    schema: Score.getByCompetitionId.schema,
+    handler: (request, reply) => getCompetitionStatisticsByCompetitionId(request, reply, fastify),
+  });
+  fastify.post("/getHeadToHeadCommentary", {
+    schema: Score.getHeadToHeadCommentary.schema,
+    handler: (request , reply) => getHeadToHeadCommentary(request, reply, fastify)
+  });
+  fastify.post("/getCommentaryStatistics", {
+    schema: Score.getCommentaryStatistics.schema,
+    handler: (request , reply) => getCommentaryStatistics(request, reply, fastify)
+  });
+  fastify.post("/getCompetitionSquads", {
+    schema: Score.getCompetitionSquads.schema,
+    handler: (request , reply) => getTournamentTeamPlayersByCompetitionIdForClient(request, reply, fastify)
+  });
+  fastify.post("/getAllCommentaryByCompetitionId", {
+    schema: Score.getAllCommentaryByCompetitionId.schema,
+    handler: (request , reply) => getAllCommentaryByCompetitionIdForClient(request, reply, fastify)
+  });
+  fastify.post("/getDomain", {
+    // schema: Score.getAllCommentaryByCompetitionId.schema,
+    handler: (request , reply) => getAllSubScribesDomain(request, reply, fastify)
+  });
+  fastify.post("/getSubDomain", {
+    // schema: Score.getAllCommentaryByCompetitionId.schema,
+    handler: (request , reply) => getAllSubDomainData(request, reply, fastify)
+  });
+  fastify.post("/insertSubDomain", {
+    // schema: Score.getAllCommentaryByCompetitionId.schema,
+    handler: (request , reply) => insertSubDomains(request, reply, fastify)
+  });
+  fastify.post("/insertDomain", {
+    // schema: Score.getAllCommentaryByCompetitionId.schema,
+    handler: (request , reply) => insertDomains(request, reply, fastify)
+  });
+  fastify.post("/getAllAdvertise", {
+    handler: (request , reply) => getAllAdvertise(request, reply, fastify)
+  });
+  fastify.post("/getAllSeasonOfCompetitions", {
+    schema: Score.getAllSeasonOfCompetitions.schema,
+    handler: (request , reply) => getAllSeasonOfCompetitions(request, reply, fastify)
+  });
+  fastify.get("/checkPanelLoadData", {
+    handler: (request , reply) => checkPanelLoadData(request, reply, fastify)
+  });
+  fastify.post("/getCommentaryScoreStats", {
+    schema: Score.getCommentaryScoreStats.schema,
+    handler: (request , reply) => getCommentaryScoreStats(request, reply, fastify)
   });
 };
 

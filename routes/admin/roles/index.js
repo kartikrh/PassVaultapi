@@ -10,6 +10,7 @@ const {
   createRole,
   getRoleById,
   getPermissionByTab,
+  updateRoleStatus,
 } = require("../../../controller/users/admin/roles");
 const { Role } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -84,4 +85,17 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => deleteRoles(request, reply, fastify),
   });
+
+   fastify.post("/updateStatus", {
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Roles",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => updateRoleStatus(request, reply, fastify),
+  });
+
 };

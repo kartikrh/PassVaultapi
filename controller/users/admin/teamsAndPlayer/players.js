@@ -12,6 +12,14 @@ const {
   mergePlayerImageAndJerseyService,
   setTeamPlayerImgService,
   getTeamListPlayerIdService,
+  activeInactivePlayerService,
+  UpdatePlayerFromEntityService,
+  allPlayersMergeImageService,
+  mergePlayerNullImageService,
+  updatePlayerHomeTeamService,
+  getPlayerCompetitionListByIdService,
+  getPlayerPlayInCommentaryListByIdService,
+  getPlayerCreatedDetailsService,
 } = require("../../../../services/player");
 const { errorLogger } = require("../../../../utilities/logger");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
@@ -81,6 +89,17 @@ const getPlayerById = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+
+const getPlayerCreatedDetails = async (request, reply, fastify) => {
+  try {
+    const result = await getPlayerCreatedDetailsService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getPlayerCreatedDetails", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 const getAllPlayerType = async (request, reply, fastify) => {
   try {
     const result = await allPlayerTypeService();
@@ -172,6 +191,75 @@ const getTeamListByPlayerId = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const activeInactivePlayer = async (request, reply, fastify) => {
+  try {
+    const result = await activeInactivePlayerService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/activeInactivePlayer", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const UpdatePlayerFromEntity = async (request, reply, fastify) => {
+  try {
+    const result = await UpdatePlayerFromEntityService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/UpdatePlayerFromEntity", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const allPlayersMergeImage = async (request, reply, fastify) => {
+  try {
+    const result = await allPlayersMergeImageService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/allPlayersMergeImage", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const mergePlayerNullImage = async (request, reply, fastify) => {
+  try {
+    const result = await mergePlayerNullImageService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/mergePlayerNullImage", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const updatePlayerHomeTeam = async (request, reply, fastify) => {
+  try {
+    const result = await updatePlayerHomeTeamService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/updatePlayerHomeTeam", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const getPlayerCompetitionListById = async (request, reply, fastify) => {
+  try {
+    const result = await getPlayerCompetitionListByIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getPlayerCompetitionListById", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const getPlayerPlayInCommentaryListById = async (request, reply, fastify) => {
+  try {
+    const result = await getPlayerPlayInCommentaryListByIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getPlayerPlayInCommentaryListById", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 
 module.exports = {
   getAllPlayers,
@@ -188,4 +276,12 @@ module.exports = {
   mergePlayerImageAndJersey,
   setTeamPlayerImg,
   getTeamListByPlayerId,
+  activeInactivePlayer,
+  UpdatePlayerFromEntity,
+  allPlayersMergeImage,
+  mergePlayerNullImage,
+  updatePlayerHomeTeam,
+  getPlayerCompetitionListById,
+  getPlayerPlayInCommentaryListById,
+  getPlayerCreatedDetails,
 };

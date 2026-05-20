@@ -7,7 +7,8 @@ const {
   getSubscribeDomainById,
   deleteSubScribeDomain,
   saveSubScribeDomain,
-  approveDomain
+  approveDomain,
+  activeInactiveVideoApproved
 } = require("../../../controller/users/admin/subScribesDomain");
 const { SubScribesDomain } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -73,6 +74,18 @@ module.exports = async (fastify, opts) => {
             }),
     ],
     handler: (request, reply) => approveDomain(request, reply, fastify),
+  })
+  fastify.post("/activeInactiveVideoApproved", {
+    schema: SubScribesDomain.activeInactiveVideoApproved.schema,
+    preHandler: [
+        (request, reply) => authorize(request, reply, fastify),
+        (request, reply, done) =>
+            checkPermission(request, reply, fastify, {
+                tabName: "Subscribers",
+                mode: "edit",
+            }),
+    ],
+    handler: (request, reply) => activeInactiveVideoApproved(request, reply, fastify),
   })
   
 };

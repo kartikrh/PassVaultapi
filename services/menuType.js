@@ -128,7 +128,7 @@ const createMenuTypeService = async (request, fastify) => {
       blockName : block.blockName,
       containerId : block.containerId
     }
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType : ServiceType.clientAPI, 
         moduleType : APIEndpointModuleType.updateMenuList,
@@ -139,9 +139,8 @@ const createMenuTypeService = async (request, fastify) => {
         }
       },
       request,
-      fastify
-    ).catch(err => 
-      errorLogger(fastify, err.message, "services/menuType.js/createMenuTypeService - callClientAPI", request)
+      fastify,
+      "services/menuType.js/createMenuTypeService"
     );
   }
   return data;
@@ -208,7 +207,7 @@ const updateMenuTypeService = async (request, fastify) => {
       blockName : block.blockName,
       containerId : block.containerId
     }
-      callClientAPI(
+      await callClientAPI(
         {
           serviceType : ServiceType.clientAPI, 
           moduleType : APIEndpointModuleType.updateMenuList,
@@ -219,9 +218,8 @@ const updateMenuTypeService = async (request, fastify) => {
           }
         },
         request,
-        fastify
-      ).catch(err => 
-        errorLogger(fastify, err.message, "services/menuType.js/updateMenuTypeService - callClientAPI", request)
+        fastify,
+        "services/menuType.js/updateMenuTypeService"
       );
   // }
 
@@ -254,7 +252,7 @@ const deleteMenuTypeService = async (request, fastify) => {
   global.tblMenuTypes = global.tblMenuTypes.filter(
     (menuType) => !encryptedIds.includes(menuType.menuTypeId)
   );
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType : ServiceType.clientAPI, 
         moduleType : APIEndpointModuleType.updateMenuList,
@@ -267,9 +265,8 @@ const deleteMenuTypeService = async (request, fastify) => {
         }
       },
       request,
-      fastify
-    ).catch(err => 
-      errorLogger(fastify, err.message, "services/menuType.js/createMenuTypeService - callClientAPI", request)
+      fastify,
+      "services/menuType.js/deleteMenuTypeService"
     );
   
 

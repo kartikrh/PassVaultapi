@@ -1,43 +1,70 @@
 const { errorLogger } = require("../utilities/logger");
 
-const getAllCommentaryBattingHistory = async (fastify, whereCondition = null) => {
-  if(whereCondition == null){
-    whereCondition = `tcpbh."wrIsDeleted" = false`
-  }
+const getAllCommentaryBattingHistory = async (fastify, playerId = null, commentaryIds = null) => {
   try {
-    return await fastify.db.query(
-      `SELECT 
-                tcpbh."wrId" as "id",
-                tcpbh."wrMatchTypeId" as "matchTypeId",
-                tmt."wrMatchType" as "matchTypeName",
-                te."wrEventId" as "eventId",
-                te."wrEventName" as "eventName",
-                tcpbh."wrPlayerId" as "playerId",
-                tcpbh."wrCommentaryId" as "commentaryId",
-                tcpbh."wrCommentaryPlayerId" as "commentaryPlayerId",
-                tcpbh."wrMatchCount" as "matchCount",
-                tcpbh."wrInningsCount" as "inningsCount",
-                tcpbh."wrNotOut" as "notOut",
-                tcpbh."wrTotalRuns" as "totalRuns",
-                tcpbh."wrHighestScore" as "highestScore",
-                tcpbh."wrAverage"::DOUBLE PRECISION as "average",
-                tcpbh."wrBallsFacedCount" as "ballsFacedCount",
-                tcpbh."wrStrikeRate"::DOUBLE PRECISION as "strikeRate",
-                tcpbh."wr100Count" as "countOf100",
-                tcpbh."wr50Count" as "countOf50",
-                tcpbh."wr4Count" as "countOf4",
-                tcpbh."wr6Count" as "countOf6",
-                tcpbh."wrCatchCount" as "catchCount",
-                tcpbh."wrStumpCount" as "stumpCount",
-                tcpbh."wrCreatedBy" as "createdBy",
-                tcpbh."wrCreatedAt" as "createdAt",
-                tcpbh."wrOutCount" as "outCount"
-            FROM "tblCommPlayerBatHist" AS tcpbh
-            LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" AND tc."wrIsDelete" = false
-            LEFT JOIN "tblEvents" AS te ON te."wrEventId" = tc."wrEventId" AND te."wrIsDeleted" = false
-            LEFT JOIN "tblMatchTypes" AS tmt ON tmt."wrMatchTypeId" = tcpbh."wrMatchTypeId" AND tmt."wrIsDeleted" = false
-            ${whereCondition ? `WHERE ${whereCondition}` : ""};`,
-      { type: fastify.db.QueryTypes.SELECT }
+    const query =
+      `
+      SELECT 
+        tcpbh."wrId" as "id",
+        tcpbh."wrMatchTypeId" as "matchTypeId",
+        tmt."wrMatchType" as "matchTypeName",
+        te."wrEventId" as "eventId",
+        te."wrEventName" as "eventName",
+        tcpbh."wrPlayerId" as "playerId",
+        tcpbh."wrCommentaryId" as "commentaryId",
+        tcpbh."wrCommentaryPlayerId" as "commentaryPlayerId",
+        tcpbh."wrMatchCount" as "matchCount",
+        tcpbh."wrInningsCount" as "inningsCount",
+        tcpbh."wrNotOut" as "notOut",
+        tcpbh."wrTotalRuns" as "totalRuns",
+        tcpbh."wrHighestScore" as "highestScore",
+        tcpbh."wrAverage"::DOUBLE PRECISION as "average",
+        tcpbh."wrBallsFacedCount" as "ballsFacedCount",
+        tcpbh."wrStrikeRate"::DOUBLE PRECISION as "strikeRate",
+        tcpbh."wr100Count" as "countOf100",
+        tcpbh."wr50Count" as "countOf50",
+        tcpbh."wr4Count" as "countOf4",
+        tcpbh."wr6Count" as "countOf6",
+        tcpbh."wrCatchCount" as "catchCount",
+        tcpbh."wrStumpCount" as "stumpCount",
+        tcpbh."wrCreatedBy" as "createdBy",
+        tcpbh."wrCreatedAt" as "createdAt",
+        tcpbh."wrOutCount" as "outCount",
+        tcpbh."wrFastest50Balls" as "fastest50Balls",
+        tcpbh."wrFastest100Balls" as "fastest100Balls",
+        tc."wrEventDate" as "eventDate",
+        tc."wrEventNo" as "eventNo",
+        CASE 
+          WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tc."wrTeam2Id"
+          WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tc."wrTeam1Id"
+          ELSE NULL
+        END as "vsTeamId",
+        CASE 
+          WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tvs2."wrTeamName"
+          WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tvs1."wrTeamName"
+          ELSE NULL
+        END as "vsTeamName",
+        CASE 
+          WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tvs2."wrTeamShortName"
+          WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tvs1."wrTeamShortName"
+          ELSE NULL
+        END as "vsTeamShortName"
+      FROM "tblCommPlayerBatHist" AS tcpbh
+      LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" AND tc."wrIsDelete" = false
+      LEFT JOIN "tblEvents" AS te ON te."wrEventId" = tc."wrEventId" AND te."wrIsDeleted" = false
+      LEFT JOIN "tblMatchTypes" AS tmt ON tmt."wrMatchTypeId" = tcpbh."wrMatchTypeId" AND tmt."wrIsDeleted" = false
+      LEFT JOIN "tblCommentaryPlayers" AS tcp ON tcp."wrCommentaryPlayerId" = tcpbh."wrCommentaryPlayerId" AND tcp."wrIsDelete" = false
+      LEFT JOIN "tblTeams" AS tvs1 ON tvs1."wrTeamId" = tc."wrTeam1Id" AND tvs1."wrIsDeleted" = false
+      LEFT JOIN "tblTeams" AS tvs2 ON tvs2."wrTeamId" = tc."wrTeam2Id" AND tvs2."wrIsDeleted" = false
+      WHERE tcpbh."wrIsDeleted" = FALSE ${playerId ? ` AND tcpbh."wrPlayerId" = $1` : ''}
+      ${commentaryIds? ` AND tcpbh."wrCommentaryId" IN (${commentaryIds})` : ''}
+    `;
+
+    return await fastify.db.query(query,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: playerId ? [playerId] : []
+      }
     );
   } catch (err) {
     errorLogger(
@@ -50,42 +77,70 @@ const getAllCommentaryBattingHistory = async (fastify, whereCondition = null) =>
   }
 };
 
-const getAllCommentaryBowlingHistory = async (fastify, whereCondition = null) => {
-  if(whereCondition == null){
-    whereCondition = `tcpbh."wrIsDeleted" = false`
-  }
+const getAllCommentaryBowlingHistory = async (fastify, playerId = null, commentaryIds = null) => {
   try {
-    return await fastify.db.query(
-      `SELECT 
-            tcpbh."wrId" as "id",
-            tcpbh."wrMatchTypeId" as "matchTypeId",
-            tmt."wrMatchType" as "matchTypeName",
-            te."wrEventId" as "eventId",
-            te."wrEventName" as "eventName",
-            tcpbh."wrPlayerId" as "playerId",
-            tcpbh."wrCommentaryId" as "commentaryId",
-            tcpbh."wrCommentaryPlayerId" as "commentaryPlayerId",
-            tcpbh."wrMatchCount" as "bowlerPlayedMatchCount",
-            tcpbh."wrInningsCount" as "bowlerPlayedInningsCount",
-            tcpbh."wrBallCount" as "ballCount",
-            tcpbh."wrTotalRuns" as "runsFromBowler",
-            tcpbh."wrWicketsCount" as "wicketsCount",
-            tcpbh."wrAverage"::DOUBLE PRECISION as "bowlerAverage",
-            tcpbh."wrBestBowlingInInnings" as "bestBowlingInInnings",
-            tcpbh."wrBestBowlingInMatch" as "bestBowlingInMatch",
-            tcpbh."wrEconomy"::DOUBLE PRECISION as "economy",
-            tcpbh."wrStrikeRate"::DOUBLE PRECISION as "bowlerStrikeRate",
-            tcpbh."wr4Wickets" as "wickets4",
-            tcpbh."wr5Wickets" as "wickets5",
-            tcpbh."wr10Wickets" as "wickets10",
-            tcpbh."wrCreatedBy" as "createdBy",
-            tcpbh."wrCreatedAt" as "createdAt"
-            FROM "tblCommPlayerBowlHist" AS tcpbh
-            LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" AND tc."wrIsDelete" = false
-            LEFT JOIN "tblEvents" AS te ON te."wrEventId" = tc."wrEventId" AND te."wrIsDeleted" = false
-            LEFT JOIN "tblMatchTypes" AS tmt ON tmt."wrMatchTypeId" = tcpbh."wrMatchTypeId" AND tmt."wrIsDeleted" = false
-            ${whereCondition ? `WHERE ${whereCondition}` : ""};`,
-      { type: fastify.db.QueryTypes.SELECT }
+    const query =
+      `
+      SELECT 
+        tcpbh."wrId" as "id",
+        tcpbh."wrMatchTypeId" as "matchTypeId",
+        tmt."wrMatchType" as "matchTypeName",
+        te."wrEventId" as "eventId",
+        te."wrEventName" as "eventName",
+        tcpbh."wrPlayerId" as "playerId",
+        tcpbh."wrCommentaryId" as "commentaryId",
+        tcpbh."wrCommentaryPlayerId" as "commentaryPlayerId",
+        tcpbh."wrMatchCount" as "bowlerPlayedMatchCount",
+        tcpbh."wrInningsCount" as "bowlerPlayedInningsCount",
+        tcpbh."wrBallCount" as "ballCount",
+        tcpbh."wrTotalRuns" as "runsFromBowler",
+        tcpbh."wrWicketsCount" as "wicketsCount",
+        tcpbh."wrAverage"::DOUBLE PRECISION as "bowlerAverage",
+        tcpbh."wrBestBowlingInInnings" as "bestBowlingInInnings",
+        tcpbh."wrBestBowlingInMatch" as "bestBowlingInMatch",
+        tcpbh."wrEconomy"::DOUBLE PRECISION as "economy",
+        tcpbh."wrStrikeRate"::DOUBLE PRECISION as "bowlerStrikeRate",
+        tcpbh."wr4Wickets" as "wickets4",
+        tcpbh."wr5Wickets" as "wickets5",
+        tcpbh."wr10Wickets" as "wickets10",
+        tcpbh."wrCreatedBy" as "createdBy",
+        tcpbh."wrCreatedAt" as "createdAt",
+        tcpbh."wrOverCount" as "overCount",
+        tcpbh."wrHattrickCount" as "hattrickCount",
+        tcpbh."wrExpensiveOverRuns" as "expensiveOverRuns",
+        tc."wrEventDate" as "eventDate",
+        tc."wrEventNo" as "eventNo",
+        CASE 
+          WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tc."wrTeam2Id"
+          WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tc."wrTeam1Id"
+          ELSE NULL
+        END as "vsTeamId",
+        CASE 
+          WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tvs2."wrTeamName"
+          WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tvs1."wrTeamName"
+          ELSE NULL
+        END as "vsTeamName",
+        CASE 
+          WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tvs2."wrTeamShortName"
+          WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tvs1."wrTeamShortName"
+          ELSE NULL
+        END as "vsTeamShortName"
+      FROM "tblCommPlayerBowlHist" AS tcpbh
+      LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" AND tc."wrIsDelete" = false
+      LEFT JOIN "tblEvents" AS te ON te."wrEventId" = tc."wrEventId" AND te."wrIsDeleted" = false
+      LEFT JOIN "tblMatchTypes" AS tmt ON tmt."wrMatchTypeId" = tcpbh."wrMatchTypeId" AND tmt."wrIsDeleted" = false
+      LEFT JOIN "tblCommentaryPlayers" AS tcp ON tcp."wrCommentaryPlayerId" = tcpbh."wrCommentaryPlayerId" AND tcp."wrIsDelete" = false
+      LEFT JOIN "tblTeams" AS tvs1 ON tvs1."wrTeamId" = tc."wrTeam1Id" AND tvs1."wrIsDeleted" = false
+      LEFT JOIN "tblTeams" AS tvs2 ON tvs2."wrTeamId" = tc."wrTeam2Id" AND tvs2."wrIsDeleted" = false
+        WHERE tcpbh."wrIsDeleted" = FALSE ${playerId ? ` AND tcpbh."wrPlayerId" = $1` : ''}
+        ${commentaryIds ? ` AND tcpbh."wrCommentaryId" IN (${commentaryIds})` : ''}
+      `;
+
+    return await fastify.db.query(query,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: playerId ? [playerId] : []
+      }
     );
   } catch (err) {
     errorLogger(
@@ -126,7 +181,9 @@ const getCommentaryPlayerBattingHistory = async (playerId, fastify) => {
                   tcpbh."wrStumpCount" as "stumpCount",
                   tcpbh."wrCreatedBy" as "createdBy",
                   tcpbh."wrCreatedAt" as "createdAt",
-                  tcpbh."wrOutCount" as "outCount"
+                  tcpbh."wrOutCount" as "outCount",
+                  tcpbh."wrFastest50Balls" as "fastest50Balls",
+                  tcpbh."wrFastest100Balls" as "fastest100Balls"
               FROM "tblMatchTypes" AS tmt
               LEFT JOIN 
               "tblCommPlayerBatHist" AS tcpbh ON tcpbh."wrMatchTypeId" = tmt."wrMatchTypeId"
@@ -176,7 +233,10 @@ const getCommentaryPlayerBowlingHistory = async (playerId, fastify) => {
               tcpbh."wr5Wickets" as "wickets5",
               tcpbh."wr10Wickets" as "wickets10",
               tcpbh."wrCreatedBy" as "createdBy",
-              tcpbh."wrCreatedAt" as "createdAt"
+              tcpbh."wrCreatedAt" as "createdAt",
+              tcpbh."wrOverCount" as "overCount",
+              tcpbh."wrHattrickCount" as "hattrickCount",
+              tcpbh."wrExpensiveOverRuns" as "expensiveOverRuns"
               FROM "tblMatchTypes" AS tmt
               LEFT JOIN 
               "tblCommPlayerBowlHist" AS tcpbh ON tcpbh."wrMatchTypeId" = tmt."wrMatchTypeId"
@@ -220,7 +280,9 @@ const updateCommPlayerBattingHistoryQuery = async(data, fastify, request) => {
           "wr6Count" = $14,
           "wrCatchCount" = $15,
           "wrStumpCount" = $16,
-          "wrOutCount" = $17
+          "wrOutCount" = $17,
+          "wrFastest50Balls" = $19,
+          "wrFastest100Balls" = $20
         WHERE "wrId" = $18
         `,
       {
@@ -243,6 +305,8 @@ const updateCommPlayerBattingHistoryQuery = async(data, fastify, request) => {
           data.stumpCount,
           data.outCount,
           data.id,
+          data.fastest50Balls,
+          data.fastest100Balls,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -276,7 +340,10 @@ const updateCommPlayerBowlingHistoryQuery = async(data, fastify, request) => {
           "wrStrikeRate" = $12,
           "wr4Wickets" = $13,
           "wr5Wickets" = $14,
-          "wr10Wickets" = $15
+          "wr10Wickets" = $15,
+          "wrOverCount" = $17,
+          "wrHattrickCount" = $18,
+          "wrExpensiveOverRuns" = $19
         WHERE "wrId" = $16
         `,
       {
@@ -297,6 +364,9 @@ const updateCommPlayerBowlingHistoryQuery = async(data, fastify, request) => {
           data.wickets5,
           data.wickets10,
           data.id,
+          data.overCount,
+          data.hattrickCount,
+          data.expensiveOverRuns,
         ],
         type: fastify.db.QueryTypes.SELECT,
       }
@@ -378,11 +448,13 @@ const getPlayerBatHistQuery = async (data, request , fastify) =>{
                 tcpbh."wrCreatedAt" as "createdAt",
                 tcpbh."wrOutCount" as "outCount",
                 tc."wrEventName" as "eventName",
-                tc."wrEventDate" as "eventDate"
+                tc."wrEventDate" as "eventDate",
+                tcpbh."wrFastest50Balls" as "fastest50Balls",
+                tcpbh."wrFastest100Balls" as "fastest100Balls"
         FROM "tblCommPlayerBatHist" AS tcpbh
-        LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId"
+        LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" AND tc."wrIsDelete" = false
         WHERE tcpbh."wrPlayerId" = $1 AND tcpbh."wrMatchTypeId" = $2 
-        AND tcpbh."wrIsDeleted" = false AND tc."wrIsDelete" = false`;
+        AND tcpbh."wrIsDeleted" = false`;
     const result = await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
       bind : [data.playerId, data.matchTypeId]
@@ -405,10 +477,10 @@ const savePlayerBatHistQuery = async (data, request, fastify) =>{
       INSERT INTO "tblCommPlayerBatHist" (
               "wrMatchTypeId", "wrMatchCount", "wrInningsCount", "wrPlayerId", "wrNotOut", "wrTotalRuns", "wrHighestScore",
               "wrAverage", "wrBallsFacedCount", "wrStrikeRate", "wr100Count", "wr50Count", "wr4Count",
-              "wr6Count", "wrCatchCount", "wrStumpCount", "wrOutCount", "wrCreatedBy", "wrCreatedAt"
+              "wr6Count", "wrCatchCount", "wrStumpCount", "wrOutCount", "wrCreatedBy", "wrCreatedAt", "wrFastest50Balls", "wrFastest100Balls"
               ) 
               VALUES (
-                  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, now()
+                  $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, now(), $19, $20
               )
               RETURNING *
               )
@@ -434,7 +506,9 @@ const savePlayerBatHistQuery = async (data, request, fastify) =>{
                 "wrStumpCount" as "stumpCount",
                 "wrCreatedBy" as "createdBy",
                 "wrCreatedAt" as "createdAt",
-                "wrOutCount" as "outCount"
+                "wrOutCount" as "outCount",
+                "wrFastest50Balls" as "fastest50Balls",
+                "wrFastest100Balls" as "fastest100Balls"
               FROM insert_data;`,
       {
       type: fastify.db.QueryTypes.SELECT,
@@ -456,7 +530,9 @@ const savePlayerBatHistQuery = async (data, request, fastify) =>{
         data.catchCount,
         data.stumpCount,
         data.outCount,
-        request.userTokenInfo.WrUserId
+        request.userTokenInfo.WrUserId,
+        data.fastest50Balls,
+        data.fastest100Balls
       ],
     });
     return result[0];
@@ -464,7 +540,7 @@ const savePlayerBatHistQuery = async (data, request, fastify) =>{
     errorLogger(
       fastify,
       err.message,
-      "DB ERROR --> repository/TableCommPlayerHistory.js/upPlayerBatHistQuery",
+      "DB ERROR --> repository/TableCommPlayerHistory.js/savePlayerBatHistQuery",
       request
     );
     throw new Error(err.message);
@@ -488,7 +564,9 @@ const upPlayerBatHistQuery = async (data, request , fastify) =>{
       "wr6Count" = $12,
       "wrCatchCount" = $13,
       "wrStumpCount" = $14,
-      "wrOutCount" = $15
+      "wrOutCount" = $15,
+      "wrFastest50Balls" = $17,
+      "wrFastest100Balls" = $18
       WHERE "wrId" = $16
       RETURNING
           "wrId" as "id",
@@ -512,7 +590,9 @@ const upPlayerBatHistQuery = async (data, request , fastify) =>{
           "wrStumpCount" as "stumpCount",
           "wrCreatedBy" as "createdBy",
           "wrCreatedAt" as "createdAt",
-          "wrOutCount" as "outCount"`
+          "wrOutCount" as "outCount",
+          "wrFastest50Balls" as "fastest50Balls",
+          "wrFastest100Balls" as "fastest100Balls"`
     const result = await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
       bind: [
@@ -532,6 +612,8 @@ const upPlayerBatHistQuery = async (data, request , fastify) =>{
         data.stumpCount,
         data.outCount,
         data.id,
+        data.fastest50Balls,
+        data.fastest100Balls,
       ],
     });
     return result;
@@ -553,9 +635,9 @@ const savePlayerBallHistQuery = async (data, request , fastify) =>{
         "wrMatchTypeId", "wrMatchCount", "wrInningsCount", "wrPlayerId", "wrBallCount", "wrTotalRuns", 
         "wrWicketsCount", "wrAverage", "wrBestBowlingInInnings", "wrBestBowlingInMatch", 
         "wrEconomy", "wrStrikeRate", "wr4Wickets", "wr5Wickets", "wr10Wickets", "wrCreatedBy",
-        "wrCreatedAt"
+        "wrCreatedAt", "wrOverCount", "wrHattrickCount", "wrExpensiveOverRuns"
       ) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, now())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, now(), $17, $18, $19)
       RETURNING *
       )        
         SELECT
@@ -578,7 +660,10 @@ const savePlayerBallHistQuery = async (data, request , fastify) =>{
           "wr5Wickets" as "wickets5",
           "wr10Wickets" as "wickets10",
           "wrCreatedBy" as "createdBy",
-          "wrCreatedAt" as "createdAt"
+          "wrCreatedAt" as "createdAt",
+          "wrOverCount" as "overCount",
+          "wrHattrickCount" as "hattrickCount",
+          "wrExpensiveOverRuns" as "expensiveOverRuns"
           FROM insert_data;`,
        {
       type: fastify.db.QueryTypes.SELECT,
@@ -599,6 +684,9 @@ const savePlayerBallHistQuery = async (data, request , fastify) =>{
         data.wickets5,
         data.wickets10,
         request.userTokenInfo.WrUserId,
+        data.overCount,
+        data.hattrickCount,
+        data.expensiveOverRuns
       ],
     });
     return result[0]
@@ -628,7 +716,10 @@ const upPlayerBallHistQuery = async (data, request , fastify) =>{
       "wrStrikeRate" = $10,
       "wr4Wickets" = $11,
       "wr5Wickets" = $12,
-      "wr10Wickets" = $13
+      "wr10Wickets" = $13,
+      "wrOverCount" = $15,
+      "wrHattrickCount" = $16,
+      "wrExpensiveOverRuns" = $17
       WHERE "wrId" = $14
       RETURNING
           "wrId" as "id",
@@ -650,7 +741,10 @@ const upPlayerBallHistQuery = async (data, request , fastify) =>{
           "wr5Wickets" as "wickets5",
           "wr10Wickets" as "wickets10",
           "wrCreatedBy" as "createdBy",
-          "wrCreatedAt" as "createdAt"`;
+          "wrCreatedAt" as "createdAt",
+          "wrOverCount" as "overCount",
+          "wrHattrickCount" as "hattrickCount",
+          "wrExpensiveOverRuns" as "expensiveOverRuns"`;
     const result = await fastify.db.query(query, {
       type: fastify.db.QueryTypes.SELECT,
       bind: [
@@ -668,6 +762,9 @@ const upPlayerBallHistQuery = async (data, request , fastify) =>{
         data.wickets5,
         data.wickets10,
         data.id,
+        data.overCount,
+        data.hattrickCount,
+        data.expensiveOverRuns,
       ],
     });
     return result[0];
@@ -706,11 +803,14 @@ const getPlayeBallHistQuery = async (data , request , fastify)=>{
             tcpbh."wrCreatedBy" as "createdBy",
             tcpbh."wrCreatedAt" as "createdAt",
             tc."wrEventName" as "eventName",
-            tc."wrEventDate" as "eventDate"
+            tc."wrEventDate" as "eventDate",
+            tcpbh."wrOverCount" as "overCount",
+            tcpbh."wrHattrickCount" as "hattrickCount",
+            tcpbh."wrExpensiveOverRuns" as "expensiveOverRuns"
             FROM "tblCommPlayerBowlHist" AS tcpbh
-            LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId"
+            LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" AND tc."wrIsDelete" = false
             WHERE tcpbh."wrMatchTypeId" = $2 AND tcpbh."wrPlayerId" = $1 
-            AND tcpbh."wrIsDeleted" = false AND tc."wrIsDelete" = false;
+            AND tcpbh."wrIsDeleted" = false;
       `,
       {
         type : fastify.db.QueryTypes.SELECT,
@@ -798,6 +898,173 @@ const deleteCommentaryPlayerHistoryQuery = async (commentaryId, request, fastify
   }
 };
 
+const getAllCommentaryBattingHistoryQueryForClient = async (fastify, playerId = null) => {
+  try {
+    const query =
+      `
+      SELECT 
+        tcpbh."wrId" as "id",
+        tcpbh."wrMatchTypeId" as "matchTypeId",
+        tmt."wrMatchType" as "matchTypeName",
+        te."wrEventId" as "eventId",
+        te."wrEventName" as "eventName",
+        tcpbh."wrPlayerId" as "playerId",
+        tcpbh."wrCommentaryId" as "commentaryId",
+        tcpbh."wrCommentaryPlayerId" as "commentaryPlayerId",
+        tcpbh."wrMatchCount" as "matchCount",
+        tcpbh."wrInningsCount" as "inningsCount",
+        tcpbh."wrNotOut" as "notOut",
+        tcpbh."wrTotalRuns" as "totalRuns",
+        tcpbh."wrHighestScore" as "highestScore",
+        tcpbh."wrAverage"::DOUBLE PRECISION as "average",
+        tcpbh."wrBallsFacedCount" as "ballsFacedCount",
+        tcpbh."wrStrikeRate"::DOUBLE PRECISION as "strikeRate",
+        tcpbh."wr100Count" as "countOf100",
+        tcpbh."wr50Count" as "countOf50",
+        tcpbh."wr4Count" as "countOf4",
+        tcpbh."wr6Count" as "countOf6",
+        tcpbh."wrCatchCount" as "catchCount",
+        tcpbh."wrStumpCount" as "stumpCount",
+        tcpbh."wrCreatedBy" as "createdBy",
+        tcpbh."wrCreatedAt" as "createdAt",
+        tcpbh."wrOutCount" as "outCount",
+        tcpbh."wrFastest50Balls" as "fastest50Balls",
+        tcpbh."wrFastest100Balls" as "fastest100Balls",
+        tc."wrEventDate" as "eventDate",
+        tc."wrEventNo" as "eventNo",
+        ${playerId ? `ticr."wrRank" as "rank",` : ''}
+        CASE 
+          WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tc."wrTeam2Id"
+          WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tc."wrTeam1Id"
+          ELSE NULL
+        END as "vsTeamId",
+        CASE 
+          WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tvs2."wrTeamName"
+          WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tvs1."wrTeamName"
+          ELSE NULL
+        END as "vsTeamName",
+        CASE 
+          WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tvs2."wrTeamShortName"
+          WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tvs1."wrTeamShortName"
+          ELSE NULL
+        END as "vsTeamShortName",
+      tcmp."wrCompetitionId" as "competitionId",
+      tcmp."wrCompetition" as "competitionName",
+      tcmp."wrImage" as "competitionImage",
+      tcmp."wrStartDate" as "competitionStartDate",
+      tcmp."wrEndDate" as "competitionEndDate"
+      FROM "tblCommPlayerBatHist" AS tcpbh
+      LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" AND tc."wrIsDelete" = false
+      LEFT JOIN "tblEvents" AS te ON te."wrEventId" = tc."wrEventId" AND te."wrIsDeleted" = false
+      LEFT JOIN "tblMatchTypes" AS tmt ON tmt."wrMatchTypeId" = tcpbh."wrMatchTypeId" AND tmt."wrIsDeleted" = false
+      LEFT JOIN "tblCommentaryPlayers" AS tcp ON tcp."wrCommentaryPlayerId" = tcpbh."wrCommentaryPlayerId" AND tcp."wrIsDelete" = false
+      LEFT JOIN "tblTeams" AS tvs1 ON tvs1."wrTeamId" = tc."wrTeam1Id" AND tvs1."wrIsDeleted" = false
+      LEFT JOIN "tblTeams" AS tvs2 ON tvs2."wrTeamId" = tc."wrTeam2Id" AND tvs2."wrIsDeleted" = false
+      ${playerId ? `LEFT JOIN "tblICCRanking" AS ticr ON ticr."wrMatchTypeId" = tcpbh."wrMatchTypeId" AND ticr."wrIsDeleted" = FALSE AND ticr."wrPlayerId" = $1 AND ticr."wrPlayerTypeId" = 1 AND ticr."wrTeamId" = tcp."wrTeamId"` : ''}
+      LEFT JOIN "tblCompetitions" AS tcmp ON tcmp."wrCompetitionId" = tc."wrCompetitionId" AND tc."wrIsDelete" = false
+      WHERE tcpbh."wrIsDeleted" = FALSE ${playerId ? `AND tcpbh."wrPlayerId" = $1` : ''}
+    `;
+
+    return await fastify.db.query(query,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: playerId ? [playerId] : []
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommPlayerHistory.js/getAllCommentaryBattingHistoryQueryForClient",
+      null
+    );
+    throw new Error(err.message);
+  }
+};
+
+const getAllCommentaryBowlingHistoryQueryForClient = async (fastify, playerId = null) => {
+  try {
+    const query =
+      `
+      SELECT 
+        tcpbh."wrId" as "id",
+        tcpbh."wrMatchTypeId" as "matchTypeId",
+        tmt."wrMatchType" as "matchTypeName",
+        te."wrEventId" as "eventId",
+        te."wrEventName" as "eventName",
+        tcpbh."wrPlayerId" as "playerId",
+        tcpbh."wrCommentaryId" as "commentaryId",
+        tcpbh."wrCommentaryPlayerId" as "commentaryPlayerId",
+        tcpbh."wrMatchCount" as "bowlerPlayedMatchCount",
+        tcpbh."wrInningsCount" as "bowlerPlayedInningsCount",
+        tcpbh."wrBallCount" as "ballCount",
+        tcpbh."wrTotalRuns" as "runsFromBowler",
+        tcpbh."wrWicketsCount" as "wicketsCount",
+        tcpbh."wrAverage"::DOUBLE PRECISION as "bowlerAverage",
+        tcpbh."wrBestBowlingInInnings" as "bestBowlingInInnings",
+        tcpbh."wrBestBowlingInMatch" as "bestBowlingInMatch",
+        tcpbh."wrEconomy"::DOUBLE PRECISION as "economy",
+        tcpbh."wrStrikeRate"::DOUBLE PRECISION as "bowlerStrikeRate",
+        tcpbh."wr4Wickets" as "wickets4",
+        tcpbh."wr5Wickets" as "wickets5",
+        tcpbh."wr10Wickets" as "wickets10",
+        tcpbh."wrCreatedBy" as "createdBy",
+        tcpbh."wrCreatedAt" as "createdAt",
+        tcpbh."wrOverCount" as "overCount",
+        tcpbh."wrHattrickCount" as "hattrickCount",
+        tcpbh."wrExpensiveOverRuns" as "expensiveOverRuns",
+        tc."wrEventDate" as "eventDate",
+        tc."wrEventNo" as "eventNo",
+        ${playerId ? `ticr."wrRank" as "rank",` : ''}
+        CASE 
+          WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tc."wrTeam2Id"
+          WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tc."wrTeam1Id"
+          ELSE NULL
+        END as "vsTeamId",
+        CASE 
+          WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tvs2."wrTeamName"
+          WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tvs1."wrTeamName"
+          ELSE NULL
+        END as "vsTeamName",
+        CASE 
+          WHEN tcp."wrTeamId" = tc."wrTeam1Id" THEN tvs2."wrTeamShortName"
+          WHEN tcp."wrTeamId" = tc."wrTeam2Id" THEN tvs1."wrTeamShortName"
+          ELSE NULL
+        END as "vsTeamShortName",
+      tcmp."wrCompetitionId" as "competitionId",
+      tcmp."wrCompetition" as "competitionName",
+      tcmp."wrImage" as "competitionImage",
+      tcmp."wrStartDate" as "competitionStartDate",
+      tcmp."wrEndDate" as "competitionEndDate"
+      FROM "tblCommPlayerBowlHist" AS tcpbh
+      LEFT JOIN "tblCommentaries" AS tc ON tc."wrCommentaryId" = tcpbh."wrCommentaryId" AND tc."wrIsDelete" = false
+      LEFT JOIN "tblEvents" AS te ON te."wrEventId" = tc."wrEventId" AND te."wrIsDeleted" = false
+      LEFT JOIN "tblMatchTypes" AS tmt ON tmt."wrMatchTypeId" = tcpbh."wrMatchTypeId" AND tmt."wrIsDeleted" = false
+      LEFT JOIN "tblCommentaryPlayers" AS tcp ON tcp."wrCommentaryPlayerId" = tcpbh."wrCommentaryPlayerId" AND tcp."wrIsDelete" = false
+      LEFT JOIN "tblTeams" AS tvs1 ON tvs1."wrTeamId" = tc."wrTeam1Id" AND tvs1."wrIsDeleted" = false
+      LEFT JOIN "tblTeams" AS tvs2 ON tvs2."wrTeamId" = tc."wrTeam2Id" AND tvs2."wrIsDeleted" = false
+      ${playerId ? `LEFT JOIN "tblICCRanking" AS ticr ON ticr."wrMatchTypeId" = tcpbh."wrMatchTypeId" AND ticr."wrIsDeleted" = FALSE AND ticr."wrPlayerId" = $1 AND ticr."wrPlayerTypeId" = 2 AND ticr."wrTeamId" = tcp."wrTeamId"` : ''}
+      LEFT JOIN "tblCompetitions" AS tcmp ON tcmp."wrCompetitionId" = tc."wrCompetitionId" AND tc."wrIsDelete" = false
+      WHERE tcpbh."wrIsDeleted" = FALSE ${playerId ? `AND tcpbh."wrPlayerId" = $1` : ''}
+      `;
+
+    return await fastify.db.query(query,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: playerId ? [playerId] : []
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommPlayerHistory.js/getAllCommentaryBowlingHistoryQueryForClient",
+      null
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllCommentaryBattingHistory,
   getAllCommentaryBowlingHistory,
@@ -815,4 +1082,6 @@ module.exports = {
   savePlayerBallHistQuery,
   getCommPlayerBowlHistQuery,
   deleteCommentaryPlayerHistoryQuery,
+  getAllCommentaryBattingHistoryQueryForClient,
+  getAllCommentaryBowlingHistoryQueryForClient
 };

@@ -6,12 +6,13 @@ const fsequelize = require("fastify-sequelize");
 const dbPg = require("./sequelize/config/config")();
 const swagger = require("@fastify/swagger");
 const swaggerUi = require("@fastify/swagger-ui");
-const { fetchAllDataFromDb, FetchingCommentariesDataFromCron, upcomingCommentaries } = require("./utilities/fetchAllData");
+const { fetchAllDataFromDb, globalMemoryDatas } = require("./utilities/fetchAllData");
+const { registerCronJobs } = require("./utilities/cronJobs");
 // const fetchAllData = require("./utilities/fetchAllData");
 const { Server } = require("socket.io"); // Import Socket.IO
 const { connection, socketMiddleware } = require("./socketIo");
 const { fastifyRateLimit } = require("@fastify/rate-limit");
-const { responseLogger, responseLogInDB } = require("./utilities/logger");
+const { responseLogger, responseLogInDB, oomLogger } = require("./utilities/logger");
 const fastifyMultipart = require("@fastify/multipart");
 const fastifyStatic = require("@fastify/static");
 const { generateToken } = require("./utilities/tokenization");
@@ -24,30 +25,43 @@ const {
 } = require("./utilities");
 const Sentry = require("@sentry/node");
 const { instrument } = require("@socket.io/admin-ui");
+const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 const bcrypt = require("bcrypt");
 const Tracing = require("@sentry/tracing");
-const { connectClients, disconnectClients } = require("./sockets");
+const { connectEntitySport, disconnectEntitySports } = require("./sockets/entitySport.js");
+// const { connectClients, disconnectClients ,connectClients2} = require("./sockets");
 const {
   disConnectClientSocketQuery,
 } = require("./repository/TableClientSocket");
-const {startSignalR} = require("./signalrHandler/MockSignalR.js")
+const { disConnectEntitySocketQuery, resetEntitySocketReconnectCountQuery } = require("./repository/TableEntitySockets.js");
+const { startSignalR } = require("./signalrHandler/MockSignalR.js")
 const WebSocket = require("ws");
 const WebsocketConnection = require("./websocket");
 const webPush = require("web-push");
-const {webPushset} = require("./WebPushHandler/index.js");
+const { webPushset } = require("./WebPushHandler/index.js");
 const { updateMarket } = require("./utilities/marketUpdate.js");
 const cron = require('node-cron');
-const { nodeProfilingIntegration } = require('@sentry/profiling-node');
+const { resetAllClientSocketReconnectCountService, disconnectAllClientSocketService } = require("./services/clientSocket.js");
+const { connectClients: newConnectClients } = require("./sockets/client.js");
+// const { nodeProfilingIntegration } = require('@sentry/profiling-node');
 // const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 // Pass --options via CLI arguments in command to enable these options.
 module.exports.options = {};
 global.tblData = {};
 global.marketData = {};
+global.isAllDataLoadedInGlobal = false;
+global.connectedEntitySocketClients = global.connectedEntitySocketClients || [];
+global.pendingAdvertiseToClient = [];
+global.pendingBannerToClient = [];
+global.pendingNewsToClient = [];
+global.pendingPhotoLibraryToClient = [];
+global.pendingVideoLibraryToClient = [];
+
 if (process.env.ENABLE_SENTRY === "TRUE") {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
     tracesSampleRate: 0.1,
-    integrations : [
+    integrations: [
       nodeProfilingIntegration(),
       Sentry.postgresIntegration(),
       Sentry.childProcessIntegration()
@@ -58,12 +72,71 @@ if (process.env.ENABLE_SENTRY === "TRUE") {
     includeLocalVariables: true,
   });
 }
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-});
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-});
+const { getMemoryStatus } = require("./utilities/logger");
+
+const MEMORY_WARNING_THRESHOLD = 85;
+const OOM_WARNING_INTERVAL_MS = 5 * 60 * 1000;
+let lastOomWarningAt = 0;
+const recordMemoryWarning = async (fastify, heapPercent, memory, globalMemory) => {
+  const reason = `High memory usage detected: ${heapPercent}%`;
+  const detail = `Heap used ${memory.process.heapUsed}, heap total ${memory.process.heapTotal}`;
+  try {
+    if (fastify && fastify.db) {
+      await oomLogger(
+        fastify,
+        reason,
+        detail,
+        JSON.stringify({ memory, globalMemory, heapPercent, threshold: MEMORY_WARNING_THRESHOLD, createdAt: new Date() })
+      );
+      // console.warn(`Persisted OOM warning to DB: ${reason}`);
+    } else {
+      console.warn("OOM warning DB logging skipped: fastify.db not available", reason);
+    }
+  } catch (err) {
+    console.warn('Failed to persist OOM warning:', err?.message || err);
+  }
+};
+
+const logMemoryUsage = async (fastify) => {
+  try {
+    const memory = getMemoryStatus();
+    const globalMemory = await globalMemoryDatas();
+    const heapUsed = parseFloat(memory.process.heapUsed);
+    const heapTotal = parseFloat(memory.process.heapTotal);
+    const heapPercent = heapTotal > 0 ? ((heapUsed / heapTotal) * 100).toFixed(1) : "0";
+    // console.log(`Memory status: heapUsed=${memory.process.heapUsed}, heapTotal=${memory.process.heapTotal}, heapPct=${heapPercent}%`);
+    // console.log("globalMemory", globalMemory);
+    if (heapPercent >= MEMORY_WARNING_THRESHOLD) {
+      console.warn(`High heap usage detected: ${heapPercent}%`);
+      if (Date.now() - lastOomWarningAt > OOM_WARNING_INTERVAL_MS) {
+        lastOomWarningAt = Date.now();
+        await recordMemoryWarning(fastify, heapPercent, memory, globalMemory);
+      }
+    }
+  } catch (err) {
+    console.warn('Failed to log memory usage:', err?.message || err);
+  }
+};
+
+const setupMemoryMonitor = (fastify) => {
+  setInterval(() => logMemoryUsage(fastify), 300000);
+  process.on('warning', async (warning) => {
+    const message = `${warning.name}: ${warning.message}`;
+    console.warn('Process warning:', message, warning.code);
+    if (!fastify || !fastify.db) {
+      return;
+    }
+    const globalMemory = await globalMemoryDatas();
+    // console.log("globalMemory", globalMemory);
+    await oomLogger(
+      fastify,
+      `Process warning: ${warning.name}`,
+      `${warning.message} code=${warning.code}`,
+      JSON.stringify({ warning, globalMemory, timestamp: new Date() })
+    );
+  });
+
+}
 // process.on("uncaughtException", (err) => {
 //   console.error("Uncaught Exception occurred:", err);
 //   // Log additional diagnostic information
@@ -99,113 +172,118 @@ module.exports = async function (fastify, opts) {
       const models = [
         "userModel", "userLoginInfoModel", "tabsModel", "roleModel", "encryptionData",
         "permissionModel", "blockModel", "menuTypeModel", "menuItemModel", "menuItemTypeModel",
-        "pageModel", "pageAliasModel", "pageFormateModel", "eventTypeModel", "teamModel", 
-        "teamPlayersModel", "paneltyRunsModel", "playerModel", "matchTypeModel", "errorLogModel", 
-        "playerTypeModel", "bowlingTypeModel", "configModel", "CommentaryModel", "commentaryTeamModel", 
-        "commentaryPlayerModel", "compititionModel", "eventModel", "commentaryBallByBallModel", 
-        "commentaryPartnershipModel", "commentaryWicketModel", "overModel", "displayStatusModel", 
-        "newsModel", "subScribesDomainModel", "subScribesSubDomainModel", "matchTypePredictorModel", 
-        "marketTemplateModel", "eventMarketsModel", "marketRunnerModel", "marketTemplateRunnerModel", 
-        "vendorsModel", "vendorIpModel", "clientSocketModel", "activityLogModel", "mailSettingsModel", 
-        "thirdPartyApisModel", "commentaryScoringLogsModel", "clientVideoModel", "awardModel", "commentaryAwardModel","cardTypeModel",
+        "pageModel", "pageAliasModel", "pageFormateModel", "eventTypeModel", "teamModel",
+        "teamPlayersModel", "paneltyRunsModel", "playerModel", "matchTypeModel", "errorLogModel",
+        "playerTypeModel", "bowlingTypeModel", "configModel", "CommentaryModel", "commentaryTeamModel",
+        "commentaryPlayerModel", "compititionModel", "eventModel", "commentaryBallByBallModel",
+        "commentaryPartnershipModel", "commentaryWicketModel", "overModel", "displayStatusModel",
+        "newsModel", "subScribesDomainModel", "subScribesSubDomainModel", "matchTypePredictorModel",
+        "marketTemplateModel", "eventMarketsModel", "marketRunnerModel", "marketTemplateRunnerModel",
+        "vendorsModel", "vendorIpModel", "clientSocketModel", "activityLogModel", "mailSettingsModel",
+        "thirdPartyApisModel", "commentaryScoringLogsModel", "clientVideoModel", "awardModel", "commentaryAwardModel", "cardTypeModel",
+        "iccRankingModel", "competitionStatisticsTypeModel", "competitionStatisticsModel", "teamMatchTypeModel", "clientLikeDislikeActivityModel"
       ];
-      
+
       models.forEach((model) => require(`./sequelize/tables/${model}`)(fastify.db));
       setImmediate(async () => {
         try {
           // await featchData(fastify);
           await fetchAllDataFromDb(fastify);
-          await disConnectClientSocketQuery(fastify);
+          // setupMemoryMonitor(fastify);
+
+          // await disConnectClientSocketQuery(fastify);
+          // await disConnectEntitySocketQuery(fastify);
           await startSignalR(fastify);
-          connectClients(fastify);
-          disconnectClients(fastify);
+          // connectClients(fastify);
+          // connectClients2(fastify);
+          // disconnectClients(fastify);
+
+          // Client Sockets
+          await resetAllClientSocketReconnectCountService(null, fastify);
+          await disconnectAllClientSocketService(null, fastify);
+          await newConnectClients(fastify);
+
+          //Entity Sockets
+          await disconnectEntitySports(fastify);
+          await resetEntitySocketReconnectCountQuery(fastify);
+          await connectEntitySport(fastify);
+
           webPushset(webPush);
           updateMarket(fastify)
-          
+
         } catch (error) {
-          console.error("Error during post-sync operations:", error);
+          console.error(new Date(), "Error during post-sync operations:", error);
         }
       });
     });
-    cron.schedule('0 0 * * *', async () => {
-      try {
-        // Fetching data from db every 24 hrs once(at midnight)
-        await FetchingCommentariesDataFromCron(fastify);
-      } catch (error) {
-        console.error("Error during scheduled task:", error);
-      }
-    });
-    cron.schedule('* * * * *', async () => {
-      try {
-        await upcomingCommentaries(fastify);
-      } catch (error) {
-        console.error("Error during scheduled task:", error);
-      }
-    });
 
-    // .after(async () => {
-    //   require("./sequelize/tables/userModel")(fastify.db);
-    //   require("./sequelize/tables/userLoginInfoModel")(fastify.db);
-    //   require("./sequelize/tables/tabsModel")(fastify.db);
-    //   require("./sequelize/tables/roleModel")(fastify.db);
-    //   require("./sequelize/tables/encryptionData")(fastify.db);
-    //   require("./sequelize/tables/permissionModel")(fastify.db);
-    //   require("./sequelize/tables/blockModel")(fastify.db);
-    //   require("./sequelize/tables/menuTypeModel")(fastify.db);
-    //   require("./sequelize/tables/menuItemModel")(fastify.db);
-    //   require("./sequelize/tables/menuItemTypeModel")(fastify.db);
-    //   require("./sequelize/tables/pageModel")(fastify.db);
-    //   require("./sequelize/tables/pageAliasModel")(fastify.db);
-    //   require("./sequelize/tables/pageFormateModel")(fastify.db);
-    //   require("./sequelize/tables/eventTypeModel")(fastify.db);
-    //   require("./sequelize/tables/teamModel")(fastify.db);
-    //   require("./sequelize/tables/teamPlayersModel")(fastify.db);
-    //   require("./sequelize/tables/paneltyRunsModel")(fastify.db);
-    //   require("./sequelize/tables/playerModel")(fastify.db);
-    //   require("./sequelize/tables/matchTypeModel")(fastify.db);
-    //   require("./sequelize/tables/errorLogModel")(fastify.db);
-    //   require("./sequelize/tables/playerTypeModel")(fastify.db);
-    //   require("./sequelize/tables/bowlingTypeModel")(fastify.db);
-    //   require("./sequelize/tables/configModel")(fastify.db);
-    //   require("./sequelize/tables/CommentaryModel")(fastify.db);
-    //   require("./sequelize/tables/commentaryTeamModel")(fastify.db);
-    //   require("./sequelize/tables/commentaryPlayerModel")(fastify.db);
-    //   require("./sequelize/tables/compititionModel")(fastify.db);
-    //   require("./sequelize/tables/eventModel")(fastify.db);
-    //   require("./sequelize/tables/commentaryBallByBallModel")(fastify.db);
-    //   require("./sequelize/tables/commentaryPartnershipModel")(fastify.db);
-    //   require("./sequelize/tables/commentaryWicketModel")(fastify.db);
-    //   require("./sequelize/tables/overModel")(fastify.db);
-    //   require("./sequelize/tables/displayStatusModel")(fastify.db);
-    //   require("./sequelize/tables/newsModel")(fastify.db);
-    //   require("./sequelize/tables/subScribesDomainModel")(fastify.db);
-    //   require("./sequelize/tables/subScribesSubDomainModel")(fastify.db);
-    //   require("./sequelize/tables/matchTypePredictorModel")(fastify.db);
-    //   require("./sequelize/tables/marketTemplateModel")(fastify.db);
-    //   require("./sequelize/tables/eventMarketsModel")(fastify.db);
-    //   require("./sequelize/tables/marketRunnerModel")(fastify.db);
-    //   require("./sequelize/tables/marketTemplateRunnerModel")(fastify.db);
-    //   require("./sequelize/tables/vendorsModel")(fastify.db);
-    //   require("./sequelize/tables/vendorIpModel")(fastify.db);
-    //   require("./sequelize/tables/clientSocketModel")(fastify.db);
-    //   require("./sequelize/tables/activityLogModel")(fastify.db);
-    //   require("./sequelize/tables/mailSettingsModel")(fastify.db);
-    //   require("./sequelize/tables/thirdPartyApisModel")(fastify.db);
-    //   require("./sequelize/tables/commentaryScoringLogsModel")(fastify.db);
-    //   require("./sequelize/tables/clientVideoModel.js")(fastify.db);
-    //   try {
-    //     await fastify.db.sync();
-    //     await featchData(fastify);
-    //     await disConnectClientSocketQuery(fastify);
-    //     await startSignalR(fastify);
-    //     connectClients(fastify);
-    //     //WebsocketConnection(fastify);
-    //     disconnectClients(fastify);
-    //     webPushset(webPush);
-    //   } catch (error) {
-    //     console.log("error sync with db", error);
-    //   }
-    // });
+  if (process.env.IS_CRON_ENABLE && process.env.IS_CRON_ENABLE === "true") {
+    registerCronJobs(fastify);
+  }
+
+  // .after(async () => {
+  //   require("./sequelize/tables/userModel")(fastify.db);
+  //   require("./sequelize/tables/userLoginInfoModel")(fastify.db);
+  //   require("./sequelize/tables/tabsModel")(fastify.db);
+  //   require("./sequelize/tables/roleModel")(fastify.db);
+  //   require("./sequelize/tables/encryptionData")(fastify.db);
+  //   require("./sequelize/tables/permissionModel")(fastify.db);
+  //   require("./sequelize/tables/blockModel")(fastify.db);
+  //   require("./sequelize/tables/menuTypeModel")(fastify.db);
+  //   require("./sequelize/tables/menuItemModel")(fastify.db);
+  //   require("./sequelize/tables/menuItemTypeModel")(fastify.db);
+  //   require("./sequelize/tables/pageModel")(fastify.db);
+  //   require("./sequelize/tables/pageAliasModel")(fastify.db);
+  //   require("./sequelize/tables/pageFormateModel")(fastify.db);
+  //   require("./sequelize/tables/eventTypeModel")(fastify.db);
+  //   require("./sequelize/tables/teamModel")(fastify.db);
+  //   require("./sequelize/tables/teamPlayersModel")(fastify.db);
+  //   require("./sequelize/tables/paneltyRunsModel")(fastify.db);
+  //   require("./sequelize/tables/playerModel")(fastify.db);
+  //   require("./sequelize/tables/matchTypeModel")(fastify.db);
+  //   require("./sequelize/tables/errorLogModel")(fastify.db);
+  //   require("./sequelize/tables/playerTypeModel")(fastify.db);
+  //   require("./sequelize/tables/bowlingTypeModel")(fastify.db);
+  //   require("./sequelize/tables/configModel")(fastify.db);
+  //   require("./sequelize/tables/CommentaryModel")(fastify.db);
+  //   require("./sequelize/tables/commentaryTeamModel")(fastify.db);
+  //   require("./sequelize/tables/commentaryPlayerModel")(fastify.db);
+  //   require("./sequelize/tables/compititionModel")(fastify.db);
+  //   require("./sequelize/tables/eventModel")(fastify.db);
+  //   require("./sequelize/tables/commentaryBallByBallModel")(fastify.db);
+  //   require("./sequelize/tables/commentaryPartnershipModel")(fastify.db);
+  //   require("./sequelize/tables/commentaryWicketModel")(fastify.db);
+  //   require("./sequelize/tables/overModel")(fastify.db);
+  //   require("./sequelize/tables/displayStatusModel")(fastify.db);
+  //   require("./sequelize/tables/newsModel")(fastify.db);
+  //   require("./sequelize/tables/subScribesDomainModel")(fastify.db);
+  //   require("./sequelize/tables/subScribesSubDomainModel")(fastify.db);
+  //   require("./sequelize/tables/matchTypePredictorModel")(fastify.db);
+  //   require("./sequelize/tables/marketTemplateModel")(fastify.db);
+  //   require("./sequelize/tables/eventMarketsModel")(fastify.db);
+  //   require("./sequelize/tables/marketRunnerModel")(fastify.db);
+  //   require("./sequelize/tables/marketTemplateRunnerModel")(fastify.db);
+  //   require("./sequelize/tables/vendorsModel")(fastify.db);
+  //   require("./sequelize/tables/vendorIpModel")(fastify.db);
+  //   require("./sequelize/tables/clientSocketModel")(fastify.db);
+  //   require("./sequelize/tables/activityLogModel")(fastify.db);
+  //   require("./sequelize/tables/mailSettingsModel")(fastify.db);
+  //   require("./sequelize/tables/thirdPartyApisModel")(fastify.db);
+  //   require("./sequelize/tables/commentaryScoringLogsModel")(fastify.db);
+  //   require("./sequelize/tables/clientVideoModel.js")(fastify.db);
+  //   try {
+  //     await fastify.db.sync();
+  //     await featchData(fastify);
+  //     await disConnectClientSocketQuery(fastify);
+  //     await startSignalR(fastify);
+  //     connectClients(fastify);
+  //     //WebsocketConnection(fastify);
+  //     disconnectClients(fastify);
+  //     webPushset(webPush);
+  //   } catch (error) {
+  //     console.log("error sync with db", error);
+  //   }
+  // });
 
   // Configure fastify to use `multipart/form-data` requests
   fastify.register(fastifyMultipart, {
@@ -218,10 +296,21 @@ module.exports = async function (fastify, opts) {
   fastify.addHook("preClose", async () => {
     console.log("preClose hook executed");
     try {
+      // Stop all cron jobs to prevent memory leaks
+      cron.getTasks().forEach(task => {
+        try {
+          task.stop();
+        } catch (e) {
+          console.error("Error stopping cron task:", e);
+        }
+      });
+
+      // Disconnect sockets
       await disConnectClientSocketQuery(fastify);
+      await disConnectEntitySocketQuery(fastify);
       console.log("Cleanup task executed successfully");
     } catch (error) {
-      console.error("Error during preClose hook execution:", error);
+      console.error(new Date(), "Error during preClose hook execution:", error);
     }
   });
   fastify.register(require("@fastify/compress"), {
@@ -239,7 +328,7 @@ module.exports = async function (fastify, opts) {
   //   prefix: "/images/",
   //   serve: true,
   // });
-  
+
   // // Serve static files from the "public" folder
   // fastify.register(fastifyStatic, {
   //   root: path.join(__dirname, "public"),
@@ -268,6 +357,9 @@ module.exports = async function (fastify, opts) {
   });
 
   fastify.addHook("onRequest", async (request, reply) => {
+    if (!global.isAllDataLoadedInGlobal) {
+      throw new Error("Please wait data is loading!");
+    }
     // Record the request start time in nanoseconds
     // request.startTime = process.hrtime.bigint();
     // request.startTimeTimeStemp = new Date();
@@ -283,18 +375,18 @@ module.exports = async function (fastify, opts) {
     //   request.errId = result[0]?.errId;
     // }
 
-    if (process.env.ENABLE_SENTRY === "TRUE") {
-      Sentry.startSpan(
-        {
-          name: `${request.method} ${request.url}`,
-          op: "http.server",
-          description: "Incoming HTTP request",
-        },
-        (span) => {
-          request.sentrySpan = span;
-        }
-      );
-    }
+    // if (process.env.ENABLE_SENTRY === "TRUE") {
+    //   Sentry.startSpan(
+    //     {
+    //       name: `${request.method} ${request.url}`,
+    //       op: "http.server",
+    //       description: "Incoming HTTP request",
+    //     },
+    //     (span) => {
+    //       request.sentrySpan = span;
+    //     }
+    //   );
+    // }
 
     // done();
   });
@@ -306,7 +398,7 @@ module.exports = async function (fastify, opts) {
     const urlLastParameter = [...urlDestructor].pop().split(".");
     const urlExceptions = ["/documentation/json", "/documentation", "/admin/virtual/createEvent",
       "/admin/virtual/eventToss", "/admin/virtual/eventBallStart", "/admin/virtual/eventScoring",
-      "/admin/virtual/eventSuffle"
+      "/admin/virtual/eventSuffle", "/admin/virtual/cancelEvent", "/admin/virtual/serverTime"
     ];
 
     if (
@@ -321,8 +413,8 @@ module.exports = async function (fastify, opts) {
         reply.statusCode,
         urlLastParameter[0]
       );
-      const urlTokenExceptions = ["/signout", "/verifyToken"];
-      const urlTokenGeneration = ["/signin", "/signup"];
+      const urlTokenExceptions = ["/signout", "/verifyToken", "/agent/signout"];
+      const urlTokenGeneration = ["/signin", "/signup", "/agent/signin"];
       const allowedStatusCodes = [200, 500, 403, 400];
       if (allowedStatusCodes.includes(reply.statusCode)) {
         if (
@@ -342,31 +434,31 @@ module.exports = async function (fastify, opts) {
       newPayload = JSON.stringify(newPayload);
     }
 
-    if (process.env.ENABLE_SENTRY === "TRUE") {
-      // const transaction = Sentry.startTransaction({
-      //   name: `${request.method} ${request.url}`,
-      //   op: "http.server",
-      //   description: "HTTP request",
-      // });
-      // request.sentryTx = transaction;
-      Sentry.startSpan(
-        {
-          name: `${request.method} ${request.url}`,
-          op: "http.server",
-          description: "Incoming HTTP request",
-        },
-        (span) => {
-          request.sentrySpan = span;
-        }
-      );
-      // const span = Sentry.startSpan({
-      //   name: `${request.method} ${request.url}`,
-      //   op: "http.server",
-      //   description: "HTTP request",
-      // });
+    // if (process.env.ENABLE_SENTRY === "TRUE") {
+    //   // const transaction = Sentry.startTransaction({
+    //   //   name: `${request.method} ${request.url}`,
+    //   //   op: "http.server",
+    //   //   description: "HTTP request",
+    //   // });
+    //   // request.sentryTx = transaction;
+    //   Sentry.startSpan(
+    //     {
+    //       name: `${request.method} ${request.url}`,
+    //       op: "http.server",
+    //       description: "Incoming HTTP request",
+    //     },
+    //     (span) => {
+    //       request.sentrySpan = span;
+    //     }
+    //   );
+    //   // const span = Sentry.startSpan({
+    //   //   name: `${request.method} ${request.url}`,
+    //   //   op: "http.server",
+    //   //   description: "HTTP request",
+    //   // });
 
-      // request.sentrySpan = span;
-    }
+    //   // request.sentrySpan = span;
+    // }
 
     done(null, newPayload);
   });
@@ -388,10 +480,10 @@ module.exports = async function (fastify, opts) {
       responseLogger(request);
     }
 
-    if (process.env.ENABLE_SENTRY === "TRUE") {
-      request.sentryTx.setHttpStatus(reply.statusCode);
-      request.sentryTx.finish();
-    }
+    // if (process.env.ENABLE_SENTRY === "TRUE") {
+    //   request.sentryTx.setHttpStatus(reply.statusCode);
+    //   request.sentryTx.finish();
+    // }
 
     done();
   });
@@ -428,7 +520,7 @@ module.exports = async function (fastify, opts) {
         origin: true,
         methods: ["GET", "POST", "OPTIONS"], // Allow necessary methods
         preflightContinue: false, // Automatically handle preflight requests,
-        maxAge :300,
+        maxAge: 300,
         preflight: true,
         optionsSuccessStatus: 204, // Ensures proper handling of preflight requests
 
@@ -449,12 +541,31 @@ module.exports = async function (fastify, opts) {
       origin: [
         "https://admin.socket.io",
         "https://panel.deployed.live",
+        "https://panel.scorre.info",
         "http://localhost:3001",
         "https://uatpanel.deployed.live",
+        "https://uatpanel.scorre.info",
         "http://localhost:8080"
       ],
       credentials: true,
     },
+    // Improved timeout settings for better connection stability
+    pingInterval: 25000, // Ping every 25 seconds (Standard default)
+    pingTimeout: 30000,  // Wait 30 seconds for pong before considering disconnected
+    connectTimeout: 10000, // Connection timeout (10 seconds)
+    // Upgrade timeout for WebSocket upgrades
+    upgradeTimeout: 10000,
+    // Allow longer initial connection attempts
+    initialPacketTimeout: 5000,
+    connectionStateRecovery: {
+      // Enable connection state recovery to handle reconnections better
+      maxDisconnectionDuration: 2 * 60 * 1000, // 2 minutes
+      skipMiddlewares: true,
+    },
+    allowEIO3: true, // Allow Engine.IO v3 clients for better compatibility
+    // Additional stability settings
+    maxHttpBufferSize: 1e8, // 100MB max buffer size
+    httpCompression: true,   // Enable compression
   });
 
   instrument(io, {
@@ -515,7 +626,7 @@ module.exports = async function (fastify, opts) {
   });
 
   fastify.setErrorHandler(function (err, request, reply) {
-    console.error("err",err);
+    // console.error("err",err);
     if (process.env.ENABLE_SENTRY === "TRUE") {
       Sentry.captureException(err);
     }

@@ -1,13 +1,17 @@
 const getAllRolesQuery = async (fastify) => {
-  return await fastify.db.query(
-    `SELECT 
-        e."wrValue" as "roleId",
-        r."wrRoleName" as "roleName",
-        r."wrDescription" as "description",
-        r."wrDisplayType" as "displayType",
-        r."wrCreatedBy" as  "createdBy"
-     FROM "tblRoles" r inner join "tblEncryptedData" e on r."wrRoleId" = e."wrKey"
-     AND r."wrIsDeleted" = false;`,
+  return fastify.db.query(
+    `
+    SELECT 
+      e."wrValue" as "roleId",
+      r."wrRoleName" as "roleName",
+      r."wrDescription" as "description",
+      r."wrDisplayType" as "displayType",
+      r."wrCreatedBy" as "createdBy",
+      r."wrIsActive" as "isActive"
+    FROM "tblRoles" r 
+    INNER JOIN "tblEncryptedData" e 
+      ON r."wrRoleId" = e."wrKey"
+    `,
     {
       type: fastify.db.QueryTypes.SELECT,
     }
@@ -74,11 +78,30 @@ const deletePermissionQuery = async (roleId, fastify, request) => {
 const createRoleQuery = async (body, fastify) => {
   const roleData = await fastify.db.query(
     `
-    with role_add as (
-    INSERT INTO "tblRoles" ("wrRoleName", "wrDescription", "wrDisplayType" , "wrCreatedBy" , "wrCreatedDate") VALUES ($1, $2, $3,$4,$5) RETURNING *
+    WITH role_add AS (
+      INSERT INTO "tblRoles"
+      (
+        "wrRoleName",
+        "wrDescription",
+        "wrDisplayType",
+        "wrIsActive",
+        "wrCreatedBy",
+        "wrCreatedDate"
+      )
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *
     )
     
-    select "wrValue" as "roleId" , "wrRoleName" as "roleName" , "wrDescription" as "description" , "wrDisplayType" as "displayType" , "wrCreatedBy" as  "createdBy" from role_add r inner join "tblEncryptedData" e on r."wrRoleId" = e."wrKey"
+    SELECT
+      e."wrValue" AS "roleId",
+      r."wrRoleName" AS "roleName",
+      r."wrDescription" AS "description",
+      r."wrDisplayType" AS "displayType",
+      r."wrCreatedBy" AS "createdBy",
+      r."wrIsActive" AS "isActive"
+    FROM role_add r
+    INNER JOIN "tblEncryptedData" e
+      ON r."wrRoleId" = e."wrKey"
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -86,6 +109,7 @@ const createRoleQuery = async (body, fastify) => {
         body.roleName,
         body.description,
         body.displayType,
+        body.isActive || false,
         body.userId,
         new Date(),
       ],
@@ -96,7 +120,7 @@ const createRoleQuery = async (body, fastify) => {
 };
 
 const updateOrCreatePermissionQuery = async (body, fastify) => {
-  return await fastify.db.query(
+  return await fastify.db.query( 
     `
     DO $$
 DECLARE
@@ -105,7 +129,7 @@ DECLARE
     tab_key int;
 BEGIN
   UPDATE "tblRoles"
-  SET "wrRoleName" = :roleName, "wrDescription" = :description, "wrDisplayType" = :dispayType,"wrModifyDate" = now() , "wrModifyBy" = :userId
+  SET "wrRoleName" = :roleName, "wrDescription" = :description, "wrDisplayType" = :dispayType, "wrIsActive" = :isActive, "wrIsDeleted" = NOT :isActive, "wrModifyDate" = now() , "wrModifyBy" = :userId
   WHERE "wrRoleId" IN (
       SELECT "wrKey" FROM "tblEncryptedData" WHERE "wrValue" = :roleId
   );
@@ -150,6 +174,7 @@ $$;
         roleName: body.roleName,
         description: body.description,
         dispayType: body.displayType,
+        isActive: body.isActive,  
         userId: body.userId || 0,
         permission: JSON.stringify(body.permissions),
       },
@@ -236,6 +261,123 @@ const permissionByRoleIdQuery = async (data, fastify) => {
   );
 };
 
+const permissionByRoleQuery = async (data, fastify) => {
+  return await fastify.db.query(
+    `select   
+     COALESCE(tp."wrIsAdd",false) as "isAddPermission",
+    COALESCE(tp."wrIsEdit",false) as "isEditPermission",
+    COALESCE(tp."wrIsDelete",false) as "isDeletePermission",
+    COALESCE(tp."wrIsView",false) as "isViewPermission"
+    from "tblTabs" tt 
+    left join (
+      select * from "tblPermissions" where "wrRoleId" = $1
+    ) as tp on tt."wrTabId" = tp."wrTabId"
+    left join "tblEncryptedData" te on te."wrKey" = tt."wrTabId"
+    where tt."wrDisplayType" = $2 and tt."wrTabName" = ANY($3) and tt."wrIsDeleted" = false
+    `,
+    {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [data.roleId, data.displayType, data.tabName],
+    }
+  );
+};
+
+const updateRoleStatusQuery = async (data, fastify, request) => {
+  const { roleId, isActive, userId } = data;
+  try {
+    return await fastify.db.query(
+      `
+      UPDATE "tblRoles"
+      SET 
+        "wrIsActive" = $1,
+        "wrModifyBy" = $2,
+        "wrModifyDate" = now()
+      WHERE "wrRoleId" = (
+        SELECT "wrKey"
+        FROM "tblEncryptedData"
+        WHERE "wrValue" = $3
+      )
+      `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [isActive, userId, roleId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableRoles/updateRoleStatusQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const updatePermissionStatusQuery = async (data, fastify, request) => {
+  const { roleId, isActive, userId } = data;
+
+  try {
+    return await fastify.db.query(
+      `
+      UPDATE "tblPermissions"
+      SET 
+        "wrIsDeleted" = $1,
+        "wrDeletedBy" = $2,
+        "wrDeletedAt" = now()
+      WHERE "wrRoleId" = (
+        SELECT "wrKey"
+        FROM "tblEncryptedData"
+        WHERE "wrValue" = $3
+      )
+      `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [!isActive, userId, roleId], 
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableRoles/updatePermissionStatusQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
+
+const checkActiveUsersRoleQuery = async (roleId, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `
+      SELECT COUNT(*) as "count"
+      FROM "tblUsers"
+      WHERE "WrRoleId" = (
+        SELECT "wrKey"
+        FROM "tblEncryptedData"
+        WHERE "wrValue" = $1
+      )
+      AND "WrIsActive" = true
+      AND "WrIsDelete" = false
+      `,
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [roleId],
+      }
+    );
+    return Number(result[0].count) > 0;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableRoles/checkActiveUsersRoleQuery",
+      null
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   getAllRolesQuery,
   valideRoleId,
@@ -246,4 +388,8 @@ module.exports = {
   deletePermissionQuery,
   roleByIdQuery,
   permissionByRoleIdQuery,
+  permissionByRoleQuery,
+  updateRoleStatusQuery,
+  updatePermissionStatusQuery,
+  checkActiveUsersRoleQuery,
 };

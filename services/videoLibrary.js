@@ -2,6 +2,8 @@ const {
   insertVideoLibraryQuery,
   updateVideoLibraryQuery,
   deleteVideoLibraryQuery,
+  updateVideoLibraryStatusQuery,
+  updateDisplayOrder,
 } = require("../repository/TableVideoLibrary");
 const {
   generateImageName,
@@ -10,7 +12,7 @@ const {
 } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
-const { VideoLibraryType } = require("../utilities/index");
+const { VideoLibraryType, getDataFromTime, checkDataSendToClient } = require("../utilities/index");
 const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
 
 const saveVideoLibraryService = async (request, fastify) => {
@@ -51,24 +53,23 @@ const saveVideoLibraryService = async (request, fastify) => {
   );
   global.tblVideoLibrary.push(saveData);
 
-  callClientAPI(
-    {
-       serviceType: ServiceType.clientAPI,
-       moduleType: APIEndpointModuleType.updateSeoModule,
-       data: {
-         module: 'videoLibrary',
-         type: "add",
-         data: saveData
-       }
-    }, request, fastify)
-   .catch((err) => {
-     errorLogger(
-       fastify,
-       err.message,
-       "services/videoLibrary.js/saveVideoLibraryService - callClientAPI",
-       request
-     );
-   });
+  const sendToClient = checkDataSendToClient(saveData, "from", "to");
+  if (sendToClient) {
+    await callClientAPI(
+      {
+        serviceType: ServiceType.clientAPI,
+        moduleType: APIEndpointModuleType.updateSeoModule,
+        data: {
+          module: 'videoLibrary',
+          type: "add",
+          data: saveData
+        }
+      }, request, fastify,
+      "services/videoLibrary.js/saveVideoLibraryService"
+    );
+  } else {
+    global.pendingVideoLibraryToClient.push(saveData);
+  }
 
   return saveData;
 };
@@ -125,6 +126,8 @@ const editVideoLibraryService = async (request, fastify, data) => {
     commentaryId: request.body.commentaryId ?? validateId.commentaryId,
     id: parseInt(request.body.id, 10),
     videoPath: request.body.videoPath ?? validateId.videoPath,
+    whitelabelId: request.body.whitelabelId ?? validateId.whitelabelId,
+    isActive: request.body.isActive ?? validateId.isActive
   };
   if(updateData.type === 2) {
     updateData.video = null
@@ -147,7 +150,9 @@ const editVideoLibraryService = async (request, fastify, data) => {
     global.tblVideoLibrary[index] = modifiedData[0];
   }
 
-  callClientAPI(
+  global.pendingVideoLibraryToClient = global.pendingVideoLibraryToClient.filter(item => item.id !== updateData.id);
+
+  await callClientAPI(
     {
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
@@ -156,21 +161,40 @@ const editVideoLibraryService = async (request, fastify, data) => {
         type: "update",
         data: modifiedData[0]
       }
-    }, request, fastify)
-  .catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "services/videoLibrary.js/editVideoLibraryService - callClientAPI",
-      request
-    );
-  });
+    }, request, fastify,
+    "services/videoLibrary.js/editVideoLibraryService"
+  );
 
   return modifiedData[0];
 };
 
 const allVideoLibraryService = async (request) => {
-  return global.tblVideoLibrary;
+  const { isActive, dateTime, isPermanent , startDate , endDate} = request.body; 
+  let videos = global.tblVideoLibrary;
+  if (isActive !== undefined) {
+    videos = videos.filter(v => v.isActive === Boolean(isActive));
+  }
+  if (isPermanent !== undefined) {
+    videos = videos.filter(v => v.isPermanent === Boolean(isPermanent));
+  }
+  if(startDate && endDate){
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+
+    videos = videos.filter(item => {
+      if (item.isPermanent) return false; // optional
+      
+      const stDate = new Date(item.from).getTime();
+      const enDate = new Date(item.to).getTime();
+
+      return stDate <= end && enDate >= start;
+    });
+  }
+
+  if (dateTime) {
+    videos = getDataFromTime(videos, "pendingVideoLibraryToClient", "from", "to");
+  }
+  return videos;
 };
 
 const videoLibraryById = async (request) => {
@@ -202,7 +226,9 @@ const deleteVideoLibraryService = async (request, fastify) => {
     (item) => !id.includes(item.id)
   );
 
-  callClientAPI({
+  global.pendingVideoLibraryToClient = global.pendingVideoLibraryToClient.filter(item => !id.includes(item.id));
+
+  await callClientAPI({
     serviceType: ServiceType.clientAPI,
     moduleType: APIEndpointModuleType.updateSeoModule,
     data: {
@@ -212,22 +238,124 @@ const deleteVideoLibraryService = async (request, fastify) => {
         id: id
       }
     }
-  }, request, fastify)
-  .catch((err) => {
-    errorLogger(
-      fastify,
-      err.message,
-      "services/videoLibrary.js/deleteVideoLibraryQuery - callClientAPI",
-      request
-    );
-  });
+  }, request, fastify,
+    "services/videoLibrary.js/deleteVideoLibraryService"
+  );
 
   return `Video library data deleted successfully`;
 };
+
+const updateVideoStatusService = async (request, fastify) => {
+  const { id, isActive } = request.body;
+  const index = global.tblVideoLibrary.findIndex(v => v.id === id);
+  if (index === -1) {
+    throw new Error("Video not found");
+  }
+  const body = {
+    id,
+    isActive,
+    userId: request.userTokenInfo.WrUserId,
+  };
+  const updatedVideo = await updateVideoLibraryStatusQuery(body, fastify, request);
+  global.tblVideoLibrary[index].isActive = isActive;
+
+  global.pendingVideoLibraryToClient = global.pendingVideoLibraryToClient.filter(item => item.id !== updateData.id);
+
+  await callClientAPI(
+    {
+      serviceType: ServiceType.clientAPI,
+      moduleType: APIEndpointModuleType.updateSeoModule,
+      data: {
+        module: 'videoLibrary',
+        type: "update",
+        data: global.tblVideoLibrary[index]
+      }
+    }, request, fastify,
+    "services/videoLibrary.js/updateVideoStatusService"
+  );
+
+  return updatedVideo[0];
+};
+
+const updateDisplayOrderService = async (request, fastify) => {
+  for (const item of request.body) {
+    await updateDisplayOrder(item, request, fastify);
+    let index = global.tblVideoLibrary.findIndex((elem) => elem.id === item.id);
+    if (index !== -1) {
+      global.tblVideoLibrary[index].displayOrder = item.displayOrder;
+    }
+  }
+  const now = Date.now();
+  let allActiveData = global.tblVideoLibrary.filter(item => 
+    item.isActive === true && (item.isPermanent === true || 
+      (
+        new Date(item.from).getTime() <= now &&
+        new Date(item.to).getTime() >= now
+      )
+    )
+  );
+
+  global.pendingVideoLibraryToClient = global.pendingVideoLibraryToClient.filter(item => request.body.map(item => item.id).includes(item.id));
+
+  await callClientAPI({
+    serviceType: ServiceType.clientAPI,
+    moduleType: APIEndpointModuleType.updateSeoModule,
+    data: {
+      module: 'videoLibrary',
+      type: "changeDisplayOrder",
+      data: allActiveData
+    }
+  }, request, fastify,
+    "services/videoLibrary.js/updateDisplayOrderService"
+  );
+
+  return `Display order updated successfully`;
+}
+
+const sendActiveVideoLibraryToClientAPIService = async (fastify) => {
+  try {
+    if (global.pendingVideoLibraryToClient.length > 0) {
+      const now = Date.now();
+      for (const data of global.pendingVideoLibraryToClient) {
+        const start = new Date(data.from).getTime();
+        const end = new Date(data.to).getTime();
+
+        const result = start <= now && end >= now;
+        if (result) {
+          global.pendingVideoLibraryToClient = global.pendingVideoLibraryToClient.filter(item => item.id !== data.id);
+          await callClientAPI(
+            {
+              serviceType: ServiceType.clientAPI,
+              moduleType: APIEndpointModuleType.updateSeoModule,
+              data: {
+                module: 'videoLibrary',
+                type: "add",
+                data: data
+              }
+            },
+            null,
+            fastify,
+            "services/videoLibrary.js/sendActiveVideoLibraryToClientAPIService"
+          );
+        }
+      }
+    }
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> services/videoLibrary.js/sendActiveVideoLibraryToClientAPIService",
+      null
+    );
+  }
+}
 
 module.exports = {
   allVideoLibraryService,
   videoLibraryById,
   createVideoLibraryService,
   deleteVideoLibraryService,
+  updateVideoStatusService,
+  updateDisplayOrderService,
+  sendActiveVideoLibraryToClientAPIService
 };

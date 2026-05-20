@@ -15,10 +15,16 @@ const {
   getTemplateByCompetitionIdService,
   saveCompTemplatesService,
   isVirtualCompetitionService,
+  upCompStatusService,
+  getMatchTypeTemplateByCompetitionIdService,
+  changeIsCompetitionStatisticsCalculationStatusService,
+  getAllCompetitionsService,
+  getAllSeasonOfCompetitionsService,
 } = require("../../../../services/competition");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 const { getEventSnapByCompetitionIdService, updateEventSnapService } = require("../../../../services/competitionEventSnap");
+const { allPythonAPIsService } = require("../../../../services/pythonAPI")
 
 let path = "controller/users/admin/competition/index";
 
@@ -40,6 +46,8 @@ const getCompetitionList = async (request, reply, fastify) => {
         competition: item.competition,
         drsCount: item.drsCount,
         matchTypeId: item.matchTypeId,
+        startDate: item.startDate ?? null,
+        endDate: item.endDate ?? null
       };
     });
     reply.status(200).send(success(result, 200));
@@ -76,12 +84,16 @@ const getCompetitionListByeventTypeId = async (request, reply, fastify) => {
   try {
     let result = await competitionByeventTypeIdService(request);
     result = result.map((item) => {
+      const pythonURI = global.tblPythonAPI.find(elem => elem.id == item?.pythonId)
       return {
         competitionId: item.competitionId,
         competition: item.competition,
         drsCount: item.drsCount,
         matchTypeId: item.matchTypeId,
         isVirtual: item.isVirtual,
+        pythonId: item.pythonId,
+        pythonURI: pythonURI?.URI ?? null,
+        countryId: item.countryId
       };
     })
     reply.status(200).send(success(result, 200));
@@ -218,6 +230,15 @@ const getTemplateByCompetitionId = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const getMatchTypeTemplateByCompetitionId = async (request, reply, fastify) => {
+  try {
+    const result = await getMatchTypeTemplateByCompetitionIdService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getMatchTypeTemplateByCompetitionId", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
 const saveCompTemplates = async (request, reply, fastify) => {
   try {
     const result = await saveCompTemplatesService(request, fastify);
@@ -236,6 +257,57 @@ const isVirtualCompetition = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const upCompStatus = async (request, reply, fastify) => {
+  try {
+    const result = await upCompStatusService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/upCompStatus", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+const allPythonAPIs = async (request, reply, fastify) => {
+  try {
+    request.body = request.body || {};
+    request.body.isActive = true;
+    const result = await allPythonAPIsService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/allPythonAPIs", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const changeIsCompetitionStatisticsCalculationStatus = async (request, reply, fastify) => {
+  try {
+    const result = await changeIsCompetitionStatisticsCalculationStatusService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/changeIsCompetitionStatisticsCalculationStatus", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const getAllCompetitions = async (request, reply, fastify) => {
+  try {
+    const result = await getAllCompetitionsService(request);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getAllCompetitions", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const getAllSeasonOfCompetitions = async (request, reply, fastify) => {
+  try {
+    const result = await getAllSeasonOfCompetitionsService(request);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, path + "/getAllSeasonOfCompetitions", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 module.exports = {
   getAllCompetition,
   getCompetitionById,
@@ -257,4 +329,10 @@ module.exports = {
   getTemplateByCompetitionId,
   saveCompTemplates,
   isVirtualCompetition,
+  upCompStatus,
+  allPythonAPIs,
+  getMatchTypeTemplateByCompetitionId,
+  changeIsCompetitionStatisticsCalculationStatus,
+  getAllCompetitions,
+  getAllSeasonOfCompetitions
 };

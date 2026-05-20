@@ -1,4 +1,4 @@
-const { allResponseLogs, allThirdPartyApiLogs, allPredictorAPILogs, allCommentaryLogs, allErrorLogs, allEventByCompetition, getComByEventId, allUndoLogs, allResultLogsService, getEMLogsService } = require("../../../../services/logs");
+const { allResponseLogs, allThirdPartyApiLogs, allPredictorAPILogs, allCommentaryLogs, allErrorLogs, allEventByCompetition, getComByEventId, allUndoLogs, allResultLogsService, getEMLogsService, allCommentaryDRSLogsService, allAutoImportDataLogsService, allEntityUpdateLogsService, actionLogsService } = require("../../../../services/logs");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -99,6 +99,42 @@ const getEMLogs = async(request , reply , fastify) =>{
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR,200))
     }
 }
+const getCommentaryDRSLogs = async(request , reply , fastify) =>{
+    try {
+        const result = await allCommentaryDRSLogsService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify , err.message, commonPath + "/getEMLogs", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR,200))
+    }
+}
+const allAutoImportDataLogs = async(request , reply , fastify) =>{
+    try {
+        const result = await allAutoImportDataLogsService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify , err.message, commonPath + "/allAutoImportDataLogs", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR,200))
+    }
+}
+const getAllEntityUpdateLogs = async (request, reply, fastify) => {
+    try {
+        const result = await allEntityUpdateLogsService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/getAllEntityUpdateLogs", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+const getActionLogs = async (request, reply, fastify) => {
+    try {
+        const result = await actionLogsService(request, fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/getActionLogs", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
 module.exports = {
     getAllResponseLogs,
     getAllThirdPartyApiLogs,
@@ -109,5 +145,9 @@ module.exports = {
     getComByEvent,
     getUndoLogs,
     getAllResultLogs,
-    getEMLogs
+    getEMLogs,
+    getCommentaryDRSLogs,
+    allAutoImportDataLogs,
+    getAllEntityUpdateLogs,
+    getActionLogs,
 };

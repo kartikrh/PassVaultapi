@@ -4,6 +4,7 @@ const {
   updateDisplayStatusesQuery,
   deleteDisplayStatusesQuery,
 } = require("../repository/TableDisplayStatus");
+const { trimTextData } = require("../utilities/index");
 
 const allDisplayStatusesService = async (request) => {
   const { isActive } = request.body;
@@ -29,6 +30,13 @@ const displayStatusesIdService = async (request) => {
 };
 
 const insertdisplayStatusesService = async (request, fastify) => {
+  const trimData = await trimTextData({
+    displayStatus: request.body?.displayStatus
+  }, request, fastify);
+  
+  if(trimData) {
+    Object.assign(request.body, trimData);
+  }
   const result = await insertDisplayStatusesQuery(
     { ...request.body },
     fastify,
@@ -46,6 +54,13 @@ const updatedisplayStatusesService = async (request, fastify) => {
 
   if (!checkId) {
     throw new Error("Display Status with this id not Found");
+  }
+  const trimData = await trimTextData({
+    displayStatus: request.body?.displayStatus
+  }, request, fastify);
+  
+  if(trimData) {
+    Object.assign(request.body, trimData);
   }
 
   const body = {

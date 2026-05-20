@@ -6,6 +6,9 @@ const {
 const { bannerViewersCountQuery } = require("../repository/TableBanner");
 const { newsViewersCountQuery } = require("../repository/TableNews");
 const { articleViewersCountQuery } = require("../repository/TableArticles");
+const { updateAdvertiseViewCountQuery } = require("../repository/TableAdvertise");
+const { updateVideoLibraryViewCountQuery } = require("../repository/TableVideoLibrary");
+const { updatePhotoLibraryViewCountQuery } = require("../repository/TablePhotoLibrary");
 
 const getAllActivityLogService = async (request, fastify) => {
   return global.tblActivityLogs;
@@ -39,7 +42,7 @@ const saveActivityLogService = async (request, fastify) => {
   }
 };
 const createActivityLogService = async (request, fastify) => {
-  const data = await insertActivityLogQuery(
+  let data = await insertActivityLogQuery(
     {
       ...request.body,
     },
@@ -52,6 +55,9 @@ const createActivityLogService = async (request, fastify) => {
     await newsViewersCountQuery({ ...request.body },request,fastify);
     if (newsIndex !== -1) {
       global.tblNews[newsIndex].viewerCount = (global.tblNews[newsIndex].viewerCount || 0) + 1;
+      if (data && data.length === 1) {
+        data[0].count = global.tblNews[newsIndex].viewerCount;
+      }
     }
   } else if(request?.body?.activityType === 2) {
     // const articleIndex = global.tblArticles.findIndex((item)=> item.id === parseInt(request.body.refId));
@@ -63,6 +69,36 @@ const createActivityLogService = async (request, fastify) => {
     await bannerViewersCountQuery({ ...request.body },request,fastify);
     if (bannerIndex !== -1) {
       global.tblBanner[bannerIndex].viewerCount = (global.tblBanner[bannerIndex].viewerCount || 0) + 1;
+      if (data && data.length === 1) {
+        data[0].count = global.tblBanner[bannerIndex].viewerCount;
+      }
+    }
+  } else if(request?.body?.activityType === 3) {
+    const advertiseIndex = global.tblAdvertise.findIndex((item)=> item.advertiseId === parseInt(request.body.refId));
+    await updateAdvertiseViewCountQuery({ ...request.body },request,fastify);
+    if (advertiseIndex !== -1) {
+      global.tblAdvertise[advertiseIndex].viewerCount = (global.tblAdvertise[advertiseIndex].viewerCount || 0) + 1;
+      if (data && data.length === 1) {
+        data[0].count = global.tblAdvertise[advertiseIndex].viewerCount;
+      }
+    }
+  } else if(request?.body?.activityType === 4) {
+    const videoLibraryIndex = global.tblVideoLibrary.findIndex((item)=> item.id === parseInt(request.body.refId));
+    await updateVideoLibraryViewCountQuery({ ...request.body },request,fastify);
+    if (videoLibraryIndex !== -1) {
+      global.tblVideoLibrary[videoLibraryIndex].viewCount = (global.tblVideoLibrary[videoLibraryIndex].viewCount || 0) + 1;
+      if (data && data.length === 1) {
+        data[0].count = global.tblVideoLibrary[videoLibraryIndex].viewCount;
+      }
+    }
+  } else if(request?.body?.activityType === 5) {
+    const photoLibraryIndex = global.tblPhotoLibrary.findIndex((item)=> item.photoLibraryId === parseInt(request.body.refId));
+    await updatePhotoLibraryViewCountQuery({ ...request.body },request,fastify);
+    if (photoLibraryIndex !== -1) {
+      global.tblPhotoLibrary[photoLibraryIndex].viewCount = (global.tblPhotoLibrary[photoLibraryIndex].viewCount || 0) + 1;
+      if (data && data.length === 1) {
+        data[0].count = global.tblPhotoLibrary[photoLibraryIndex].viewCount;
+      }
     }
   } else {
     // const bannerIndex = global.tblBanner.findIndex((item)=> item.bannerId === parseInt(request.body.refId));

@@ -37,7 +37,7 @@ const {
     global.tblSocialMedia.push(saveData);
 
       if(data.body.isActive){
-        callClientAPI(
+        await callClientAPI(
          {
             serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.updateSeoModule,
@@ -47,15 +47,9 @@ const {
               data: saveData
             }
          },
-         request, fastify)
-        .catch((err) => {
-          errorLogger(
-            fastify,
-            err.message,
-            "services/socialMedia.js/saveSocialMedia - callClientAPI",
-            request
-          );
-        });
+         request, fastify,
+          "services/socialMedia.js/saveSocialMedia"
+        );
       }
 
     return saveData;
@@ -105,7 +99,7 @@ const {
       global.tblSocialMedia[index] = modifiedData[0];
     }
 
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
@@ -114,15 +108,9 @@ const {
           type: "update",
           data: modifiedData[0]
         }
-      }, request, fastify)
-    .catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "services/socialMedia.js/editSocialMedia - callClientAPI",
-        request
-      );
-    });
+      }, request, fastify,
+      "services/socialMedia.js/editSocialMedia"
+    );
 
     return modifiedData[0];
   };
@@ -171,7 +159,7 @@ const {
       (item) => !id.includes(item.id)
     );
   
-    callClientAPI({
+    await callClientAPI({
       serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data: {
@@ -181,15 +169,9 @@ const {
           id: id
         }
       }
-    }, request, fastify)
-    .catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "services/socialMedia.js/deleteSocialMediaService - callClientAPI",
-        request
-      );
-    });
+    }, request, fastify,
+      "services/socialMedia.js/deleteSocialMediaService"
+    );
 
     return `Social media(s) data deleted successfully`;
   };
@@ -209,7 +191,7 @@ const {
       global.tblSocialMedia[index].isActive = isActive;
     }
     
-    callClientAPI(
+    await callClientAPI(
       {
         serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
@@ -218,15 +200,9 @@ const {
           type: isActive ? "active" : "inactive",
           data: global.tblSocialMedia[index]
         }
-      }, request, fastify)
-    .catch((err) => {
-      errorLogger(
-        fastify,
-        err.message,
-        "services/socialMedia.js/activeInactiveSocialMediaService - callClientAPI",
-        request
-      );
-    });
+      }, request, fastify,
+      "services/socialMedia.js/activeInactiveSocialMediaService"
+    );
 
     return `Social media data updated successfully`;
   };

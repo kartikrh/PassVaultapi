@@ -64,15 +64,23 @@ const ImportMarketService = async (request, fastify) => {
 
     //Compitition Add/Update
     let setCompetitions;
+    // let CompetitionsObj = global.tblCompetitions.find(
+    //   (item) =>
+    //     item.eventTypeId === setEventtype.eventTypeId &&
+    //     item.refId === request.body.competitionId
+    // );
     let CompetitionsObj = global.tblCompetitions.find(
       (item) =>
         item.eventTypeId === setEventtype.eventTypeId &&
-        item.refId === request.body.competitionId
+        (item.refId == request.body.competitionId ||
+        item.competitionId == request.body.compId)
     );
     if (!CompetitionsObj) {
       request.body.eventTypeId = setEventtype.eventTypeId;
       request.body.image = "";
       request.body.isActive = true;
+      const pythonId = global.tblPythonAPI.find(item => item.isDefault === true && item.isActive === true);
+      request.body.pythonId = pythonId.id;
       setCompetitions = await insertCompetitionQuery(request, fastify);
       global.tblCompetitions.push(setCompetitions);
       CompetitionsObj = setCompetitions;
@@ -114,7 +122,14 @@ const ImportMarketService = async (request, fastify) => {
         item.competitionId === CompetitionsObj.competitionId &&
         item.refId === request.body.eventId
     );
+
     if (!Eventsobj) {
+      const openDate = request.body.openDate?.trim();
+      if (openDate == undefined || openDate == null ||
+        openDate === "" || openDate === "null" ||
+        isNaN(new Date(openDate).getTime())) {
+        throw new Error("Open Date is required for event creation");
+      }
       request.body.competitionId = CompetitionsObj.competitionId;
       request.body.eventTypeId = eventtypeobj.eventTypeId;
       request.body.isActive = true;
@@ -262,6 +277,8 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
       request.body.eventTypeId = setEventtype.eventTypeId;
       request.body.image = "";
       request.body.isActive = true;
+      const pythonId = global.tblPythonAPI.find(item => item.isDefault === true && item.isActive === true);
+      request.body.pythonId = pythonId.id;
       setCompetitions = await insertCompetitionQuery(request, fastify);
       global.tblCompetitions.push(setCompetitions);
       CompetitionsObj = setCompetitions;
@@ -607,11 +624,17 @@ const getCompByEventTypeService = async (request, fastify) => {
   if(!findEventType){
     return [];
   }
-  let response = global.tblCompetitions.filter((item) => item.eventTypeId === findEventType.eventTypeId).map((item) => {
+  let response = global.tblCompetitions.filter((item) => 
+    item.eventTypeId === findEventType.eventTypeId &&
+    item.isActive === true  
+  ).map((item) => {
     return {
       competitionId: item.competitionId,
       competition: item.competition,
-      competitionRefId : item.refId
+      competitionRefId : item.refId,
+      isActive: item.isActive,
+      startDate: item.startDate ?? null,
+      endDate: item.endDate ?? null
     }
   });
 

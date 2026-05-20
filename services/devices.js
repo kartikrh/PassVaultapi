@@ -38,7 +38,17 @@ const createDeviceService = async (request, fastify) => {
  if(request.body.deviceType == 2){
   const checkmobileToken = devices.find((item) => item.mobileToken === request.body.mobileToken && item.mobileToken !== '');
   if (checkmobileToken) {
-    return checkmobileToken;
+    const updateData = {
+      ...checkmobileToken,
+      userId: request.body.userId || null,
+    };
+    await updateDeviceQuery(updateData, fastify, request);
+    const index = devices.findIndex(item => item.deviceId === checkmobileToken.deviceId);
+    if (index !== -1) {
+      devices[index] = updateData;
+    }
+  
+    return updateData;
   }
 
   const data = await insertDeviceQuery(
@@ -94,7 +104,7 @@ const updateDeviceService = async (request, fastify) => {
 const saveDeviceService = async (request, fastify) => {
   const { deviceId } = request.body;
 
-  if (deviceId === "0") {
+  if (deviceId == 0) {
     return await createDeviceService(request, fastify);
   } else {
     return await updateDeviceService(request, fastify);

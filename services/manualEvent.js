@@ -62,15 +62,23 @@ const ImportMarketService = async (request, fastify) => {
 
     //Compitition Add/Update
     let setCompetitions;
+    // let CompetitionsObj = global.tblCompetitions.find(
+    //   (item) =>
+    //     item.eventTypeId === setEventtype.eventTypeId &&
+    //     item.refId === request.body.competitionId
+    // );
     let CompetitionsObj = global.tblCompetitions.find(
       (item) =>
         item.eventTypeId === setEventtype.eventTypeId &&
-        item.refId === request.body.competitionId
+        (item.refId == request.body.competitionId ||
+        item.competitionId == request.body.compId)
     );
     if (!CompetitionsObj) {
       request.body.eventTypeId = setEventtype.eventTypeId;
       request.body.image = "";
       request.body.isActive = true;
+      const pythonId = global.tblPythonAPI.find(item => item.isDefault === true && item.isActive === true);
+      request.body.pythonId = pythonId.id;
       setCompetitions = await insertCompetitionQuery(request, fastify);
       global.tblCompetitions.push(setCompetitions);
       CompetitionsObj = setCompetitions;
@@ -270,6 +278,8 @@ const ImportMarketWithRunnerService = async (request, fastify) => {
       request.body.eventTypeId = setEventtype.eventTypeId;
       request.body.image = "";
       request.body.isActive = true;
+      const pythonId = global.tblPythonAPI.find(item => item.isDefault === true && item.isActive === true);
+      request.body.pythonId = pythonId.id;
       setCompetitions = await insertCompetitionQuery(request, fastify);
       global.tblCompetitions.push(setCompetitions);
       CompetitionsObj = setCompetitions;

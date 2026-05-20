@@ -5,8 +5,14 @@ const { errorLogger } = require("./logger");
 
 const updateMarket = async (fastify) => {
     // create interval and get market from db
-    let intervalId;
+    if (global.updateMarketIntervalId) {
+        clearInterval(global.updateMarketIntervalId);
+    }
+    if (global.checkMarketIntervalId) {
+        clearInterval(global.checkMarketIntervalId);
+    }
     let getInterval = global.tblConfigs.find((config) => config.key === configConstants.GETMARKETINTERVALMIN)?.value;
+
     if(!getInterval){
         errorLogger(
             fastify,
@@ -16,7 +22,8 @@ const updateMarket = async (fastify) => {
         )
     }
     getInterval = parseInt(getInterval);
-    setInterval(async () => {
+    global.updateMarketIntervalId = setInterval(async () => {
+
         try {
             // console.log('Updating market');
             let market = await fastify.db.query(
@@ -49,12 +56,17 @@ const updateMarket = async (fastify) => {
                     )
                 }
                 intervalForCheck = parseInt(intervalForCheck);
-                clearInterval(intervalId);
-                intervalId = setInterval(async () => {
+                if (global.checkMarketIntervalId) {
+                    clearInterval(global.checkMarketIntervalId);
+                }
+                global.checkMarketIntervalId = setInterval(async () => {
+
                     // console.log('Checking market for update');
                     if(market.length === 0){
-                        clearInterval(intervalId);
+                        clearInterval(global.checkMarketIntervalId);
+                        global.checkMarketIntervalId = null;
                     }
+
                    let currentTime = new Date();
                    const marketToSuspend = market?.filter((m) => m.afterSuspendTime && new Date(m.afterSuspendTime) <= currentTime);
                    const marketToClose = market?.filter((m) => m.afterCloseTime && new Date(m.afterCloseTime) <= currentTime);
@@ -210,21 +222,23 @@ const updateMarket = async (fastify) => {
                     market = market.filter((m) => !marketToSuspend.map((m) => m.eventMarketId).includes(m.eventMarketId) && !marketToClose.map((m) => m.eventMarketId).includes(m.eventMarketId));
                 },intervalForCheck * 60 * 1000);
             }
-            else {
-                // console.log('No market found to update');
-                errorLogger(
-                    fastify,
-                    "No market found to update",
-                    "utilities/marketUpdate.js",
-                    null
-                )
-            }
+            return;
+            // else {
+            //     // console.log('No market found to update');
+            //     // errorLogger(
+            //     //     fastify,
+            //     //     "No market found to update",
+            //     //     "utilities/marketUpdate.js",
+            //     //     null
+            //     // )
+            //     // return;
+            // }
         } catch (error) {
             /// console.log('Error in market update', error);
             errorLogger(
                 fastify,
                 error.message,
-                "utilities/marketUpdate.js",
+                "utilities/marketUpdate.js - catch",
                 error
             )
         }

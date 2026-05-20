@@ -42,15 +42,17 @@ const {
   updatePasswordInForgot,
   clientDataById,
   verifySeamlessOTP,
+  loadEnityData,
+  globalMemoryData,
   //loginRegistrationClient,
 } = require("../controller/users/index");
 const { Auth ,sendPushNotification,weblogs, Config, EventType, Commentary} = require("../swaggerSchema/groupTags/schema");
 const { authorize } = require("../controller/middleware/index");
 const { startSignalR, stopSignalR, isSignalRStarted, stopCustomSignalR, isCustomSignalRStarted  } = require('../signalrHandler/MockSignalR');
-const { errorLogger } = require("../utilities/logger");
+const { errorLogger, getMemoryStatus } = require("../utilities/logger");
 const { getAllConfigData, getInitConfig } = require("../controller/users/admin/Page/config");
 const { marketType } = require("../controller/users/admin/matchType");
-const { thirdPartyApiType } = require('../utilities/index');
+const { thirdPartyApiType, error, ERROR_CODES, success } = require('../utilities/index');
 const { getEventTypeList } = require("../controller/users/admin/eventTypes");
 const { getCompetitionListByeventTypeId } = require("../controller/users/admin/competition");
 const { getAllConfig } = require("../controller/users/admin/Page/config")
@@ -328,4 +330,22 @@ module.exports = async function (fastify, opts) {
   fastify.post("/otplessVerify", {
     handler: (request, reply) => verifySeamlessOTP(request, reply, fastify),
   });
+  fastify.post("/loadEntity", {
+    handler: (request, reply) => loadEnityData(request, fastify, reply),
+  });
+  fastify.get("/server/checkStatus", {
+    handler: async (request, reply) => {
+      try {
+        const result = getMemoryStatus();
+        reply.status(200).send(success(result, 200));
+      } catch (err) {
+        errorLogger(fastify, err.message, "/server/checkStatus", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+      }
+    }
+  });
+  fastify.post("/globalMemory", {
+    handler: (request, reply) => globalMemoryData(request, reply, fastify),
+  })
+
 };

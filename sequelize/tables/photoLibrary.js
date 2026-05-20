@@ -48,6 +48,10 @@ module.exports = (sequelize) => {
         type: DataTypes.DATE,
         allowNull: true,
       },
+      wrViewCount: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      }
     },
     {
       timestamps: false,

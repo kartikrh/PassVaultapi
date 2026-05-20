@@ -19,6 +19,14 @@ const {
   mergePlayerImageAndJersey,
   setTeamPlayerImg,
   getTeamListByPlayerId,
+  activeInactivePlayer,
+  UpdatePlayerFromEntity,
+  allPlayersMergeImage,
+  mergePlayerNullImage,
+  updatePlayerHomeTeam,
+  getPlayerCompetitionListById,
+  getPlayerPlayInCommentaryListById,
+  getPlayerCreatedDetails,
 } = require("../../../controller/users/admin/teamsAndPlayer/players");
 const {
   getTeamList,
@@ -74,6 +82,18 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => getPlayerById(request, reply, fastify),
+  });
+  fastify.post("/createdDetails", {
+    schema: Player.getById.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Players",
+          mode: "view",
+        }),
+    ],
+    handler: (request, reply) => getPlayerCreatedDetails(request, reply, fastify),
   });
   fastify.post("/byTeamId", {
     schema: Teams.getById.schema,
@@ -178,4 +198,82 @@ module.exports = async (fastify, opts) => {
     ],
     handler: (request, reply) => getTeamListByPlayerId(request, reply, fastify),
   })
+    fastify.post("/activeInactive", {
+    schema : Player.activeInactive.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) => checkPermission(request, reply, fastify, {
+        tabName: "Players",
+        mode: "edit",
+      }),
+    ],
+    handler: (request, reply) => activeInactivePlayer(request, reply, fastify),
+  });
+  fastify.post("/importUpdate", {
+    schema: Player.importUpdate.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Players",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => UpdatePlayerFromEntity(request, reply, fastify),
+  });
+  fastify.post("/mergeImageV1", {
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Players",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => allPlayersMergeImage(request, reply, fastify),
+  });
+  fastify.post("/mergeImageV2", {
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "Players",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => mergePlayerNullImage(request, reply, fastify),
+  });
+  fastify.post("/updateHomeTeam", {
+    schema: Player.updateHomeTeam.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) => checkPermission(request, reply, fastify, {
+        tabName: "Players",
+        mode: "edit",
+      }),
+    ],
+    handler: (request, reply) => updatePlayerHomeTeam(request, reply, fastify),
+  });
+  fastify.post("/competitionList", {
+    schema: Player.getPlayerCompetitionById.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) => checkPermission(request, reply, fastify, {
+        tabName: "Players",
+        mode: "view",
+      }),
+    ],
+    handler: (request, reply) => getPlayerCompetitionListById(request, reply, fastify),
+  });
+  fastify.post("/playCommentaryList", {
+    schema: Player.getPlayerPlayInCommentaryListById.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) => checkPermission(request, reply, fastify, {
+        tabName: "Players",
+        mode: "view",
+      }),
+    ],
+    handler: (request, reply) => getPlayerPlayInCommentaryListById(request, reply, fastify),
+  });
 };

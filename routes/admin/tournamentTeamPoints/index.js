@@ -6,6 +6,8 @@ const {
   activeInactiveTournamentTeamPoints,
   teamsList,
   netRunRateRecalculation,
+  changeDisplayOrder,
+  updateTournamentTeamPointGroupVisibleStatus
 } = require("../../../controller/users/admin/tournamentTeamPoints");
 const { getAllTeams  } = require("../../../controller/users/admin/teamsAndPlayer/teams");
 const { TournamentTeamPoints } = require("../../../swaggerSchema/groupTags/schema");
@@ -82,5 +84,29 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => netRunRateRecalculation(request, reply, fastify),
+  });
+  fastify.post("/changeDisplayOrder", {
+    schema: TournamentTeamPoints.changeDisplayOrder.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "competition",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => changeDisplayOrder(request, reply, fastify),
+  });
+  fastify.post("/changeGroupVisibleStatus", {
+    schema: TournamentTeamPoints.changeGroupVisibleStatus.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) =>
+        checkPermission(request, reply, fastify, {
+          tabName: "competition",
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => updateTournamentTeamPointGroupVisibleStatus(request, reply, fastify),
   });
 };

@@ -6,6 +6,8 @@ const {
   deleteTeamService,
   getTeamPointService,
   mergeTeamJerseyAndPlayerImageService,
+  UpdateTeamFromEntityService,
+  activeInactiveTeamService,
 } = require("../../../../services/teams");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -84,6 +86,26 @@ const mergeTeamJerseyAndPlayerImage = async (request, reply, fastify) => {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
+const UpdateTeamFromEntity = async (request, reply, fastify) => {
+  try {
+    const result = await UpdateTeamFromEntityService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/UpdateTeamFromEntity", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const activeInactiveTeam = async (request, reply, fastify) => {
+  try {
+    const result = await activeInactiveTeamService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/activeInactiveTeam", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
 module.exports = {
   getAllTeams,
   getTeamById,
@@ -92,4 +114,6 @@ module.exports = {
   getTeamList,
   getTeamPoint,
   mergeTeamJerseyAndPlayerImage,
+  UpdateTeamFromEntity,
+  activeInactiveTeam
 };

@@ -1,22 +1,29 @@
 const { errorLogger } = require("../utilities/logger");
 
 const getAllBannerQuery = async (fastify) => {
-  
   return await fastify.db.query(
     `select 
-            "wrId" as "bannerId",
-            "wrBannerType" as "bannerType",
-            "wrTitle" as "title",
-            "wrImage" as "image",
-            "wrIsActive" as "isActive",
-            "wrIsPermanent" as "isPermanent",
-            "wrStartDate" as "startDate",
-            "wrEndDate" as "endDate",
-            "wrLink" as "link",
-            "wrViewerCount" as "viewerCount",
-            "wrImagePath" as "imagePath"
-        from "tblBanner"
-        where "wrIsDeleted" = false
+            tb."wrId" as "bannerId",
+            tb."wrBannerType" as "bannerType",
+            tb."wrTitle" as "title",
+            tb."wrImage" as "image",
+            tb."wrIsActive" as "isActive",
+            tb."wrIsPermanent" as "isPermanent",
+            tb."wrStartDate" as "startDate",
+            tb."wrEndDate" as "endDate",
+            tb."wrLink" as "link",
+            tb."wrViewerCount" as "viewerCount",
+            tb."wrImagePath" as "imagePath",
+            tb."wrDeviceTypeId" as "deviceTypeId",
+            tb."wrWhitelabelId" as "whitelabelId",
+            ed."wrValue" as "encryptWhitelabelId",
+            twl."wrDomain" as "domain",
+            tb."wrDisplayOrder" as "displayOrder"
+        from "tblBanner" tb
+        LEFT JOIN "tblWhitelabel" twl ON tb."wrWhitelabelId" = twl."wrId"
+        LEFT JOIN "tblEncryptedData" ed ON tb."wrWhitelabelId" = ed."wrKey"
+        where tb."wrIsDeleted" = false
+        order by tb."wrDisplayOrder" ASC
         `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -27,43 +34,59 @@ const insertBannerQuery = async (data, request, fastify) => {
   try {
     const result = await fastify.db.query(
       `
-                with insert_data as (
-                    insert into "tblBanner" (
-                        "wrTitle",
-                        "wrBannerType",
-                        "wrImage",
-                        "wrIsActive",
-                        "wrIsPermanent",
-                        "wrStartDate",
-                        "wrEndDate",
-                        "wrCreatedBy",
-                        "wrCreatedDate",
-                        "wrLink",
-                        "wrViewerCount",
-                        "wrImagePath"
-                    )
-                values ($1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10, $11) returning *
-                )
-                select 
-                    "wrId" as "bannerId",
-                    "wrTitle" as "title",
-                    "wrBannerType" as "bannerType",
-                    "wrImage" as "image",
-                    "wrIsActive" as "isActive",
-                    "wrIsPermanent" as "isPermanent",
-                    "wrStartDate" as "startDate",
-                    "wrEndDate" as "endDate",
-                    "wrLink" as "link",
-                    "wrViewerCount" as "viewerCount",
-                    "wrImagePath" as "imagePath"
-                from "insert_data"
-            `,
+        WITH insert_data AS (
+          INSERT INTO "tblBanner" (
+            "wrTitle",
+            "wrBannerType",
+            "wrImage",
+            "wrIsActive",
+            "wrIsPermanent",
+            "wrStartDate",
+            "wrEndDate",
+            "wrCreatedBy",
+            "wrCreatedDate",
+            "wrLink",
+            "wrViewerCount",
+            "wrImagePath",
+            "wrDeviceTypeId",
+            "wrWhitelabelId",
+            "wrDisplayOrder"
+          )
+          VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10, $11, $12, $13,
+            (SELECT COALESCE(MAX("wrDisplayOrder"), 0) + 1 FROM "tblBanner" WHERE "wrIsDeleted" = false)
+          )
+          RETURNING *
+        )
+        SELECT 
+          tb."wrId" as "bannerId",
+          tb."wrTitle" as "title",
+          tb."wrBannerType" as "bannerType",
+          tb."wrImage" as "image",
+          tb."wrIsActive" as "isActive",
+          tb."wrIsPermanent" as "isPermanent",
+          tb."wrStartDate" as "startDate",
+          tb."wrEndDate" as "endDate",
+          tb."wrLink" as "link",
+          tb."wrViewerCount" as "viewerCount",
+          tb."wrImagePath" as "imagePath",
+          tb."wrDeviceTypeId" as "deviceTypeId",
+          tb."wrWhitelabelId" as "whitelabelId",
+          ed."wrValue" as "encryptWhitelabelId",
+          twl."wrDomain" as "domain",
+          tb."wrDisplayOrder" as "displayOrder"
+        FROM "insert_data" as tb
+        LEFT JOIN "tblWhitelabel" twl 
+          ON tb."wrWhitelabelId" = twl."wrId"
+        LEFT JOIN "tblEncryptedData" ed 
+          ON tb."wrWhitelabelId" = ed."wrKey"
+      `,
       {
         type: fastify.db.QueryTypes.INSERT,
         bind: [
           data.title || null,
           data.bannerType,
-          data.image,
+          data.image || null,
           data.isActive || false,
           data.isPermanent || false,
           data.startDate ? new Date(data.startDate) : null,
@@ -71,7 +94,9 @@ const insertBannerQuery = async (data, request, fastify) => {
           data.userId,
           data.link || null,
           data.viewerCount || null,
-          data.imagePath || null
+          data.imagePath || null,
+          data?.deviceTypeId ?? null,
+          data?.whitelabelId ?? null
         ],
       }
     );
@@ -102,7 +127,10 @@ const updateBannerQuery = async (data, request, fastify) => {
                 "wrCreatedDate" = now(),
                 "wrLink" = $10,
                 "wrViewerCount" = $11,
-                "wrImagePath" = $12
+                "wrImagePath" = $12,
+                "wrDeviceTypeId" = $13,
+                "wrWhitelabelId" = $14,
+                "wrDisplayOrder" = $15
                 where "wrId" = $9
             `,
       {
@@ -118,7 +146,10 @@ const updateBannerQuery = async (data, request, fastify) => {
           data.bannerId,
           data.link || null,
           data.viewerCount || null,
-          data.imagePath
+          data.imagePath,
+          data?.deviceTypeId ?? null,
+          data?.whitelabelId ?? null,
+          data.displayOrder
         ],
       }
     );
@@ -200,12 +231,35 @@ const bannerViewersCountQuery = async (data, request, fastify) => {
     );
     throw new Error(err.message);
   }
-}
+};
+const updateDisplayOrderBannerQuery = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+      UPDATE "tblBanner"
+      SET "wrDisplayOrder" = $1
+      WHERE "wrId" = $2
+      `,
+      {
+        bind: [data.displayOrder, data.bannerId],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableBanner/updateDisplayOrderBannerQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 module.exports = {
   insertBannerQuery,
   updateBannerQuery,
   deleteBannerQuery,
   getAllBannerQuery,
   activeInactiveBannerQuery,
-  bannerViewersCountQuery
+  bannerViewersCountQuery,
+  updateDisplayOrderBannerQuery
 };

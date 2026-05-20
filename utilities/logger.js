@@ -1,11 +1,14 @@
+const os = require('os');
 const ResponseLog = require("../database/schema/responseLogger");
+const configConstants = require("./configConstants");
 const { ISCOMMENTARYLOGGER } = require("./configConstants");
+const { getCurrentDateTime } = require('./datetime');
 
-const errorLogger = async (fastify, errMessage, errStack, request) => {
+const errorLogger = async (fastify, errMessage, errStack, request , data = null) => {
   try {
     
     return await fastify.db.query(
-      `INSERT INTO "tblErrorLogs" ("wrErrMessage", "wrErrStack", "wrDomain","wrUserId","wrUserIp", "wrCreatedDate" ,"wrApi", "wrRequestBody") VALUES ($1, $2, $3, $4, $5, $6 ,$7,$8)`,
+      `INSERT INTO "tblErrorLogs" ("wrErrMessage", "wrErrStack", "wrDomain","wrUserId","wrUserIp", "wrCreatedDate" ,"wrApi", "wrRequestBody", "wrData") VALUES ($1, $2, $3, $4, $5, $6 ,$7,$8 ,$9)`,
       {
         type: fastify.db.QueryTypes.INSERT,
         bind: [
@@ -17,11 +20,30 @@ const errorLogger = async (fastify, errMessage, errStack, request) => {
           new Date(),
           request?.originalUrl || null,
           request?.body || null,
+          data ?? null
         ],
       }
     );
   } catch (err) {
     console.log(err);
+  }
+};
+
+const oomLogger = async (fastify, reason, detail = null, data = null) => {
+  try {
+    if (!fastify || !fastify.db) {
+      console.warn("oomLogger: fastify.db not available, skipping DB write", reason, detail);
+      return;
+    }
+    return await errorLogger(
+      fastify,
+      reason,
+      detail || "Server memory usage warning near OOM",
+      null,
+      data ?? JSON.stringify({ reason, detail, timestamp: new Date() })
+    );
+  } catch (err) {
+    console.warn("oomLogger failed:", err?.message || err);
   }
 };
 
@@ -112,7 +134,7 @@ const marketLogger = async (data , request , fastify) => {
           eventMarketId || null,
           actionType,
           value,
-          request.userTokenInfo.WrUserId,
+          request.userTokenInfo?.WrUserId ?? null,
           new Date(),
           commentaryId || null,
           result || null
@@ -207,7 +229,7 @@ const commentaryLogger = async (data, request, fastify) => {
     if (addLog == "false") {
       return true;
     }
-    let comment = request.body.deleteCommentaryBallByBallId || request.body.deleteOverId ? "delete" : null;
+    let comment = request?.body?.deleteCommentaryBallByBallId || request?.body?.deleteOverId ? "delete" : null;
     const query = `
       INSERT INTO "tblCommentaryLogs"
       (
@@ -409,7 +431,165 @@ const pythonSocketLogger = async (data, fastify) => {
     console.log(error);
   }
 }
+const disMissalLogger = async (data,fastify,request)=>{
+    try {
+      // console.log(data)
+      // if this player have different log false them
 
-module.exports = { errorLogger, responseLogger ,responseLogInDB , marketLogger ,
+    const upQuery = await fastify.db.query(`
+        UPDATE "tblDismissalMarLogs"
+        SET 
+        "wrIsActive" = false
+        WHERE "wrEventMarketId" = $1
+        AND "wrCommentaryPlayerId" =$2
+      `,{
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        data.eventMarketId,
+        data.commentaryPlayerId
+      ],
+    })
+    let market = data.data;
+
+    const query = `
+      INSERT INTO "tblDismissalMarLogs"(
+      "wrCommentaryId", 
+      "wrEventMarketId", 
+      "wrOverTypeId", 
+      "wrCommentaryPlayerId", 
+      "wrWicketNo", 
+      "wrData", 
+      "wrIsActive", 
+      "wrCreatedBy")
+	  VALUES ( $1, $2, $3, $4, $5, $6, $7, $8);
+    `;
+    
+    await fastify.db.query(query, {
+      type: fastify.db.QueryTypes.SELECT,
+      bind: [
+        data.commentaryId || null,
+        data.eventMarketId,
+        data.overTypeId,
+        data.commentaryPlayerId,
+        data.wicketNo,
+        market,
+        data.isActive ||true,
+        request.userTokenInfo?.WrUserId || null
+      ],
+    });
+    return true;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "Error in disMissalLogger -> utilities/logger.js/disMissalLogger",
+      null
+    )
+    console.log(error);
+  }
+}
+
+const commActionLogger = async (data, request, fastify) => {
+  try {
+    return await fastify.db.query(
+      `
+      INSERT INTO "tblCommActionLogs"
+      (
+        "wrCommentaryId",
+        "wrRequestBody",
+        "wrResponse",
+        "wrApiName",
+        "wrCreatedBy",
+        "wrCreatedAt"
+      )
+      VALUES ($1, $2, $3, $4, $5, NOW())
+    `,
+    {
+      type: fastify.db.QueryTypes.INSERT,
+      bind: [
+        data.commentaryId ?? null,
+        data.requestBody ?? null,
+        data.response ?? null,
+        data.apiName ?? null,
+        request?.userTokenInfo?.WrUserId ?? null,
+      ],  
+    });
+ 
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "Error in commActionLogger -> utilities/logger.js/commActionLogger",
+      request ?? null
+    )
+    console.log(error);
+  }
+}
+
+const cardLogger = async (request , fastify) => {
+  try{
+    let addLog = global.tblConfigs.find((x) => x.key == configConstants.ISCARDLOGGER)?.value || "false";
+    if (addLog == "false") {
+      return true;
+    }
+    return await fastify.db.query(
+      `INSERT INTO "tblCardLogs" ("wrCommentaryId", "wrRequest" ) 
+      VALUES ($1, $2)`, 
+      {
+        type: fastify.db.QueryTypes.SELECT,
+        bind: [
+          request.body.commentaryId || null,
+          JSON.stringify(request.body) || null
+        ],
+      })
+
+  }catch(err){
+     errorLogger(
+      fastify,
+      err.message,
+      "Error in cardLogger -> utilities/logger.js/cardLogger",
+      request ?? null
+    )
+    console.log(err);
+  }
+}
+const originalLog = console.log;
+const originalLogError = console.error;
+const originalLogWarn = console.warn;
+
+const createLogPrefix = (originalFn) => {
+  return (...args) => originalFn(`[${getCurrentDateTime()}]`, ...args);
+}
+
+console.log = createLogPrefix(originalLog);
+console.error = createLogPrefix(originalLogError);
+console.warn = createLogPrefix(originalLogWarn);
+
+const getMemoryStatus = () => {
+  const toMB = bytes => (bytes / 1024 / 1024).toFixed(2);
+  const mem = process.memoryUsage();
+
+  const systemTotal = os.totalmem();
+  const systemFree = os.freemem();
+  const systemUsed = systemTotal - systemFree;
+
+  return {
+    process: {
+      rss: `${toMB(mem.rss)} MB`,
+      heapTotal: `${toMB(mem.heapTotal)} MB`,
+      heapUsed: `${toMB(mem.heapUsed)} MB`,
+    },
+    system: {
+      total: `${toMB(systemTotal)} MB`,
+      used: `${toMB(systemUsed)} MB`,
+      free: `${toMB(systemFree)} MB`,
+    }
+  }
+}
+
+module.exports = { errorLogger, oomLogger, responseLogger ,responseLogInDB , marketLogger ,
   marketDataLogger,tblPredictorAPILogger,tblThirdPartyAPILogger,commentaryLogger,updateWebRequestLogs,
-  eventMarketLogger, marektResultLogger,pythonSocketLogger};
+  eventMarketLogger, marektResultLogger,pythonSocketLogger,
+disMissalLogger, commActionLogger,cardLogger,
+  getMemoryStatus
+};

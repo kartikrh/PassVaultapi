@@ -13,7 +13,10 @@ const saveVenueService = async (request, fastify) => {
   if (validateName) {
     throw new Error("Venue with this name already exist");
   }
-  if(request.body.tpId !== undefined || request.body.tpId !== null) {
+  if(request.body.tpId === 0) {
+    request.body.tpId = null
+  }
+  if(request.body.tpId !== undefined && request.body.tpId !== null) {
     const validateTpId = global.tblVenues.find(
       (item) => item.tpId === request.body.tpId
     );
@@ -33,31 +36,41 @@ const editVenueService = async (request, fastify) => {
   if (!validateId) {
     throw new Error("Venue data with this Id not found");
   }
-  if(validateId && request.body.id !== null && request.body.id !== undefined) {
+  if(request.body.tpId === 0) {
+    request.body.tpId = null
+  }
+  if(validateId && request.body.id !== null && request.body.id !== undefined && request.body.tpId !== undefined && request.body.tpId !== null) {
     const validateTpId = global.tblVenues.find(
-      (item) =>
-        item.tpId === request.body?.tpId && item.id !== request.body.id &&
-        item.tpId !== null
+      (item) => item.tpId === request.body.tpId && item.id !== request.body.id
     );
-  
-    if (validateTpId) {
-      throw new Error("TpId already exist");
+    if(validateTpId) {
+      throw new Error("Venue with this tpId already exist");
     }
   }
-  const validateName = global.tblVenues.find(
-    (item) => item.name.toLowerCase() === request.body.name.toLowerCase() && item.id !== request.body.id
-  );
+  if (request.body.name) {
+    const validateName = global.tblVenues.find(
+      (item) => item.name.toLowerCase() === request.body.name.toLowerCase() && item.id !== request.body.id
+    );
 
-  if (validateName) {
-    throw new Error("Venue with this name already exist");
+    if (validateName) {
+      throw new Error("Venue with this name already exist");
+    }
   }
   const updateData = {
     countryId: request.body.countryId ?? validateId.countryId,
     city: request.body.city ?? validateId.city,
     name: request.body.name ?? validateId.name,
-    tpId: 'tpId' in request.body ? request.body.tpId : validateId.tpId,
-    isActive: Boolean(request.body.isActive) ?? validateId.isActive,
+    tpId: request.body.tpId === undefined ? validateId.tpId : request.body.tpId,
+    isActive: request.body.isActive != null ? Boolean(request.body.isActive) : validateId.isActive,
     capacity: request.body.capacity ?? validateId.capacity,
+    avgInn1Score: request.body.avgInn1Score ?? validateId.avgInn1Score,
+    avgInn2Score: request.body.avgInn2Score ?? validateId.avgInn2Score,
+    avgInn3Score: request.body.avgInn3Score ?? validateId.avgInn3Score,
+    avgInn4Score: request.body.avgInn4Score ?? validateId.avgInn4Score,
+    highestTotalFullScore: request.body.highestTotalFullScore ?? validateId.highestTotalFullScore,
+    lowestTotalFullScore: request.body.lowestTotalFullScore ?? validateId.lowestTotalFullScore,
+    spinWicketsCount: request.body.spinWicketsCount ?? validateId.spinWicketsCount,
+    paceWicketsCount: request.body.paceWicketsCount ?? validateId.paceWicketsCount,
     id: request.body.id ?? validateId.id,
   };
 
@@ -69,6 +82,23 @@ const editVenueService = async (request, fastify) => {
 
   if (index != -1) {
     global.tblVenues[index] = modifiedData[0];
+    const allCommentaries = global.tblCommentaries.filter(c => c.venueId == modifiedData[0].id);
+    for (const commentary of allCommentaries) {
+      const sendDataForSocketUpdate = {
+          commentaryId: commentary.commentaryId,
+          eventRefId: commentary?.eventRefId,
+          dataToUpdate: [
+            {
+              module: "venueReportData",
+              type: "update",
+              data: modifiedData[0]
+            }
+          ]
+      };
+      global.clientSocketIo?.forEach((socket) => {
+        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      });
+    }
   }
   
   return modifiedData[0];
