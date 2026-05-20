@@ -16,9 +16,10 @@ yarn-error.log*
 .env
 .env.*
 env.txt
-jwt.keys.json
 *.pem
 *.key
+# NOTE: jwt.keys.json is required by WebPushHandler at runtime and is intentionally NOT ignored.
+# Long-term, move this to an env var (see GOOGLE_SERVICE_ACCOUNT_JSON refactor).
 
 # Local dev / IDE
 .vscode
