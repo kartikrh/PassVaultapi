@@ -6,7 +6,7 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
   } = require("../utilities/Images");
   const { PROJECT_NAME } = require("../utilities/configConstants");
   const { ImgModuleConfig } = require("../utilities/imageConstant");
-  const { APIEndpointModuleType, ServiceType, callClientAPI, getDataFromTime, checkDataSendToClient } = require("../utilities");
+  const { APIEndpointModuleType, callClientAPI, getDataFromTime, checkDataSendToClient } = require("../utilities");
   // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
   
   const getAllBannerService = async (request, fastify) => {
@@ -84,7 +84,6 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
     if (sendToClient) {
       await callClientAPI(
         {
-          serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.updateBanner,
           data: data[0]
         },
@@ -171,7 +170,6 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
 
     await callClientAPI(
       {
-        serviceType : ServiceType.clientAPI,
         moduleType : APIEndpointModuleType.updateBanner,
         data : body
       },
@@ -204,7 +202,6 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
 
     await callClientAPI(
       {
-        serviceType : ServiceType.clientAPI,
         moduleType : APIEndpointModuleType.updateBanner,
         data : {
           type : "delete",
@@ -241,7 +238,6 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
 
     await callClientAPI(
       {
-        serviceType : ServiceType.clientAPI,
         moduleType : APIEndpointModuleType.updateBanner,
         data : {
           type: "status",
@@ -284,7 +280,6 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
 
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateBanner,
       data: {
         type: "changeDisplayOrder",
@@ -312,7 +307,6 @@ const sendActiveBannerToClientAPIService = async (fastify) => {
           global.pendingBannerToClient = global.pendingBannerToClient.filter(item => item.bannerId !== data.bannerId);
           await callClientAPI(
             {
-              serviceType: ServiceType.clientAPI,
               moduleType: APIEndpointModuleType.updateBanner,
               data: data
             },

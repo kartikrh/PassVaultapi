@@ -22,7 +22,7 @@ const {
 const {storeImageOnServer, removeImageFromServer, generateImageName, getImageFromUrl } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
-const { APIEndpointModuleType, ServiceType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, matchStatusEntity, error, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, parseUmpires, ScoringTypes, RefType, lowerEntityMatchTypesEnums, EntityCommentaryStatus, getComDataByCId, getCombineFullScore, EntityMatchStatus, normalizeCompetitionSeasonName } = require("../utilities");
+const { APIEndpointModuleType, callClientAPI, compStatus, callCardCricket, callEntitySportAPI, EntityEnums, EventType, CompetitionType, matchStatusEntity, error, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, parseUmpires, ScoringTypes, RefType, lowerEntityMatchTypesEnums, EntityCommentaryStatus, getComDataByCId, getCombineFullScore, EntityMatchStatus, normalizeCompetitionSeasonName } = require("../utilities");
 const { getCommentariesResultQuery, getAllCommByCompIdQuery, insertCommentaryQuery, insertCommentaryPlayers, updateCommentaryPlayerById, isCountInPOintCommentaryChangeQuery, updateCommentaryDateByCommentaryIdQuery, updateCommentaryQuery, insertCommentaryTeamQuery, deleteInningWiseCommentaryPlayersQuery, deleteCommentaryTeamQuery } = require("../repository/TableCommentary")
 const { deleteTournamentTeamPlayersByCompIdQuery, insertTournamentTeamPlayersQuery } = require("../repository/TableTournamentsTeamPlayers");
 const { deleteTournamentTeamPointsByCompIdQuery } = require("../repository/TableTournmentTeamPoints");
@@ -245,7 +245,6 @@ const createCompititionService = async (request, fastify) => {
   if(result.isActive && result.isTrending){
   await callClientAPI(
     {
-      serviceType : ServiceType.clientAPI,
       moduleType : APIEndpointModuleType.updateSeoModule,
       data : {
         module : "competition",
@@ -411,7 +410,6 @@ const updateCompititionService = async (request, fastify) => {
 if(data.isActive && data.isTrending){
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data : {
         module : "competition",
@@ -479,7 +477,6 @@ const deleteCompetitionService = async (request, fastify) => {
 
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data : {
         module : "competition",
@@ -520,7 +517,6 @@ const updateDisplayOrderService = async (request, fastify) => {
     if (compData.isActive && compData.isTrending) {
       await callClientAPI(
         {
-          serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.updateSeoModule,
           data: {
             module: "competition",
@@ -566,7 +562,6 @@ const isTrendingChangeStatusService = async (request, fastify) => {
   
   await callClientAPI(
     {
-      serviceType : ServiceType.clientAPI,
       moduleType : APIEndpointModuleType.updateSeoModule,
       data : {
         module : "competition",
@@ -607,7 +602,6 @@ const isEventSnapService = async (request, fastify) => {
   if (compData.isActive && compData.isTrending) {
     await callClientAPI(
       {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
         data: {
           module: "competition",
@@ -705,7 +699,6 @@ const isPointTableService = async (request, fastify) => {
   if (compData.isActive && compData.isTrending) {
     await callClientAPI(
       {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
         data: {
           module: "competition",
@@ -2276,7 +2269,6 @@ const competitionImportService = async (data, fastify, request) => {
       if (cData.isActive && !cData.isTest) {
         await callClientAPI(
           {
-            serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.commentaryUpdate,
             data: cData,
           },

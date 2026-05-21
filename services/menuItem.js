@@ -12,7 +12,7 @@ const {
 const {
   updatePageService, addPageService
 } = require('../services/page');
-const { ServiceType, APIEndpointModuleType, callClientAPI } = require("../utilities");
+const { APIEndpointModuleType, callClientAPI } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 const { getAllMenuItemListService } = require("./menuType");
 const allMenuItemService = async (request,fastify) => {
@@ -102,7 +102,6 @@ const createMenuItemService = async (request, fastify) => {
   if(data.isActive){
     await callClientAPI(
       {
-        serviceType : ServiceType.clientAPI, 
         moduleType : APIEndpointModuleType.updateMenuList,
         data : {
           module : "menuItems",
@@ -200,7 +199,6 @@ const updateMenuItemService = async (request, fastify) => {
   if(body.isActive){
       await callClientAPI(
         {
-          serviceType : ServiceType.clientAPI, 
           moduleType : APIEndpointModuleType.updateMenuList,
           data : {
             module : "menuItems",
@@ -255,7 +253,6 @@ const deleteMenuItemService = async (request, fastify) => {
   );
     await callClientAPI(
       {
-        serviceType : ServiceType.clientAPI, 
         moduleType : APIEndpointModuleType.updateMenuList,
         data : {
           module : "menuItems",
@@ -326,7 +323,6 @@ const updateMenuItemStatusService = async (request, fastify) => {
   };
     await callClientAPI(
       {
-        serviceType : ServiceType.clientAPI, 
         moduleType : APIEndpointModuleType.updateMenuList,
         data : {
           module : "menuItems",
@@ -374,7 +370,6 @@ const updateMenuItemDisplayOrderService = async (request, fastify) => {
   global.tblMenuItems = getAllMenuItems;
     await callClientAPI(
       {
-        serviceType : ServiceType.clientAPI, 
         moduleType : APIEndpointModuleType.updateMenuList,
         data : {
           module : "menuItems",

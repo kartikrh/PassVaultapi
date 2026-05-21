@@ -4,7 +4,7 @@ const {
   validateBlockQuery,
   deleteBlockQuery,
 } = require("../repository/TableBlock");
-const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { callClientAPI, APIEndpointModuleType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 
 const allBlocksService = async (request, fastify) => {
@@ -56,7 +56,6 @@ const createBlockService = async (request, fastify) => {
   if(data.isShowContent){
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data: {
         module : "blocks",
@@ -120,7 +119,6 @@ const updateBlockService = async (request, fastify) => {
 
     await callClientAPI(
       {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
         data: {
           module : "blocks",
@@ -162,7 +160,6 @@ const deleteBlockService = async (request, fastify) => {
   
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data: {
         module : "blocks",

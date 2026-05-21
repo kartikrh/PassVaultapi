@@ -15,7 +15,7 @@ const {
 } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
-const { callClientAPI, ServiceType, APIEndpointModuleType, HideEventType, commentaryStatus } = require("../utilities");
+const { callClientAPI, APIEndpointModuleType, HideEventType, commentaryStatus } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 const { hideEventsQuery, unHideEventQuery } = require("../repository/TableHideEvents");
 
@@ -42,7 +42,6 @@ const saveWhitelabelService = async (request, fastify) => {
   if(saveData.isActive){
       await callClientAPI(
        {
-          serviceType : ServiceType.clientAPI,
           moduleType : APIEndpointModuleType.updateSeoModule,
           data : {
             module : 'whiteLable',
@@ -128,7 +127,6 @@ const editWhitelabelService = async (request, fastify) => {
   
    await callClientAPI(
      {
-       serviceType : ServiceType.clientAPI,
        moduleType : APIEndpointModuleType.updateSeoModule,
        data : {
          module : 'whiteLable',
@@ -188,7 +186,6 @@ const deleteWhitelabelService = async (request, fastify) => {
   );
 
   await callClientAPI({
-    serviceType : ServiceType.clientAPI,
     moduleType : APIEndpointModuleType.updateSeoModule,
     data : {
       module : 'whiteLable',
@@ -224,7 +221,6 @@ const activeInactiveWhitelabelService = async (request, fastify) => {
   }
   await callClientAPI(
     {
-      serviceType : ServiceType.clientAPI,
       moduleType : APIEndpointModuleType.updateSeoModule,
       data : {
         module : 'whiteLable',
@@ -266,7 +262,6 @@ const upIsDefaultAPIService = async (request, fastify) => {
     }
     await callClientAPI(
       {
-        serviceType : ServiceType.clientAPI,
         moduleType : APIEndpointModuleType.updateSeoModule,
         data : {
           module : 'whiteLable',
@@ -284,7 +279,6 @@ const upIsDefaultAPIService = async (request, fastify) => {
       })
       await callClientAPI(
         {
-          serviceType : ServiceType.clientAPI,
           moduleType : APIEndpointModuleType.updateSeoModule,
           data : {
             module : 'whiteLable',
@@ -311,7 +305,6 @@ const upIsDefaultAPIService = async (request, fastify) => {
     }
     await callClientAPI(
       {
-        serviceType : ServiceType.clientAPI,
         moduleType : APIEndpointModuleType.updateSeoModule,
         data : {
           module : 'whiteLable',
@@ -346,7 +339,6 @@ const demoClientEnableInIOSWhitelabelService = async (request, fastify) => {
   }
   await callClientAPI(
     {
-      serviceType : ServiceType.clientAPI,
       moduleType : APIEndpointModuleType.updateSeoModule,
       data : {
         module : 'whiteLable',
@@ -379,7 +371,6 @@ const isDemoClientLoginService = async (request, fastify) => {
   }
   await callClientAPI(
     {
-      serviceType : ServiceType.clientAPI,
       moduleType : APIEndpointModuleType.updateSeoModule,
       data : {
         module : 'whiteLable',
@@ -448,7 +439,6 @@ const hideEventsService = async (request, fastify) => {
   global.tblHideEvents.push(hideEvent);
   await callClientAPI(
     {
-       serviceType : ServiceType.clientAPI,
        moduleType : APIEndpointModuleType.updateSeoModule,
        data : {
          module : 'hideEvent',
@@ -472,7 +462,6 @@ const unhideEventsService = async (request, fastify) => {
     global.tblHideEvents.splice(he, 1);
   }
   await callClientAPI({
-    serviceType : ServiceType.clientAPI,
     moduleType : APIEndpointModuleType.updateSeoModule,
     data : {
       module : 'hideEvent',

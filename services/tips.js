@@ -10,7 +10,6 @@ const {
 } = require("../repository/TableTips");
 const {
   callClientAPI,
-  ServiceType,
   APIEndpointModuleType,
 } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
@@ -48,7 +47,6 @@ const saveTipsService = async (request, fastify) => {
 
     await callClientAPI(
       {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
         data: {
           module: "tips",
@@ -106,7 +104,6 @@ const editTipsService = async (request, fastify) => {
 
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data: {
         module: "tips",
@@ -152,7 +149,6 @@ const deleteTipsService = async (fastify, request) => {
 
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data: {
         module: "tips",
@@ -194,7 +190,6 @@ const activeInactiveTipsService = async (request, fastify) => {
 
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data: {
         module: "tips",
@@ -240,7 +235,6 @@ const createTipsOnExternalService = async (request, fastify) => {
 
     await callClientAPI(
       {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
         data: {
           module: "tips",
@@ -281,7 +275,6 @@ const activeInactiveTipsOnExternalService = async (request, fastify) => {
 
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data: {
         module: "tips",
