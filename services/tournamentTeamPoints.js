@@ -26,23 +26,49 @@ const { saveCompetitionService } = require("./competition");
 
 const allTournamentTeamPointsService = async (request, fastify) => {
   const { competitionId, teamId, groupId, isActive } = request.body;
-  let result = await getAllTournamentTeamPointsQuery(fastify);
-  result = result.filter((item) => {
-    const competitionMatch = competitionId !== undefined ? item.competitionId === competitionId : true;
-    const teamMatch = teamId !== undefined ? item.teamId === teamId : true;
-    const groupMatch = groupId !== undefined ? item.groupId === groupId : true;
-    const isActiveMatch = isActive !== undefined ? item.isActive === isActive : true;
 
-    return competitionMatch && teamMatch && groupMatch && isActiveMatch;
-  }).sort((a, b) => {
-    if (b.totalPoint !== a.totalPoint) {
-      return b.totalPoint - a.totalPoint;
-    }
-  
-    return b.netRunRate - a.netRunRate;
+  const result = await getAllTournamentTeamPointsQuery(fastify);
+
+  const filteredData = result.filter((item) => {
+    return (
+      (competitionId === undefined || item.competitionId === competitionId) &&
+      (teamId === undefined || item.teamId === teamId) &&
+      (groupId === undefined || item.groupId === groupId) &&
+      (isActive === undefined || item.isActive === isActive)
+    );
   });
 
-  return result;
+  const groupMap = new Map();
+
+  for (const item of filteredData) {
+    if (!groupMap.has(item.groupId)) {
+      groupMap.set(item.groupId, []);
+    }
+
+    groupMap.get(item.groupId).push(item);
+  }
+
+  const tournamentTeamPointData = [];
+
+  for (const teams of groupMap.values()) {
+    const allPointsZero = teams.every((team) => team.totalPoint === 0);
+
+    const sortedTeams = [...teams].sort((a, b) => {
+      if (allPointsZero) {
+        return a.id - b.id;
+      }
+
+      if (b.totalPoint !== a.totalPoint) {
+        return b.totalPoint - a.totalPoint;
+      }
+
+      return b.netRunRate - a.netRunRate;
+    });
+
+    tournamentTeamPointData.push(...sortedTeams);
+  }
+
+  return tournamentTeamPointData;
 };
 
 const createTblTournamentTeamPointsService = async (request, fastify) => {
