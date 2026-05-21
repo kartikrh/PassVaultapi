@@ -1,4 +1,4 @@
-const { APIEndpointModuleType, callEntitySportAPI, parseUmpires, ScoringTypes, ServiceType, callClientAPI, commentaryStatus } = require(".");
+const { APIEndpointModuleType, callEntitySportAPI, parseUmpires, ScoringTypes, callClientAPI, commentaryStatus } = require(".");
 const { errorLogger } = require("./logger");
 const { autoUpdateCommentaryDataStatus, intervalTimesForUpdateCommentary, entitySportAPIEndPoint } = require('./entityConst');
 const { getAllAutoUpdateCommentaryDataQuery, insertAutoUpdateCommentaryDataQuery, updateAutoUpdateCommentaryDataQuery } = require('../repository/TableAutoUpdateCommentaryData');
@@ -414,7 +414,6 @@ const entitySportUpdateCommentary = async (commentaryData, checkCompetition, ent
 
         await callClientAPI(
             {
-                serviceType: ServiceType.clientAPI,
                 moduleType: APIEndpointModuleType.commentaryUpdate,
                 data: {
                     ...cData,

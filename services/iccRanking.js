@@ -1,5 +1,5 @@
 const { deleteICCRankingByIdQuery, insertICCRankingQuery, updateICCRankingQuery, activeInactiveICCRankingByIdQuery, deleteAllICCRankingQuery, removeDeletedICCRankingQuery } = require("../repository/TableICCRanking");
-const { ICCRankingType, callEntitySportAPI, ServiceType, APIEndpointModuleType, callClientAPI, ICCRankingPlayerType, ICCMatchType, RefType } = require("../utilities");
+const { ICCRankingType, callEntitySportAPI, APIEndpointModuleType, callClientAPI, ICCRankingPlayerType, ICCMatchType, RefType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 const { playerImportService } = require("./player");
 const { teamImportService, upsertTeamPlayers } = require("./teams");
@@ -127,7 +127,6 @@ const createICCRankingService = async (request, fastify) => {
         const keyNames = await fieldNamesService(saveData, fastify);
         await callClientAPI(
             {
-                serviceType: ServiceType.clientAPI,
                 moduleType: APIEndpointModuleType.updateSeoModule,
                 data: {
                     module: 'iccRankings',
@@ -262,7 +261,6 @@ const updateICCRankingByIdService = async (request, fastify) => {
     if (clientData.length > 0) {
         await callClientAPI(
             {
-                serviceType: ServiceType.clientAPI,
                 moduleType: APIEndpointModuleType.updateSeoModule,
                 data: {
                     module: 'iccRankings',
@@ -295,7 +293,6 @@ const deleteICCRankingByIdService = async (request, fastify) => {
 
     await callClientAPI(
         {
-            serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.updateSeoModule,
             data: {
                 module: 'iccRankings',
@@ -329,7 +326,6 @@ const activeInactiveICCRankingByIdService = async (request, fastify) => {
     const keyNames = await fieldNamesService(global.tblICCRanking[index], fastify);
     await callClientAPI(
         {
-            serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.updateSeoModule,
             data: {
                 module: 'iccRankings',
@@ -499,7 +495,6 @@ const importICCRankingFromEntitySportService = async (data = null, fastify, requ
 
     await callClientAPI(
         {
-            serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.updateSeoModule,
             data: {
                 module: 'iccRankings',

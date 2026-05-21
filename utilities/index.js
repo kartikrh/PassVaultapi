@@ -645,8 +645,8 @@ const callDataProvider = async (data, fastify) => {
 // }
 
 const callClientAPI = async (data, request, fastify, route) => {
-  const clientServices = global.tblAPIs.filter(
-    (item) => item.type === data.serviceType && item.isActive
+  const clientServices = global.tblClientSocket.filter(
+    (item) => item.isActive
   );
 
   if (clientServices.length === 0) {
@@ -657,7 +657,7 @@ const callClientAPI = async (data, request, fastify, route) => {
     clientServices.map((ser) => {
       const endPoint = global.tblAPIEndpoints.find(
         (item) =>
-          item.serviceType === ser.type &&
+          item.serviceType === ServiceType.clientAPI &&
           item.moduleType === data.moduleType &&
           item.isActive
       );

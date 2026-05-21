@@ -6,7 +6,7 @@ const {
   getDomainByIdQuery,
   updateActiveInactiveVideoApprovedQuery,
 } = require("../repository/TableSubScibesDomain");
-const { callClientAPI, APIEndpointModuleType, ServiceType } = require("../utilities");
+const { callClientAPI, APIEndpointModuleType } = require("../utilities");
 
 const allSubScribesDomainService = async (request) => {
   const { isApproved, isVideoApproved } = request.body;
@@ -206,7 +206,6 @@ const approveDomainService = async (request, fastify) => {
 
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data: {
         data : {
@@ -238,7 +237,6 @@ const activeInactiveVideoApprovedService = async (request, fastify) => {
 
   await callClientAPI(
     { 
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data: {
         data : {

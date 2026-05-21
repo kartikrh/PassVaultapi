@@ -1,7 +1,7 @@
 const { signInUser, signOutUser, updateUserPasswordQuery } = require("../repository/TableUser");
 const { v4: uuidv4 } = require("uuid");
 const requestIp = require("request-ip");
-const { deviceInfo, encrypt, decrypt, callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities/index");
+const { deviceInfo, encrypt, decrypt, callClientAPI, APIEndpointModuleType } = require("../utilities/index");
 const { generateToken } = require("../utilities/tokenization");
 const { getTabsQuery, getUserWisePermisionQuery } = require("../repository/TableTabs.js");
 const configConstants = require("../utilities/configConstants.js");
@@ -265,7 +265,6 @@ const changeShowClientService = async (request, fastify) => {
 
     await callClientAPI(
       {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.commentaryUpdate,
         data: {
           ...cData,
@@ -338,7 +337,6 @@ const activeInactiveCommentaryService = async (request, fastify) => {
   );
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
       data: {
         ...cData,

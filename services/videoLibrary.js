@@ -13,7 +13,7 @@ const {
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { VideoLibraryType, getDataFromTime, checkDataSendToClient } = require("../utilities/index");
-const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { callClientAPI, APIEndpointModuleType } = require("../utilities");
 
 const saveVideoLibraryService = async (request, fastify) => {
   const validateId = global.tblVideoLibrary.find(
@@ -57,7 +57,6 @@ const saveVideoLibraryService = async (request, fastify) => {
   if (sendToClient) {
     await callClientAPI(
       {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
         data: {
           module: 'videoLibrary',
@@ -154,7 +153,6 @@ const editVideoLibraryService = async (request, fastify, data) => {
 
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data: {
         module: 'videoLibrary',
@@ -229,7 +227,6 @@ const deleteVideoLibraryService = async (request, fastify) => {
   global.pendingVideoLibraryToClient = global.pendingVideoLibraryToClient.filter(item => !id.includes(item.id));
 
   await callClientAPI({
-    serviceType: ServiceType.clientAPI,
     moduleType: APIEndpointModuleType.updateSeoModule,
     data: {
       module: 'videoLibrary',
@@ -263,7 +260,6 @@ const updateVideoStatusService = async (request, fastify) => {
 
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data: {
         module: 'videoLibrary',
@@ -298,7 +294,6 @@ const updateDisplayOrderService = async (request, fastify) => {
   global.pendingVideoLibraryToClient = global.pendingVideoLibraryToClient.filter(item => request.body.map(item => item.id).includes(item.id));
 
   await callClientAPI({
-    serviceType: ServiceType.clientAPI,
     moduleType: APIEndpointModuleType.updateSeoModule,
     data: {
       module: 'videoLibrary',
@@ -325,7 +320,6 @@ const sendActiveVideoLibraryToClientAPIService = async (fastify) => {
           global.pendingVideoLibraryToClient = global.pendingVideoLibraryToClient.filter(item => item.id !== data.id);
           await callClientAPI(
             {
-              serviceType: ServiceType.clientAPI,
               moduleType: APIEndpointModuleType.updateSeoModule,
               data: {
                 module: 'videoLibrary',

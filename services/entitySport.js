@@ -170,7 +170,6 @@ const saveCommentariesService = async (request , fastify) =>{
               );
               await callClientAPI(
                 {
-                  serviceType: ServiceType.clientAPI,
                   moduleType: APIEndpointModuleType.commentaryUpdate,
                   data: {
                     ...cData,
@@ -445,7 +444,6 @@ const setEntityCom2Service = async (request , fastify) =>{
 
       await callClientAPI(
         {
-          serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
           data: cData,
         },
@@ -600,7 +598,6 @@ const setEntityCom2Service = async (request , fastify) =>{
 
         await callClientAPI(
           {
-            serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.commentaryUpdate,
             data: cData,
           },
@@ -1215,7 +1212,6 @@ const setEntityCom2Service = async (request , fastify) =>{
 
       await callClientAPI(
         {
-          serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
           data: cData,
         },
@@ -4688,7 +4684,6 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
 
       await callClientAPI(
         {
-          serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
           data: cData,
         },
@@ -6440,7 +6435,6 @@ const cancelCommentaryOnInningService  = async (commentaryId, request, fastify) 
 
       await callClientAPI(
         {
-          serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
           data: cData,
         },

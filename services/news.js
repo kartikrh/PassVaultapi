@@ -5,7 +5,7 @@ const {
   activeInactiveNewsQuery,
   changeeDisplayOrderQuery
 } = require("../repository/TableNews");
-const { callClientAPI, ServiceType, APIEndpointModuleType, getDataFromTime, checkDataSendToClient } = require("../utilities");
+const { callClientAPI, APIEndpointModuleType, getDataFromTime, checkDataSendToClient } = require("../utilities");
 const {
   generateImageName,
   storeImageOnServer,
@@ -99,7 +99,6 @@ const createNewsService = async (request, fastify) => {
   if (sendToClient) {
     await callClientAPI(
       {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
         data: {
           module: 'news',
@@ -188,7 +187,6 @@ const updateNewsService = async (request, fastify) => {
   global.pendingNewsToClient = global.pendingNewsToClient.filter(item => item.newsId !== body.newsId);
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data: {
         module: 'news',
@@ -221,7 +219,6 @@ const deleteNewsService = async (request, fastify) => {
   global.pendingNewsToClient = global.pendingNewsToClient.filter(item => !newsId.includes(item.newsId));
 
     await callClientAPI({
-      serviceType : ServiceType.clientAPI,
       moduleType : APIEndpointModuleType.updateSeoModule,
       data : {
         module : 'news',
@@ -259,7 +256,6 @@ const activeInactiveNewsService = async (request, fastify) => {
 
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data: {
         module: 'news',
@@ -297,7 +293,6 @@ const changeDisplayOrderService = async (request, fastify) => {
 
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data: {
         module: 'news',
@@ -322,7 +317,6 @@ const sendActiveNewsToClientAPIService = async (fastify) => {
           global.pendingNewsToClient = global.pendingNewsToClient.filter(item => item.newsId !== data.newsId);
           await callClientAPI(
             {
-              serviceType: ServiceType.clientAPI,
               moduleType: APIEndpointModuleType.updateSeoModule,
               data: {
                 module: 'news',
