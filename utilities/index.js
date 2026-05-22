@@ -664,16 +664,16 @@ const callClientAPI = async (data, request, fastify, route) => {
 
       if (!endPoint) {
         request.log.warn(
-          `Endpoint not found for service type: ${ser.type}, module: ${data.moduleType}`
+          `Endpoint not found for service type: ClientAPI, module: ${data.moduleType}`
         );
 
         // Return a rejected promise so it shows in allSettled
         return Promise.reject(
-          new Error(`Missing endpoint for ${ser.type}`)
+          new Error(`Missing endpoint for ClientAPI`)
         );
       }
 
-      const url = `${ser.api}${endPoint.endPoint}`;
+      const url = `${ser.url}${endPoint.endPoint}`;
 
       // IMPORTANT: return the promise
       return axios.post(url, data.data, { timeout: 5000 });
@@ -684,7 +684,7 @@ const callClientAPI = async (data, request, fastify, route) => {
   return results.map((r, i) => {
     if (r.status === 'fulfilled') {
       return {
-        api: clientServices[i].api,
+        api: clientServices[i].serverName,
         success: true,
         data: r.value.data
       };
@@ -693,13 +693,13 @@ const callClientAPI = async (data, request, fastify, route) => {
       errorLogger(
         fastify,
         r.reason.message,
-        `CallClientAPI Error --> ${clientServices[i].api}`,
+        `CallClientAPI Error --> ${clientServices[i].serverName}`,
         request,
         r.reason.response?.data || null
       );
 
       return {
-        api: clientServices[i].api,
+        api: clientServices[i].serverName,
         success: false,
         error: r.reason.message
       };
