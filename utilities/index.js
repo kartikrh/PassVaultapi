@@ -664,12 +664,12 @@ const callClientAPI = async (data, request, fastify, route) => {
 
       if (!endPoint) {
         request.log.warn(
-          `Endpoint not found for service type: ${ser.serverName}, module: ${data.moduleType}`
+          `Endpoint not found for service type: ClientAPI, module: ${data.moduleType}`
         );
 
         // Return a rejected promise so it shows in allSettled
         return Promise.reject(
-          new Error(`Missing endpoint for ${ser.serverName}`)
+          new Error(`Missing endpoint for ClientAPI`)
         );
       }
 
@@ -699,7 +699,7 @@ const callClientAPI = async (data, request, fastify, route) => {
       );
 
       return {
-        api: clientServices[i].api,
+        api: clientServices[i].serverName,
         success: false,
         error: r.reason.message
       };
