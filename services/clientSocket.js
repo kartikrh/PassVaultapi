@@ -13,7 +13,6 @@ const {
     clientSocketActionType, 
     callSocketCountClientAPI,
     APIEndpointModuleType, 
-    ServiceType,
     clientSocketStatus,
  } = require("../utilities");
 const { connectClients: newConnectClients, disconnectClientSockets } = require("../sockets/client");

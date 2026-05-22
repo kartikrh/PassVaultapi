@@ -20,7 +20,7 @@ const { commentaryStatus, getDataFromTime, checkDataSendToClient } = require("..
 const { errorLogger } = require("../utilities/logger");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
-const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { callClientAPI, APIEndpointModuleType } = require("../utilities");
 
 const savePhotoLibraryService = async (request, fastify) => {
   const saveData = await insertPhotoLibraryQuery(
@@ -34,7 +34,6 @@ const savePhotoLibraryService = async (request, fastify) => {
   if (sendToClient) {
     await callClientAPI(
       {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
         data: {
           module: 'photoLibrary',
@@ -90,7 +89,6 @@ const editPhotoLibraryService = async (request, fastify, data) => {
 
   await callClientAPI(
     {
-       serviceType: ServiceType.clientAPI,
        moduleType: APIEndpointModuleType.updateSeoModule,
        data: {
          module: 'photoLibrary',
@@ -145,7 +143,6 @@ const saveLibraryImageService = async (request, fastify, data) => {
 
   await callClientAPI(
     {
-       serviceType: ServiceType.clientAPI,
        moduleType: APIEndpointModuleType.updateSeoModule,
        data: {
          module: 'libraryImage',
@@ -227,7 +224,6 @@ const editLibraryImageService = async (request, fastify, data) => {
 
   await callClientAPI(
     {
-       serviceType: ServiceType.clientAPI,
        moduleType: APIEndpointModuleType.updateSeoModule,
        data: {
          module: 'libraryImage',
@@ -334,7 +330,6 @@ const deletePhotoLibraryService = async (request, fastify) => {
   global.pendingPhotoLibraryToClient = global.pendingPhotoLibraryToClient.filter(item => !photoLibraryId.includes(item.photoLibraryId));
 
   await callClientAPI({
-    serviceType: ServiceType.clientAPI,
     moduleType: APIEndpointModuleType.updateSeoModule,
     data: {
       module: 'photoLibrary',
@@ -367,7 +362,6 @@ const deleteLibraryImagesService = async (request, fastify) => {
 
   await callClientAPI(
     {
-       serviceType: ServiceType.clientAPI,
        moduleType: APIEndpointModuleType.updateSeoModule,
        data: {
          module: 'libraryImage',
@@ -398,7 +392,6 @@ const updateDisplayOrderService = async (request, fastify) => {
 
   await callClientAPI(
     {
-       serviceType: ServiceType.clientAPI,
        moduleType: APIEndpointModuleType.updateSeoModule,
        data: {
          module: 'libraryImage',
@@ -446,7 +439,6 @@ const updateIsDefultService = async (request, fastify) => {
 
   await callClientAPI(
     {
-       serviceType: ServiceType.clientAPI,
        moduleType: APIEndpointModuleType.updateSeoModule,
        data: {
          module: 'libraryImage',
@@ -482,7 +474,6 @@ const updatePhotoLibraryStatusService = async (request, fastify) => {
 
   await callClientAPI(
     {
-       serviceType: ServiceType.clientAPI,
        moduleType: APIEndpointModuleType.updateSeoModule,
        data: {
           module: 'photoLibrary',
@@ -522,7 +513,6 @@ const updatePhotoLibraryDisplayOrderService = async (request, fastify) => {
   global.pendingPhotoLibraryToClient = global.pendingPhotoLibraryToClient.filter(item => allActiveData.map(item => item.photoLibraryId).includes(item.photoLibraryId));
 
   await callClientAPI({
-    serviceType: ServiceType.clientAPI,
     moduleType: APIEndpointModuleType.updateSeoModule,
     data: {
       module: 'libraryImage',
@@ -568,7 +558,6 @@ const sendActivePhotoLibraryToClientAPIService = async (fastify) => {
           global.pendingPhotoLibraryToClient = global.pendingPhotoLibraryToClient.filter(item => item.photoLibraryId !== data.photoLibraryId);
           await callClientAPI(
             {
-              serviceType: ServiceType.clientAPI,
               moduleType: APIEndpointModuleType.updateSeoModule,
               data: {
                 module: 'photoLibrary',

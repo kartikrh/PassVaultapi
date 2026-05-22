@@ -456,7 +456,6 @@ const createVirtualEventService = async (request, fastify) => {
     );
     await callClientAPI(
       {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.commentaryUpdate,
         data: cData,
       },
@@ -871,7 +870,6 @@ const virtualEventTossService = async (request, fastify) => {
   );
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
       data: cData,
     },
@@ -2764,7 +2762,6 @@ const comResponseService = async (request, fastify, completeOver = false) => {
 
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
       data: cData
     },
@@ -3174,7 +3171,6 @@ const cancelEventAPIService = async (request, fastify) => {
 
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
       data: cData,
     },

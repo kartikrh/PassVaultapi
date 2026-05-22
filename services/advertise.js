@@ -5,7 +5,7 @@ const {
   activeInactiveAdvertiseQuery,
   changeDisplayOrderQuery
 } = require("../repository/TableAdvertise");
-const { ServiceType, APIEndpointModuleType, callClientAPI, ClientAPIType, getDataFromTime, checkDataSendToClient } = require("../utilities");
+const { APIEndpointModuleType, callClientAPI, ClientAPIType, getDataFromTime, checkDataSendToClient } = require("../utilities");
 
 const {
   generateImageName,
@@ -103,7 +103,6 @@ const createAdvertiseService = async (request, fastify) => {
     if (sendToClient) {
       await callClientAPI(
         {
-          serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
           data: {
             type: ClientAPIType.Insert,
@@ -218,7 +217,6 @@ const updateAdvertiseService = async (request, fastify) => {
 
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
       data: {
         type: ClientAPIType.Update,
@@ -254,7 +252,6 @@ const deleteAdvertiseService = async (request, fastify) => {
 
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
       data: {
         type: ClientAPIType.Delete,
@@ -288,7 +285,6 @@ const activeInactiveAdvertiseService = async (request, fastify) => {
 
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
       data: {
         type: ClientAPIType.Update,
@@ -324,7 +320,6 @@ const changeDisplayOrderService = async (request, fastify) => {
   );
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
       data: {
         type: ClientAPIType.ChangeDisplayOrder,
@@ -351,7 +346,6 @@ const sendActiveAdvertiseToClientAPIService = async (fastify) => {
           global.pendingAdvertiseToClient = global.pendingAdvertiseToClient.filter(item => item.advertiseId !== data.advertiseId);
           await callClientAPI(
             {
-              serviceType: ServiceType.clientAPI,
               moduleType: APIEndpointModuleType.upsertAdvertiseDataToClient,
               data: {
                 type: ClientAPIType.Insert,

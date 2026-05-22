@@ -6,7 +6,7 @@ const {
     generateImageName,
     removeImageFromServer,
 } = require("../utilities/Images");
-const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { callClientAPI, APIEndpointModuleType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 
  const SuitEnum = {
@@ -61,7 +61,6 @@ const saveCardTypeService = async (request, fastify) => {
 
     await callClientAPI(
        {
-          serviceType : ServiceType.clientAPI,
           moduleType : APIEndpointModuleType.updateSeoModule,
           data : {
             module : 'cardType',
@@ -120,7 +119,6 @@ const editCardTypeService = async (request, fastify) => {
   }
   await callClientAPI(
        {
-          serviceType : ServiceType.clientAPI,
           moduleType : APIEndpointModuleType.updateSeoModule,
           data : {
             module : 'cardType',
@@ -176,7 +174,6 @@ const deleteCardTypeService = async (fastify, request) => {
   global.tblCardType = global.tblCardType.filter((item) => !id.includes(item.id));
   await callClientAPI(
        {
-          serviceType : ServiceType.clientAPI,
           moduleType : APIEndpointModuleType.updateSeoModule,
           data : {
             module : 'cardType',
@@ -218,7 +215,6 @@ const activeInactiveCardTypeService = async (fastify, request) => {
 
   await callClientAPI(
        {
-          serviceType : ServiceType.clientAPI,
           moduleType : APIEndpointModuleType.updateSeoModule,
           data : {
             module : 'cardType',

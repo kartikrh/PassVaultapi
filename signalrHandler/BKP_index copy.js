@@ -695,7 +695,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
 
         await callClientAPI(
           {
-            serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.commentaryUpdate,
             data: cData
           },
