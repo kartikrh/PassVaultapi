@@ -34,7 +34,7 @@ const { deleteAwardsByPlayerIdQuery } = require("../repository/TableCommentaryAw
 const { bowlingStyleChangeOnCommPlayersQuery, deleteCommentaryPlayerById } = require("../repository/TableCommentary");
 const { mergeAndSaveImage } = require("../utilities/imageMerge");
 const configConstants = require("../utilities/configConstants");
-const { trimTextData, callEntitySportAPI, APIEndpointModuleType, ServiceType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, RefType, EventType, ICCMatchType } = require("../utilities/index");
+const { trimTextData, callEntitySportAPI, APIEndpointModuleType, EntityPlayerType, EntityBowlingStyleType, extractBowlingStyle, RefType, EventType, ICCMatchType } = require("../utilities/index");
 const { errorLogger } = require("../utilities/logger");
 const { playersMergeImageService, callClientAPI } = require("../utilities/index");
 const { insertCountryCodeQuery } = require("../repository/TableCountryCodes");
@@ -1527,7 +1527,6 @@ const playerImageChangeOnClientAPIService = async (teamPlayer, matchTypeId, fast
   if (updatedData.length > 0) {
     await callClientAPI(
       {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
         data: {
           module: 'iccRankings',

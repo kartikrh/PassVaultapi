@@ -5,7 +5,7 @@ const {
     assignAwardQuery,
     deleteAwardsQuery
 } = require("../repository/TableCommentaryAward");
-const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { callClientAPI, APIEndpointModuleType } = require("../utilities");
 const { getCommentaryPlayerByIdsQuery } = require("../repository/TableCommentary")
 
 const getAllComAwardService = async (fastify) => {
@@ -142,7 +142,6 @@ const assignAwardService = async (request, fastify) => {
           );
             await callClientAPI(
                 {
-                    serviceType: ServiceType.clientAPI,
                     moduleType: APIEndpointModuleType.updateSeoModule,
                     data: {
                         module: 'commentaryAwards',
@@ -178,7 +177,6 @@ const assignAwardService = async (request, fastify) => {
         
         await callClientAPI(
             {
-                serviceType: ServiceType.clientAPI,
                 moduleType: APIEndpointModuleType.updateSeoModule,
                 data: {
                     module: 'commentaryAwards',

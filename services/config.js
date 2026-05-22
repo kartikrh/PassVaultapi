@@ -3,7 +3,7 @@ const {
   updateConfigQuery,
   deleteConfigQuery,
 } = require("../repository/TableConfig");
-const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { callClientAPI, APIEndpointModuleType } = require("../utilities");
 const configConstants = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { generateImageName, storeImageOnServer } = require("../utilities/Images");
@@ -55,7 +55,6 @@ const createConfigService = async (request, fastify) => {
   global.tblConfigs.push(data);
     await callClientAPI(
       {
-        serviceType : ServiceType.clientAPI,
         moduleType : APIEndpointModuleType.updateConfig,
         data : data
       },
@@ -116,7 +115,6 @@ const updateConfigService = async (request, fastify) => {
   global.tblConfigs[index] = data;
     await callClientAPI(
       {
-        serviceType : ServiceType.clientAPI,
         moduleType : APIEndpointModuleType.updateConfig,
         data : data
       },
@@ -147,7 +145,6 @@ const deleteConfigService = async (request, fastify) => {
 
   await callClientAPI(
     {
-      serviceType : ServiceType.clientAPI,
       moduleType : APIEndpointModuleType.updateConfig,
       data : {
         type : "delete",

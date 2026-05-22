@@ -11,7 +11,7 @@ const {
   } = require("../utilities/Images");
   const { PROJECT_NAME } = require("../utilities/configConstants");
   const { ImgModuleConfig } = require("../utilities/imageConstant");
-  const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+  const { callClientAPI, APIEndpointModuleType } = require("../utilities");
   
   const saveSocialMedia = async (request, fastify, data) => {
     if (data.body.image && data.body.image.length) {
@@ -39,7 +39,6 @@ const {
       if(data.body.isActive){
         await callClientAPI(
          {
-            serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.updateSeoModule,
             data: {
               module: 'socialMedia',
@@ -101,7 +100,6 @@ const {
 
     await callClientAPI(
       {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
         data: {
           module: 'socialMedia',
@@ -160,7 +158,6 @@ const {
     );
   
     await callClientAPI({
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data: {
         module: 'socialMedia',
@@ -193,7 +190,6 @@ const {
     
     await callClientAPI(
       {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
         data: {
           module: 'socialMedia',

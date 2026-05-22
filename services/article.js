@@ -5,8 +5,6 @@ const {
   activeInactiveArticleQuery,
 } = require("../repository/TableArticles");
 const {
-  callClientAPI,
-  ServiceType,
   APIEndpointModuleType,
 } = require("../utilities");
 const {

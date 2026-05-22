@@ -4,7 +4,7 @@ const {
   validatePageFormatQuery,
   deletePageFormatQuery,
 } = require("../repository/TablePageFormate");
-const { ServiceType, APIEndpointModuleType, callClientAPI } = require("../utilities");
+const { APIEndpointModuleType, callClientAPI } = require("../utilities");
 const { removeImageFromServer, storeImageOnServer, generateImageName } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const {ImgModuleConfig} = require("../utilities/imageConstant");
@@ -70,7 +70,6 @@ const addPageFormatService = async (request, fastify) => {
   global.tblPageFormats.push(data);
   if(data.isActive){
     await callClientAPI({
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data: {
         type : "add",
@@ -147,7 +146,6 @@ const updatePageFormatService = async (request, fastify) => {
 
   if(data.isActive){
     await callClientAPI({
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data: {
         type : "update",
@@ -196,7 +194,6 @@ const deletePageFormatService = async (request, fastify) => {
   );
 
   await callClientAPI({
-    serviceType: ServiceType.clientAPI,
     moduleType: APIEndpointModuleType.updateSeoModule,
     data: {
       type : "delete",

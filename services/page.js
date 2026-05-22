@@ -6,7 +6,7 @@ const {
   deletePageQuery,
   isDefaultChangesQuery,
 } = require("../repository/TablePage");
-const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { callClientAPI, APIEndpointModuleType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 
 const allPageService = async (fastify) => {
@@ -50,7 +50,6 @@ const addPageService = async (request, fastify) => {
   }
 
   await callClientAPI({
-    serviceType: ServiceType.clientAPI,
     moduleType: APIEndpointModuleType.updateMenuList,
     data: {
       type : "add",
@@ -128,7 +127,6 @@ const updatePageService = async (request, fastify) => {
   }
 
   await callClientAPI({
-    serviceType: ServiceType.clientAPI,
     moduleType: APIEndpointModuleType.updateMenuList,
     data: {
       type : "update",
@@ -187,7 +185,6 @@ const deletePageService = async (request, fastify) => {
   );
 
   await callClientAPI({
-    serviceType: ServiceType.clientAPI,
     moduleType: APIEndpointModuleType.updateMenuList,
     data: {
       type : "delete",

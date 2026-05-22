@@ -5,7 +5,7 @@ const {
   validatMenuTypeQuery,
   getAllMenuTypesQuery,
 } = require("../repository/TableMenuTypes");
-const { callClientAPI, ServiceType, APIEndpointModuleType } = require("../utilities");
+const { callClientAPI,  APIEndpointModuleType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 
 const allMenuTypeService = async (request , fastify) => {
@@ -130,7 +130,6 @@ const createMenuTypeService = async (request, fastify) => {
     }
     await callClientAPI(
       {
-        serviceType : ServiceType.clientAPI, 
         moduleType : APIEndpointModuleType.updateMenuList,
         data : {
           module : "menuTypes",
@@ -209,7 +208,6 @@ const updateMenuTypeService = async (request, fastify) => {
     }
       await callClientAPI(
         {
-          serviceType : ServiceType.clientAPI, 
           moduleType : APIEndpointModuleType.updateMenuList,
           data : {
             module : "menuTypes",
@@ -254,7 +252,6 @@ const deleteMenuTypeService = async (request, fastify) => {
   );
     await callClientAPI(
       {
-        serviceType : ServiceType.clientAPI, 
         moduleType : APIEndpointModuleType.updateMenuList,
         data : {
           module : "menuTypes",

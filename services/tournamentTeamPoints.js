@@ -17,7 +17,7 @@ const {
   updateTournamentTeamPointGroupVisibleStatusQuery,
   getTournamentTeamPointsByCompetitionIdQuery,
 } = require("../repository/TableTournmentTeamPoints");
-const { callClientAPI, ServiceType, APIEndpointModuleType, callEntitySportAPI, extractGroupDataFromArray, teamRemarkType, compStatus, RefType } = require("../utilities");
+const { callClientAPI, APIEndpointModuleType, callEntitySportAPI, extractGroupDataFromArray, teamRemarkType, compStatus, RefType } = require("../utilities");
 const { nullTeamtpIds, entitySportAPIEndPoint } = require("../utilities/entityConst");
 const { errorLogger } = require("../utilities/logger");
 const { insertAutoImportDataService } = require("./autoImportData");
@@ -26,23 +26,49 @@ const { saveCompetitionService } = require("./competition");
 
 const allTournamentTeamPointsService = async (request, fastify) => {
   const { competitionId, teamId, groupId, isActive } = request.body;
-  let result = await getAllTournamentTeamPointsQuery(fastify);
-  result = result.filter((item) => {
-    const competitionMatch = competitionId !== undefined ? item.competitionId === competitionId : true;
-    const teamMatch = teamId !== undefined ? item.teamId === teamId : true;
-    const groupMatch = groupId !== undefined ? item.groupId === groupId : true;
-    const isActiveMatch = isActive !== undefined ? item.isActive === isActive : true;
 
-    return competitionMatch && teamMatch && groupMatch && isActiveMatch;
-  }).sort((a, b) => {
-    if (b.totalPoint !== a.totalPoint) {
-      return b.totalPoint - a.totalPoint;
-    }
-  
-    return b.netRunRate - a.netRunRate;
+  const result = await getAllTournamentTeamPointsQuery(fastify);
+
+  const filteredData = result.filter((item) => {
+    return (
+      (competitionId === undefined || item.competitionId === competitionId) &&
+      (teamId === undefined || item.teamId === teamId) &&
+      (groupId === undefined || item.groupId === groupId) &&
+      (isActive === undefined || item.isActive === isActive)
+    );
   });
 
-  return result;
+  const groupMap = new Map();
+
+  for (const item of filteredData) {
+    if (!groupMap.has(item.groupId)) {
+      groupMap.set(item.groupId, []);
+    }
+
+    groupMap.get(item.groupId).push(item);
+  }
+
+  const tournamentTeamPointData = [];
+
+  for (const teams of groupMap.values()) {
+    const allPointsZero = teams.every((team) => team.totalPoint === 0);
+
+    const sortedTeams = [...teams].sort((a, b) => {
+      if (allPointsZero) {
+        return a.id - b.id;
+      }
+
+      if (b.totalPoint !== a.totalPoint) {
+        return b.totalPoint - a.totalPoint;
+      }
+
+      return b.netRunRate - a.netRunRate;
+    });
+
+    tournamentTeamPointData.push(...sortedTeams);
+  }
+
+  return tournamentTeamPointData;
 };
 
 const createTblTournamentTeamPointsService = async (request, fastify) => {
@@ -107,7 +133,6 @@ const createTblTournamentTeamPointsService = async (request, fastify) => {
 
     await callClientAPI(
       {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
         data: {
           module: 'tournamentTeamPoints',
@@ -207,7 +232,6 @@ const updateTblTournamentTeamPointsService = async (request, fastify) => {
     const res = await responseChangeService(updateData?.teamId, updateData?.competitionId);
     await callClientAPI(
       {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
         data: {
           module: 'tournamentTeamPoints',
@@ -250,7 +274,6 @@ const createTournamentTeamPointsService = async (newItems, fastify, request) => 
       const res = await responseChangeService(saveData?.teamId, saveData?.competitionId);
       await callClientAPI(
        {
-          serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.updateSeoModule,
           data: {
             module: 'tournamentTeamPoints',
@@ -313,7 +336,6 @@ const updateTournamentTeamPointsService = async (existingItems, fastify, request
       const res = await responseChangeService(updateData?.teamId, updateData?.competitionId);
       await callClientAPI(
        {
-          serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.updateSeoModule,
           data: {
             module: 'tournamentTeamPoints',
@@ -361,7 +383,6 @@ const deleteTournamentTeamPointsService = async (request, fastify) => {
 
   await callClientAPI(
    {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.updateSeoModule,
       data: {
         module: 'tournamentTeamPoints',
@@ -415,7 +436,6 @@ const activeInactiveTournamentTeamPointsService = async (request, fastify) => {
     updateData.push({ ...result[0], ...res })
     await callClientAPI(
      {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
         data: {
           module: 'tournamentTeamPoints',
@@ -574,7 +594,6 @@ const setTeamNetRunRateService = async (teamId, competitionId, fastify) => {
     const res = await responseChangeService(updatedData?.teamId, updatedData?.competitionId);
     await callClientAPI(
      {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.updateSeoModule,
         data: {
           module: 'tournamentTeamPoints',
@@ -706,7 +725,6 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
             const res = await responseChangeService(updateData?.teamId, updateData?.competitionId);
             await callClientAPI(
               {
-                serviceType: ServiceType.clientAPI,
                 moduleType: APIEndpointModuleType.updateSeoModule,
                 data: {
                   module: 'tournamentTeamPoints',
@@ -735,7 +753,6 @@ const addEditTournamentTeamPointDataService = async (result, competitionId, fast
               const res = await responseChangeService(pointData?.teamId, pointData?.competitionId);
               await callClientAPI(
                 {
-                  serviceType: ServiceType.clientAPI,
                   moduleType: APIEndpointModuleType.updateSeoModule,
                   data: {
                     module: 'tournamentTeamPoints',

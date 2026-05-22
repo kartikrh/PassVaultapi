@@ -1180,7 +1180,6 @@ const createCommentaryService = async (request, fastify) => {
 
     await callClientAPI(
       {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.commentaryUpdate,
         data: cData,
       },
@@ -1883,7 +1882,6 @@ const updateCommentaryService = async (request, fastify) => {
 
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
       data: {
         ...cData,
@@ -2360,7 +2358,6 @@ const cloneCommentaryService = async (request, fastify) => {
 
     await callClientAPI(
       {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.commentaryUpdate,
         data: cData,
       },
@@ -2577,7 +2574,6 @@ const deleteCommentaryService = async (request, fastify) => {
 
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
       data: {
         type: "deleteEvent",
@@ -4048,7 +4044,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
 
         await callClientAPI(
           {
-            serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.commentaryUpdate,
             data: cData,
           },
@@ -4194,7 +4189,6 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
           );
           await callClientAPI(
             {
-              serviceType: ServiceType.clientAPI,
               moduleType: APIEndpointModuleType.updateSeoModule,
               data: {
                 module: "tips",
@@ -6503,7 +6497,6 @@ const commentaryStatusService = async (request, fastify) => {
 
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
       data: cData,
     },
@@ -10122,7 +10115,6 @@ const changeShowClientService = async (request, fastify) => {
 
     await callClientAPI(
       {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.commentaryUpdate,
         data: {
           ...cData,
@@ -10573,7 +10565,6 @@ const updateResultInCommentaryService = async (request, fastify) => {
 
     await callClientAPI(
       {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.commentaryUpdate,
         data: cData,
       },
@@ -10810,7 +10801,6 @@ const activeInactiveCommentaryService = async (request, fastify) => {
   );
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
       data: {
         ...cData,
@@ -10947,7 +10937,6 @@ const closeCommentaryService = async (request, fastify) => {
 
       await callClientAPI(
         {
-          serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
           data: cData,
         },
@@ -10994,7 +10983,6 @@ const closeCommentaryService = async (request, fastify) => {
         );
         await callClientAPI(
           {
-            serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.updateSeoModule,
             data: {
               module: "tips",
@@ -11450,7 +11438,6 @@ const updateEventRefIdInCommentaryService = async (request, fastify) => {
   
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
       data: {
         ...cData,
@@ -12851,7 +12838,6 @@ const cancelCommentaryService = async (request, fastify) => {
         //   data: cData,
         // },
         {
-          serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
           data: {
             commentaryId: request.body.commentaryId,
@@ -12875,7 +12861,6 @@ const cancelCommentaryService = async (request, fastify) => {
         );
         await callClientAPI(
           {
-            serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.updateSeoModule,
             data: {
               module: "tips",
@@ -12981,7 +12966,6 @@ const deleteEventResultService = async (request, fastify) => {
 
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
       data: {
         type: "deleteEvent",
@@ -13329,7 +13313,6 @@ const deleteCommentaryHistoryService = async (request, fastify) => {
 
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
       data: {
         type: "deleteEvent",
@@ -13460,7 +13443,6 @@ const changeIsTestComService = async (request, fastify) => {
   );
   await callClientAPI(
     {
-      serviceType: ServiceType.clientAPI,
       moduleType: APIEndpointModuleType.commentaryUpdate,
       data: {
         ...cData,
@@ -14052,7 +14034,6 @@ const saveComVirtual = async (request, fastify) => {
 
         await callClientAPI(
           {
-            serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.commentaryUpdate,
             data: cData
           },
@@ -15393,7 +15374,6 @@ const commentaryStartService = async (request, fastify) => {
 
       await callClientAPI(
         {
-          serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
           data: cData,
         },
@@ -15706,7 +15686,6 @@ const commentaryTossService = async (request, fastify) => {
 
       await callClientAPI(
         {
-          serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
           data: cData,
         },
@@ -17350,7 +17329,6 @@ const commentaryInningChangeService = async (request, fastify) => {
 
         await callClientAPI(
           {
-            serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.commentaryUpdate,
             data: cData,
           },
@@ -22943,7 +22921,6 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
 
                 await callClientAPI(
                     {
-                        serviceType: ServiceType.clientAPI,
                         moduleType: APIEndpointModuleType.commentaryUpdate,
                         data: cData,
                     },
@@ -24011,7 +23988,6 @@ const matchImportService = async (data, fastify, request = null) => {
 
     await callClientAPI(
       {
-        serviceType: ServiceType.clientAPI,
         moduleType: APIEndpointModuleType.commentaryUpdate,
         data: cData,
       },
@@ -24471,7 +24447,6 @@ const undoCommentaryService = async (request, fastify) => {
 
         await callClientAPI(
           {
-            serviceType: ServiceType.clientAPI,
             moduleType: APIEndpointModuleType.commentaryUpdate,
             data: cData,
           },
@@ -24595,7 +24570,6 @@ const undoCommentaryService = async (request, fastify) => {
           );
           await callClientAPI(
             {
-              serviceType: ServiceType.clientAPI,
               moduleType: APIEndpointModuleType.updateSeoModule,
               data: {
                 module: "tips",
@@ -26096,7 +26070,6 @@ const abandonedCommentaryService = async (request, fastify) => {
 
       await callClientAPI(
         {
-          serviceType: ServiceType.clientAPI,
           moduleType: APIEndpointModuleType.commentaryUpdate,
           data: cData,
         },
