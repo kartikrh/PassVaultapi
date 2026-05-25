@@ -6230,7 +6230,7 @@ const updateBatterIdService = async (data, request, fastify) => {
         batBall: entityBatterData.balls_faced,
         batFour: entityBatterData.fours,
         batSix: entityBatterData.sixes,
-        batterOrder: null,
+        // batterOrder: null,
         batDotBall: entityBatterData?.run0 ?? 0,
         batsmanStrikeRate: parseFloat(entityBatterData.strike_rate) ?? "0",
         isInPlayingEleven: true,
