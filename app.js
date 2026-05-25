@@ -218,7 +218,6 @@ module.exports = async function (fastify, opts) {
     });
 
   if (process.env.IS_CRON_ENABLE && process.env.IS_CRON_ENABLE === "true") {
-    console.log("Registering cron jobs...");
     registerCronJobs(fastify);
   }
 
@@ -307,8 +306,9 @@ module.exports = async function (fastify, opts) {
       });
 
       // Disconnect sockets
-      await disConnectClientSocketQuery(fastify);
-      await disConnectEntitySocketQuery(fastify);
+      await disconnectAllClientSocketService(null, fastify);
+      await disconnectEntitySports(fastify);
+      await resetEntitySocketReconnectCountQuery(fastify);
       console.log("Cleanup task executed successfully");
     } catch (error) {
       console.error(new Date(), "Error during preClose hook execution:", error);
