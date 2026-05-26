@@ -844,7 +844,8 @@ const sendNotificationByType = async (data, request, fastify) => {
           data.description,
           data.url,
           data.image,
-          data.icon
+          data.icon,
+          data.commentaryId
         );
         return true;
         break;
