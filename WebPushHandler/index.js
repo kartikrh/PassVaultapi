@@ -84,69 +84,251 @@ async function _sendNotification(title, message, url, image, icon) {
     }
   }
 
-async function sendNotification(title, message, url, image, icon) {
+// async function sendNotification(title, message, url, image, icon) {
+//   const payload = JSON.stringify({ title, message, url, image, icon });
+//   const webPushPayload = JSON.stringify({ title, message, url, image, icon });
+//   const mobilePayload = {
+//     notification: {
+//       title,
+//       body: message,
+//       image,
+//     },
+//   };
+
+//   try {
+//     const subscriptions = global.tblDevices.map(device => {
+//       if (device.deviceType === 1) {
+//         return {
+//           type: 'web',
+//           subscription: {
+//             endpoint: device.pushEndpoint,
+//             keys: {
+//               p256dh: device.pushP256DH,
+//               auth: device.pushAuth
+//             }
+//           }
+//         };
+//       } else if (device.deviceType === 2) {
+//         return {
+//           type: 'mobile',
+//           token: device.mobileToken
+//         };
+//       }
+//     });
+//     //const Authorization = global.tblConfigs.find((item) => item.key === configConstants.AUTHORIZATION_KEY).value;
+//     //MobilwNotificationurl = 'https://fcm.googleapis.com/v1/projects/login-ee30d/messages:send';
+//     const MobilwNotificationurl = global.tblConfigs.find((item) => item.key === configConstants.MOBILE_NOTIFICATION_URL).value;
+//     const accessToken = await getAccessToken();
+//     //const accessToken = "";
+//     const promises = subscriptions.map(device => {
+//       if (device.type === 'web') {
+//         return global.webPush.sendNotification(device.subscription, webPushPayload).catch(error => {
+//           console.error("Error sending web notification:", error);
+//         });
+//       } else if (device.type === 'mobile') {
+//         let _Resjson = {}
+//         _Resjson.message = mobilePayload;
+//         _Resjson.message.token = device.token
+//         const notificationPayload = { ..._Resjson };
+//         return axios.post(MobilwNotificationurl, notificationPayload, {
+//           headers: {
+//             'Authorization': 'Bearer ' + accessToken,
+//             'Content-Type': 'application/json',
+//           },
+//         }).catch(error => {
+//           console.error("Error sending mobile notification:", error);
+//         });
+//       }
+//     });
+
+//     await Promise.all(promises);
+//   } catch (error) {
+//     console.error("Error sending notifications: ", error);
+//   }
+// }
+async function sendNotification(title, message, url, image, icon, commentaryId) {
   const payload = JSON.stringify({ title, message, url, image, icon });
   const webPushPayload = JSON.stringify({ title, message, url, image, icon });
   const mobilePayload = {
-    notification: {
       title,
       body: message,
-      image,
-    },
+      ...(image ? { image } : {})
   };
-
+  const topic = `match_${commentaryId}`
   try {
-    const subscriptions = global.tblDevices.map(device => {
-      if (device.deviceType === 1) {
-        return {
-          type: 'web',
-          subscription: {
-            endpoint: device.pushEndpoint,
-            keys: {
-              p256dh: device.pushP256DH,
-              auth: device.pushAuth
-            }
-          }
-        };
-      } else if (device.deviceType === 2) {
-        return {
-          type: 'mobile',
-          token: device.mobileToken
-        };
-      }
+    const webSubscriptions = global.tblDevices.filter(
+      (device) => device.deviceType === 1
+    );
+    const webPromises = webSubscriptions.map((device) => {
+      const subscription = {
+        endpoint: device.pushEndpoint,
+        keys: {
+          p256dh: device.pushP256DH,
+          auth: device.pushAuth,
+        },
+      };
+      return global.webPush
+        .sendNotification(subscription, webPushPayload)
+        .catch((error) => {
+          console.error(
+            "Error sending web notification:",
+            error
+          );
+        });
     });
-    //const Authorization = global.tblConfigs.find((item) => item.key === configConstants.AUTHORIZATION_KEY).value;
-    //MobilwNotificationurl = 'https://fcm.googleapis.com/v1/projects/login-ee30d/messages:send';
-    const MobilwNotificationurl = global.tblConfigs.find((item) => item.key === configConstants.MOBILE_NOTIFICATION_URL).value;
-    const accessToken = await getAccessToken();
-    //const accessToken = "";
-    const promises = subscriptions.map(device => {
-      if (device.type === 'web') {
-        return global.webPush.sendNotification(device.subscription, webPushPayload).catch(error => {
-          console.error("Error sending web notification:", error);
-        });
-      } else if (device.type === 'mobile') {
-        let _Resjson = {}
-        _Resjson.message = mobilePayload;
-        _Resjson.message.token = device.token
-        const notificationPayload = { ..._Resjson };
-        return axios.post(MobilwNotificationurl, notificationPayload, {
+    const mobileNotificationUrl =
+      global.tblConfigs.find(
+        (item) =>
+          item.key === configConstants.MOBILE_NOTIFICATION_URL
+      ).value;
+    const accessToken = await getAccessToken(); 
+    // console.log("accessToken",accessToken)
+    const notificationPayload = {
+      message: {
+        topic,
+        notification : mobilePayload,
+        data : {
+          type : "match",
+          matchId : String(commentaryId)
+        },
+        apns: {
           headers: {
-            'Authorization': 'Bearer ' + accessToken,
-            'Content-Type': 'application/json',
+            "apns-priority": "10",
           },
-        }).catch(error => {
-          console.error("Error sending mobile notification:", error);
-        });
+          payload: {
+            aps: {
+              sound: "default",
+              badge: 1,
+            },
+          },
+        },
+      },
+    };
+    // console.log("NotificationPayload",notificationPayload )
+
+    const mobilePromise = axios.post(
+      mobileNotificationUrl,
+      notificationPayload,
+      {
+        headers: {
+          Authorization: "Bearer " + accessToken,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const results = await Promise.allSettled([
+      ...webPromises,
+      mobilePromise,
+    ]);
+    results.forEach((result) => {
+      if(result.status === "rejected"){
+        console.error("Notification failed", result.reason);
       }
     });
 
-    await Promise.all(promises);
+    console.log("Notifications sent successfully");
   } catch (error) {
     console.error("Error sending notifications: ", error);
   }
 }
+async function sendNewsNotification(data) {
+  const payload = {
+      title : data.title,
+      body : data.seoDescription,
+      ...(image ? { image } : {}),
+  };
+  const topic = `news`
+  try {
+    const mobileNotificationUrl =
+      global.tblConfigs.find(
+        (item) =>
+          item.key === configConstants.MOBILE_NOTIFICATION_URL
+      ).value;
+    const accessToken = await getAccessToken(); 
+    const newsPayload = {
+      message: {
+        topic,
+        notification : payload,
+        data : {
+          type : "news",
+          newsId : String(data.newsId)
+        },
+        apns: {
+          headers: {
+            "apns-priority": "10",
+          },
+          payload: {
+            aps: {
+              sound: "default",
+            },
+          },
+        },
+      },
+    };
 
+    const mobilePromise = axios.post(
+      mobileNotificationUrl,
+      newsPayload,
+      {
+        headers: {
+          Authorization: "Bearer " + accessToken,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    console.log("News notification sent successfully");
+  } catch (error) {
+    console.error("Error sending notifications: ", error);
+  }
+}
+async function sendVideoNotification(data) {
+  const payload = {
+      title : data.title,
+      body: data.description
+  };
+  const topic = `videos`
+  try {
+    const mobileNotificationUrl =
+      global.tblConfigs.find(
+        (item) =>
+          item.key === configConstants.MOBILE_NOTIFICATION_URL
+      ).value;
+    const accessToken = await getAccessToken(); 
+    const videoPayload = {
+      message: {
+        topic,
+        notification : payload,
+        data : {
+          type : "videos",
+          videoId : String(data.id)
+        },
+        apns: {
+          headers: {
+            "apns-priority": "10",
+          },
+          payload: {
+            aps: {
+              sound: "default",
+            },
+          },
+        },
+      },
+    };
+
+    const mobilePromise = axios.post(
+      mobileNotificationUrl,
+      videoPayload,
+      {
+        headers: {
+          Authorization: "Bearer " + accessToken,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  } catch (error) {
+    console.error("Error sending notifications: ", error);
+  }
+}
   async function webPushset(webpush){
     try {
         const publicVapidKey = global.tblConfigs.find((item) => item.key === configConstants.PUBLIC_VAPID_KEY)?.value;
