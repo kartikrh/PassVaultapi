@@ -2578,6 +2578,18 @@ const checkDataSendToClient = (data, startDate = "startDate", endDate = "endDate
   );
 }
 
+const getGlobalMemoryDataService = async (request, fastify) => {
+  const keyname = request.body.keyname;
+  if (!keyname) {
+    throw new Error("Keyname is required");
+  }
+  return {
+    message: global[keyname] ? "Data retrieved successfully" : "No data found for the provided keyname",
+    length: global[keyname]?.length || 0,
+    data: global[keyname] || null
+  };
+}
+
 module.exports = {    
   ERROR_CODES,
   error,
@@ -2710,5 +2722,6 @@ module.exports = {
   getOverCalculation,
   getDataFromTime,
   pushSessionData,
-  checkDataSendToClient
+  checkDataSendToClient,
+  getGlobalMemoryDataService
 };
