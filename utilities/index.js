@@ -2579,14 +2579,30 @@ const checkDataSendToClient = (data, startDate = "startDate", endDate = "endDate
 }
 
 const getGlobalMemoryDataService = async (request, fastify) => {
-  const keyname = request.body.keyname;
+  const { keyname, ...rest } = request.body;
   if (!keyname) {
     throw new Error("Keyname is required");
   }
+
+  if (!rest) {
+    return {
+      message: global[keyname] ? "Data retrieved successfully" : "No data found for the provided keyname",
+      length: global[keyname]?.length || 0,
+      data: global[keyname] || null
+    };
+  }
+
+  const filteredData = (global[keyname] || []).filter(item => {
+    return Object.entries(rest).every(([filterKey, filterValue]) => {
+      if (filterValue === undefined || filterValue === null) return true;
+      return item[filterKey] === filterValue;
+    });
+  });
+
   return {
-    message: global[keyname] ? "Data retrieved successfully" : "No data found for the provided keyname",
-    length: global[keyname]?.length || 0,
-    data: global[keyname] || null
+    message: filteredData.length > 0 ? "Data retrieved successfully" : "No data found for the provided keyname and filters",
+    length: filteredData.length,
+    data: filteredData
   };
 }
 
