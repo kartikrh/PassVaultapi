@@ -285,6 +285,7 @@ async function sendVideoNotification(data) {
   const payload = {
       title : data.title,
       body: data.description
+      //image
   };
   const topic = `videos`
   try {
@@ -375,6 +376,8 @@ async function sendVideoNotification(data) {
   module.exports = {
     sendNotification,
     webPushset,
-    sendMobileNotifications
+    sendMobileNotifications,
+    sendNewsNotification,
+    sendVideoNotification,
   };
   

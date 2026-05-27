@@ -13,6 +13,7 @@ const {
 } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
+const { sendNotificationByType } = require("../utilities/index");
 // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
 
 const getAllNewsService = async (request, fastify) => {
@@ -97,6 +98,7 @@ const createNewsService = async (request, fastify) => {
 
   const sendToClient = checkDataSendToClient(data[0]);
   if (sendToClient) {
+    sendNotificationByType({ ...data[0], type: "news"}, request, fastify);
     await callClientAPI(
       {
         moduleType: APIEndpointModuleType.updateSeoModule,
@@ -185,6 +187,10 @@ const updateNewsService = async (request, fastify) => {
   );
   global.tblNews[index] = body;
   global.pendingNewsToClient = global.pendingNewsToClient.filter(item => item.newsId !== body.newsId);
+  const sendToClient = checkDataSendToClient(body);
+  if (sendToClient) {
+    sendNotificationByType({ ...body, type: "news" }, request, fastify);
+  }
   await callClientAPI(
     {
       moduleType: APIEndpointModuleType.updateSeoModule,
