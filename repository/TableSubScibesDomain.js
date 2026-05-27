@@ -250,12 +250,20 @@ const updateDomainStatusQuery = async (request,fastify) =>{
           throw new Error(err.message);
     }
 }
-const insertSubScribeSubDomainQuery = async (body ,request,fastify) =>{
+const insertSubScribeSubDomainQuery = async (body, request, fastify) =>{
     try {
-        // insert sub domain
-        const values = body.subDomains.map((item) => {
-            return `(${body.subScribesDomainId}, '${item}', now())`
-        }).join(',');
+        if (!Array.isArray(body.subDomains) || body.subDomains.length === 0) {
+            return [];
+        }
+
+        const placeholders = body.subDomains
+            .map((_, index) => `($1, $${index + 2}, now())`)
+            .join(',');
+
+        const bind = [
+            body.subScribesDomainId,
+            ...body.subDomains
+        ];
 
         const data = await fastify.db.query(
             `
@@ -265,14 +273,15 @@ const insertSubScribeSubDomainQuery = async (body ,request,fastify) =>{
                 "wrCreatedDate"
             )
             VALUES 
-                ${values}
+                ${placeholders}
             RETURNING 
                 "wrSubScribesSubDomainId" as "subScribesSubDomainId",
                 "wrSubScribesDomainId" as "subScribesDomainId",
                 "wrSiteSubDomain" as "siteSubDomain"
             `,
             {
-                type: fastify.db.QueryTypes.INSERT
+                type: fastify.db.QueryTypes.INSERT,
+                bind
             }
         );
         
@@ -282,7 +291,7 @@ const insertSubScribeSubDomainQuery = async (body ,request,fastify) =>{
         errorLogger(
             fastify,
             err.message,
-            "DB ERROR --> repository/TableSubScribesDomain.js/updateDomainStatusQuery",
+            "DB ERROR --> repository/TableSubScribesDomain.js/insertSubScribeSubDomainQuery",
             request
           );
           throw new Error(err.message);

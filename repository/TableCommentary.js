@@ -5357,9 +5357,11 @@ const getCommentariesResultQuery = async (request, fastify) => {
 	    LEFT JOIN "tblCommentaryTeams" tct1 
         ON tc."wrCommentaryId" = tct1."wrCommentaryId" 
         AND tc."wrTeam1Id" = tct1."wrTeamId"
+		    AND tct1."wrIsDelete" = FALSE
       LEFT JOIN "tblCommentaryTeams" tct2 
         ON tc."wrCommentaryId" = tct2."wrCommentaryId" 
         AND tc."wrTeam2Id" = tct2."wrTeamId"
+		    AND tct2."wrIsDelete" = FALSE
       WHERE tc."wrIsDelete" = false 
       AND tc."wrIsTest" = false
       -- AND tc."wrIsActive" = true
