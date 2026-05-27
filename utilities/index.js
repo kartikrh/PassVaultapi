@@ -13,7 +13,7 @@ const {
 const {
   getCommentaryDetailByIdQuery,
 } = require("../repository/TableCommentary");
-const { sendNotification } = require("../WebPushHandler");
+const { sendNotification, sendNewsNotification, sendVideoNotification } = require("../WebPushHandler");
 const { entityConstant, nullTeamtpIds } = require("./entityConst");
 const {
   AllTeamPlayersQuery,
@@ -839,12 +839,32 @@ const sendNotificationByType = async (data, request, fastify) => {
         break;
       case NotificationSendType.pushNotification:
         // eventName = "onSendPushNotification";
+        if (data.type == "news") {
+          sendNewsNotification(
+            data.newsId,
+            data.title,
+            data.news,
+            data.image,
+          );
+          return true;
+        }
+        if (data.type == "video") {
+          sendVideoNotification(
+            data.id,
+            data.title,
+            data.description,
+            data.video,
+            data.videoURL,
+          );
+          return true;
+        }
         sendNotification(
           data.title,
           data.description,
           data.url,
           data.image,
-          data.icon
+          data.icon,
+          data.commentaryId
         );
         return true;
         break;

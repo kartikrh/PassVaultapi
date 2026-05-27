@@ -1561,9 +1561,6 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
         } else {
           comP = playerTpIdObj[p.batsman_id];
         }
-        if (p?.batsman_id == 114511) {
-          console.log("comP", comP)
-        }
         let batterData = response?.scorecard?.innings
           ?.find(i => i?.number === response?.live?.live_inning_number)?.batsmen
           ?.find(i1 => i1?.batsman_id == p?.batsman_id && i1?.batting == "true");
