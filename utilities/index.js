@@ -2584,7 +2584,7 @@ const getGlobalMemoryDataService = async (request, fastify) => {
     throw new Error("Keyname is required");
   }
 
-  if (!rest) {
+  if (Object.keys(rest).length === 0) {
     return {
       message: global[keyname] ? "Data retrieved successfully" : "No data found for the provided keyname",
       length: global[keyname]?.length || 0,
