@@ -13,7 +13,7 @@ const {
 const {
   getCommentaryDetailByIdQuery,
 } = require("../repository/TableCommentary");
-const { sendNotification } = require("../WebPushHandler");
+const { sendNotification, sendNewsNotification, sendVideoNotification } = require("../WebPushHandler");
 const { entityConstant, nullTeamtpIds } = require("./entityConst");
 const {
   AllTeamPlayersQuery,
@@ -839,12 +839,32 @@ const sendNotificationByType = async (data, request, fastify) => {
         break;
       case NotificationSendType.pushNotification:
         // eventName = "onSendPushNotification";
+        if (data.type == "news") {
+          sendNewsNotification(
+            data.newsId,
+            data.title,
+            data.news,
+            data.image,
+          );
+          return true;
+        }
+        if (data.type == "video") {
+          sendVideoNotification(
+            data.id,
+            data.title,
+            data.description,
+            data.video,
+            data.videoURL,
+          );
+          return true;
+        }
         sendNotification(
           data.title,
           data.description,
           data.url,
           data.image,
-          data.icon
+          data.icon,
+          data.commentaryId
         );
         return true;
         break;
@@ -2558,6 +2578,34 @@ const checkDataSendToClient = (data, startDate = "startDate", endDate = "endDate
   );
 }
 
+const getGlobalMemoryDataService = async (request, fastify) => {
+  const { keyname, ...rest } = request.body;
+  if (!keyname) {
+    throw new Error("Keyname is required");
+  }
+
+  if (Object.keys(rest).length === 0) {
+    return {
+      message: global[keyname] ? "Data retrieved successfully" : "No data found for the provided keyname",
+      length: global[keyname]?.length || 0,
+      data: global[keyname] || null
+    };
+  }
+
+  const filteredData = (global[keyname] || []).filter(item => {
+    return Object.entries(rest).every(([filterKey, filterValue]) => {
+      if (filterValue === undefined || filterValue === null) return true;
+      return item[filterKey] === filterValue;
+    });
+  });
+
+  return {
+    message: filteredData.length > 0 ? "Data retrieved successfully" : "No data found for the provided keyname and filters",
+    length: filteredData.length,
+    data: filteredData
+  };
+}
+
 module.exports = {    
   ERROR_CODES,
   error,
@@ -2690,5 +2738,6 @@ module.exports = {
   getOverCalculation,
   getDataFromTime,
   pushSessionData,
-  checkDataSendToClient
+  checkDataSendToClient,
+  getGlobalMemoryDataService
 };
