@@ -187,10 +187,10 @@ const updateNewsService = async (request, fastify) => {
   );
   global.tblNews[index] = body;
   global.pendingNewsToClient = global.pendingNewsToClient.filter(item => item.newsId !== body.newsId);
-  const sendToClient = checkDataSendToClient(body);
-  if (sendToClient) {
-    sendNotificationByType({ ...body, type: "news", sendType: 3 }, request, fastify);
-  }
+  // const sendToClient = checkDataSendToClient(body);
+  // if (sendToClient) {
+  //   sendNotificationByType({ ...body, type: "news", sendType: 3 }, request, fastify);
+  // }
   await callClientAPI(
     {
       moduleType: APIEndpointModuleType.updateSeoModule,
