@@ -56,7 +56,7 @@ const saveVideoLibraryService = async (request, fastify) => {
 
   const sendToClient = checkDataSendToClient(saveData, "from", "to");
   if (sendToClient) {
-    sendNotificationByType({ ...saveData, type: "video"}, request, fastify);
+    sendNotificationByType({ ...saveData, type: "video", sendType: 3 }, request, fastify);
     await callClientAPI(
       {
         moduleType: APIEndpointModuleType.updateSeoModule,
@@ -154,7 +154,7 @@ const editVideoLibraryService = async (request, fastify, data) => {
   global.pendingVideoLibraryToClient = global.pendingVideoLibraryToClient.filter(item => item.id !== updateData.id);
   const sendToClient = checkDataSendToClient(modifiedData[0], "from", "to");
   if (sendToClient) {
-    sendNotificationByType({ ...modifiedData[0], type: "video" }, request, fastify);
+    sendNotificationByType({ ...modifiedData[0], type: "video", sendType: 3 }, request, fastify);
   }
   await callClientAPI(
     {
