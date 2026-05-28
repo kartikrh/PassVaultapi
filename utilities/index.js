@@ -841,20 +841,22 @@ const sendNotificationByType = async (data, request, fastify) => {
         // eventName = "onSendPushNotification";
         if (data.type == "news") {
           sendNewsNotification(
-            data.newsId,
-            data.title,
-            data.news,
-            data.image,
+            {
+              newsId: data.newsId,
+              title: data.title,
+              SEODescription: data.SEODescription,
+              image: data.image,
+            }
           );
           return true;
         }
         if (data.type == "video") {
           sendVideoNotification(
-            data.id,
-            data.title,
-            data.description,
-            data.video,
-            data.videoURL,
+            {
+              id: data.id,
+              title: data.title,
+              description: data.description,
+            }
           );
           return true;
         }

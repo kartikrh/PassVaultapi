@@ -232,13 +232,8 @@ async function sendNotification(title, message, url, image, icon, commentaryId) 
   }
 }
 async function sendNewsNotification(data) {
-  const payload = {
-      title : data.title,
-      body : data.seoDescription,
-      ...(image ? { image } : {}),
-  };
-  const topic = `news`
   try {
+    const topic = `news`
     const mobileNotificationUrl =
       global.tblConfigs.find(
         (item) =>
@@ -248,10 +243,22 @@ async function sendNewsNotification(data) {
     const newsPayload = {
       message: {
         topic,
-        notification : payload,
+        notification : {
+          title: data.title,
+          body: data.SEODescription,
+        },
         data : {
           type : "news",
-          newsId : String(data.newsId)
+          newsId : String(data.newsId),
+          image: data?.image ?? ""
+        },
+        android: {
+          priority: "high",
+
+          notification: {
+            sound: "default",
+            image: data?.image ?? ""
+          },
         },
         apns: {
           headers: {
@@ -260,7 +267,11 @@ async function sendNewsNotification(data) {
           payload: {
             aps: {
               sound: "default",
+              mutableContent: true,
             },
+          },
+          fcm_options: {
+            image: data?.image ?? "",
           },
         },
       },
@@ -271,7 +282,7 @@ async function sendNewsNotification(data) {
       newsPayload,
       {
         headers: {
-          Authorization: "Bearer " + accessToken,
+          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
       }
@@ -282,13 +293,8 @@ async function sendNewsNotification(data) {
   }
 }
 async function sendVideoNotification(data) {
-  const payload = {
-      title : data.title,
-      body: data.description
-      //image
-  };
-  const topic = `videos`
   try {
+    const topic = `videos`
     const mobileNotificationUrl =
       global.tblConfigs.find(
         (item) =>
@@ -298,10 +304,20 @@ async function sendVideoNotification(data) {
     const videoPayload = {
       message: {
         topic,
-        notification : payload,
+        notification : {
+          title: data.title,
+          body: data.description,
+        },
         data : {
           type : "videos",
           videoId : String(data.id)
+        },
+        android: {
+          priority: "high",
+
+          notification: {
+            sound: "default",
+          },
         },
         apns: {
           headers: {
@@ -310,6 +326,7 @@ async function sendVideoNotification(data) {
           payload: {
             aps: {
               sound: "default",
+              mutableContent: true,
             },
           },
         },
@@ -321,11 +338,12 @@ async function sendVideoNotification(data) {
       videoPayload,
       {
         headers: {
-          Authorization: "Bearer " + accessToken,
+          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
       }
     );
+    console.log("Video notification sent successfully");
   } catch (error) {
     console.error("Error sending notifications: ", error);
   }
