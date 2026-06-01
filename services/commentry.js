@@ -104,7 +104,8 @@ const {
   getComTeamQuery,
   getAllCommentaryByCompetitionIdQuery,
   deleteCommentaryTeamQuery,
-  abandonedCommentaryQuery
+  abandonedCommentaryQuery,
+  getAllOversDataQuery
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const { withSentryCronProfiling } = require("../utilities/sentryCron");
