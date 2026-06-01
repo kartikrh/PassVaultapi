@@ -26158,7 +26158,7 @@ const getCommentaryScoreStatsService = async (request, fastify) => {
   const team1 = global.tblTeams.find(t => t.teamId === getCommentary.team1Id);
   const team2 = global.tblTeams.find(t => t.teamId === getCommentary.team2Id);
 
-  const overData = global.tblOvers.filter(to => to.commentaryId === commentaryId && to.isDelete === false);
+  const overData = await getAllOversDataQuery(`"wrIsDelete" = false AND "wrCommentaryId" = ${getCommentary.commentaryId}`, fastify);
   const matchType = global.tblMatchTypes.find(mt => mt.matchTypeId === getCommentary.matchTypeId);
 
   const getTotalBalls = getOverCalculation(matchType?.oversPerInings);
