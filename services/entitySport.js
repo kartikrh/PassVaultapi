@@ -3127,12 +3127,26 @@ const matchCompleteService = async (data , fastify,comDetails) =>{
   //   ...bowlTeam,
   //   isWin : !isBatTeamWon
   // }
+  let playerToUpdate = global.tblCommentaryPlayers.filter(
+    (item) =>
+      item.commentaryId == comDetails.commentaryId &&
+      item.currentInnings == comDetails.currentInnings &&
+      (item.onStrike == true || item.isPlay == true)
+  );
+  playerToUpdate = playerToUpdate.map((item) => {
+    return {
+      ...item,
+      isPlay: null,
+      onStrike: null,
+    };
+  }); 
 
   const commentaryTeams = [upBatTeam, upBowlTeam].filter(Boolean);
 
   await syncEntitySportCommentaryService({
     commentaryId: comDetails.commentaryId,
     commentaryDetails:upComDetails,
+    commentaryPlayers : playerToUpdate,
     // commentaryTeams: [
     //   upBatTeam,
     //   upBowlTeam
