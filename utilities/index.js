@@ -2063,7 +2063,7 @@ const CompetitionStatisticsType = {
     "Highest Individual Score": {
       key: "batting_most_runs_innings",
       enum: 2,
-      valueKey: "runs"
+      valueKey: "highestRun"
     },
     "Highest Strike Rates": {
       key: "batting_highest_strikerate",
@@ -2073,7 +2073,7 @@ const CompetitionStatisticsType = {
     "Highest Strike Rates (Innings)": {
       key: "batting_highest_strikerate_innings",
       enum: 4,
-      valueKey: "average"
+      valueKey: "hStrike"
     },
     "Highest Average": {
       key: "batting_highest_average",
@@ -2130,7 +2130,7 @@ const CompetitionStatisticsType = {
     "Best Bowling Figures": {
       key: "bowling_best_bowling_figures",
       enum: 15,
-      valueKey: ""
+      valueKey: "bestinning"
     },
     "Best Strike Rates": {
       key: "bowling_best_strike_rates",
@@ -2150,7 +2150,7 @@ const CompetitionStatisticsType = {
     "Most runs conceded in an innings": {
       key: "bowling_most_runs_conceded_innings",
       enum: 19,
-      valueKey: ""
+      valueKey: "bestinning"
     },
     "Four Wickets": {
       key: "bowling_four_wickets",
