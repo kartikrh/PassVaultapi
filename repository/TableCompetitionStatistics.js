@@ -252,7 +252,6 @@ const updateCompetitionStatisticsByIdQuery = async (data, fastify, request) => {
 };
 
 const deleteCompetitionStatisticsByIdQuery = async (competitionStatisticsId, fastify, request) => {
-    console.log("🚀 ~ deleteCompetitionStatisticsByIdQuery ~ competitionStatisticsId:", competitionStatisticsId)
     try {
         await fastify.db.query(
             `
