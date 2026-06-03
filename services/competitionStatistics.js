@@ -300,6 +300,7 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
 
                     if (getRecords.length > 0) {
                         const getRecordIds = getRecords.map(r => r.competitionStatisticsId);
+                        console.log("🚀 ~ importCompetitionstatisticsService ~ getRecordIds:", getRecordIds)
                         await deleteCompetitionStatisticsByIdQuery(getRecordIds, fastify, request);
                         global.tblCompetitionStatistics = global.tblCompetitionStatistics.filter(tcs => !getRecordIds.includes(tcs.competitionStatisticsId));
                     }
