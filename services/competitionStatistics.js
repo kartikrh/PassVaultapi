@@ -104,6 +104,7 @@ const createCompetitionStatisticsService = async (request, fastify) => {
         }
     }
 
+    console.log("🚀 ~ createCompetitionStatisticsService ~ request.body:", request.body)
     const getCompetitionStatisticsData = global.tblCompetitionStatistics.find(tcs => {
         const commonCondition = tcs.eventTypeId === eventTypeId &&
             tcs.competitionId === competitionId &&
@@ -118,6 +119,7 @@ const createCompetitionStatisticsService = async (request, fastify) => {
 
         return false;
     });
+    console.log("🚀 ~ createCompetitionStatisticsService ~ getCompetitionStatisticsData:", getCompetitionStatisticsData)
 
 
     if (getCompetitionStatisticsData) {
