@@ -104,7 +104,6 @@ const createCompetitionStatisticsService = async (request, fastify) => {
         }
     }
 
-    console.log("🚀 ~ createCompetitionStatisticsService ~ request.body:", request.body)
     const getCompetitionStatisticsData = global.tblCompetitionStatistics.find(tcs => {
         const commonCondition = tcs.eventTypeId === eventTypeId &&
             tcs.competitionId === competitionId &&
@@ -119,7 +118,6 @@ const createCompetitionStatisticsService = async (request, fastify) => {
 
         return false;
     });
-    console.log("🚀 ~ createCompetitionStatisticsService ~ getCompetitionStatisticsData:", getCompetitionStatisticsData)
 
 
     if (getCompetitionStatisticsData) {
@@ -302,7 +300,6 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
 
                     if (getRecords.length > 0) {
                         const getRecordIds = getRecords.map(r => r.competitionStatisticsId);
-                        console.log("🚀 ~ importCompetitionstatisticsService ~ getRecordIds:", getRecordIds)
                         await deleteCompetitionStatisticsByIdQuery(getRecordIds, fastify, request);
                         global.tblCompetitionStatistics = global.tblCompetitionStatistics.filter(tcs => !getRecordIds.includes(tcs.competitionStatisticsId));
                     }
