@@ -48,17 +48,24 @@ const createCompetitionStatisticsService = async (request, fastify) => {
         throw new Error("Event Type Id is required");
     } else if (!competitionId) {
         throw new Error("Competition Id is required");
+    } else if (!matchTypeId) {
+        throw new Error("Match Type Id is required");
     } else if (!competitionStatisticsTypeEnum) {
         throw new Error("Competition Statistics Type Enum is required");
-    } else if (!displayOrder) {
+    } else if (displayOrder === undefined || displayOrder === null) {
         throw new Error("Display Order is required");
-    } else if (!value) {
+    } else if (value === undefined || value === null || value === "") {
         throw new Error("Value is required");
     }
 
     const getCompetition = global.tblCompetitions.find(tc => tc.competitionId === competitionId);
     if (!getCompetition) {
         throw new Error(`Competition with id ${competitionId} not Found`);
+    }
+
+    const getMatchType = global.tblMatchTypes.find(mt => mt.matchTypeId === matchTypeId);
+    if (!getMatchType) {
+        throw new Error(`Match Type with id ${matchTypeId} not Found`);
     }
 
     const getCompetitionStatisticsTypeData = global.tblCompetitionStatisticsType.find(tcst => tcst.entityEnum === competitionStatisticsTypeEnum);
@@ -180,7 +187,7 @@ const updateCompetitionStatisticsService = async (request, fastify) => {
             tcs.competitionStatisticsId !== competitionStatisticsId &&
             tcs.eventTypeId === (eventTypeId !== undefined ? eventTypeId : getCompetitionStatistics.eventTypeId) &&
             tcs.competitionId === (competitionId !== undefined ? competitionId : getCompetitionStatistics.competitionId) &&
-            tcs.matchTypeId !== matchTypeId &&
+            tcs.matchTypeId === (matchTypeId !== undefined ? matchTypeId : getCompetitionStatistics.matchTypeId) &&
             tcs.competitionStatisticsTypeId === (competitionStatisticsTypeEnum !== undefined ? getCompetitionStatisticsType.competitionStatisticsTypeId : getCompetitionStatistics.competitionStatisticsTypeId) &&
             tcs.displayOrder === displayOrder &&
             !tcs.isDeleted
