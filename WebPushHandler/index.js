@@ -156,26 +156,26 @@ async function sendNotification(title, message, url, image, icon, commentaryId) 
   };
   const topic = `match_${commentaryId}`
   try {
-    const webSubscriptions = global.tblDevices.filter(
-      (device) => device.deviceType === 1
-    );
-    const webPromises = webSubscriptions.map((device) => {
-      const subscription = {
-        endpoint: device.pushEndpoint,
-        keys: {
-          p256dh: device.pushP256DH,
-          auth: device.pushAuth,
-        },
-      };
-      return global.webPush
-        .sendNotification(subscription, webPushPayload)
-        .catch((error) => {
-          console.error(
-            "Error sending web notification:",
-            error
-          );
-        });
-    });
+    // const webSubscriptions = global.tblDevices.filter(
+    //   (device) => device.deviceType === 1
+    // );
+    // const webPromises = webSubscriptions.map((device) => {
+    //   const subscription = {
+    //     endpoint: device.pushEndpoint,
+    //     keys: {
+    //       p256dh: device.pushP256DH,
+    //       auth: device.pushAuth,
+    //     },
+    //   };
+    //   return global.webPush
+    //     .sendNotification(subscription, webPushPayload)
+    //     .catch((error) => {
+    //       console.error(
+    //         "Error sending web notification:",
+    //         error
+    //       );
+    //     });
+    // });
     const mobileNotificationUrl =
       global.tblConfigs.find(
         (item) =>
@@ -216,15 +216,7 @@ async function sendNotification(title, message, url, image, icon, commentaryId) 
         },
       }
     );
-    const results = await Promise.allSettled([
-      ...webPromises,
-      mobilePromise,
-    ]);
-    results.forEach((result) => {
-      if(result.status === "rejected"){
-        console.error("Notification failed", result.reason);
-      }
-    });
+  
 
     console.log("Notifications sent successfully");
   } catch (error) {
