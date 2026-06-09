@@ -205,7 +205,6 @@ async function sendNotification(title, message, url, image, icon, commentaryId) 
       },
     };
     // console.log("NotificationPayload",notificationPayload )
-
     const mobilePromise = await axios.post(
       mobileNotificationUrl,
       notificationPayload,
