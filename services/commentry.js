@@ -13544,7 +13544,8 @@ const notiConfigContentReplaceService = async (
   commentaryId,
   request,
   fastify,
-  cId
+  cId = null,
+  ballDetails = null
 ) => {
   let data = global.tblNotificationConfig.find(
     (elem) => elem.isActive === true && elem.eventName === eventName
@@ -13582,17 +13583,17 @@ const notiConfigContentReplaceService = async (
     const battingTeamId = battingTeam?.teamId;
     
     // Find the most recent ball-by-ball entry for the batting team
-    const lastBall = global.tblCommentaryBallByBall
-      .filter(item => 
-        item.commentaryId === commentaryId && 
-        item.teamId === battingTeamId
-      )
-      .sort((a, b) => b.commentaryBallByBallId - a.commentaryBallByBallId)[0];
+    // const lastBall = global.tblCommentaryBallByBall
+    //   .filter(item => 
+    //     item.commentaryId === commentaryId && 
+    //     item.teamId === battingTeamId
+    //   )
+    //   .sort((a, b) => b.commentaryBallByBallId - a.commentaryBallByBallId)[0];
 
-    if (lastBall && lastBall?.ballIsBoundry) {
+    if (ballDetails && ballDetails?.ballIsBoundry) {
         // Find the player's name using the striker ID from the last ball
         const strikerPlayer = global.tblCommentaryPlayers.find(player =>
-            player.commentaryPlayerId === lastBall?.batStrikeId
+            player.commentaryPlayerId === ballDetails?.batStrikeId
         );
         batterNameForBoundary = strikerPlayer?.playerName || "";
     }
@@ -13689,6 +13690,10 @@ const notiConfigContentReplaceService = async (
   });
 
   if (data && commentary.isActive === true) {
+      sendNotification(commentary.eventName, 
+       content, null, null,
+       null, commentary.commentaryId
+      )
     if (
       global?.clientSocketIo !== undefined &&
       global?.clientSocketIo.length > 0
@@ -13696,10 +13701,7 @@ const notiConfigContentReplaceService = async (
       global.clientSocketIo.forEach((socket) => {
         socket.client.emit("notificationSend", { ...data, title, content ,eventId : commentary.eventRefId ?? null, commentaryId: commentary?.commentaryId ?? null});
       });
-      sendNotification(commentary.eventName, 
-       content, null, null,
-       null, commentary.commentaryId
-      )
+      
       let notificationData = {
         title: commentary.eventName,
         description: content,
@@ -23159,30 +23161,30 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
             } else {
                 global.tblCommentaryBallByBall[findBallByBall] = ballDetails;
             }
-            // // call Third Party API
-            // if (ballDetails.ballType > 0) {
+            // call Third Party API
+            if (ballDetails.ballType > 0) {
+              let _wkt = ballDetails.ballIsWicket;
+              let _bory = ballDetails.ballIsBoundry;
+              if (_bory == true) {
+                  let boundaryType;
+                  let ballRun = ballDetails.ballRun;
+                  if (ballRun == 4) {
+                      boundaryType = ballRun;
+                  }
+                  if (ballRun == 6) {
+                      boundaryType = ballRun;
+                  }
 
-            //   let _wkt = ballDetails.ballIsWicket;
-            //   let _bory = ballDetails.ballIsBoundry;
-            //   if (_bory == true) {
-            //       let boundaryType;
-            //       let ballRun = ballDetails.ballRun;
-            //       if (ballRun == 4) {
-            //           boundaryType = ballRun;
-            //       }
-            //       if (ballRun == 6) {
-            //           boundaryType = ballRun;
-            //       }
-
-            //       await notiConfigContentReplaceService(
-            //           EventName.BOUNDARY,
-            //           commentaryData.commentaryId,
-            //           request,
-            //           fastify,
-            //           boundaryType
-            //       );
-            //   }
-            // }
+                  await notiConfigContentReplaceService(
+                      EventName.BOUNDARY,
+                      commentaryData.commentaryId,
+                      request,
+                      fastify,
+                      boundaryType,
+                      ballDetails
+                  );
+              }
+            }
           }
           // sendDataForSocketUpdate.dataToUpdate.push({
           //   module: "commentaryBallByBall",
