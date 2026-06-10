@@ -149,9 +149,14 @@ async function _sendNotification(title, message, url, image, icon) {
 async function sendNotification(title, message, url, image, icon, commentaryId) {
   const payload = JSON.stringify({ title, message, url, image, icon });
   const webPushPayload = JSON.stringify({ title, message, url, image, icon });
+  let content  = message
+    .replace(/<[^>]*>/g, '')      // Remove HTML tags
+    .replace(/&nbsp;/gi, ' ')     // Replace &nbsp; with space
+    .replace(/&[a-z0-9#]+;/gi, ''); // Remove other HTML entities
+    
   const mobilePayload = {
       title,
-      body: message,
+      body: content,
       ...(image ? { image } : {})
   };
   const topic = `match_${commentaryId}`
