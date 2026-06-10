@@ -153,6 +153,7 @@ async function sendNotification(title, message, url, image, icon, commentaryId) 
     .replace(/<[^>]*>/g, '')      // Remove HTML tags
     .replace(/&nbsp;/gi, ' ')     // Replace &nbsp; with space
     .replace(/&[a-z0-9#]+;/gi, ''); // Remove other HTML entities
+    
   const mobilePayload = {
       title,
       body: content,
