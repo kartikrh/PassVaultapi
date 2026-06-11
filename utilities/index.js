@@ -1123,7 +1123,7 @@ const callTPAPI = async (data, fastify) => {
 const clientProcessStatus = {
   ADDUSERDETAIL: 1,
   MOEMAILVERIFIED: 2,
-  PASSWORDSET: 3,
+  COMPLETED: 3,
 };
 const sendOtpToMobile = async (data, request, fastify) => {
   try {

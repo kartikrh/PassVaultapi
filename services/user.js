@@ -1559,7 +1559,7 @@ const verifyMobileNoAppService = async (request, fastify) => {
     // global.tblClient[index].registrationProcessStatus = 2;
     const token = generateToken({ clientId: id });
     const result = await updateClientValidateKeysQuery({
-      clientId: id, isUserActive: 1, isActive: true, registrationProcessStatus: clientProcessStatus.PASSWORDSET
+      clientId: id, isUserActive: 1, isActive: true, registrationProcessStatus: clientProcessStatus.COMPLETED
     }, request, fastify)
     global.tblClient[index] = {
       ...global.tblClient[index],
@@ -1596,7 +1596,7 @@ const verifyMobileNoAppService = async (request, fastify) => {
       // global.tblClient[index].registrationProcessStatus = 2;
       const token = generateToken({ clientId: id });
       const result = await updateClientValidateKeysQuery({
-        clientId: id, isUserActive: 1, isActive: true, registrationProcessStatus: clientProcessStatus.PASSWORDSET
+        clientId: id, isUserActive: 1, isActive: true, registrationProcessStatus: clientProcessStatus.COMPLETED
       }, request, fastify)
       global.tblClient[index] = {
         ...global.tblClient[index],
@@ -1624,7 +1624,7 @@ const verifyMobileNoAppService = async (request, fastify) => {
 
       const token = generateToken({ clientId: id });
       const result = await updateClientValidateKeysQuery({
-        clientId: id, isUserActive: 1, isActive: true, registrationProcessStatus: clientProcessStatus.PASSWORDSET
+        clientId: id, isUserActive: 1, isActive: true, registrationProcessStatus: clientProcessStatus.COMPLETED
       }, request, fastify)
       global.tblClient[index] = {
         ...global.tblClient[index],
@@ -2003,7 +2003,7 @@ const verifySeamlessOTPService = async (request, fastify) => {
 
     const token = generateToken({ clientId: id });
     const result = await updateClientValidateKeysQuery({
-      clientId: id, isUserActive: 1, isActive: true, registrationProcessStatus: clientProcessStatus.PASSWORDSET
+      clientId: id, isUserActive: 1, isActive: true, registrationProcessStatus: clientProcessStatus.COMPLETED
     }, request, fastify);
 
     global.tblClient[index] = {
