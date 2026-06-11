@@ -13547,175 +13547,185 @@ const notiConfigContentReplaceService = async (
   cId = null,
   ballDetails = null
 ) => {
-  let data = global.tblNotificationConfig.find(
+  try{
+      let data = global.tblNotificationConfig.find(
     (elem) => elem.isActive === true && elem.eventName === eventName
-  );
-
-  if (!data) {
-    return;
-  }
-
-  const commentary = global.tblCommentaries.find(
-    (item) => item?.commentaryId === commentaryId
-  );
-  const commentaryTeams = global.tblCommentaryTeams.filter(item => item.commentaryId === commentaryId);
-
-  const battingTeam = commentaryTeams.find(item => item.teamStatus === 1);
-  const bowlingTeam = commentaryTeams.find(item => item.teamStatus === 2);
-  const tossWonBy = commentaryTeams.find(item => item.teamId == commentary?.tossWonBy)?.teamName;
-  const teamData = commentaryTeams.find(item => item.teamBattingOrder === 2);
-
-  let wicketData = null;
-  let batterNameForBoundary = "";
-
-  // const playerName = global.tblCommentaryWicket.find(item => item.commentaryId === commentaryId &&
-  //   item.commentaryWicketId == cId
-  // );
-
-  if (eventName === EventName.WICKET && cId) {
-    wicketData = global.tblCommentaryWicket.find(item => item.commentaryId === commentaryId &&
-      item.commentaryWicketId == cId
     );
-  }
 
-  // Logic to get the player name for BOUNDARY event (using last ball)
-  if (eventName === EventName.BOUNDARY) {
-    const battingTeamId = battingTeam?.teamId;
-    
-    // Find the most recent ball-by-ball entry for the batting team
-    // const lastBall = global.tblCommentaryBallByBall
-    //   .filter(item => 
-    //     item.commentaryId === commentaryId && 
-    //     item.teamId === battingTeamId
-    //   )
-    //   .sort((a, b) => b.commentaryBallByBallId - a.commentaryBallByBallId)[0];
-
-    if (ballDetails && ballDetails?.ballIsBoundry) {
-        // Find the player's name using the striker ID from the last ball
-        const strikerPlayer = global.tblCommentaryPlayers.find(player =>
-            player.commentaryPlayerId === ballDetails?.batStrikeId
-        );
-        batterNameForBoundary = strikerPlayer?.playerName || "";
+    if (!data) {
+      return;
     }
-  }
-  const date = commentary?.eventDate ? convertDate(commentary.eventDate, "ddd MMM D YYYY") : "";
-  const title = data?.title.replace(/\{(.*?)\}/g, (_, key) => {
-    const normalizedKey = key.toLowerCase();
-    const batsmanname = eventName === EventName.WICKET 
-      ? wicketData?.batterName ?? ""
-      : batterNameForBoundary;
-    const valueMap = {
-      eventname: commentary.eventName ?? "",
-      eventtype: commentary.eventType ?? "",
-      eventdate: commentary.eventDate ?? "",
-      date: date ?? "",
-      location: commentary.location ?? "",
-      battingteam: battingTeam?.teamName ?? "",
-      bowlername: wicketData?.bowlerName ?? "",
-      batsmanname: batsmanname ?? "",
-      // bowlername: playerName?.bowlerName ?? "",
-      // batsmanname: playerName?.batterName ?? "",
-      batsmanrun: (wicketData?.playerRun != null) ? wicketData?.playerRun : "",
-      batsmanball: (wicketData?.playerBalls != null) ? wicketData?.playerBalls : "",
-      wickettype: wicketType[wicketData?.wicketType] ?? "",
-      // batsmanrun: (playerName?.playerRun != null) ? playerName?.playerRun : "",
-      // wickettype: wicketType[playerName?.wicketType] ?? "",
-      bowlingteam: bowlingTeam?.teamName ?? "",
-      trilscore: battingTeam?.teamScore ?? "",
-      rmk: commentary.rmk ?? "",
-      wonremark: commentary.winRmk ?? "",
-      winnername: commentary?.winnerName ?? "",
-      winnerid: commentary?.winnerId ?? 0,
-      boundarytype: cId ?? "",
-      team1name: commentary?.team1Name ?? "",
-      team2name: commentary?.team2Name ?? "",
-      matchtype: commentary?.matchType ?? "",
-      competition: commentary?.competition ?? "",
-      result: commentary?.result ?? "",
-      eventtype: commentary?.eventType ?? "",
-      displaystatus: commentary?.displayStatus ?? "",
-      eventno: commentary?.eventNo ?? "",
-      tosswonby: tossWonBy,
-      runs: battingTeam?.teamScore ?? "0",
-      wickets: battingTeam?.teamWicket ?? "0",
-      overs: battingTeam?.teamOver ?? "0.0",
-    };
 
-    return valueMap[normalizedKey] ?? "";
-  });
+    const commentary = global.tblCommentaries.find(
+      (item) => item?.commentaryId === commentaryId
+    );
+    const commentaryTeams = global.tblCommentaryTeams.filter(item => item.commentaryId === commentaryId);
 
-  const content = data.content.replace(/\{(.*?)\}/g, (_, key) => {
-    const normalizedKey = key.toLowerCase();
-    const batsmanname = eventName === EventName.WICKET 
-      ? wicketData?.batterName ?? ""
-      : batterNameForBoundary;
-    const valueMap = {
-      eventname: commentary.eventName ?? "",
-      eventtype: commentary.eventType ?? "",
-      eventdate: commentary.eventDate ?? "",
-      date: date ?? "",
-      location: commentary.location ?? "",
-      battingteam: battingTeam?.teamName ?? "",
-      bowlername: wicketData?.bowlerName ?? "",
-      batsmanname: batsmanname ?? "",
-      // bowlername: playerName?.bowlerName ?? "",
-      // batsmanname: playerName?.batterName ?? "",
-      batsmanrun: (wicketData?.playerRun != null) ? wicketData?.playerRun : "",
-      batsmanball: (wicketData?.playerBalls != null) ? wicketData?.playerBalls : "",
-      wickettype: wicketType[wicketData?.wicketType] ?? "",
-      // batsmanrun: (playerName?.playerRun != null) ? playerName?.playerRun : "",
-      // wickettype: wicketType[playerName?.wicketType] ?? "",
-      bowlingteam: bowlingTeam?.teamName ?? "",
-      trilscore: battingTeam?.teamScore ?? "",
-      rmk: commentary.rmk ?? "",
-      wonremark: commentary.winRmk ?? "",
-      winnername: commentary?.winnerName ?? "",
-      winnerid: commentary?.winnerId ?? 0,
-      boundarytype: cId ?? "",
-      team1name: commentary?.team1Name ?? "",
-      team2name: commentary?.team2Name ?? "",
-      matchtype: commentary?.matchType ?? "",
-      competition: commentary?.competition ?? "",
-      result: commentary?.result ?? "",
-      eventtype: commentary?.eventType ?? "",
-      displaystatus: commentary?.displayStatus ?? "",
-      eventno: commentary?.eventNo ?? "",
-      tosswonby: tossWonBy,
-      runs: battingTeam?.teamScore ?? "0",
-      wickets: battingTeam?.teamWicket ?? "0",
-      overs: battingTeam?.teamOver ?? "0.0",
-    };
+    const battingTeam = commentaryTeams.find(item => item.teamStatus === 1);
+    const bowlingTeam = commentaryTeams.find(item => item.teamStatus === 2);
+    const tossWonBy = commentaryTeams.find(item => item.teamId == commentary?.tossWonBy)?.teamName;
+    const teamData = commentaryTeams.find(item => item.teamBattingOrder === 2);
 
-    return valueMap[normalizedKey] ?? "";
-  });
+    let wicketData = null;
+    let batterNameForBoundary = "";
 
-  if (data && commentary.isActive === true) {
-      sendNotification(commentary.eventName, 
-       content, null, null,
-       null, commentary.commentaryId
-      )
-    if (
-      global?.clientSocketIo !== undefined &&
-      global?.clientSocketIo.length > 0
-    ) {
-      global.clientSocketIo.forEach((socket) => {
-        socket.client.emit("notificationSend", { ...data, title, content ,eventId : commentary.eventRefId ?? null, commentaryId: commentary?.commentaryId ?? null});
-      });
-      
-      let notificationData = {
-        title: commentary.eventName,
-        description: content,
-        commentaryId: commentary.commentaryId,
-        // subTitle: title,
-      };
-      await insertNotificationViaNotiConfigQuery(
-        notificationData,
-        request,
-        fastify
+    // const playerName = global.tblCommentaryWicket.find(item => item.commentaryId === commentaryId &&
+    //   item.commentaryWicketId == cId
+    // );
+
+    if (eventName === EventName.WICKET && cId) {
+      wicketData = global.tblCommentaryWicket.find(item => item.commentaryId === commentaryId &&
+        item.commentaryWicketId == cId
       );
     }
+
+    // Logic to get the player name for BOUNDARY event (using last ball)
+    if (eventName === EventName.BOUNDARY) {
+      const battingTeamId = battingTeam?.teamId;
+      
+      // Find the most recent ball-by-ball entry for the batting team
+      // const lastBall = global.tblCommentaryBallByBall
+      //   .filter(item => 
+      //     item.commentaryId === commentaryId && 
+      //     item.teamId === battingTeamId
+      //   )
+      //   .sort((a, b) => b.commentaryBallByBallId - a.commentaryBallByBallId)[0];
+
+      if (ballDetails && ballDetails?.ballIsBoundry) {
+          // Find the player's name using the striker ID from the last ball
+          const strikerPlayer = global.tblCommentaryPlayers.find(player =>
+              player.commentaryPlayerId === ballDetails?.batStrikeId
+          );
+          batterNameForBoundary = strikerPlayer?.playerName || "";
+      }
+    }
+    const date = commentary?.eventDate ? convertDate(commentary.eventDate, "ddd MMM D YYYY") : "";
+    const title = data?.title.replace(/\{(.*?)\}/g, (_, key) => {
+      const normalizedKey = key.toLowerCase();
+      const batsmanname = eventName === EventName.WICKET 
+        ? wicketData?.batterName ?? ""
+        : batterNameForBoundary;
+      const valueMap = {
+        eventname: commentary.eventName ?? "",
+        eventtype: commentary.eventType ?? "",
+        eventdate: commentary.eventDate ?? "",
+        date: date ?? "",
+        location: commentary.location ?? "",
+        battingteam: battingTeam?.teamName ?? "",
+        bowlername: wicketData?.bowlerName ?? "",
+        batsmanname: batsmanname ?? "",
+        // bowlername: playerName?.bowlerName ?? "",
+        // batsmanname: playerName?.batterName ?? "",
+        batsmanrun: (wicketData?.playerRun != null) ? wicketData?.playerRun : "",
+        batsmanball: (wicketData?.playerBalls != null) ? wicketData?.playerBalls : "",
+        wickettype: wicketType[wicketData?.wicketType] ?? "",
+        // batsmanrun: (playerName?.playerRun != null) ? playerName?.playerRun : "",
+        // wickettype: wicketType[playerName?.wicketType] ?? "",
+        bowlingteam: bowlingTeam?.teamName ?? "",
+        trilscore: battingTeam?.teamScore ?? "",
+        rmk: commentary.rmk ?? "",
+        wonremark: commentary.winRmk ?? "",
+        winnername: commentary?.winnerName ?? "",
+        winnerid: commentary?.winnerId ?? 0,
+        boundarytype: cId ?? "",
+        team1name: commentary?.team1Name ?? "",
+        team2name: commentary?.team2Name ?? "",
+        matchtype: commentary?.matchType ?? "",
+        competition: commentary?.competition ?? "",
+        result: commentary?.result ?? "",
+        eventtype: commentary?.eventType ?? "",
+        displaystatus: commentary?.displayStatus ?? "",
+        eventno: commentary?.eventNo ?? "",
+        tosswonby: tossWonBy,
+        runs: battingTeam?.teamScore ?? "0",
+        wickets: battingTeam?.teamWicket ?? "0",
+        overs: battingTeam?.teamOver ?? "0.0",
+      };
+
+      return valueMap[normalizedKey] ?? "";
+    });
+
+    const content = data.content.replace(/\{(.*?)\}/g, (_, key) => {
+      const normalizedKey = key.toLowerCase();
+      const batsmanname = eventName === EventName.WICKET 
+        ? wicketData?.batterName ?? ""
+        : batterNameForBoundary;
+      const valueMap = {
+        eventname: commentary.eventName ?? "",
+        eventtype: commentary.eventType ?? "",
+        eventdate: commentary.eventDate ?? "",
+        date: date ?? "",
+        location: commentary.location ?? "",
+        battingteam: battingTeam?.teamName ?? "",
+        bowlername: wicketData?.bowlerName ?? "",
+        batsmanname: batsmanname ?? "",
+        // bowlername: playerName?.bowlerName ?? "",
+        // batsmanname: playerName?.batterName ?? "",
+        batsmanrun: (wicketData?.playerRun != null) ? wicketData?.playerRun : "",
+        batsmanball: (wicketData?.playerBalls != null) ? wicketData?.playerBalls : "",
+        wickettype: wicketType[wicketData?.wicketType] ?? "",
+        // batsmanrun: (playerName?.playerRun != null) ? playerName?.playerRun : "",
+        // wickettype: wicketType[playerName?.wicketType] ?? "",
+        bowlingteam: bowlingTeam?.teamName ?? "",
+        trilscore: battingTeam?.teamScore ?? "",
+        rmk: commentary.rmk ?? "",
+        wonremark: commentary.winRmk ?? "",
+        winnername: commentary?.winnerName ?? "",
+        winnerid: commentary?.winnerId ?? 0,
+        boundarytype: cId ?? "",
+        team1name: commentary?.team1Name ?? "",
+        team2name: commentary?.team2Name ?? "",
+        matchtype: commentary?.matchType ?? "",
+        competition: commentary?.competition ?? "",
+        result: commentary?.result ?? "",
+        eventtype: commentary?.eventType ?? "",
+        displaystatus: commentary?.displayStatus ?? "",
+        eventno: commentary?.eventNo ?? "",
+        tosswonby: tossWonBy,
+        runs: battingTeam?.teamScore ?? "0",
+        wickets: battingTeam?.teamWicket ?? "0",
+        overs: battingTeam?.teamOver ?? "0.0",
+      };
+
+      return valueMap[normalizedKey] ?? "";
+    });
+
+    if (data && commentary.isActive === true) {
+        await sendNotification(commentary.eventName, 
+        content, null, null,
+        null, commentary.commentaryId
+        )
+      if (
+        global?.clientSocketIo !== undefined &&
+        global?.clientSocketIo.length > 0
+      ) {
+        global.clientSocketIo.forEach((socket) => {
+          socket.client.emit("notificationSend", { ...data, title, content ,eventId : commentary.eventRefId ?? null, commentaryId: commentary?.commentaryId ?? null});
+        });
+        
+        let notificationData = {
+          title: commentary.eventName,
+          description: content,
+          commentaryId: commentary.commentaryId,
+          // subTitle: title,
+        };
+        await insertNotificationViaNotiConfigQuery(
+          notificationData,
+          request,
+          fastify
+        );
+      }
+    }
+    return { ...data, content };
+  }catch(error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> services/commentary.js/notiConfigContentReplaceService",
+      request
+    )
   }
-  return { ...data, content };
+
 };
 
 const saveComVirtual = async (request, fastify) => {
@@ -23162,7 +23172,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                 global.tblCommentaryBallByBall[findBallByBall] = ballDetails;
             }
             // call Third Party API
-            if (ballDetails.ballType > 0) {
+            if (ballDetails.type == "create" && ballDetails.ballType > 0) {
               let _wkt = ballDetails.ballIsWicket;
               let _bory = ballDetails.ballIsBoundry;
               if (_bory == true) {
@@ -23212,7 +23222,7 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
             if (wickIndex === -1) {
                 global.tblCommentaryWicket.push(wicketDetails);
             } else {
-              if (wicketDetails.wicketType !== null) {
+              if(global.tblCommentaryWicket[wickIndex]?.wicketType != wicketDetails.wicketType){
                 await notiConfigContentReplaceService(
                   EventName.WICKET,
                   commentaryData.commentaryId,
@@ -23221,6 +23231,15 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
                   wicketDetails?.commentaryWicketId
                 );
               }
+              // if (wicketDetails.wicketType !== null) {
+              //   await notiConfigContentReplaceService(
+              //     EventName.WICKET,
+              //     commentaryData.commentaryId,
+              //     request,
+              //     fastify,
+              //     wicketDetails?.commentaryWicketId
+              //   );
+              // }
               global.tblCommentaryWicket[wickIndex] = wicketDetails;
             }
           }

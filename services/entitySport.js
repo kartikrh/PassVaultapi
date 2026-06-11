@@ -12,7 +12,7 @@ const {
   deleteCommentryOldDataQuery,
 } = require("../repository/TableCommentary")
 const { getAllTournamentTeamPlayerByIdsQuery } = require("../repository/TableTournamentsTeamPlayers")
-const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService,addSuperOverInEntity, insertComPlayerEntityService, revertCommentaryService, commentaryDetailsByEventIdService } = require("../services/commentry");
+const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService,addSuperOverInEntity, insertComPlayerEntityService, revertCommentaryService, commentaryDetailsByEventIdService, notiConfigContentReplaceService } = require("../services/commentry");
 const {
     callClientAPI,
     ServiceType,
@@ -32,6 +32,7 @@ const {
     EntityInningsStatus,
     oversToBalls,
     callDataProvider,
+    EventName,
 } = require("../utilities/index");
 const { getCountryByIds } = require("../repository/TableCountryCodes")
 const { getVenueByIds } = require("../repository/TableVenue")
@@ -2595,6 +2596,13 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           });
           const comWicketData = await createCommWicketQuery(generateWicket1, fastify, request);
           global.tblCommentaryWicket.push(comWicketData)
+          notiConfigContentReplaceService(
+            EventName.WICKET,
+            comWicketData?.commentaryId,
+            request,
+            fastify,
+            comWicketData?.commentaryWicketId
+          );
           comWicketData.type = "create";
           wickets.push(comWicketData);
           // console.log("batters", batters.length)
