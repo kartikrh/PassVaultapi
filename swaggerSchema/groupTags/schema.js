@@ -7636,6 +7636,8 @@ const Client = {
         type: "object",
         properties: {
           isActive: { type: "boolean" },
+          isUserActive: { type: "integer" },
+          provider: { type: "integer" },
         },
       },
     },

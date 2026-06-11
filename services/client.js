@@ -2,25 +2,28 @@ const { deleteClientQuery, insertClientQuery, updateClientQuery, activeInactiveC
 const { encrypt, decrypt } = require("../utilities/index");
 
 const getAllClientService = async (request, fastify) => {
-  const { isActive, isUserActive } = request.body;
+  const { isActive, isUserActive, provider } = request.body;
+  let result = global.tblClient.map(({ password, seamlessToken, ...res }) => res);
   if (isActive == undefined) {
-    return global.tblClient.map(({ password, seamlessToken, ...res }) => res)
+    result = result;
+  }
+
+  if (isActive != undefined) {
+    result = result.filter((item) => item.isActive === isActive);
+  }
+
+  if (isUserActive != null || isUserActive != undefined) {
+    result = result.filter((item) => item.isUserActive == isUserActive);
+  }
+
+  if (provider != null || provider != undefined) {
+    result = result.filter((item) => item.provider == provider);
+  }
+
+  return result
     .sort((a, b) => {
       return new Date(b.createdDate) - new Date(a.createdDate);
     })
-  }
-  if(isUserActive !== undefined && isActive !== undefined){
-    return global.tblClient.filter((item)=> item.isUserActive == isUserActive && item.isActive === isActive)
-      .map(({ password, seamlessToken, ...res }) => res)
-      .sort((a, b) => {
-        return new Date(b.createdDate) - new Date(a.createdDate);
-    })
-  }
-  return global.tblClient.filter((item) => item.isActive === isActive)
-    .map(({ password, seamlessToken, ...res }) => res)
-    .sort((a, b) => {
-      return new Date(b.createdDate) - new Date(a.createdDate);
-  })
 };
 
 const clientByIdService = async (request, fastify) => {
