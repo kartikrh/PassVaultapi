@@ -23171,8 +23171,10 @@ const syncEntitySportCommentaryService = async (data,fastify,request = null) => 
             } else {
                 global.tblCommentaryBallByBall[findBallByBall] = ballDetails;
             }
+            let cball = commentaryBallByBall.find((i)=> 
+              i.commentaryBallByBallId == ballDetails.commentaryBallByBallId)
             // call Third Party API
-            if (response.commentaryBallByBallDetails.type == "create" && ballDetails.ballType > 0) {
+            if (cball?.type == "create" && ballDetails.ballType > 0) {
               let _wkt = ballDetails.ballIsWicket;
               let _bory = ballDetails.ballIsBoundry;
               if (_bory == true) {
