@@ -13640,6 +13640,7 @@ const notiConfigContentReplaceService = async (
         runs: battingTeam?.teamScore ?? "0",
         wickets: battingTeam?.teamWicket ?? "0",
         overs: battingTeam?.teamOver ?? "0.0",
+        teamscore : `${battingTeam?.teamScore ?? "0"}/${battingTeam?.teamWicket ?? "0"} `
       };
 
       return valueMap[normalizedKey] ?? "";
