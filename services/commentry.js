@@ -14503,6 +14503,7 @@ const saveComVirtual = async (request, fastify) => {
           target: nonStrikeTeam?.teamScore != null ? parseInt(nonStrikeTeam.teamScore, 10) + 1 : null,
         },
         commentary_id: commentaryId,
+        is_endinnings : isEndInnings,
         ball_by_ball_details: {
           cardKey: updatedData.commentaryBallByBallDetails?.cardKey,
           cardType: updatedData.commentaryBallByBallDetails?.cardType,
