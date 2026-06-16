@@ -25756,6 +25756,10 @@ const addSuperOverInEntity = async (data, request , fastify,comDetails = null) =
         };
       }),
     ];
+    const sendDataForSocketUpdate = {};
+    sendDataForSocketUpdate.commentaryId = commentaryId;
+    sendDataForSocketUpdate.eventRefId = comDetails.eventRefId;
+    sendDataForSocketUpdate.dataToUpdate = [];
     let currentInnings = parseInt(comDetails.currentInnings) + 1;
     await updateSuperOverCommentaryQuery(
       { commentaryId: comDetails.commentaryId, currentInnings, commentaryStatus : commentaryStatus.INPROGRESS },
@@ -25763,7 +25767,7 @@ const addSuperOverInEntity = async (data, request , fastify,comDetails = null) =
     );
     let teamData = {};
     teamData.commentaryId = commentaryId;
-    console.log(data.response.live.live_inning.batting_team_id)
+    // console.log(data.response.live.live_inning.batting_team_id)
     let battingTeamId = commentaryTeams.find((i)=>i.tpId == data.response.live.live_inning.batting_team_id)?.teamId || null;
     if(!battingTeamId){
       errorLogger(
@@ -25847,9 +25851,15 @@ const addSuperOverInEntity = async (data, request , fastify,comDetails = null) =
         global.tblCommentaryTeams.push(t)
       }
     }
+    sendDataForSocketUpdate.dataToUpdate.push({
+      module: "commentaryTeams",
+      type: "create",
+      data: teams,
+    })
     // return true;
    
     // return true;
+    let players = []
     for (let info of playerData) {
       let playerData = await insertCommentaryPlayers(
         {
@@ -25861,13 +25871,68 @@ const addSuperOverInEntity = async (data, request , fastify,comDetails = null) =
         request
       );
       global.tblCommentaryPlayers.push(playerData[0])
+      players.push(playerData[0])
     }
+    sendDataForSocketUpdate.dataToUpdate.push({
+      module: "commentaryPlayers",
+      type: "create",
+      data: players,
+    });
+
     const updatedData = await getCommentaryByIdQuery(
       { body: { commentaryId: comDetails.commentaryId } },
       fastify
     );
     let index = global.tblCommentaries.findIndex((i)=>i.commentaryId == comDetails.commentaryId)
     global.tblCommentaries[index] = updatedData;
+    sendDataForSocketUpdate.dataToUpdate.push({
+        module: "commentaryDetails",
+        type: "update",
+        data: updatedData,
+    })
+    // call the getscore and emit the event data
+    if (
+        global?.clientSocketIo !== undefined &&
+        global?.clientSocketIo.length > 0
+    ) {
+      commentaryDetailsByEventIdService(
+          {
+              ...request,
+              body: {
+                  eventId: comDetails.eventRefId,
+                  commentaryId: comDetails.commentaryId
+              },
+          },
+          fastify,
+          "callFromSocket"
+      ).catch((err) => {
+          console.log("err in entity commentaryDetailsByEventIdService", err);
+          errorLogger(
+              fastify,
+              err.message,
+              "ERROR --> services/commentary.js/syncEntitySportCommentaryService",
+              request
+          );
+      });
+      global.clientSocketIo.forEach((socket) => {
+          socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      });
+    }
+    if (global.wss) {
+      let res = {};
+      res.eventname = "ShortScore";
+      res.connectionID = "";
+      let _ShortCommentry = setShortCommenrty(comDetails.eventRefId);
+      _ShortCommentry = JSON.stringify(_ShortCommentry);
+      res.data = _ShortCommentry;
+      // Iterate over all connected clients and send the update
+      global.wss.clients.forEach(function each(client) {
+          if (client.readyState === WebSocket.OPEN) {
+              client.send(JSON.stringify(res));
+          }
+      });
+    }
+
     
     commentaryLogger(
       {
