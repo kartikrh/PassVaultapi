@@ -8,6 +8,8 @@ services:
     restart: always
     ports:
       - "4002:3000"
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_DEVICE=desktop
