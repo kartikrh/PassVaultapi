@@ -25852,11 +25852,21 @@ const addSuperOverInEntity = async (data, request , fastify,comDetails = null) =
         global.tblCommentaryTeams.push(t)
       }
     }
-    teams = teams.map(item => ({
-      ...item,
-      teamScore: 0,
-      teamOver: 0
-    }));
+    teams = teams.map((team) => {
+      const teamData = global.tblTeams.find(
+        (item) => item.teamId === team.teamId
+      );
+
+      return {
+        ...team,
+        image: teamData?.image ?? "",
+        jersey: teamData?.jersey ?? "",
+        nimage: teamData?.imagePath ?? "",
+        njersey: teamData?.jerseyPath ?? "",
+        teamScore: 0,
+        teamOver: 0,
+      };
+    });
     sendDataForSocketUpdate.dataToUpdate.push({
       module: "commentaryTeams",
       type: "create",
