@@ -25852,6 +25852,11 @@ const addSuperOverInEntity = async (data, request , fastify,comDetails = null) =
         global.tblCommentaryTeams.push(t)
       }
     }
+    teams = teams.map(item => ({
+      ...item,
+      teamScore: 0,
+      teamOver: 0
+    }));
     sendDataForSocketUpdate.dataToUpdate.push({
       module: "commentaryTeams",
       type: "create",
