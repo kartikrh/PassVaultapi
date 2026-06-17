@@ -14,6 +14,7 @@ const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { VideoLibraryType, getDataFromTime, checkDataSendToClient } = require("../utilities/index");
 const { callClientAPI, APIEndpointModuleType } = require("../utilities");
+const { sendNotificationByType } = require("../utilities/index");
 
 const saveVideoLibraryService = async (request, fastify) => {
   const validateId = global.tblVideoLibrary.find(
@@ -55,6 +56,7 @@ const saveVideoLibraryService = async (request, fastify) => {
 
   const sendToClient = checkDataSendToClient(saveData, "from", "to");
   if (sendToClient) {
+    sendNotificationByType({ ...saveData, type: "video", sendType: 3 }, request, fastify);
     await callClientAPI(
       {
         moduleType: APIEndpointModuleType.updateSeoModule,
@@ -150,7 +152,10 @@ const editVideoLibraryService = async (request, fastify, data) => {
   }
 
   global.pendingVideoLibraryToClient = global.pendingVideoLibraryToClient.filter(item => item.id !== updateData.id);
-
+  const sendToClient = checkDataSendToClient(modifiedData[0], "from", "to");
+  if (sendToClient) {
+    sendNotificationByType({ ...modifiedData[0], type: "video", sendType: 3 }, request, fastify);
+  }
   await callClientAPI(
     {
       moduleType: APIEndpointModuleType.updateSeoModule,

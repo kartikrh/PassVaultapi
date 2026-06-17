@@ -12,7 +12,7 @@ const {
   deleteCommentryOldDataQuery,
 } = require("../repository/TableCommentary")
 const { getAllTournamentTeamPlayerByIdsQuery } = require("../repository/TableTournamentsTeamPlayers")
-const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService,addSuperOverInEntity, insertComPlayerEntityService, revertCommentaryService, commentaryDetailsByEventIdService } = require("../services/commentry");
+const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService,addSuperOverInEntity, insertComPlayerEntityService, revertCommentaryService, commentaryDetailsByEventIdService, notiConfigContentReplaceService } = require("../services/commentry");
 const {
     callClientAPI,
     ServiceType,
@@ -32,6 +32,7 @@ const {
     EntityInningsStatus,
     oversToBalls,
     callDataProvider,
+    EventName,
 } = require("../utilities/index");
 const { getCountryByIds } = require("../repository/TableCountryCodes")
 const { getVenueByIds } = require("../repository/TableVenue")
@@ -884,7 +885,13 @@ const setEntityCom2Service = async (request , fastify) =>{
             }
             // create partnership
             let part = response.live.live_inning?.current_partnership;
-            if(!part){
+            if (!part || !Array.isArray(part.batsmen) ||
+              part.batsmen.some(
+                b => b?.batsman_id === undefined ||
+                b?.batsman_id === null ||
+                b?.batsman_id == 0
+              )
+            ) {
               errorLogger(
                 fastify,
                 `Current Partnership is not in Data - ${response?.match_info?.match_id}`,
@@ -1473,6 +1480,29 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     ltSetOrder = existingBatters.length
       ? Math.max(...existingBatters?.map(i => i.batterOrder))
       : 0;
+
+    const inningNo = response?.live?.live_inning_number;
+    const retiredHurtBatters = response?.scorecard?.innings
+        ?.find(i => Number(i?.number) === Number(inningNo))?.batsmen
+        ?.filter(batter => batter?.how_out === "Retired hurt" || batter?.dismissal === "retired") || [];
+    for (const rb of retiredHurtBatters) {
+      const player = playerTpIdObj?.[rb?.batsman_id];
+      if (!player) continue;
+      if (player?.isBatterRetir !== true) {
+        if (!playersMap?.[rb?.batsman_id]) {
+          playersMap[rb.batsman_id] = {
+            ...player,
+          };
+        }
+        playersMap[rb.batsman_id] = {
+          ...playersMap[rb.batsman_id],
+          isBatterRetir: true,
+          isPlay: null,
+          onStrike: null,
+        };
+      }
+    }
+
     if (response.live?.batsmen && response.live?.batsmen.length > 0) {
       for (let p of response.live?.batsmen) {
         if (!playerTpIdObj[p.batsman_id]) {
@@ -1526,7 +1556,12 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           //   }
           // }
         }
-        let comP = playerTpIdObj[p.batsman_id];
+        let comP;
+        if (playersMap?.[p?.batsman_id]) {
+          comP = playersMap[p.batsman_id]
+        } else {
+          comP = playerTpIdObj[p.batsman_id];
+        }
         let batterData = response?.scorecard?.innings
           ?.find(i => i?.number === response?.live?.live_inning_number)?.batsmen
           ?.find(i1 => i1?.batsman_id == p?.batsman_id && i1?.batting == "true");
@@ -1628,7 +1663,6 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     ltSetBowlerOrder = existingBowlers.length
       ? Math.max(...existingBowlers?.map(i => i.bowlerOrder))
       : 0;
-    let inningNo = response?.live?.live_inning_number
     if(response.scorecard && response.scorecard?.innings?.length > 0){
       let cInning = response.scorecard.innings.find((i) => i.number == inningNo)
       let bowlers = cInning.bowlers;
@@ -1787,7 +1821,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           let isBoundary = c.run == 4 || c.run ==6 ? true : false
           let strikePId = playerTpIdObj[c.batsman_id]?.commentaryPlayerId
           let bowlerPId = playerTpIdObj[c.bowler_id]?.commentaryPlayerId
-          let nonStrike = response.live.batsmen.find((i)=> i.batsman_id != c.batsman_id).batsman_id
+          let nonStrike = response?.live?.batsmen?.find((i)=> i.batsman_id != c.batsman_id)?.batsman_id
           let nonStrikePId = playerTpIdObj[nonStrike]?.commentaryPlayerId;
           if(index == -1){
             let isWide = false;
@@ -1839,7 +1873,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                       currentOverBalls: 0,
                       bowlerId: playerTpIdObj[c.bowler_id].commentaryPlayerId,
                       batStrikeId: playerTpIdObj[c.batsman_id].commentaryPlayerId,
-                      batNonStrikeId: nonStrike.commentaryPlayerId,
+                      batNonStrikeId: nonStrike?.commentaryPlayerId,
                       ballIsCount: true,
                       ballType: 0,
                       ballIsDot: false,
@@ -1949,7 +1983,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                       currentOverBalls: 0,
                       bowlerId: playerTpIdObj[c.bowler_id].commentaryPlayerId,
                       batStrikeId: playerTpIdObj[c.batsman_id].commentaryPlayerId,
-                      batNonStrikeId: nonStrike.commentaryPlayerId,
+                      batNonStrikeId: nonStrike?.commentaryPlayerId,
                       ballIsCount: true,
                       ballType: 0,
                       ballIsDot: false,
@@ -2054,7 +2088,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                         currentOverBalls: 0,
                         bowlerId: playerTpIdObj[c.bowler_id].commentaryPlayerId,
                         batStrikeId: playerTpIdObj[c.batsman_id].commentaryPlayerId,
-                        batNonStrikeId: nonStrike.commentaryPlayerId,
+                        batNonStrikeId: nonStrike?.commentaryPlayerId,
                         ballIsCount: true,
                         ballType: 0,
                         ballIsDot: false,
@@ -2328,7 +2362,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           let over = oversMap[overKey];
           let strikePId = playerTpIdObj[c.batsman_id]?.commentaryPlayerId
           let bowlerPId = playerTpIdObj[c.bowler_id]?.commentaryPlayerId
-          let nonStrike = response.live.batsmen.find((i)=> i.batsman_id != c.batsman_id).batsman_id
+          let nonStrike = response?.live?.batsmen?.find((i)=> i.batsman_id != c.batsman_id)?.batsman_id
           let nonStrikePId = playerTpIdObj[nonStrike]?.commentaryPlayerId;
           isOverEnd = false;
           // if(playersMap[c.bowler_id]){
@@ -2562,6 +2596,13 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
           });
           const comWicketData = await createCommWicketQuery(generateWicket1, fastify, request);
           global.tblCommentaryWicket.push(comWicketData)
+          notiConfigContentReplaceService(
+            EventName.WICKET,
+            comWicketData?.commentaryId,
+            request,
+            fastify,
+            comWicketData?.commentaryWicketId
+          );
           comWicketData.type = "create";
           wickets.push(comWicketData);
           // console.log("batters", batters.length)
@@ -3094,12 +3135,26 @@ const matchCompleteService = async (data , fastify,comDetails) =>{
   //   ...bowlTeam,
   //   isWin : !isBatTeamWon
   // }
+  let playerToUpdate = global.tblCommentaryPlayers.filter(
+    (item) =>
+      item.commentaryId == comDetails.commentaryId &&
+      item.currentInnings == comDetails.currentInnings &&
+      (item.onStrike == true || item.isPlay == true)
+  );
+  playerToUpdate = playerToUpdate.map((item) => {
+    return {
+      ...item,
+      isPlay: null,
+      onStrike: null,
+    };
+  }); 
 
   const commentaryTeams = [upBatTeam, upBowlTeam].filter(Boolean);
 
   await syncEntitySportCommentaryService({
     commentaryId: comDetails.commentaryId,
     commentaryDetails:upComDetails,
+    commentaryPlayers : playerToUpdate,
     // commentaryTeams: [
     //   upBatTeam,
     //   upBowlTeam

@@ -222,7 +222,7 @@ const resetAllClientSocketReconnectCountService = async (request, fastify) => {
 const disconnectAllClientSocketService = async (request, fastify) => {
     const result = await disconnectAllClientSocketQuery(request, fastify);
     for (const id of result) {
-        const index = global.tblClientSocket.findIndex(item => item.clientSocketId === id.clientSocketId);
+        const index = global.tblClientSocket?.findIndex(item => item.clientSocketId === id.clientSocketId);
         if (index !== -1) {
             global.tblClientSocket[index].status = clientSocketStatus.disconnected;
         }
