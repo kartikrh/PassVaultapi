@@ -16,7 +16,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 SRC_DOCKERFILE="linux-Dockerfile"
-SRC_COMPOSE="linux-docker-compose.yml"
+SRC_COMPOSE="linux-docker-compose"
 
 DST_DOCKERFILE="Dockerfile"
 DST_COMPOSE="docker-compose.yml"
