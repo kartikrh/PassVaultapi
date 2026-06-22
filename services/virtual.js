@@ -1800,12 +1800,23 @@ const updateRunPayload = async (data, request, fastify) => {
     commentaryDetails: ncom,
     commentaryId: commentaryDetails.commentaryId,
   };
+  const prediction = checkInningChangePredictor({
+    commentaryDetails: ncom,
+    matchType,
+    batTeam: updateBattingTeam,
+    bowlTeam : bowlingTeam,
+    over: updateOver,
+    isOverComplete
+  });
+
+  const endInningForPredictor = prediction.inningChange;
   const ballByBall1 = await saveComVirtual(
     {
       ...request,
       body: {
         ...objToSave,
         isOverComplete,
+        endInningForPredictor
       },
     },
     fastify
@@ -2452,6 +2463,15 @@ const handleWicketService = async (data, request, fastify) => {
       })
       : "",
   };
+  const prediction = checkInningChangePredictor({
+    commentaryDetails: nCom,
+    matchType,
+    batTeam: upBatTeam,
+    bowlTeam: bowlingTeam,
+    over: upOver
+  });
+
+  const endInningForPredictor = prediction.inningChange;
 
   let objToSave = {
     commentaryId: commentaryDetails.commentaryId,
@@ -2463,6 +2483,7 @@ const handleWicketService = async (data, request, fastify) => {
     commentaryDetails: nCom,
     commentaryId: commentaryDetails.commentaryId,
     commentaryWicket: geenrateWicket,
+    endInningForPredictor : endInningForPredictor || false
   };
 
   // // update in db
@@ -3270,6 +3291,48 @@ const loadVirtualCom = async (request, fastify) => {
 const serverTimeAPIService = async (request, fastify) => {
   return { Remote_IP: "0.0.0.1" }
 }
+
+const checkInningChangePredictor = ({
+  commentaryDetails,
+  matchType,
+  batTeam,
+  bowlTeam,
+  over,
+  isOverComplete
+}) => {
+  const maxNoOfWicket =
+    matchType.noOfPlayer - (matchType.isLastManStand ? 0 : 1);
+
+  const isLastInnings =
+    commentaryDetails.currentInnings >= matchType.noOfIningsPerSide;
+
+  let target = 0;
+
+  // Chase innings
+  if (bowlTeam?.isBattingComplete) {
+    const trialRuns = +batTeam?.teamTrialRuns || 0;
+    target = trialRuns > -1 ? trialRuns + 1 : 0;
+  }
+
+  const overLimit =
+    isOverComplete &&
+    matchType.isLimitedOvers &&
+    Math.ceil(+over.over || 0) + 1 >= batTeam.teamMaxOver;
+  const wicketLimit =
+    batTeam?.teamWicket >= maxNoOfWicket;
+
+  const targetAchieved =
+    isLastInnings &&
+    target > 0 &&
+    batTeam?.teamScore >= target;
+
+  return {
+    inningChange:
+      overLimit ||
+      wicketLimit ||
+      targetAchieved,
+  };
+};
 module.exports = {
   saveEventervice,
   createVirtualEventService,

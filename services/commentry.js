@@ -13747,7 +13747,8 @@ const saveComVirtual = async (request, fastify) => {
       commentaryId,
       isEndInnings = false,
       isCallPredict = false,
-      isOverComplete = false
+      isOverComplete = false,
+      endInningForPredictor = false
     } = request.body;
 
     let commentaryIndex,
@@ -14503,7 +14504,7 @@ const saveComVirtual = async (request, fastify) => {
           target: nonStrikeTeam?.teamScore != null ? parseInt(nonStrikeTeam.teamScore, 10) + 1 : null,
         },
         commentary_id: commentaryId,
-        is_endinnings : isEndInnings,
+        is_endinnings : endInningForPredictor,
         ball_by_ball_details: {
           cardKey: updatedData.commentaryBallByBallDetails?.cardKey,
           cardType: updatedData.commentaryBallByBallDetails?.cardType,
@@ -25852,11 +25853,21 @@ const addSuperOverInEntity = async (data, request , fastify,comDetails = null) =
         global.tblCommentaryTeams.push(t)
       }
     }
-    teams = teams.map(item => ({
-      ...item,
-      teamScore: 0,
-      teamOver: 0
-    }));
+    teams = teams.map((team) => {
+      const teamData = global.tblTeams.find(
+        (item) => item.teamId === team.teamId
+      );
+
+      return {
+        ...team,
+        image: teamData?.image ?? "",
+        jersey: teamData?.jersey ?? "",
+        nimage: teamData?.imagePath ?? "",
+        njersey: teamData?.jerseyPath ?? "",
+        teamScore: 0,
+        teamOver: 0,
+      };
+    });
     sendDataForSocketUpdate.dataToUpdate.push({
       module: "commentaryTeams",
       type: "create",
