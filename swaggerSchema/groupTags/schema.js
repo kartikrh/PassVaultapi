@@ -7638,7 +7638,9 @@ const Client = {
           isActive: { type: "boolean" },
           isUserActive: { type: "integer" },
           provider: { type: "integer" },
-          registrationProcessStatus: { type: "integer" }
+          registrationProcessStatus: { type: "integer" },
+          isEmailVerified: { type: "boolean" },
+          isMobileVerified: { type: "boolean" }
         },
       },
     },

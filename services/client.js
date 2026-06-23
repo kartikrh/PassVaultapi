@@ -2,7 +2,7 @@ const { deleteClientQuery, insertClientQuery, updateClientQuery, activeInactiveC
 const { encrypt, decrypt } = require("../utilities/index");
 
 const getAllClientService = async (request, fastify) => {
-  const { isActive, isUserActive, provider, registrationProcessStatus } = request.body;
+  const { isActive, isUserActive, provider, registrationProcessStatus, isEmailVerified, isMobileVerified } = request.body;
   let result = global.tblClient.map(({ password, seamlessToken, ...res }) => res);
   if (isActive == undefined) {
     result = result;
@@ -22,6 +22,14 @@ const getAllClientService = async (request, fastify) => {
 
   if (registrationProcessStatus != null || registrationProcessStatus != undefined) {
     result = result.filter((item) => item.registrationProcessStatus == registrationProcessStatus);
+  }
+
+  if (isEmailVerified != undefined) {
+    result = result.filter((item) => item.isEmailVerified === isEmailVerified);
+  }
+
+  if (isMobileVerified != undefined) {
+    result = result.filter((item) => item.isMobileVerified === isMobileVerified);
   }
 
   return result
