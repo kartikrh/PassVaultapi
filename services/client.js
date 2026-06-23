@@ -1,8 +1,8 @@
 const { deleteClientQuery, insertClientQuery, updateClientQuery, activeInactiveClientQuery, isUserActiveInactiveQuery, clientEmailVerifyQuery, clientMobileVerifyQuery, deleteClientEncryptQuery, addClientDltReqQuery, getIdByEncrypt } = require("../repository/TableClient");
-const { encrypt, decrypt } = require("../utilities/index");
+const { encrypt, decrypt, clientProcessStatus } = require("../utilities/index");
 
 const getAllClientService = async (request, fastify) => {
-  const { isActive, isUserActive, provider, registrationProcessStatus } = request.body;
+  const { isActive, isUserActive, provider, registrationProcessStatus, isEmailVerified, isMobileVerified } = request.body;
   let result = global.tblClient.map(({ password, seamlessToken, ...res }) => res);
   if (isActive == undefined) {
     result = result;
@@ -22,6 +22,14 @@ const getAllClientService = async (request, fastify) => {
 
   if (registrationProcessStatus != null || registrationProcessStatus != undefined) {
     result = result.filter((item) => item.registrationProcessStatus == registrationProcessStatus);
+  }
+
+  if (isEmailVerified != undefined) {
+    result = result.filter((item) => item.isEmailVerified === isEmailVerified);
+  }
+
+  if (isMobileVerified != undefined) {
+    result = result.filter((item) => item.isMobileVerified === isMobileVerified);
   }
 
   return result
@@ -67,9 +75,13 @@ const saveClientService = async (request, fastify) => {
 };
 
 const createClientService = async (request, fastify) => {
+  const { isEmailVerified, isMobileVerified } = request.body;
   if(request.body?.password) {
     request.body.password = encrypt(request.body?.password)
   }
+
+  request.body.registrationProcessStatus = isEmailVerified && isMobileVerified ? clientProcessStatus.COMPLETED : clientProcessStatus.MOEMAILVERIFIED;
+
   const data = await insertClientQuery(
     {
       ...request.body,
@@ -111,6 +123,8 @@ const updateClientService = async (request, fastify) => {
     createdDate : validateClientId.createdDate,
     password : request.body?.password || validateClientId?.password,
   };
+
+  body.registrationProcessStatus = body.isEmailVerified && body.isMobileVerified ? clientProcessStatus.COMPLETED : clientProcessStatus.MOEMAILVERIFIED;
 
   await updateClientQuery(body, request, fastify);
   const index = global.tblClient.findIndex(

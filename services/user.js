@@ -1458,7 +1458,7 @@ const registerClientAppService = async (request, fastify) => {
   if(checkExist && (checkExist.isMobileVerified == false || checkExist.registrationProcessStatus == clientProcessStatus.ADDUSERDETAIL)){
     // get encrypt client id
     let clientId = checkExist.clientId;
-    let encrypt = await getEncryptClinet({clientId},request,fastify);
+    let encryptClient = await getEncryptClinet({clientId},request,fastify);
     // let isSendOtp = global.tblConfigs.find((item) => item.key === configConstants.ISSENDMOBILEOTP)?.value;
     // if(isSendOtp === 'true'){
     if(isSendOtp?.isSendMobileOTP === true) {
@@ -1471,7 +1471,7 @@ const registerClientAppService = async (request, fastify) => {
       if(isSendOtp?.sendMobileOTPType === 2) {
         // Success reponse when the mobile otp type is 2
         return {
-          clientId : encrypt.clientId,
+          clientId : encryptClient.clientId,
           mobileNo : checkExist.mobileNo,
           countryCode : request.body.countryCode,
           otpExpired: isSendOtp?.mobileOTPExpired || 0,
@@ -1482,7 +1482,7 @@ const registerClientAppService = async (request, fastify) => {
     }
     // const otpExpired = parseInt(global.tblConfigs?.find((item) => item.key === configConstants.OTPEXPIRED)?.value, 10) || 0;
     return {
-        clientId : encrypt.clientId,
+        clientId : encryptClient.clientId,
         mobileNo : checkExist.mobileNo,
         countryCode : request.body.countryCode,
         otpExpired: isSendOtp?.mobileOTPExpired || 0,
