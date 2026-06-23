@@ -4625,6 +4625,19 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
           await updateAutoImportDataQuery(importData, fastify, request);
           return `Inning data inserted successfully`
         } else {
+          let scoringTypeData = {
+            commentaryId: comDetails?.commentaryId,
+            scoringType: ScoringTypes.Entity,
+            tpId: matchId
+          }
+          await scoringTypeCommentaryQuery(scoringTypeData, fastify, request);
+          const index = global.tblCommentaries.findIndex((c) => c.commentaryId == comDetails?.commentaryId);
+          if (index !== -1) {
+            global.tblCommentaries[index] = {
+              ...global.tblCommentaries[index],
+              ...scoringTypeData,
+            }
+          }
           throw new Error("Toss not done");
         }
       }
