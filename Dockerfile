@@ -12,4 +12,4 @@ ARG PORT
 
 EXPOSE ${PORT}
 
-CMD ["npx", "fastify", "start", "app.js"]
+CMD ["npx", "fastify", "start", "-a", "0.0.0.0", "app.js"]
