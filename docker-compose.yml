@@ -1,40 +1,32 @@
-# Local development only. Railway uses the Dockerfile directly.
 services:
-  postgres:
-    image: postgres:15-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USERNAME:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DATABASE:-ScoreUAT}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USERNAME:-postgres}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   node-app:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        PORT: ${PORT}
     restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      NODE_ENV: development
-      PORT: 3000
-      HOST: 0.0.0.0
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
+    container_name: SocreAPI
     ports:
-      - "8000:3000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-volumes:
-  postgres_data:
+      - "8000:${PORT}"
+    environment:
+      POSTGRES_USERNAME: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DATABASE: ${POSTGRES_DATABASE}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_DIALECT: ${POSTGRES_DIALECT}
+      SALT_ROUNDS: ${SALT_ROUNDS}
+      SECRET_KEY_TOKEN: ${SECRET_KEY_TOKEN}
+      SECRET_HASH_KEY_TABID: ${SECRET_HASH_KEY_TABID}
+      TOKEN_EXPIRY_TIME: ${TOKEN_EXPIRY_TIME}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      COMMANTRY_UPDATE_TIME: ${COMMANTRY_UPDATE_TIME}
+      IMPORTMARKET_API : ${IMPORTMARKET_API}
+      SYSTEM_PLAYER_COUNT : ${SYSTEM_PLAYER_COUNT}
+      SENTRY_DSN: ${SENTRY_DSN}
+      ENABLE_SENTRY: ${ENABLE_SENTRY}
+      SOCKET_ADMIN_USERNAME: ${SOCKET_ADMIN_USERNAME}
+      SOCKET_ADMIN_PASSWORD: ${SOCKET_ADMIN_PASSWORD}
+      IS_CRON_ENABLE: ${IS_CRON_ENABLE}
+      PORT: ${PORT}
