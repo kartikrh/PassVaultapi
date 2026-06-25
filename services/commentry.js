@@ -5430,6 +5430,116 @@ const syncCommentaryStatsWithAPIAndSocket = async (request, fastify) => {
     throw error;
   }
 };
+const saveMarOdd = async (
+  commentaryId,
+  objball,
+  fastify,
+  eventRefId
+) => {
+  try {
+    const markets = global.tblEventMarketsV2.filter(
+      (e) =>
+        e.commentaryId === commentaryId &&
+        e.rateSource === 2
+    );
+
+    if (!markets.length || objball.ballType <= 0) {
+      return null;
+    }
+
+    let savedRecords = [];
+
+    for (const market of markets) {
+      const runners = global.tblMarketRunnerV2.filter(
+        (r) => r.eventMarketId === market.eventMarketId
+      );
+
+      // Store unique runners
+      const uniqueRunners = new Map();
+
+      for (const runner of runners) {
+        const mapKey =
+          `${market.eventMarketId}_${runner.selectionId}`;
+
+        const odds = global.SignalRData[mapKey];
+
+        if (!odds) {
+          continue;
+        }
+
+        uniqueRunners.set(odds.selectionId, {
+          RunnerId: odds.RunnerId,
+          BackPrice: odds.BackPrice,
+          LayPrice: odds.LayPrice,
+          BackSize: odds.BackSize,
+          LaySize: odds.LaySize,
+          RunnerName: odds.RunnerName,
+          selectionId: odds.selectionId,
+          timestamp: odds.timestamp,
+        });
+      }
+
+      const oddsData = [...uniqueRunners.values()];
+
+      const payload = {
+        commentaryId,
+        commentaryBallByBallId:
+          objball.commentaryBallByBallId,
+        eventMarketId: market.eventMarketId,
+        marketStatus: market.status,
+        marketName: market.marketName,
+        data: JSON.stringify(oddsData),
+      };
+
+      let res = null;
+
+      try {
+        res = await createMarketOddsBallInSaveDetails(
+          payload,
+          fastify,
+          null
+        );
+
+        if (res) {
+          global.tblMarketOddsBallByBall.push(res);
+          savedRecords.push(res);
+        }
+      } catch (error) {
+        errorLogger(
+          fastify,
+          error.message,
+          "ERROR --> createMarketOddsBallInSaveDetails - saveMarOdd",
+          null
+        );
+      }
+    }
+    const sendDataForSocketUpdate = {};
+    sendDataForSocketUpdate.commentaryId = commentaryId;
+    sendDataForSocketUpdate.eventRefId = eventRefId;
+    sendDataForSocketUpdate.dataToUpdate = [];
+
+    if (savedRecords && savedRecords.length > 0) {
+      sendDataForSocketUpdate.dataToUpdate.push({
+        module: "marketOddsBallByBall",
+        data: savedRecords,
+        type: "create",
+      });
+      global.clientSocketIo.forEach((socket) => {
+        socket.client.emit("updateFullscore", sendDataForSocketUpdate);
+      });
+    }
+    return true;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "ERROR --> saveMarOdd",
+      null
+    );
+
+    return null;
+  }
+};
 
 const addinMarketBallbyballOdds = async (commentaryId, objball, fastify) => {
   let _resultArray;
@@ -26503,5 +26613,6 @@ module.exports = {
   addSuperOverInEntity,
   insertComPlayerEntityService,
   abandonedCommentaryService,
-  getCommentaryScoreStatsService
+  getCommentaryScoreStatsService,
+  saveMarOdd
 };
