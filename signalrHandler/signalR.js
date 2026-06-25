@@ -427,7 +427,7 @@ const  subScribeConnectMarketRate = async (_fastify) => {
     } catch (error) {
         errorLogger(
             _fastify,
-            error,
+            error?.message,
             "Error SignalrR --> signalrHandler/SubScribeConnectMarketRate",
             null
         );
