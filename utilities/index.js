@@ -826,16 +826,62 @@ const NotificationSendType = {
   all: 1,
   onlyLoggedInUser: 2,
   pushNotification: 3,
+  onlyLoggedOutUser: 4,
+  pushNotificationAndOnlyLoggedInUser: 5,
+  pushNotificationAndOnlyLoggedOutUser: 6,
+  onlyLoggedInUserAndLoggedOutUser: 7,
+};
+const SOCKET_EVENTS = {
+  ALL: "onSendNotificationToAll",
+  LOGGED_IN: "onSendNotificationToLoggedInUser",
+  LOGGED_OUT: "onSendNotificationToLoggedOutUser",
+  LOGGED_IN_AND_LOGGED_OUT: "onSendNotificationToLoggedInAndLoggedOutUser",
 };
 const sendNotificationByType = async (data, request, fastify) => {
   try {
     let eventName;
     switch (data.sendType) {
       case NotificationSendType.all:
-        eventName = "onSendNotificationToAll";
+        eventName = SOCKET_EVENTS.ALL;
+        sendNotification(
+          data.title,
+          data.description,
+          data.url,
+          data.image,
+          data.icon,
+          data.commentaryId
+        );
         break;
       case NotificationSendType.onlyLoggedInUser:
-        eventName = "onSendNotificationToLoggedInUser";
+        eventName = SOCKET_EVENTS.LOGGED_IN;
+        break;
+      case NotificationSendType.onlyLoggedOutUser:
+        eventName = SOCKET_EVENTS.LOGGED_OUT;
+        break;
+      case NotificationSendType.onlyLoggedInUserAndLoggedOutUser:
+        eventName = SOCKET_EVENTS.LOGGED_IN_AND_LOGGED_OUT;
+        break;
+      case NotificationSendType.pushNotificationAndOnlyLoggedInUser:
+        eventName = SOCKET_EVENTS.LOGGED_IN;
+        sendNotification(
+          data.title,
+          data.description,
+          data.url,
+          data.image,
+          data.icon,
+          data.commentaryId
+        );
+        break;
+      case NotificationSendType.pushNotificationAndOnlyLoggedOutUser:
+        eventName = SOCKET_EVENTS.LOGGED_OUT;
+        sendNotification(
+          data.title,
+          data.description,
+          data.url,
+          data.image,
+          data.icon,
+          data.commentaryId
+        );
         break;
       case NotificationSendType.pushNotification:
         // eventName = "onSendPushNotification";
