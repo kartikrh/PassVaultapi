@@ -115,7 +115,8 @@ const createCompetitionStatisticsService = async (request, fastify) => {
         const commonCondition = tcs.eventTypeId === eventTypeId &&
             tcs.competitionId === competitionId &&
             tcs.matchTypeId === matchTypeId &&
-            tcs.competitionStatisticsTypeId === getCompetitionStatisticsTypeData.competitionStatisticsTypeId;
+            tcs.competitionStatisticsTypeId === getCompetitionStatisticsTypeData.competitionStatisticsTypeId &&
+            tcs.value == value;
 
         if (categoryId === "batting" || categoryId === "bowling") {
             return commonCondition && tcs.playerId === playerId && tcs.teamId === teamId;
