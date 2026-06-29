@@ -160,6 +160,7 @@ const {
   updateComInMarketService,
   suspendMarketService,
   handleMarketByDLSService,
+  upComIdService,
 } = require("./eventMarket");
 const {
   createMarketOddsBallByBallBYID,
@@ -1326,6 +1327,16 @@ const updateCommentaryService = async (request, fastify) => {
     request.body.isClientShow = false;
   }
   await updateCommentaryQuery(request, fastify);
+  // check if commentaryId need to set in markets
+  await upComIdService(
+    {
+      commentaryId: request.body.commentaryId,
+      eventRefId: request.body.eventRefId,
+    },
+    request,
+    fastify
+  )
+  
   const team1GroupId = await getGroupId(request.body.team1Id, request, fastify);
   const team2GroupId = await getGroupId(request.body.team2Id, request, fastify);
 

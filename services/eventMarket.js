@@ -65,6 +65,7 @@ const {
   upCloseTimeQuery,
   getCommentaryDetailsQuery,
   getManualMarketByIdQuery,
+  upComInMarketQuery,
 } = require("../repository/TableEventMarkets");
 const { getRunnerByIdQuery, setResultInRunnerMarketQuery, getRunnerByMarketQuery } = require("../repository/TableMarketRunner");
 const configConstants = require("../utilities/configConstants");
@@ -2185,7 +2186,24 @@ const updateComInMarketService = async (data, request, fastify) => {
   }
   return "Event Market updated successfully";
 };
-
+const upComIdService = async (data, request, fastify) => {
+  let updateData = await upComInMarketQuery(data, request, fastify);
+  for (let item of updateData) {
+    let eventMarket = global.tblEventMarkets.findIndex(
+      (e) => e.eventMarketId === item.eventMarketId
+    );
+    if (eventMarket !== -1) {
+      global.tblEventMarkets[eventMarket].commentaryId = data.commentaryId;
+    }
+    let index = global.tblEventMarketsV2.findIndex(
+      (item) => item.eventMarketId === item.eventMarketId
+    );
+    if(index !== -1){
+        global.tblEventMarketsV2[index].commentaryId = data.commentaryId;
+    }
+  }
+  return "Event Market updated successfully";
+};
 const marketListcategoryNameByCIdService = async (request, fastify) => {
   const { commentaryId } = request.body;
   // validate the commentaryId
@@ -4250,4 +4268,5 @@ module.exports = {
   getCommentaryDetailsService,
   loadMarketByComIdService,
   getEventMarketAndRunnersByIdService,
+  upComIdService
 };

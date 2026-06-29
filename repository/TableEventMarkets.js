@@ -2500,7 +2500,32 @@ const updateComInMarketQuery = async (data, request, fastify) => {
     throw new Error(error.message)
   }
 };
+const upComInMarketQuery = async (data, request, fastify) => {
+  try {
+    let { eventRefId, commentaryId } = data;
+    let query = `
+      UPDATE "tblEventMarkets" SET
+        "wrCommentaryId" = $1
+      WHERE "wrEventRefID" = $2
+      AND "wrCommentaryId" IS NULL OR "wrCommentaryId" = 0
+      RETURNING "wrID" as "eventMarketId"
+    `;
 
+    const result = await fastify.db.query(query, {
+      bind: [commentaryId, eventRefId],
+      type: fastify.db.QueryTypes.SELECT,
+    });
+    return result;
+  } catch (error) {
+    errorLogger(
+      fastify,
+      error.message,
+      "DB ERROR --> repository/TableEventmarket.js/upComInMarketQuery",
+      request
+    )
+    throw new Error(error.message)
+  }
+};
 const getMarketListWithCategoryNameByCIdQuery = async (data, request, fastify) => {
   try {
     const { commentaryId } = data;
@@ -6522,5 +6547,6 @@ module.exports = {
   cancelMarketVirtualQuery,
   getManualMarketByIdQuery,
   updateManualMarketQuery,
+  upComInMarketQuery
 }
 
