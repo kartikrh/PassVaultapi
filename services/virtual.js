@@ -3455,69 +3455,69 @@ const processMarketAndRunners = (market, teamId, keyPrefix, processedMarketsObj,
       });
     }
   }
-  else if (market.marketTypeCategoryId === 28) {
-    marketRunners = market.runners?.map(runner => ({
-      marketTemplateRunnerId: runner.marketTemplateRunnerId,
-      marketTemplateId: runner.marketTemplateId,
-      runner: runner.runner,
-      line: runner.line,
-      overRate: runner.overRate,
-      underRate: runner.underRate,
-      lastUpdate: new Date().toISOString(),
-      selectionId: runner.selectionId,
-      order: runner.order,
-      backPrice: runner.backPrice,
-      layPrice: runner.layPrice,
-      backSize: runner.backSize,
-      laySize: runner.laySize,
-      predefinedValue: runner.predefinedValue,
-      runnerId: runner.runnerId || "0"
-    })) || [];
-  }
-  else if (market.marketTypeCategoryId === 26) {
-    // Handle LDO and Lottery markets
-    marketRunners = market.runners?.map(runner => ({
-      ...runner,  // Spread the original runner properties
-      runnerId: runner.runnerId || "0",
-      // Make sure each property is explicitly copied
-      marketTemplateRunnerId: runner.marketTemplateRunnerId,
-      marketTemplateId: market.marketTemplateId,
-      runner: runner.runner,
-      line: runner.line,
-      overRate: runner.overRate,
-      underRate: runner.underRate,
-      lastUpdate: new Date().toISOString(),
-      selectionId: runner.selectionId,
-      order: runner.order,
-      backPrice: runner.backPrice,
-      layPrice: runner.layPrice,
-      backSize: market?.isPredefineRunnerValue ? runner?.backSize : market?.defaultBackSize,
-      laySize: market?.isPredefineRunnerValue ? runner?.laySize : market?.defaultLaySize,
-      predefinedValue: runner.predefinedValue
-    })) || [];
-  } else {
-    // Default runner handling for other market types
-    if (!market.runners || market.runners.length === 0) {
-      marketRunners = [{
-        marketTemplateRunnerId: 0,
-        runnerId: "0",
-        marketTemplateId: market.marketTemplateId,
-        runner: market?.marketName,
-        line: market.defaultLine || null,
-        overRate: null,
-        underRate: null,
-        lastUpdate: new Date().toISOString(),
-        selectionId: `${market.marketTemplateId}01`,
-        order: 1,
-        backPrice: null,
-        layPrice: null,
-        backSize: market?.defaultBackSize,
-        laySize: market?.defaultLaySize,
-      }];
-    } else {
-      marketRunners = market.runners;
-    }
-  }
+  // else if (market.marketTypeCategoryId === 28) {
+  //   marketRunners = market.runners?.map(runner => ({
+  //     marketTemplateRunnerId: runner.marketTemplateRunnerId,
+  //     marketTemplateId: runner.marketTemplateId,
+  //     runner: runner.runner,
+  //     line: runner.line,
+  //     overRate: runner.overRate,
+  //     underRate: runner.underRate,
+  //     lastUpdate: new Date().toISOString(),
+  //     selectionId: runner.selectionId,
+  //     order: runner.order,
+  //     backPrice: runner.backPrice,
+  //     layPrice: runner.layPrice,
+  //     backSize: runner.backSize,
+  //     laySize: runner.laySize,
+  //     predefinedValue: runner.predefinedValue,
+  //     runnerId: runner.runnerId || "0"
+  //   })) || [];
+  // }
+  // else if (market.marketTypeCategoryId === 26) {
+  //   // Handle LDO and Lottery markets
+  //   marketRunners = market.runners?.map(runner => ({
+  //     ...runner,  // Spread the original runner properties
+  //     runnerId: runner.runnerId || "0",
+  //     // Make sure each property is explicitly copied
+  //     marketTemplateRunnerId: runner.marketTemplateRunnerId,
+  //     marketTemplateId: market.marketTemplateId,
+  //     runner: runner.runner,
+  //     line: runner.line,
+  //     overRate: runner.overRate,
+  //     underRate: runner.underRate,
+  //     lastUpdate: new Date().toISOString(),
+  //     selectionId: runner.selectionId,
+  //     order: runner.order,
+  //     backPrice: runner.backPrice,
+  //     layPrice: runner.layPrice,
+  //     backSize: market?.isPredefineRunnerValue ? runner?.backSize : market?.defaultBackSize,
+  //     laySize: market?.isPredefineRunnerValue ? runner?.laySize : market?.defaultLaySize,
+  //     predefinedValue: runner.predefinedValue
+  //   })) || [];
+  // } else {
+  //   // Default runner handling for other market types
+  //   if (!market.runners || market.runners.length === 0) {
+  //     marketRunners = [{
+  //       marketTemplateRunnerId: 0,
+  //       runnerId: "0",
+  //       marketTemplateId: market.marketTemplateId,
+  //       runner: market?.marketName,
+  //       line: market.defaultLine || null,
+  //       overRate: null,
+  //       underRate: null,
+  //       lastUpdate: new Date().toISOString(),
+  //       selectionId: `${market.marketTemplateId}01`,
+  //       order: 1,
+  //       backPrice: null,
+  //       layPrice: null,
+  //       backSize: market?.defaultBackSize,
+  //       laySize: market?.defaultLaySize,
+  //     }];
+  //   } else {
+  //     marketRunners = market.runners;
+  //   }
+  // }
 
   processedMarketsObj[baseKey].push({
     ...market,
@@ -4024,44 +4024,45 @@ const processMarketData = (templates, existingMarkets, teams, commentary, matchT
   sortedTemplates.forEach(template => {
     if (template.isPerEvent) {
       if (template.marketTypeCategoryId === 37) {
-        processTopBowlerRunsMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
-      } else {
+        // processTopBowlerRunsMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
+      } else if (template.marketTypeCategoryId === 6) {
         processMarketAndRunners(generateMarketFromTemplate(template, teams, commentary), null, 'oneTimeMarket', processedMarketsObj, commentaryDetails);
       }
-    } else if (template.marketTypeCategoryId === 11 && template.isOver) {
-      processOnlyOverMarkets(generateMarketFromTemplate(template, teams, commentary), teams, matchType, processedMarketsObj, commentaryDetails);
     }
-    else if (template.marketTypeCategoryId === 10 && template.isOver) {
-      processOverSessionMarkets(generateMarketFromTemplate(template, teams, commentary), teams, matchType, processedMarketsObj, commentaryDetails);
-    } else if (template.marketTypeCategoryId === 13) {
-      processWicketMarkets(generateMarketFromTemplate(template, teams, commentary), teams, matchType.noOfPlayer, processedMarketsObj, commentaryDetails);
-    } else if (template.marketTypeCategoryId === 12) {
-      processPlayerRunsMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
-    } else if (template.marketTypeCategoryId === 29) {
-      processPlayerBoundaryMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
-    } else if (template.marketTypeCategoryId === 26) {
-      processFancyLDOMarkets(generateMarketFromTemplate(template, teams, commentary), teams, matchType, processedMarketsObj, commentaryDetails);
-    } else if (template.marketTypeCategoryId === 30) {
-      processPlayerBallMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
-    } else if (template.marketTypeCategoryId === 23 || template.marketTypeCategoryId === 26 || template.marketTypeCategoryId === 27) {
-      processMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
-    } else if (template.marketTypeCategoryId === 28 || template.marketTypeCategoryId === 35) {
-      processLotteryMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, matchType);
-    } else if (template.marketTypeCategoryId === 31) {
-      processFallOfWicketMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
-    } else if (template.marketTypeCategoryId === 32) {
-      processPartnershipBoundariesMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
-    } else if (template.marketTypeCategoryId === 33) {
-      processWicketLostBallsMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
-    } else if (template.marketTypeCategoryId === 38) {
-      processTopBatsManRunsMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
-    } else if (template.marketTypeCategoryId === 39) {
-      processOnlyOverMarkets(generateMarketFromTemplate(template, teams, commentary), teams, matchType.maxOversInFirstInings, processedMarketsObj, commentaryDetails);
-    } else {
-      teams.forEach(team => {
-        processMarketAndRunners(generateExtraMarketFromTemplate(template, team, commentary), team.teamId, team.teamId.toString(), processedMarketsObj, commentaryDetails);
-      });
-    }
+    // else if (template.marketTypeCategoryId === 11 && template.isOver) {
+    //   processOnlyOverMarkets(generateMarketFromTemplate(template, teams, commentary), teams, matchType, processedMarketsObj, commentaryDetails);
+    // }
+    // else if (template.marketTypeCategoryId === 10 && template.isOver) {
+    //   processOverSessionMarkets(generateMarketFromTemplate(template, teams, commentary), teams, matchType, processedMarketsObj, commentaryDetails);
+    // } else if (template.marketTypeCategoryId === 13) {
+    //   processWicketMarkets(generateMarketFromTemplate(template, teams, commentary), teams, matchType.noOfPlayer, processedMarketsObj, commentaryDetails);
+    // } else if (template.marketTypeCategoryId === 12) {
+    //   processPlayerRunsMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
+    // } else if (template.marketTypeCategoryId === 29) {
+    //   processPlayerBoundaryMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
+    // } else if (template.marketTypeCategoryId === 26) {
+    //   processFancyLDOMarkets(generateMarketFromTemplate(template, teams, commentary), teams, matchType, processedMarketsObj, commentaryDetails);
+    // } else if (template.marketTypeCategoryId === 30) {
+    //   processPlayerBallMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
+    // } else if (template.marketTypeCategoryId === 23 || template.marketTypeCategoryId === 26 || template.marketTypeCategoryId === 27) {
+    //   processMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
+    // } else if (template.marketTypeCategoryId === 28 || template.marketTypeCategoryId === 35) {
+    //   processLotteryMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, matchType);
+    // } else if (template.marketTypeCategoryId === 31) {
+    //   processFallOfWicketMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
+    // } else if (template.marketTypeCategoryId === 32) {
+    //   processPartnershipBoundariesMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
+    // } else if (template.marketTypeCategoryId === 33) {
+    //   processWicketLostBallsMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
+    // } else if (template.marketTypeCategoryId === 38) {
+    //   processTopBatsManRunsMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
+    // } else if (template.marketTypeCategoryId === 39) {
+    //   processOnlyOverMarkets(generateMarketFromTemplate(template, teams, commentary), teams, matchType.maxOversInFirstInings, processedMarketsObj, commentaryDetails);
+    // } else {
+    //   teams.forEach(team => {
+    //     processMarketAndRunners(generateExtraMarketFromTemplate(template, team, commentary), team.teamId, team.teamId.toString(), processedMarketsObj, commentaryDetails);
+    //   });
+    // }
   });
 
   // Now update with existing markets from API
