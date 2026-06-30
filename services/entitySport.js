@@ -12,7 +12,7 @@ const {
   deleteCommentryOldDataQuery,
 } = require("../repository/TableCommentary")
 const { getAllTournamentTeamPlayerByIdsQuery } = require("../repository/TableTournamentsTeamPlayers")
-const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService,addSuperOverInEntity, insertComPlayerEntityService, revertCommentaryService, commentaryDetailsByEventIdService, notiConfigContentReplaceService } = require("../services/commentry");
+const { getMatchDataByCId, syncEntitySportCommentaryService, updateCommentaryPlayersFromEntityService,addSuperOverInEntity, insertComPlayerEntityService, revertCommentaryService, commentaryDetailsByEventIdService, notiConfigContentReplaceService, saveMarOdd } = require("../services/commentry");
 const {
     callClientAPI,
     ServiceType,
@@ -2264,6 +2264,16 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
                 oball.commentaryPartnershipId = partnershipData[0].commentaryPartnershipId
               }
             }
+            if (oball.ballType > 0 && !global.isSignalRStopped) {
+              saveMarOdd(
+                oball.commentaryId,
+                oball,
+                fastify,
+                comDetails.eventRefId
+              );
+            }
+            
+        
             global.tblCommentaryBallByBall.push(oball)
             ballbyball.push(oball)
           } 
@@ -2583,6 +2593,14 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
               prtship.push(...partnershipData);
               oball.commentaryPartnershipId = partnershipData[0].commentaryPartnershipId
             }
+          }
+          if (oball.ballType > 0 && !global.isSignalRStopped) {
+            saveMarOdd(
+              comDetails.commentaryId,
+              oball,
+              fastify,
+              comDetails.eventRefId
+            );
           }
           global.tblCommentaryBallByBall.push(oball)
           ballbyball.push(oball);
@@ -4625,6 +4643,19 @@ const storeInningWiseEntityDataService = async (request, fastify) => {
           await updateAutoImportDataQuery(importData, fastify, request);
           return `Inning data inserted successfully`
         } else {
+          let scoringTypeData = {
+            commentaryId: comDetails?.commentaryId,
+            scoringType: ScoringTypes.Entity,
+            tpId: matchId
+          }
+          await scoringTypeCommentaryQuery(scoringTypeData, fastify, request);
+          const index = global.tblCommentaries.findIndex((c) => c.commentaryId == comDetails?.commentaryId);
+          if (index !== -1) {
+            global.tblCommentaries[index] = {
+              ...global.tblCommentaries[index],
+              ...scoringTypeData,
+            }
+          }
           throw new Error("Toss not done");
         }
       }

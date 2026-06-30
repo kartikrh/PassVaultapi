@@ -505,6 +505,12 @@ const reConnectScoreHub = async () => {
                                 );
                             }
                         } catch (err) {
+                            let thirdParty = signalRURLs.find((item) => item.id === id);
+                            if (thirdParty) {
+                                thirdParty.isConnect = false;
+                                thirdParty.adminDisconnected = false;
+                                await updateConnectionStatus(thirdParty, _fastify);
+                            }
                             errorLogger(
                                 _fastify,
                                 `Error reconnecting SignalR connection : ${err.message}`,
@@ -847,7 +853,7 @@ const subScribeConnectMarketRate = async (_fastify) => {
     } catch (error) {
         errorLogger(
             _fastify,
-            error,
+            error?.message,
             "Error SignalrR --> signalrHandler/SubScribeConnectMarketRate",
             null
         );

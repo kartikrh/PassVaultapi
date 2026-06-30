@@ -4,8 +4,18 @@ const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { generateImageName, storeImageOnServer, removeImage, removeImageFromServer } = require("../utilities/Images");
 
-const getAllNotificationService = async(request) =>{
+const getAllNotificationService = async(request) => {
+    const { startDate, endDate } = request.body;
     let result = global.tblNotifications;
+    if (startDate && endDate) {
+        const start = new Date(startDate).getTime();
+        const end = new Date(endDate).getTime();
+
+        result = result.filter(item => {
+            const createdAt = new Date(item.createdAt).getTime();
+            return createdAt >= start && createdAt <= end;
+        });
+    }
     return result || [];
 }
 const getEventListService = async(request) =>{
