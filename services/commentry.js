@@ -8704,14 +8704,43 @@ const getMatchListByStatus = async (body, request, fastify) => {
     //   console.log(error)
     // }
     
-    const weatherAndPitchData = await weatherAndPitchDataService(item.commentaryId);
+    let weatherAndPitchData = await weatherAndPitchDataService(item.commentaryId);
+    weatherAndPitchData = {
+      ofu: weatherAndPitchData?.onfieldUmpires || "",
+      mRef: weatherAndPitchData?.matchReferee || "",
+      tUmp: weatherAndPitchData?.thirdUmpire || "",
+
+      diff: weatherAndPitchData?.difficulty || 0,
+      pHard: weatherAndPitchData?.pitchHardness || 0,
+      pCrk: weatherAndPitchData?.pitchCracks || 0,
+      pWear: weatherAndPitchData?.pitchWareSpeed || 0,
+      pType: weatherAndPitchData?.pitchType || 0,
+      lStrip: weatherAndPitchData?.lawnStriping || 0,
+      pAge: weatherAndPitchData?.pitchAge || 0,
+
+      sess: weatherAndPitchData?.session || "",
+
+      batCon: weatherAndPitchData?.battingCondition || "",
+      pitCon: weatherAndPitchData?.pitchCondition || "",
+      pacCon: weatherAndPitchData?.paceBowlingCondition || "",
+      spiCon: weatherAndPitchData?.spineBowlingConniton || "",
+
+      wCon: weatherAndPitchData?.weatherCondition || "",
+      // desc: weatherDetails?.description || "",
+
+      tmp: weatherAndPitchData?.temp || null,
+      hum: weatherAndPitchData?.humidity || null,
+      vis: weatherAndPitchData?.visibility || null,
+      wSpd: weatherAndPitchData?.windSpeed || null,
+      cld: weatherAndPitchData?.clouds || null,
+    }
 
     let details = {
       rno: rno,
       cid: item.commentaryId,
       eid: item.eventRefId || "",
       ety: eventType?.eventType || "",
-      matchTypeId: item.matchTypeId || null,
+      mtyId: item.matchTypeId || null,
       mtyp: item.matchType || "",
       hmtyp: item.historyMatchType || "",
       com: competition?.competition || "",
@@ -8773,19 +8802,19 @@ const getMatchListByStatus = async (body, request, fastify) => {
       t2id: item.team2Id || null,
       isPr: item.isPredictMarket,
       ics: item.isClientShow,
-      isTest: item?.isTest,
-      isActive: item?.isActive,
+      isTe: item?.isTest,
+      isAc: item?.isActive,
       nte1i: team1?.imagePath || "",
       nt1jr: team1?.jerseyPath || "",
       nte2i: team2?.imagePath || "",
       nt2jr: team2?.jerseyPath || "",
       etyId: eventType?.eventTypeId,
-      ballDelay: item?.ballDelay || 0,
-      overDelay: item?.overDelay || 0,
-      inningDelay: item?.inningDelay || 0,
-      tossDelay: item?.tossDelay || 0,
-      eventNo: item?.eventNo || "",
-      statusNote: item?.statusNote || "",
+      bDel: item?.ballDelay || 0,
+      oDel: item?.overDelay || 0,
+      iDel: item?.inningDelay || 0,
+      tDel: item?.tossDelay || 0,
+      eNo: item?.eventNo || "",
+      sNote: item?.statusNote || "",
       ...weatherAndPitchData,
       // mr: mr
       // bowT : item.bowlingTeam || null,
@@ -13472,7 +13501,36 @@ const getAllCompletedCommentaryService = async (request, fastify) => {
   const completedCommentaryData = await getAllCompletedCommentaryQuery(request, fastify);
   const result = await Promise.all(
     completedCommentaryData.map(async (item) => {
-      const weatherAndPitchData = await weatherAndPitchDataService(item.commentaryId);
+      let weatherAndPitchData = await weatherAndPitchDataService(item.commentaryId);
+         weatherAndPitchData = {
+        ofu: weatherAndPitchData?.onfieldUmpires || "",
+        mRef: weatherAndPitchData?.matchReferee || "",
+        tUmp: weatherAndPitchData?.thirdUmpire || "",
+
+        diff: weatherAndPitchData?.difficulty || 0,
+        pHard: weatherAndPitchData?.pitchHardness || 0,
+        pCrk: weatherAndPitchData?.pitchCracks || 0,
+        pWear: weatherAndPitchData?.pitchWareSpeed || 0,
+        pType: weatherAndPitchData?.pitchType || 0,
+        lStrip: weatherAndPitchData?.lawnStriping || 0,
+        pAge: weatherAndPitchData?.pitchAge || 0,
+
+        sess: weatherAndPitchData?.session || "",
+
+        batCon: weatherAndPitchData?.battingCondition || "",
+        pitCon: weatherAndPitchData?.pitchCondition || "",
+        pacCon: weatherAndPitchData?.paceBowlingCondition || "",
+        spiCon: weatherAndPitchData?.spineBowlingConniton || "",
+
+        wCon: weatherAndPitchData?.weatherCondition || "",
+        // desc: weatherDetails?.description || "",
+
+        tmp: weatherAndPitchData?.temp || null,
+        hum: weatherAndPitchData?.humidity || null,
+        vis: weatherAndPitchData?.visibility || null,
+        wSpd: weatherAndPitchData?.windSpeed || null,
+        cld: weatherAndPitchData?.clouds || null,
+      }
       return {
         ...item,
         ...weatherAndPitchData,
