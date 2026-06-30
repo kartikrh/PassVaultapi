@@ -76,6 +76,7 @@ const { processPredictScoreMarket } = require("../markets/index")
 const { cancelEventMarketsQuery, closeEventMarketByCIdQuery, cancelMarketVirtualQuery } = require("../repository/TableEventMarkets");
 const { ISPREDICATIONONCRICKETCARD, DEFAULTBALLFACED, DEFAULTPLAYERRUNS, DEFAULTPLAYERBOUNDARIES } = require("../utilities/configConstants");
 const configConstants = require("../utilities/configConstants");
+const { getDetailsByCIdV1Service, createEventMarketsServiceV1, changeMarketCloseService, changeMarketResultService } = require("./eventMarket");
 // const ballbyball ={
 //   commentaryBallByBallId: 0,
 //   commentaryId: commentary?.commentaryId,
@@ -446,6 +447,13 @@ const createVirtualEventService = async (request, fastify) => {
           request
         );
       });
+
+      const { marketTemplate, eventMarket, teamAndPlayers, commentary, matchType } = await getDetailsByCIdV1Service({ ...request, body: { commentaryId: commentaryData.commentaryId } }, fastify);
+      const processedMarkets = processMarketData(marketTemplate, eventMarket, teamAndPlayers, commentary, matchType, commentaryData);
+      for (const d of Object.keys(processedMarkets)) {
+        const data = processedMarkets[d]
+        await createEventMarketsServiceV1({ ...request, body: { eventMarket: data } }, fastify);
+      }
     }
     let cData = await getMatchDataByCId(
         {
@@ -860,6 +868,17 @@ const virtualEventTossService = async (request, fastify) => {
       );
     });
 
+    const getEventMarketId = global.tblEventMarketsV2.find(item => item.commentaryId === commentaryId && item.eventRefId === commentary?.eventRefId);
+    if (getEventMarketId) {
+      await changeMarketCloseService({ ...request, body: { commentaryId: commentaryId, eventMarketId: getEventMarketId.eventMarketId } }, fastify);
+      const getCommentaryTeam = global.tblCommentaryTeams.find(item => item.commentaryId === commentaryId && item.teamId === tossWonBy);
+      if (getCommentaryTeam) {
+        const marketRunner = global.tblMarketRunnerV2.find(item => item.eventMarketId === getEventMarketId.eventMarketId && item.selectionId == getCommentaryTeam.commentaryTeamId);
+        if (marketRunner) {
+          await changeMarketResultService({ ...request, body: { eventMarketId: getEventMarketId.eventMarketId, commentaryId, result: marketRunner.runnerId } }, fastify);
+        }
+      }
+    }
   }
   let cData = await getMatchDataByCId(
     {
@@ -3333,6 +3352,777 @@ const checkInningChangePredictor = ({
       targetAchieved,
   };
 };
+
+const generateMarketFromTemplate = (template, teams, commentary) => {
+  // Default market name without any changes
+  let marketName = template.templateName;
+
+  // Apply specific logic only when isPerEvent is true
+  if (template.isPerEvent && teams.length >= 2) {
+    // const team1Name = teams[0]?.shortName || 'Team1';
+    // const team2Name = teams[1]?.shortName || 'Team2';
+    marketName = `${template.templateName}`;
+  }
+
+  return {
+    eventMarketId: 0, // Default to 0 for new markets
+    isCreate: true,  // Default to true for new markets
+    status: "1",
+    margin: template.margin,
+    data: "",
+    playerId: null,
+    ...template,
+    commentaryId: commentary.commentaryId,
+    eventRefId: commentary.eventRefId,
+    marketName, // Use the newly formatted market name only when isPerEvent is true
+    defaultBackSize: template?.defaultBackSize,
+    defaultLaySize: template?.defaultLaySize,
+    lineType: template?.lineType,
+    teamId: null,
+    inningsId: 1,
+    isActive: template?.isDefaultMarketActive || false,
+    isAllow: template.isDefaultBetAllowed || false,
+    index: 0,
+    beforeSuspendMin: template.beforeSuspendMin,
+    beforeCloseMin: template.beforeCloseMin,
+    rateDiff: template?.rateDiff,
+    runners: template.runners?.map(runner => ({
+      ...runner,
+      runnerId: runner.runnerId || "0",
+      backSize: template?.isPredefineRunnerValue ? runner?.backSize : template?.defaultBackSize,
+      laySize: template?.isPredefineRunnerValue ? runner?.laySize : template?.defaultLaySize,
+    })) || []
+  };
+};
+
+const processMarketAndRunners = (market, teamId, keyPrefix, processedMarketsObj, commentaryDetails) => {
+  const baseKey = `${keyPrefix}_##_${market.marketTypeId}_##_${market.marketTypeCategoryId}`;
+
+  if (!processedMarketsObj[baseKey]) {
+    processedMarketsObj[baseKey] = [];
+  }
+
+  // Special handling for marketTypeId=5 and marketTypeCategoryId=6
+  let marketRunners = [];
+  if (market.marketTypeId === 5 && market.marketTypeCategoryId === 6) {
+    // Get team names from commentary object instead of marketData
+    const commentaryTeams = global.tblCommentaryTeams.filter(item => item.commentaryId === commentaryDetails.commentaryId && [commentaryDetails.team1Id, commentaryDetails.team2Id].includes(item.teamId));
+    const team1Name = commentaryDetails?.team1Name || 'Team1';
+    const team2Name = commentaryDetails?.team2Name || 'Team2';
+
+    // For each template runner, create two runners (one for each team)
+    if (market.runners && market.runners.length > 0) {
+      market.runners.forEach((templateRunner, index) => {
+        // Create runner for team 1
+        const team1Runner = {
+          ...templateRunner,
+          marketTemplateRunnerId: templateRunner.marketTemplateRunnerId,
+          runnerId: templateRunner.runnerId || "0",
+          marketTemplateId: market.marketTemplateId,
+          runner: templateRunner.runner.replace("{team}", team1Name),
+          line: templateRunner.line,
+          overRate: templateRunner.overRate,
+          underRate: templateRunner.underRate,
+          lastUpdate: new Date().toISOString(),
+          selectionId: commentaryTeams.find(item => item.teamId === commentaryDetails.team1Id)?.commentaryTeamId,
+          order: templateRunner.order * 2 - 1,
+          backPrice: templateRunner.backPrice,
+          layPrice: templateRunner.layPrice,
+          backSize: templateRunner.backSize || market.defaultBackSize,
+          laySize: templateRunner.laySize || market.defaultLaySize,
+        };
+
+        // Create runner for team 2
+        const team2Runner = {
+          ...templateRunner,
+          marketTemplateRunnerId: templateRunner.marketTemplateRunnerId,
+          runnerId: templateRunner.runnerId || "0",
+          marketTemplateId: market.marketTemplateId,
+          runner: templateRunner.runner.replace("{team}", team2Name),
+          line: templateRunner.line,
+          overRate: templateRunner.overRate,
+          underRate: templateRunner.underRate,
+          lastUpdate: new Date().toISOString(),
+          selectionId: commentaryTeams.find(item => item.teamId === commentaryDetails.team2Id)?.commentaryTeamId,
+          order: templateRunner.order * 2,
+          backPrice: templateRunner.backPrice,
+          layPrice: templateRunner.layPrice,
+          backSize: templateRunner.backSize || market.defaultBackSize,
+          laySize: templateRunner.laySize || market.defaultLaySize,
+        };
+
+        marketRunners.push(team1Runner, team2Runner);
+      });
+    }
+  }
+  else if (market.marketTypeCategoryId === 28) {
+    marketRunners = market.runners?.map(runner => ({
+      marketTemplateRunnerId: runner.marketTemplateRunnerId,
+      marketTemplateId: runner.marketTemplateId,
+      runner: runner.runner,
+      line: runner.line,
+      overRate: runner.overRate,
+      underRate: runner.underRate,
+      lastUpdate: new Date().toISOString(),
+      selectionId: runner.selectionId,
+      order: runner.order,
+      backPrice: runner.backPrice,
+      layPrice: runner.layPrice,
+      backSize: runner.backSize,
+      laySize: runner.laySize,
+      predefinedValue: runner.predefinedValue,
+      runnerId: runner.runnerId || "0"
+    })) || [];
+  }
+  else if (market.marketTypeCategoryId === 26) {
+    // Handle LDO and Lottery markets
+    marketRunners = market.runners?.map(runner => ({
+      ...runner,  // Spread the original runner properties
+      runnerId: runner.runnerId || "0",
+      // Make sure each property is explicitly copied
+      marketTemplateRunnerId: runner.marketTemplateRunnerId,
+      marketTemplateId: market.marketTemplateId,
+      runner: runner.runner,
+      line: runner.line,
+      overRate: runner.overRate,
+      underRate: runner.underRate,
+      lastUpdate: new Date().toISOString(),
+      selectionId: runner.selectionId,
+      order: runner.order,
+      backPrice: runner.backPrice,
+      layPrice: runner.layPrice,
+      backSize: market?.isPredefineRunnerValue ? runner?.backSize : market?.defaultBackSize,
+      laySize: market?.isPredefineRunnerValue ? runner?.laySize : market?.defaultLaySize,
+      predefinedValue: runner.predefinedValue
+    })) || [];
+  } else {
+    // Default runner handling for other market types
+    if (!market.runners || market.runners.length === 0) {
+      marketRunners = [{
+        marketTemplateRunnerId: 0,
+        runnerId: "0",
+        marketTemplateId: market.marketTemplateId,
+        runner: market?.marketName,
+        line: market.defaultLine || null,
+        overRate: null,
+        underRate: null,
+        lastUpdate: new Date().toISOString(),
+        selectionId: `${market.marketTemplateId}01`,
+        order: 1,
+        backPrice: null,
+        layPrice: null,
+        backSize: market?.defaultBackSize,
+        laySize: market?.defaultLaySize,
+      }];
+    } else {
+      marketRunners = market.runners;
+    }
+  }
+
+  processedMarketsObj[baseKey].push({
+    ...market,
+    teamId,
+    eventMarketId: market.eventMarketId || 0,
+    isCreate: market.isCreate !== undefined ? market.isCreate : true,
+    status: market.status || "1",
+    margin: parseFloat(market.margin) || 3,
+    data: market.data || "",
+    playerId: market.playerId || null,
+    isActive: market.isActive !== undefined ? market.isActive : true,
+    isAllow: market.isAllow !== undefined ? market.isAllow : false,
+    inningsId: market.inningsId || 1,
+    index: market.index || 0,
+    commentaryId: market.commentaryId,
+    eventRefId: market.eventRefId,
+    isPredefineRunnerValue: market.isPredefineRunnerValue !== undefined ? market.isPredefineRunnerValue : true,
+    runners: marketRunners
+  });
+};
+
+const processTopBowlerRunsMarkets = (market, teams, processedMarketsObj, commentaryDetails) => {
+  const specialMarketName = `Man Of the Match ${market?.matchType} ADV`;
+  const specialMarket = {
+    ...market,
+    marketName: specialMarketName,
+    over: 0,
+    runners: teams?.flatMap(team =>
+      team?.players?.flatMap(player =>
+        (market?.runners || []).map(runner => ({
+          marketTemplateRunnerId: runner?.marketTemplateRunnerId,
+          marketTemplateId: market?.marketTemplateId,
+          runner: `${player?.playerName} ${team?.teamName}`,
+          line: runner?.line,
+          overRate: runner?.overRate,
+          underRate: runner?.underRate,
+          lastUpdate: new Date().toISOString(),
+          selectionId: runner?.selectionId,
+          order: runner?.order,
+          backPrice: runner?.backPrice,
+          layPrice: runner?.layPrice,
+          backSize: market?.isPredefineRunnerValue ? runner?.backSize : market?.defaultBackSize,
+          laySize: market?.isPredefineRunnerValue ? runner?.laySize : market?.defaultLaySize,
+          predefinedValue: runner?.predefinedValue,
+          runnerId: runner?.runnerId || "0",
+          playerId: player?.commentaryPlayerId,
+          defaultLine: parseFloat(player?.batsmanAverage),
+          teamId: team?.teamId,
+        }))
+      )
+    )
+  }
+  processMarketAndRunners(specialMarket, null, 'oneTimeMarket', processedMarketsObj, commentaryDetails);
+};
+
+const processOnlyOverMarkets = (market, teams, matchType, processedMarketsObj, commentaryDetails) => {
+  // const startOver = parseInt(market.over);
+  const startOver = 2;
+  const maxOvers = matchType.maxOversInFirstInings
+  const ballsPerOver = matchType.ballsPerOver
+  teams.forEach(team => {
+    for (let currentOver = startOver; currentOver <= maxOvers; currentOver++) {
+      let marketName = ""
+      if (market.isNameInBall) {
+        const endBall = currentOver * ballsPerOver
+        const startBall = endBall - ballsPerOver + 1
+        marketName = `${market?.templateName.replace("{x}", endBall).replace("{y}", startBall)} - ${team.shortName}`;
+      } else {
+        marketName = `${market?.templateName.replace("{x}", currentOver)} - ${team.shortName}`;
+      }
+      const specialMarket = {
+        ...market,
+        over: currentOver.toString(),
+        marketName: marketName,
+        teamId: team.teamId
+      };
+      processMarketAndRunners(specialMarket, team.teamId, team.teamId.toString(), processedMarketsObj, commentaryDetails);
+    }
+  });
+};
+
+const processOverSessionMarkets = (market, teams, matchType, processedMarketsObj, commentaryDetails) => {
+  // const startOver = parseInt(market.over);
+  const startOver = 2;
+  const maxOvers = matchType.maxOversInFirstInings
+  const ballsPerOver = matchType.ballsPerOver
+  const overNotInclude = (market.notIncludedOver || "").split(",")
+  teams.forEach(team => {
+    for (let currentOver = startOver; currentOver <= maxOvers; currentOver++) {
+      if (overNotInclude.includes("" + currentOver)) continue
+      // const specialMarketName = `ONLY ${currentOver} OVER - ${team.shortName}`;
+      let marketName = ""
+      if (market.isNameInBall) {
+        const endBall = currentOver * ballsPerOver
+        marketName = `${market?.templateName.replace("{x}", endBall)} - ${team.shortName}`;
+      } else {
+        marketName = `${market?.templateName.replace("{x}", currentOver)} - ${team.shortName}`;
+      }
+      const specialMarket = {
+        ...market,
+        over: currentOver.toString(),
+        marketName: marketName,
+        teamId: team.teamId
+      };
+      processMarketAndRunners(specialMarket, team.teamId, team.teamId.toString(), processedMarketsObj, commentaryDetails);
+    }
+  });
+};
+
+const processWicketMarkets = (market, teams, noOfPlayers, processedMarketsObj, commentaryDetails) => {
+  teams.forEach(team => {
+    for (let wicket = 1; wicket < noOfPlayers; wicket++) {
+      // const specialMarketName = `${wicket} Wicket - ${team.shortName}`;
+      const specialMarketName = `${market?.marketName.replace("{fow}", wicket)} - ${team.shortName}`;
+      const specialMarket = {
+        ...market,
+        marketName: specialMarketName,
+        teamId: team.teamId
+      };
+      processMarketAndRunners(specialMarket, team.teamId, team.teamId.toString(), processedMarketsObj, commentaryDetails);
+    }
+  });
+};
+
+const processPlayerRunsMarkets = (market, teams, processedMarketsObj, commentaryDetails) => {
+  teams.forEach(team => {
+    sortbasedOnthePlayerTypeAndPlayerName(team.players);
+    // team.players.sort((a, b) => a?.playerName.localeCompare(b?.playerName));
+    team.players.forEach(player => {
+      const specialMarketName = `${player?.playerName} Runs`;
+      const specialMarket = {
+        ...market,
+        playerId: player.commentaryPlayerId,
+        playerName: player.playerName,
+        playerType: player.playerType,
+        marketName: specialMarketName,
+        teamId: team.teamId,
+        over: 0,
+        defaultLine: parseFloat(player.batsmanAverage)
+      }
+      processMarketAndRunners(specialMarket, team.teamId, team.teamId.toString(), processedMarketsObj, commentaryDetails);
+    });
+  });
+};
+
+const processPlayerBoundaryMarkets = (market, teams, processedMarketsObj, commentaryDetails) => {
+  teams.forEach(team => {
+    // team.players.sort((a, b) => a?.playerName.localeCompare(b?.playerName));
+    sortbasedOnthePlayerTypeAndPlayerName(team.players);
+    team.players.forEach(player => {
+      const specialMarketName = `${player?.playerName} Boundaries`;
+      const specialMarket = {
+        ...market,
+        playerId: player.commentaryPlayerId,
+        marketName: specialMarketName,
+        teamId: team.teamId,
+        over: 0,
+        defaultLine: parseFloat(player.boundary) || 0
+      };
+      processMarketAndRunners(specialMarket, team.teamId, team.teamId.toString(), processedMarketsObj, commentaryDetails);
+    });
+  });
+};
+
+const processFancyLDOMarkets = (market, teams, matchType, processedMarketsObj, commentaryDetails) => {
+  const startOver = parseInt(market.over) || 2;
+  const diff = startOver;
+  const autoclose = parseFloat(market.beforeAutoClose) || 6;
+  const autosuspend = parseFloat(market.beforeAutoSuspend) || 6;
+  const autocreate = parseFloat(market.create) || 6;
+  const autoopen = parseFloat(market.autoOpen) || 6;
+  const howManyOpenMarkets = parseInt(market.howManyOpenMarkets) || 1;
+  const notincludedover = market.notIncludedOver ?
+    market.notIncludedOver.split(',').map(x => parseInt(x)) : [];
+  const matchTypeId = market.matchTypeID || 2;
+
+  teams.forEach(team => {
+    let nextopen = 0.0;
+    let nextcreate = 0.0;
+    let noOfMarketsCreated = 0;
+    let nextaddmarket = 0;
+    const maxOvers = matchType.maxOversInFirstInings
+
+    for (let currentOver = startOver; currentOver <= maxOvers; currentOver++) {
+      if (!notincludedover.includes(currentOver)) {
+        const updatedBeforeAutoClose = ballsToOvers((currentOver * 6 - autoclose), matchTypeId, matchType);
+        const updatedBeforeAutoSuspend = ballsToOvers((currentOver * 6 - autosuspend), matchTypeId, matchType);
+
+        let updatedCreate, updatedAutoOpen;
+
+        if (howManyOpenMarkets === 1) {
+          updatedCreate = ballsToOvers(((currentOver - diff) * 6 + autocreate - 6), matchTypeId, matchType);
+          updatedAutoOpen = ballsToOvers(((currentOver - diff) * 6 + autoopen - 6), matchTypeId, matchType);
+        } else {
+          updatedCreate = nextcreate;
+          updatedAutoOpen = nextopen;
+          noOfMarketsCreated++;
+
+          if (noOfMarketsCreated === howManyOpenMarkets) {
+            noOfMarketsCreated--;
+            nextcreate = Math.floor(nextaddmarket) + (autocreate / 10);
+            nextopen = Math.floor(nextaddmarket) + (autoopen / 10);
+            nextaddmarket++;
+          }
+        }
+
+        let marketName = ""
+        const ballsPerOver = matchType.ballsPerOver
+        if (market.isNameInBall) {
+          const endBall = currentOver * ballsPerOver
+          marketName = `${market?.templateName.replace("{x}", endBall)} - ${team.shortName}`;
+        } else {
+          marketName = `${market?.templateName.replace("{x}", currentOver)} - ${team.shortName}`;
+        }
+        const specialMarket = {
+          ...market,
+          over: currentOver.toString(),
+          marketName: marketName,
+          teamId: team.teamId,
+          beforeAutoClose: updatedBeforeAutoClose.toString(),
+          beforeAutoSuspend: updatedBeforeAutoSuspend.toString(),
+          create: updatedCreate.toString(),
+          autoOpen: updatedAutoOpen.toString()
+        };
+
+        processMarketAndRunners(specialMarket, team.teamId, team.teamId.toString(), processedMarketsObj, commentaryDetails);
+      }
+    }
+  });
+};
+
+const processPlayerBallMarkets = (market, teams, processedMarketsObj, commentaryDetails) => {
+  teams.forEach(team => {
+    // team.players.sort((a, b) => a?.playerName.localeCompare(b?.playerName));
+    sortbasedOnthePlayerTypeAndPlayerName(team.players);
+    team.players.forEach(player => {
+      const specialMarketName = market.marketName.replace("{player}", player?.playerName);
+      const specialMarket = {
+        ...market,
+        playerId: player.commentaryPlayerId,
+        marketName: specialMarketName,
+        teamId: team.teamId,
+        over: 0,
+        defaultLine: parseFloat(player.playerBallFaced)
+      };
+      processMarketAndRunners(specialMarket, team.teamId, team.teamId.toString(), processedMarketsObj, commentaryDetails);
+    });
+  });
+};
+
+const processMarkets = (market, teams, processedMarketsObj, commentaryDetails) => {
+  teams.forEach(team => {
+    const specialMarketName = `${market.marketName} - ${team.shortName}`;
+    const specialMarket = {
+      ...market,
+      marketName: specialMarketName,
+      teamId: team.teamId
+    };
+    processMarketAndRunners(specialMarket, team.teamId, team.teamId.toString(), processedMarketsObj, commentaryDetails);
+  });
+};
+
+const processLotteryMarkets = (market, teams, processedMarketsObj, matchType, commentaryDetails) => {
+
+  const maxOvers = market.maxOvers || matchType?.maxOversInFirstInings || 5;
+  const startOver = parseInt(market.over) || 2;
+  const diff = startOver;
+  const autoclose = parseFloat(market.beforeAutoClose) || 6;
+  const autosuspend = parseFloat(market.beforeAutoSuspend) || 6;
+  const autocreate = parseFloat(market.create) || 6;
+  const autoopen = parseFloat(market.autoOpen) || 6;
+  const howManyOpenMarkets = parseInt(market.howManyOpenMarkets) || 1;
+  const notincludedover = market.notIncludedOver ?
+    market.notIncludedOver.split(',').map(x => parseInt(x)) : [];
+  const matchTypeId = market.matchTypeID || 2;
+
+  teams.forEach(team => {
+    let nextopen = 0.0;
+    let nextcreate = 0.0;
+    let noOfMarketsCreated = 0;
+    let nextaddmarket = 0;
+
+    for (let currentOver = startOver; currentOver <= maxOvers; currentOver++) {
+      if (notincludedover.includes(currentOver)) continue;
+      // Calculate updated values based on current over
+      const updatedValues = {
+        beforeAutoClose: ballsToOvers((currentOver * 6 - autoclose), matchTypeId, matchType),
+        beforeAutoSuspend: ballsToOvers((currentOver * 6 - autosuspend), matchTypeId, matchType)
+      };
+
+      // Determine create and autoOpen values based on howManyOpenMarkets
+      if (howManyOpenMarkets === 1) {
+        updatedValues.create = ballsToOvers(((currentOver - diff) * 6 + autocreate - 6), matchTypeId, matchType);
+        updatedValues.autoOpen = ballsToOvers(((currentOver - diff) * 6 + autoopen - 6), matchTypeId, matchType);
+      } else {
+        updatedValues.create = nextcreate;
+        updatedValues.autoOpen = nextopen;
+        noOfMarketsCreated++;
+
+        if (noOfMarketsCreated === howManyOpenMarkets) {
+          noOfMarketsCreated--;
+          nextcreate = Math.floor(nextaddmarket) + (autocreate / 10);
+          nextopen = Math.floor(nextaddmarket) + (autoopen / 10);
+          nextaddmarket++;
+        }
+      }
+
+      // Create market for current over
+      let marketName = ""
+      const ballsPerOver = matchType.ballsPerOver
+      if (market.isNameInBall) {
+        const endBall = currentOver * ballsPerOver
+        marketName = `${market?.templateName.replace("{x}", endBall)} - ${team.shortName}`;
+      } else {
+        marketName = `${market?.templateName.replace("{x}", currentOver)} - ${team.shortName}`;
+      }
+      const specialMarket = {
+        ...market,
+        over: currentOver.toString(),
+        marketName,
+        teamId: team.teamId,
+        beforeAutoClose: updatedValues.beforeAutoClose.toString(),
+        beforeAutoSuspend: updatedValues.beforeAutoSuspend.toString(),
+        create: updatedValues.create.toString(),
+        autoOpen: updatedValues.autoOpen.toString(),
+        runners: market.runners?.map(runner => ({
+          marketTemplateRunnerId: runner.marketTemplateRunnerId,
+          marketTemplateId: market.marketTemplateId,
+          runner: runner.runner,
+          line: runner.line,
+          overRate: runner.overRate,
+          underRate: runner.underRate,
+          lastUpdate: new Date().toISOString(),
+          selectionId: runner.selectionId,
+          order: runner.order,
+          backPrice: runner.backPrice,
+          layPrice: runner.layPrice,
+          backSize: market.isPredefineRunnerValue ? runner.backSize : market.defaultBackSize,
+          laySize: market.isPredefineRunnerValue ? runner.laySize : market.defaultLaySize,
+          predefinedValue: runner.predefinedValue,
+          runnerId: runner.runnerId || "0"
+        })) || []
+      };
+
+      processMarketAndRunners(specialMarket, team.teamId, team.teamId.toString(), processedMarketsObj, commentaryDetails);
+    }
+  });
+};
+
+const processFallOfWicketMarkets = (market, teams, processedMarketsObj, commentaryDetails) => {
+  const maxWickets = market.afterWicketAutoSuspend - 1;  // Subtract 1 to not include the suspend wicket
+
+  teams.forEach(team => {
+    for (let wicket = 1; wicket <= maxWickets; wicket++) {
+      const wicketOrdinal = getOrdinalSuffix(wicket);
+      const marketName = market.templateName.replace("{wicket}", wicketOrdinal);
+      const specialMarket = {
+        ...market,
+        marketName: `${marketName} - ${team.shortName}`,
+        wicketNo: wicket,
+        teamId: team.teamId
+      };
+      processMarketAndRunners(specialMarket, team.teamId, team.teamId.toString(), processedMarketsObj, commentaryDetails);
+    }
+  });
+};
+
+const processPartnershipBoundariesMarkets = (market, teams, processedMarketsObj, commentaryDetails) => {
+  const maxWickets = market?.afterWicketAutoSuspend - 2;  // Subtract 2 to not include the suspend wicket
+
+  teams.forEach(team => {
+    for (let wicket = 1; wicket <= maxWickets; wicket++) {
+      const wicketOrdinal = getOrdinalSuffix(wicket);
+      const marketName = market.templateName.replace("{wicket}", wicketOrdinal);
+      const specialMarket = {
+        ...market,
+        marketName: `${marketName} - ${team.shortName}`,
+        wicketNo: wicket,
+        teamId: team.teamId
+      };
+      processMarketAndRunners(specialMarket, team.teamId, team.teamId.toString(), processedMarketsObj, commentaryDetails);
+    }
+  });
+};
+
+const processWicketLostBallsMarkets = (market, teams, processedMarketsObj, commentaryDetails) => {
+  const maxWickets = market?.afterWicketAutoSuspend - 2;  // Subtract 2 to not include the suspend wicket
+
+  teams.forEach(team => {
+    for (let wicket = 1; wicket <= maxWickets; wicket++) {
+      const wicketOrdinal = getOrdinalSuffix(wicket);
+      const marketName = market.templateName.replace("{wicket}", wicketOrdinal);
+      const specialMarket = {
+        ...market,
+        marketName: `${marketName} - ${team.shortName}`,
+        wicketNo: wicket,
+        teamId: team.teamId
+      };
+      processMarketAndRunners(specialMarket, team.teamId, team.teamId.toString(), processedMarketsObj);
+    }
+  });
+};
+
+const processTopBatsManRunsMarkets = (market, teams, processedMarketsObj, commentaryDetails) => {
+  teams.forEach(team => {
+    sortbasedOnthePlayerTypeAndPlayerName(team.players);
+    const specialMarketName = `Top Batsman ${team?.teamName} adv`;
+    const specialMarket = {
+      ...market,
+      marketName: specialMarketName,
+      teamId: team?.teamId,
+      over: 0,
+      runners: team?.players?.flatMap(player =>
+        (market?.runners || []).map(runner => ({
+          marketTemplateRunnerId: runner?.marketTemplateRunnerId,
+          marketTemplateId: market?.marketTemplateId,
+          runner: `${player?.playerName} ${team?.teamName}`,
+          line: runner?.line,
+          overRate: runner?.overRate,
+          underRate: runner?.underRate,
+          lastUpdate: new Date().toISOString(),
+          selectionId: runner?.selectionId,
+          order: runner?.order,
+          backPrice: runner?.backPrice,
+          layPrice: runner?.layPrice,
+          backSize: market?.isPredefineRunnerValue ? runner?.backSize : market?.defaultBackSize,
+          laySize: market?.isPredefineRunnerValue ? runner?.laySize : market?.defaultLaySize,
+          predefinedValue: runner?.predefinedValue,
+          runnerId: runner?.runnerId || "0",
+          playerId: player?.commentaryPlayerId,
+          defaultLine: parseFloat(player?.batsmanAverage),
+        }))
+      )
+    }
+    processMarketAndRunners(specialMarket, team.teamId, team.teamId.toString(), processedMarketsObj, commentaryDetails);
+  });
+};
+
+const generateExtraMarketFromTemplate = (template, team, commentary) => {
+  return {
+    eventMarketId: 0,
+    isCreate: true,
+    status: "1",
+    margin: template.margin,
+    data: "",
+    playerId: null,
+    ...template,
+    commentaryId: commentary.commentaryId,
+    eventRefId: commentary.eventRefId,
+    marketName: `${template.templateName} - ${team.shortName}`,
+    defaultBackSize: template?.defaultBackSize,
+    defaultLaySize: template?.defaultLaySize,
+    lineType: template?.lineType,
+    teamId: null,
+    inningsId: 1,
+    isActive: template?.isDefaultMarketActive || false,
+    isAllow: template.isDefaultBetAllowed || false,
+    index: 0,
+    rateDiff: template?.rateDiff,
+    runners: template.runners?.map(runner => ({
+      ...runner,
+      runnerId: runner.runnerId || "0",
+      backSize: template?.isPredefineRunnerValue ? runner?.backSize : template?.defaultBackSize,
+      laySize: template?.isPredefineRunnerValue ? runner?.laySize : template?.defaultLaySize,
+    })) || []
+  };
+};
+
+// Helper function to get the key for a market
+const getMarketKey = (market) => {
+  const prefix = market.teamId || 'oneTimeMarket';
+  return `${prefix}_##_${market.marketTypeId}_##_${market.marketTypeCategoryId}`;
+};
+
+// Helper function to merge runners
+const mergeRunners = (templateRunners, apiRunners, marketName, marketPredefinedValue) => {
+  if (apiRunners.length > 0) {
+    return apiRunners.map(apiRunner => ({
+      ...apiRunner,
+      runner: apiRunner.runner || marketName,
+      runnerId: apiRunner.runnerId || apiRunner.selectionId || apiRunner.runner || marketName,
+      predefinedValue: marketPredefinedValue, // Copy market level predefinedValue to runner
+      line: apiRunner.line,
+      overRate: apiRunner.overRate,
+      underRate: apiRunner.underRate,
+      backPrice: apiRunner.backPrice,
+      layPrice: apiRunner.layPrice,
+      backSize: apiRunner.backSize,
+      laySize: apiRunner.laySize,
+      order: apiRunner.order,
+      selectionId: apiRunner.selectionId
+    }));
+  }
+  return templateRunners;
+};
+
+const processMarketData = (templates, existingMarkets, teams, commentary, matchType, commentaryDetails) => {
+  const processedMarketsObj = {};
+  let sortedTemplates = [...templates];
+  const type23Templates = sortedTemplates?.filter(t => t?.marketTypeCategoryId === 23)?.sort((a, b) => a?.over - b?.over);
+  const otherTemplates = sortedTemplates?.filter(t => t?.marketTypeCategoryId !== 23);
+  sortedTemplates = [...type23Templates, ...otherTemplates];
+  // Process templates first to ensure all markets are generated
+  sortedTemplates.forEach(template => {
+    if (template.isPerEvent) {
+      if (template.marketTypeCategoryId === 37) {
+        processTopBowlerRunsMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
+      } else {
+        processMarketAndRunners(generateMarketFromTemplate(template, teams, commentary), null, 'oneTimeMarket', processedMarketsObj, commentaryDetails);
+      }
+    } else if (template.marketTypeCategoryId === 11 && template.isOver) {
+      processOnlyOverMarkets(generateMarketFromTemplate(template, teams, commentary), teams, matchType, processedMarketsObj, commentaryDetails);
+    }
+    else if (template.marketTypeCategoryId === 10 && template.isOver) {
+      processOverSessionMarkets(generateMarketFromTemplate(template, teams, commentary), teams, matchType, processedMarketsObj, commentaryDetails);
+    } else if (template.marketTypeCategoryId === 13) {
+      processWicketMarkets(generateMarketFromTemplate(template, teams, commentary), teams, matchType.noOfPlayer, processedMarketsObj, commentaryDetails);
+    } else if (template.marketTypeCategoryId === 12) {
+      processPlayerRunsMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
+    } else if (template.marketTypeCategoryId === 29) {
+      processPlayerBoundaryMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
+    } else if (template.marketTypeCategoryId === 26) {
+      processFancyLDOMarkets(generateMarketFromTemplate(template, teams, commentary), teams, matchType, processedMarketsObj, commentaryDetails);
+    } else if (template.marketTypeCategoryId === 30) {
+      processPlayerBallMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
+    } else if (template.marketTypeCategoryId === 23 || template.marketTypeCategoryId === 26 || template.marketTypeCategoryId === 27) {
+      processMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
+    } else if (template.marketTypeCategoryId === 28 || template.marketTypeCategoryId === 35) {
+      processLotteryMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, matchType);
+    } else if (template.marketTypeCategoryId === 31) {
+      processFallOfWicketMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
+    } else if (template.marketTypeCategoryId === 32) {
+      processPartnershipBoundariesMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
+    } else if (template.marketTypeCategoryId === 33) {
+      processWicketLostBallsMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
+    } else if (template.marketTypeCategoryId === 38) {
+      processTopBatsManRunsMarkets(generateMarketFromTemplate(template, teams, commentary), teams, processedMarketsObj, commentaryDetails);
+    } else if (template.marketTypeCategoryId === 39) {
+      processOnlyOverMarkets(generateMarketFromTemplate(template, teams, commentary), teams, matchType.maxOversInFirstInings, processedMarketsObj, commentaryDetails);
+    } else {
+      teams.forEach(team => {
+        processMarketAndRunners(generateExtraMarketFromTemplate(template, team, commentary), team.teamId, team.teamId.toString(), processedMarketsObj, commentaryDetails);
+      });
+    }
+  });
+
+  // Now update with existing markets from API
+  existingMarkets.forEach(apiMarket => {
+    const key = getMarketKey(apiMarket);
+    if (!processedMarketsObj[key]) {
+      processedMarketsObj[key] = [];
+    }
+
+    const existingMarketIndex = processedMarketsObj[key].findIndex(m =>
+      m.teamId === apiMarket.teamId &&
+      m.marketTypeId === apiMarket.marketTypeId &&
+      m.marketTypeCategoryId === apiMarket.marketTypeCategoryId &&
+      m.marketName === apiMarket.marketName
+    );
+
+    if (existingMarketIndex !== -1) {
+      // Update the existing market with API data
+      const templateMarket = processedMarketsObj[key][existingMarketIndex];
+      const updatedMarket = {
+        ...templateMarket,
+        ...apiMarket,
+        isCreate: false,
+        runners: mergeRunners(
+          templateMarket.runners,
+          apiMarket.runners,
+          apiMarket.marketName,
+          apiMarket.predefinedValue // Pass market level predefinedValue
+        )
+      };
+      processedMarketsObj[key][existingMarketIndex] = updatedMarket;
+    } else {
+      // If the API market doesn't exist in our generated markets, add it
+      processedMarketsObj[key].push({
+        ...apiMarket,
+        isCreate: false,
+        runners: mergeRunners(
+          [],
+          apiMarket.runners,
+          apiMarket.marketName,
+          apiMarket.predefinedValue // Pass market level predefinedValue
+        )
+      });
+    }
+  });
+
+  // Sort the markets within each key to maintain order
+  Object.keys(processedMarketsObj).forEach(key => {
+    processedMarketsObj[key].sort((a, b) => {
+      // First, sort by over if it exists
+      if (a.over && b.over) {
+        return a.over - b.over;
+      }
+      // If over doesn't exist, maintain the original order
+      return 0;
+    });
+  });
+
+  return processedMarketsObj;
+};
+
 module.exports = {
   saveEventervice,
   createVirtualEventService,

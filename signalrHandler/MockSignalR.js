@@ -505,6 +505,12 @@ const reConnectScoreHub = async () => {
                                 );
                             }
                         } catch (err) {
+                            let thirdParty = signalRURLs.find((item) => item.id === id);
+                            if (thirdParty) {
+                                thirdParty.isConnect = false;
+                                thirdParty.adminDisconnected = false;
+                                await updateConnectionStatus(thirdParty, _fastify);
+                            }
                             errorLogger(
                                 _fastify,
                                 `Error reconnecting SignalR connection : ${err.message}`,
