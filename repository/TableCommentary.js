@@ -5589,7 +5589,7 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
             WHEN tc."wrChoseTo" IS NULL THEN NULL
             WHEN tc."wrChoseTo" = 1 THEN 'BAT'
             ELSE 'BOWL'
-          END AS "choseto",
+          END AS "cto",
           tt1."wrTeamName" AS "te1n",
           tt2."wrTeamName" AS "te2n",
           tct1."wrShortName" AS "s1n",

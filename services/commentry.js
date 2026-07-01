@@ -8751,7 +8751,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       et: convertDate(item.eventDate, "hh:mm:ss") || "",
       utc: item.eventDate,
       twonby: TossTeamName?.teamName || null,
-      choseto: toss || null,
+      cto: toss || null,
       te1n: commentaryTeamsOne?.teamName || "",
       te2n: commentaryTeamsTwo?.teamName || "",
       s1n: commentaryTeamsOne?.shortName || "",
