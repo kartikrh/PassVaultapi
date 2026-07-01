@@ -5589,7 +5589,7 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
             WHEN tc."wrChoseTo" IS NULL THEN NULL
             WHEN tc."wrChoseTo" = 1 THEN 'BAT'
             ELSE 'BOWL'
-          END AS "choseto",
+          END AS "cto",
           tt1."wrTeamName" AS "te1n",
           tt2."wrTeamName" AS "te2n",
           tct1."wrShortName" AS "s1n",
@@ -5626,9 +5626,9 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           ) AS t2s,
           tc."wrDisplayStatus" AS "dis",
           COALESCE(tc."wrRmk", '') AS "rmk",
-          COALESCE(tc."wrWinRmk", '') AS "winRmk",
-          COALESCE(tc."wrTossRmk", '') AS "tossRmk",
-          COALESCE(tc."wrCardType", 0) AS "cardType",
+          COALESCE(tc."wrWinRmk", '') AS "wrm",
+          COALESCE(tc."wrTossRmk", '') AS "trk",
+          COALESCE(tc."wrCardType", 0) AS "ct",
           COALESCE(CAST(tct1."wrCrr" AS FLOAT), 0) AS "te1crr",
           COALESCE(CAST(tct2."wrCrr" AS FLOAT), 0) AS "te2crr",
           COALESCE(CAST(tct1."wrRrr" AS FLOAT), 0) AS "te1rrr",

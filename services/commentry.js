@@ -8751,7 +8751,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       et: convertDate(item.eventDate, "hh:mm:ss") || "",
       utc: item.eventDate,
       twonby: TossTeamName?.teamName || null,
-      choseto: toss || null,
+      cto: toss || null,
       te1n: commentaryTeamsOne?.teamName || "",
       te2n: commentaryTeamsTwo?.teamName || "",
       s1n: commentaryTeamsOne?.shortName || "",
@@ -8766,13 +8766,13 @@ const getMatchListByStatus = async (body, request, fastify) => {
       t2s: teamScore2 || "",
       dis: item.displayStatus || "",
       rmk: item.rmk === null || item.rmk === undefined ? "" : item.rmk,
-      winRmk:
+      wrm:
         item.winRmk === null || item.winRmk === undefined ? "" : item.winRmk,
-      cardType:
+      ct:
         item.cardType === null || item.cardType === undefined
           ? ""
           : item.cardType,
-      tossRmk:
+      trk:
         item.tossRmk === null || item.tossRmk === undefined ? "" : item.tossRmk,
       winNm:
         item.winnerName === null || item.winnerName === undefined
