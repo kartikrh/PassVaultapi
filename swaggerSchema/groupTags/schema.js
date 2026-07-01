@@ -5573,7 +5573,10 @@ const SubScribesDomain = {
         type: "object",
         properties: {
           isApproved: { type: "boolean" },
-          isVideoApproved: { type: "boolean" }
+          isVideoApproved: { type: "boolean" },
+          isActive: { type: "boolean" },
+          startDate: { type: "string" },
+          endDate: { type: "string" }
         },
       },
     },
@@ -5657,6 +5660,13 @@ const SubScribesDomain = {
         required: ["subScribesDomainId", "isVideoApproved"],
       },
     },
+  },
+  inActiveSubscribeDomainAndSubDomain: {
+    schema: {
+      tags: ["SubScribesDomain"],
+      description: "inactive Subscribe Domain and Sub Domain",
+      security: [{ bearerAuth: [] }]
+    }
   }
 };
 const MatchTypePredictor = {
