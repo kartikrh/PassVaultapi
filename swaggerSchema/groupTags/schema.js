@@ -5661,11 +5661,19 @@ const SubScribesDomain = {
       },
     },
   },
-  inActiveSubscribeDomainAndSubDomain: {
+  activeInactiveSubscribeDomain: {
     schema: {
       tags: ["SubScribesDomain"],
-      description: "inactive Subscribe Domain and Sub Domain",
-      security: [{ bearerAuth: [] }]
+      description: "active inactive Subscribe Domain and Sub Domain",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          subScribesDomainId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["subScribesDomainId", "isActive"],
+      }
     }
   }
 };

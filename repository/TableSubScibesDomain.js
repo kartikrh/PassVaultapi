@@ -328,6 +328,37 @@ const updateActiveInactiveVideoApprovedQuery = async (request,fastify) =>{
           throw new Error(err.message);
     }
 }
+
+const activeInactiveSubscribeDomainQuery = async (request,fastify) =>{
+    try {
+        await fastify.db.query(
+            `
+            UPDATE "tblSubScribesDomains" 
+            SET 
+                "wrIsActive" = $1
+            WHERE 
+                "wrSubScribesDomainId" = $2
+            `,
+            {
+                type: fastify.db.QueryTypes.UPDATE,
+                bind: [
+                    request.body.isActive,
+                    request.body.subScribesDomainId
+                ]
+            }
+        );
+        return true;
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableSubScribesDomain.js/activeInactiveSubscribeDomain",
+            request
+          );
+          throw new Error(err.message);
+    }
+}
+
 module.exports = {
     getAllSubScribesDomainQuery,
     getAllSubScribesSubDomainQuery,
@@ -337,5 +368,6 @@ module.exports = {
     insertSubScribeSubDomainQuery,
     getDomainByIdQuery,
     getSubDomainByDomainQuery,
-    updateActiveInactiveVideoApprovedQuery
+    updateActiveInactiveVideoApprovedQuery,
+    activeInactiveSubscribeDomainQuery
 }
