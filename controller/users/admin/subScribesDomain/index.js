@@ -116,5 +116,6 @@ module.exports = {
     getAllSubDomainData,
     insertSubDomains,
     insertDomains,
+    activeInactiveSubscribeDomain,
     inactiveAllSubscribeDomain
 }

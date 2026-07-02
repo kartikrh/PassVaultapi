@@ -145,7 +145,8 @@ const insertSubScribeDomainQuery = async (request,fastify) =>{
                 "wrSiteDomain" as "siteDomain",
                 "wrIsApproved" as "isApproved",
                 "wrIsVideoApproved" as "isVideoApproved",
-                "wrCreatedDate" as "createdDate"
+                "wrCreatedDate" as "createdDate",
+                "wrIsActive" as "isActive"
             FROM insert_data
             `,
             {
@@ -352,7 +353,7 @@ const activeInactiveSubscribeDomainQuery = async (request,fastify) =>{
         errorLogger(
             fastify,
             err.message,
-            "DB ERROR --> repository/TableSubScribesDomain.js/activeInactiveSubscribeDomain",
+            "DB ERROR --> repository/TableSubScribesDomain.js/activeInactiveSubscribeDomainQuery",
             request
           );
           throw new Error(err.message);
