@@ -5487,6 +5487,7 @@ const saveMarOdd = async (
           RunnerName: odds.RunnerName,
           selectionId: odds.selectionId,
           timestamp: odds.timestamp,
+          teamId: runner.teamId,
         });
       }
 
