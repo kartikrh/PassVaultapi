@@ -103,6 +103,20 @@ const insertDomainsService = async (request,fastify) => {
       domainData,
       subDomainData
     };
+  } else if (domainData && domainData.isActive === false) {
+    await activeInactiveSubscribeDomainQuery({
+      ...request,
+      body: {
+        subScribesDomainId: domainData.subScribesDomainId,
+        isActive: true
+      }
+    }, fastify);
+    domainData.isActive = true;
+    const index = global.tblSubScribesDomain.findIndex(
+      (d) => d.subScribesDomainId === domainData.subScribesDomainId
+    );
+    global.tblSubScribesDomain[index] = domainData;
+    return domainData;
   }
   else {
     return null;

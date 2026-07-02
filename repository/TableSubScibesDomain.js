@@ -352,7 +352,7 @@ const activeInactiveSubscribeDomainQuery = async (request,fastify) =>{
         errorLogger(
             fastify,
             err.message,
-            "DB ERROR --> repository/TableSubScribesDomain.js/activeInactiveSubscribeDomain",
+            "DB ERROR --> repository/TableSubScribesDomain.js/activeInactiveSubscribeDomainQuery",
             request
           );
           throw new Error(err.message);
