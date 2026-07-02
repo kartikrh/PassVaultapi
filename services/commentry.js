@@ -8707,31 +8707,31 @@ const getMatchListByStatus = async (body, request, fastify) => {
     let weatherAndPitchData = await weatherAndPitchDataService(item.commentaryId);
     weatherAndPitchData = {
       ofu: weatherAndPitchData?.onfieldUmpires || "",
-      mRef: weatherAndPitchData?.matchReferee || "",
-      tUmp: weatherAndPitchData?.thirdUmpire || "",
+      mrf: weatherAndPitchData?.matchReferee || "",
+      tum: weatherAndPitchData?.thirdUmpire || "",
 
-      diff: weatherAndPitchData?.difficulty || 0,
-      pHard: weatherAndPitchData?.pitchHardness || 0,
-      pCrk: weatherAndPitchData?.pitchCracks || 0,
-      pWear: weatherAndPitchData?.pitchWareSpeed || 0,
-      pType: weatherAndPitchData?.pitchType || 0,
-      lStrip: weatherAndPitchData?.lawnStriping || 0,
-      pAge: weatherAndPitchData?.pitchAge || 0,
+      dif: weatherAndPitchData?.difficulty || 0,
+      phd: weatherAndPitchData?.pitchHardness || 0,
+      pcr: weatherAndPitchData?.pitchCracks || 0,
+      pws: weatherAndPitchData?.pitchWareSpeed || 0,
+      pty: weatherAndPitchData?.pitchType || 0,
+      lst: weatherAndPitchData?.lawnStriping || 0,
+      pag: weatherAndPitchData?.pitchAge || 0,
 
-      sess: weatherAndPitchData?.session || "",
+      ses: weatherAndPitchData?.session || "",
 
-      batCon: weatherAndPitchData?.battingCondition || "",
-      pitCon: weatherAndPitchData?.pitchCondition || "",
-      pacCon: weatherAndPitchData?.paceBowlingCondition || "",
-      spiCon: weatherAndPitchData?.spineBowlingConniton || "",
+      btc: weatherAndPitchData?.battingCondition || "",
+      ptc: weatherAndPitchData?.pitchCondition || "",
+      pbc: weatherAndPitchData?.paceBowlingCondition || "",
+      sbc: weatherAndPitchData?.spineBowlingConniton || "",
 
-      wCon: weatherAndPitchData?.weatherCondition || "",
+      wcn: weatherAndPitchData?.weatherCondition || "",
       // desc: weatherDetails?.description || "",
 
       tmp: weatherAndPitchData?.temp || null,
       hum: weatherAndPitchData?.humidity || null,
       vis: weatherAndPitchData?.visibility || null,
-      wSpd: weatherAndPitchData?.windSpeed || null,
+      wsp: weatherAndPitchData?.windSpeed || null,
       cld: weatherAndPitchData?.clouds || null,
     }
 
@@ -8740,7 +8740,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       cid: item.commentaryId,
       eid: item.eventRefId || "",
       ety: eventType?.eventType || "",
-      mtyId: item.matchTypeId || null,
+      mtid: item.matchTypeId || null,
       mtyp: item.matchType || "",
       hmtyp: item.historyMatchType || "",
       com: competition?.competition || "",
@@ -8751,7 +8751,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
       et: convertDate(item.eventDate, "hh:mm:ss") || "",
       utc: item.eventDate,
       twonby: TossTeamName?.teamName || null,
-      choseto: toss || null,
+      cto: toss || null,
       te1n: commentaryTeamsOne?.teamName || "",
       te2n: commentaryTeamsTwo?.teamName || "",
       s1n: commentaryTeamsOne?.shortName || "",
@@ -8766,13 +8766,13 @@ const getMatchListByStatus = async (body, request, fastify) => {
       t2s: teamScore2 || "",
       dis: item.displayStatus || "",
       rmk: item.rmk === null || item.rmk === undefined ? "" : item.rmk,
-      winRmk:
+      wrm:
         item.winRmk === null || item.winRmk === undefined ? "" : item.winRmk,
-      cardType:
+      ct:
         item.cardType === null || item.cardType === undefined
           ? ""
           : item.cardType,
-      tossRmk:
+      trk:
         item.tossRmk === null || item.tossRmk === undefined ? "" : item.tossRmk,
       winNm:
         item.winnerName === null || item.winnerName === undefined
@@ -8802,8 +8802,8 @@ const getMatchListByStatus = async (body, request, fastify) => {
       t2id: item.team2Id || null,
       isPr: item.isPredictMarket,
       ics: item.isClientShow,
-      isTe: item?.isTest,
-      isAc: item?.isActive,
+      tst: item?.isTest,
+      iac: item?.isActive,
       nte1i: team1?.imagePath || "",
       nt1jr: team1?.jerseyPath || "",
       nte2i: team2?.imagePath || "",
@@ -8813,8 +8813,8 @@ const getMatchListByStatus = async (body, request, fastify) => {
       oDel: item?.overDelay || 0,
       iDel: item?.inningDelay || 0,
       tDel: item?.tossDelay || 0,
-      eNo: item?.eventNo || "",
-      sNote: item?.statusNote || "",
+      eno: item?.eventNo || "",
+      snt: item?.statusNote || "",
       ...weatherAndPitchData,
       // mr: mr
       // bowT : item.bowlingTeam || null,
@@ -9347,7 +9347,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
       cid: commentary.commentaryId || 0,
       eid: commentary.eventRefId || "",
       ety: eventType?.eventType || "",
-      matchTypeId: commentary.matchTypeId || null,
+      mtyId: commentary.matchTypeId || null,
       mtyp: commentary.matchType || "",
       hmtyp: commentary.historyMatchType || "",
       com: competition?.competition || "",
@@ -13502,35 +13502,34 @@ const getAllCompletedCommentaryService = async (request, fastify) => {
   const result = await Promise.all(
     completedCommentaryData.map(async (item) => {
       let weatherAndPitchData = await weatherAndPitchDataService(item.commentaryId);
-         weatherAndPitchData = {
+      weatherAndPitchData = {
         ofu: weatherAndPitchData?.onfieldUmpires || "",
-        mRef: weatherAndPitchData?.matchReferee || "",
-        tUmp: weatherAndPitchData?.thirdUmpire || "",
+        mrf: weatherAndPitchData?.matchReferee || "",
+        tum: weatherAndPitchData?.thirdUmpire || "",
 
-        diff: weatherAndPitchData?.difficulty || 0,
-        pHard: weatherAndPitchData?.pitchHardness || 0,
-        pCrk: weatherAndPitchData?.pitchCracks || 0,
-        pWear: weatherAndPitchData?.pitchWareSpeed || 0,
-        pType: weatherAndPitchData?.pitchType || 0,
-        lStrip: weatherAndPitchData?.lawnStriping || 0,
-        pAge: weatherAndPitchData?.pitchAge || 0,
+        dif: weatherAndPitchData?.difficulty || 0,
+        phd: weatherAndPitchData?.pitchHardness || 0,
+        pcr: weatherAndPitchData?.pitchCracks || 0,
+        pws: weatherAndPitchData?.pitchWareSpeed || 0,
+        pty: weatherAndPitchData?.pitchType || 0,
+        lst: weatherAndPitchData?.lawnStriping || 0,
+        pag: weatherAndPitchData?.pitchAge || 0,
 
-        sess: weatherAndPitchData?.session || "",
+        ses: weatherAndPitchData?.session || "",
 
-        batCon: weatherAndPitchData?.battingCondition || "",
-        pitCon: weatherAndPitchData?.pitchCondition || "",
-        pacCon: weatherAndPitchData?.paceBowlingCondition || "",
-        spiCon: weatherAndPitchData?.spineBowlingConniton || "",
+        btc: weatherAndPitchData?.battingCondition || "",
+        ptc: weatherAndPitchData?.pitchCondition || "",
+        pbc: weatherAndPitchData?.paceBowlingCondition || "",
+        sbc: weatherAndPitchData?.spineBowlingConniton || "",
 
-        wCon: weatherAndPitchData?.weatherCondition || "",
-        // desc: weatherDetails?.description || "",
+        wcn: weatherAndPitchData?.weatherCondition || "",
 
-        tmp: weatherAndPitchData?.temp || null,
-        hum: weatherAndPitchData?.humidity || null,
-        vis: weatherAndPitchData?.visibility || null,
-        wSpd: weatherAndPitchData?.windSpeed || null,
-        cld: weatherAndPitchData?.clouds || null,
-      }
+        tmp: weatherAndPitchData?.temp ?? null,
+        hum: weatherAndPitchData?.humidity ?? null,
+        vis: weatherAndPitchData?.visibility ?? null,
+        wsp: weatherAndPitchData?.windSpeed ?? null,
+        cld: weatherAndPitchData?.clouds ?? null,
+      };
       return {
         ...item,
         ...weatherAndPitchData,
