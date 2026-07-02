@@ -183,6 +183,14 @@ const insertSubScribeDomain = async (request, fastify) => {
     // const data = await getDomainByIdQuery(domainData.subScribesDomainId, fastify);
     // return data;
     return domainData;
+  } else if (domainData && domainData.isActive === false) {
+    domainData = await activeInactiveSubscribeDomainService({
+      ...request,
+      body: {
+        subScribesDomainId: domainData.subScribesDomainId,
+        isActive: true
+      }
+    }, fastify);
   }
   // check if domain exist but any subDomains is new
   if(request.body.subDomains && request.body.subDomains.length > 0){
@@ -312,7 +320,7 @@ const activeInactiveSubscribeDomainService = async (request, fastify) => {
     fastify,
     "services/subScribesDomain.js/activeInactiveSubscribeDomainService"
   );
-  return "Domain status updated Successfully";
+  return global.tblSubScribesDomain[index];
 }
 
 const inactiveAllSubscribeDomainService = async (request, fastify) => {
