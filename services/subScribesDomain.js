@@ -9,7 +9,7 @@ const {
 const { callClientAPI, APIEndpointModuleType } = require("../utilities");
 
 const allSubScribesDomainService = async (request) => {
-  const { isApproved, isVideoApproved } = request.body;
+  const { isApproved, isVideoApproved, isActive, startDate, endDate } = request.body;
   let result = global.tblSubScribesDomain;
   if (isApproved !== undefined) {
     result = result.filter(
@@ -20,6 +20,20 @@ const allSubScribesDomainService = async (request) => {
     result = result.filter(
       (d) => d.isVideoApproved === isVideoApproved
     );
+  }
+  if (isActive !== undefined) {
+    result = result.filter(
+      (d) => d.isActive === isActive
+    );
+  }
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    result = result.filter((item) => {
+      const createdDate = new Date(item.createdDate);
+      return createdDate >= start && createdDate <= end;
+    });
   }
   return result.sort((a, b) => b.createdDate - a.createdDate);
 };
