@@ -183,7 +183,7 @@ const insertSubScribeDomain = async (request, fastify) => {
           data: domainData,
           type: "add",
           module: "subScribesDomain"
-        },
+        }
       },
       request,
       fastify,
