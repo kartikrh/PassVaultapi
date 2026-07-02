@@ -104,19 +104,13 @@ const insertDomainsService = async (request,fastify) => {
       subDomainData
     };
   } else if (domainData && domainData.isActive === false) {
-    await activeInactiveSubscribeDomainQuery({
+    return await activeInactiveSubscribeDomainService({
       ...request,
       body: {
         subScribesDomainId: domainData.subScribesDomainId,
         isActive: true
       }
     }, fastify);
-    domainData.isActive = true;
-    const index = global.tblSubScribesDomain.findIndex(
-      (d) => d.subScribesDomainId === domainData.subScribesDomainId
-    );
-    global.tblSubScribesDomain[index] = domainData;
-    return domainData;
   }
   else {
     return null;
@@ -182,6 +176,19 @@ const insertSubScribeDomain = async (request, fastify) => {
     global.tblSubScribesDomain.push(domainData);
     // const data = await getDomainByIdQuery(domainData.subScribesDomainId, fastify);
     // return data;
+    await callClientAPI(
+      {
+        moduleType: APIEndpointModuleType.updateSeoModule,
+        data: {
+          data: domainData,
+          type: "add",
+          module: "subScribesDomain"
+        },
+      },
+      request,
+      fastify,
+      "services/subScribesDomain.js/insertSubScribeDomain"
+    );
     return domainData;
   } else if (domainData && domainData.isActive === false) {
     domainData = await activeInactiveSubscribeDomainService({
@@ -308,10 +315,7 @@ const activeInactiveSubscribeDomainService = async (request, fastify) => {
     { 
       moduleType: APIEndpointModuleType.updateSeoModule,
       data: {
-        data : {
-          subScribesDomainId: request.body.subScribesDomainId,
-          isActive: request.body.isActive,
-        },
+        data : global.tblSubScribesDomain[index],
         type: "active/inactive",
         module : "subScribesDomain"
       },
