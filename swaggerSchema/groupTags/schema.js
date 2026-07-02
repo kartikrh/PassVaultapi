@@ -5675,6 +5675,13 @@ const SubScribesDomain = {
         required: ["subScribesDomainId", "isActive"],
       }
     }
+  },
+  inactiveAllSubscribeDomain: {
+    schema: {
+      tags: ["SubScribesDomain"],
+      description: "inactive all Subscribe Domain and Sub Domain",
+      security: [{ bearerAuth: [] }]
+    }
   }
 };
 const MatchTypePredictor = {
