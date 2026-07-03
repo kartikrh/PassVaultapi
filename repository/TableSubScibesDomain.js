@@ -145,7 +145,8 @@ const insertSubScribeDomainQuery = async (request,fastify) =>{
                 "wrSiteDomain" as "siteDomain",
                 "wrIsApproved" as "isApproved",
                 "wrIsVideoApproved" as "isVideoApproved",
-                "wrCreatedDate" as "createdDate"
+                "wrCreatedDate" as "createdDate",
+                "wrIsActive" as "isActive"
             FROM insert_data
             `,
             {
@@ -352,7 +353,38 @@ const activeInactiveSubscribeDomainQuery = async (request,fastify) =>{
         errorLogger(
             fastify,
             err.message,
-            "DB ERROR --> repository/TableSubScribesDomain.js/activeInactiveSubscribeDomain",
+            "DB ERROR --> repository/TableSubScribesDomain.js/activeInactiveSubscribeDomainQuery",
+            request
+          );
+          throw new Error(err.message);
+    }
+}
+
+const inactiveSubscribeDomainQuery = async (request,fastify) =>{
+    try {
+        await fastify.db.query(
+            `
+            UPDATE "tblSubScribesDomains" 
+            SET 
+                "wrIsActive" = $1
+            WHERE 
+                "wrIsActive" = $2 AND "wrIsDeleted" = $3
+            `,
+            {
+                type: fastify.db.QueryTypes.UPDATE,
+                bind: [
+                    false,
+                    true,
+                    false
+                ]
+            }
+        );
+        return true;
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableSubScribesDomain.js/inactiveSubscribeDomainQuery",
             request
           );
           throw new Error(err.message);
@@ -369,5 +401,6 @@ module.exports = {
     getDomainByIdQuery,
     getSubDomainByDomainQuery,
     updateActiveInactiveVideoApprovedQuery,
-    activeInactiveSubscribeDomainQuery
+    activeInactiveSubscribeDomainQuery,
+    inactiveSubscribeDomainQuery
 }
