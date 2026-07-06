@@ -138,7 +138,6 @@ const connectClients = async (fastify, clientSocketId) => {
         global.clientSocketIo = global.clientSocketIo.filter(
           (item) => item.clientSocketId !== config.clientSocketId
         );
-
         try {
           await updateClientSocketStatusQuery(
             {
