@@ -162,7 +162,7 @@ const connectClients = async (fastify, clientSocketId) => {
         updateReconnectCountQuery(
           {
             clientSocketId: config.clientSocketId,
-            reconnectCount: Number(reconnectCounts ?? 0) + 1
+            reconnectCount: attempt
           },
           fastify
         ).catch(err =>
