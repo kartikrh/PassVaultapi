@@ -8962,13 +8962,42 @@ const getMatchDataByCId = async (data, request, fastify) => {
   if (com.choseTo) {
     toss = com.choseTo == 1 ? "BAT" : "BOWL";
   }
-  const weatherAndPitchData = await weatherAndPitchDataService(com.commentaryId);
+  let weatherAndPitchData = await weatherAndPitchDataService(com.commentaryId);
+  weatherAndPitchData = {
+    ofu: weatherAndPitchData?.onfieldUmpires || "",
+    mrf: weatherAndPitchData?.matchReferee || "",
+    tum: weatherAndPitchData?.thirdUmpire || "",
+
+    dif: weatherAndPitchData?.difficulty || 0,
+    phd: weatherAndPitchData?.pitchHardness || 0,
+    pcr: weatherAndPitchData?.pitchCracks || 0,
+    pws: weatherAndPitchData?.pitchWareSpeed || 0,
+    pty: weatherAndPitchData?.pitchType || 0,
+    lst: weatherAndPitchData?.lawnStriping || 0,
+    pag: weatherAndPitchData?.pitchAge || 0,
+
+    ses: weatherAndPitchData?.session || "",
+
+    btc: weatherAndPitchData?.battingCondition || "",
+    ptc: weatherAndPitchData?.pitchCondition || "",
+    pbc: weatherAndPitchData?.paceBowlingCondition || "",
+    sbc: weatherAndPitchData?.spineBowlingConniton || "",
+
+    wcn: weatherAndPitchData?.weatherCondition || "",
+    // desc: weatherDetails?.description || "",
+
+    tmp: weatherAndPitchData?.temp || null,
+    hum: weatherAndPitchData?.humidity || null,
+    vis: weatherAndPitchData?.visibility || null,
+    wsp: weatherAndPitchData?.windSpeed || null,
+    cld: weatherAndPitchData?.clouds || null,
+  }
   let comDetails = {
     rno: rno,
     cid : com.commentaryId,
     eid: com.eventRefId || "",
     ety: eventType?.eventType || "",
-    matchTypeId: com.matchTypeId || null,
+    mtid: com.matchTypeId || null,
     mtyp: com.matchType || "",
     hmtyp: com.historyMatchType || "",
     com: competition?.competition || "",
@@ -8978,7 +9007,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
     et: convertDate(com.eventDate, "hh:mm:ss") || "",
     utc: com.eventDate,
     twonby: TossTeamName?.teamName || null,
-    choseto: toss || null,
+    cto: toss || null,
     te1n: commentaryTeamsOne?.teamName || "",
     te2n: commentaryTeamsTwo?.teamName || "",
     s1n: commentaryTeamsOne?.shortName || "",
@@ -8997,9 +9026,9 @@ const getMatchDataByCId = async (data, request, fastify) => {
     t2s: teamScore2 || "",
     dis: com.displayStatus || "",
     rmk: com.rmk || "",
-    winRmk: com.winRmk || "",
-    cardType: com.cardType,
-    tossRmk: com.tossRmk || "",
+    wrm: com.winRmk || "",
+    ct: com.cardType,
+    trk: com.tossRmk || "",
     winNm: com?.winnerName || "",
     winId: com?.winnerId || 0,
     te1crr: parseFloat(commentaryTeamsOne.crr) || 0,
@@ -9022,11 +9051,11 @@ const getMatchDataByCId = async (data, request, fastify) => {
     compId: competition?.competitionId || 0,
     isPr: com.isPredictMarket,
     ics: com.isClientShow,
-    isTest: com.isTest,
-    isActive: com.isActive,
+    tst: com.isTest,
+    iac: com.isActive,
     etyId: eventType?.eventTypeId,
-    eventNo: com?.eventNo,
-    statusNote: com?.statusNote || "",
+    eno: com?.eventNo,
+    snt: com?.statusNote || "",
     ...weatherAndPitchData,
   };
   return comDetails;
