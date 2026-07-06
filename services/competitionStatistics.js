@@ -286,10 +286,26 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
 
     const getCompetitionStatisticsType = global.tblCompetitionStatisticsType.filter(tcst => tcst.isActive);
     for (const esMatchType of getEntitySportCompetitionStatisticsResponse) {
+        const getMatchType = global.tblMatchTypes.find(tmt => tmt.entityEnum === competitionMatchTypeEnum[isMen ? "men" : "women"][esMatchType]);
+        if (!getMatchType) {
+            errorLogger(
+                fastify,
+                `Match Type Id not found for type ${esMatchType} for competition tp id ${competitionTpId}`,
+                "/services/competitionStatistics.js/importCompetitionstatisticsService - getMatchType",
+                {
+                    ...request,
+                    body: {
+                        ...request.body,
+                        data
+                    }
+                }
+            );
+            continue;
+        }
+
         for (const statType of getCompetitionStatisticsType) {
             const getKey = await getKeyAndValueKey(statType.entityEnum);
             if (getKey) {
-                const getMatchType = global.tblMatchTypes.find(tmt => tmt.entityEnum === competitionMatchTypeEnum[isMen ? "men" : "women"][esMatchType]);
                 const url = `${entitySportAPIEndPoint.getCompetitionStatisticsData.replace('{cid}', competitionTpId)}/${getKey.key}?paged=1&per_page=50&format=${esMatchType}`;
                 const entitySportCompetitionStatistics = await callEntitySportAPI(url, request, fastify);
 

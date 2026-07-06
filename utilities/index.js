@@ -2289,7 +2289,8 @@ const competitionMatchTypeEnum = {
     odi: 7,
     womenodi: 7,
     woment20: 8,
-    t20i: 21
+    t20i: 21,
+    lista: 4
   }
 }
 
