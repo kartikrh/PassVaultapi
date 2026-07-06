@@ -138,7 +138,6 @@ const connectClients = async (fastify, clientSocketId) => {
         global.clientSocketIo = global.clientSocketIo.filter(
           (item) => item.clientSocketId !== config.clientSocketId
         );
-
         try {
           await updateClientSocketStatusQuery(
             {
@@ -162,7 +161,7 @@ const connectClients = async (fastify, clientSocketId) => {
         updateReconnectCountQuery(
           {
             clientSocketId: config.clientSocketId,
-            reconnectCount: Number(reconnectCounts ?? 0) + 1
+            reconnectCount: attempt
           },
           fastify
         ).catch(err =>
