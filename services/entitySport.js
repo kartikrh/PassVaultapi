@@ -1096,7 +1096,7 @@ const setEntityCom2Service = async (request , fastify) =>{
         //   }
         // }
         if(comDetails.commentaryStatus == commentaryStatus.INPROGRESS){
-          comDetails.isClientShow = true;
+          // comDetails.isClientShow = true;
           // check for super over
           let isSuperOver = response.live.live_inning.issuperover || "false";
           if(isSuperOver == "true"){
@@ -1765,6 +1765,7 @@ const handleComArr = async (data , request , fastify , comDetails) =>{
     if(commentaries?.length > 0){
       if(comDetails.commentaryStatus == commentaryStatus.INNINGCHANGE){
         upComDetails.commentaryStatus = commentaryStatus.INPROGRESS
+        upComDetails.isClientShow = true;
       }
       
       let extraRuns = response?.scorecard?.innings.find((i) => i.number == inningNo)?.extra_runs;
