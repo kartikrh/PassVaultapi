@@ -238,7 +238,7 @@ const disconnectClientSockets = async (fastify, clientSocketId) => {
         errorLogger(
           fastify,
           error.message,
-          "DB Error --> sockets/client.js/disconnectClientSockets- updateEntitySocketStatusQuery",
+          "DB Error --> sockets/client.js/disconnectClientSockets- updateClientSocketStatusQuery",
           null
         );
       }
