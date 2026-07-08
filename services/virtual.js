@@ -140,7 +140,17 @@ const saveEventervice = async (request, fastify) => {
   };
 };
 
-const createVirtualEventService = async (request, fastify) => {
+const cardCricketCreateVirtualEventService = async (request, fastify) => {
+  const cards = request.body?.cards;
+  if (!(Array.isArray(cards) && cards.length > 0)) {
+    throw new Error("Request body must include a non-empty 'cards' array.");
+  }
+
+  const cardType = request.body?.cardType;
+  if (!Number.isInteger(cardType)) {
+    throw new Error("Request body must include an integer 'cardType'.");
+  }
+
   let checkComp = global.tblCompetitions.find(
     (item) =>
       item.competitionId == request.body.competitionId && item.isActive == true
@@ -443,7 +453,7 @@ const createVirtualEventService = async (request, fastify) => {
         errorLogger(
           fastify,
           err.message,
-          "ERROR --> services/virtual.js/createVirtualEventService",
+          "ERROR --> services/virtual.js/cardCricketCreateVirtualEventService",
           request
         );
       });
@@ -486,6 +496,369 @@ const createVirtualEventService = async (request, fastify) => {
   const comData = await commentaryResponseSerivce(comId);
   // return "Commentary Created Successfully";
   return comData;
+};
+
+const playstationCricketCreateVirtualEventService = async (request, fastify) => {
+  if (!request.body?.team1Name) {
+    throw new Error("Request body must include a not-null 'team1Name'.");
+  }
+  if (!request.body?.team2Name) {
+    throw new Error("Request body must include a not-null 'team2Name'.");
+  }
+
+  let checkComp = global.tblCompetitions.find(
+    (item) =>
+      item.competitionId == request.body.competitionId && item.isActive == true
+  );
+  if (!checkComp) {
+    throw new Error("Competition with this Id not found");
+  }
+  let comId;
+  const validateCommentary = global.tblCommentaries.find(
+    (item) => item.eventRefId == request.body.eventRefId
+  );
+  if (validateCommentary) {
+    throw new Error("EventRefId should be unique");
+  }
+  let matchType;
+  // check Match Type
+  if (!checkComp.matchTypeId) {
+    throw new Error("Match Type not found");
+  } else {
+    matchType = global.tblMatchTypes.find(
+      (item) => item.matchTypeId == checkComp.matchTypeId
+    );
+    if (!matchType) {
+      throw new Error("Match Type details not found");
+    }
+  }
+
+  const tournamentTeams = await getTournamentTeamsByCompIdQuery(
+    request.body.competitionId,
+    request,
+    fastify
+  );
+  if (!tournamentTeams || tournamentTeams.length < 2) {
+    throw new Error(
+      "Not enough teams for the tournament, atleast 2 teams are required."
+    );
+  }
+
+  if (tournamentTeams.length >= 2) {
+    const team1 = global.tblTeams.find(tt => [tt.teamName.trim().toLowerCase(), tt.teamShortName.trim().toLowerCase()].includes(request.body.team1Name?.trim().toLowerCase()));
+    if (!team1) {
+      throw new Error("Team 1 details not found.");
+    }
+
+    const team2 = global.tblTeams.find(tt => [tt.teamName.trim().toLowerCase(), tt.teamShortName.trim().toLowerCase()].includes(request.body.team2Name?.trim().toLowerCase()));
+    if (!team2) {
+      throw new Error("Team 2 details not found.");
+    }
+
+    if (team1.teamId === team2.teamId) {
+      throw new Error("Team 1 and Team 2 cannot be same.");
+    }
+
+    const checkTeam1InCompetition = tournamentTeams.find(tt => tt.teamId === team1.teamId);
+    if (!checkTeam1InCompetition) {
+      throw new Error("Team 1 details not available in this competition.");
+    }
+
+    const checkTeam2InCompetition = tournamentTeams.find(tt => tt.teamId === team2.teamId);
+    if (!checkTeam2InCompetition) {
+      throw new Error("Team 2 details not available in this competition.");
+    }
+
+    request.body.team1Id = team1.teamId;
+    request.body.team2Id = team2.teamId;
+
+    request.body.eventName = `${team1.teamName} v ${team2.teamName}`;
+
+    const team1Players = await getAllPlayersByTeamAndCompetitionIdQuery(
+      {
+        teamId: request.body.team1Id,
+        competitionId: request.body.competitionId,
+      },
+      request,
+      fastify
+    );
+    const team2Players = await getAllPlayersByTeamAndCompetitionIdQuery(
+      {
+        teamId: request.body.team2Id,
+        competitionId: request.body.competitionId,
+      },
+      request,
+      fastify
+    );
+    if (team1Players.length < 2 || team2Players.length < 2) {
+      throw new Error("Each team must have at least 2 players.");
+    }
+
+    const isPrediction = global.tblConfigs.find(item =>
+      item.key.toLowerCase().trim() === ISPREDICATIONONCRICKETCARD.trim().toLowerCase()
+    )?.value;
+    const isPredictMarket = isPrediction === "true";
+    let pythonId, pythonURI
+    if (checkComp?.pythonId) {
+      pythonId = checkComp.pythonId
+      const pythonAPI = global.tblPythonAPI.find(elem => elem.id === pythonId);
+      pythonURI = pythonAPI?.URI;
+    } else {
+      let pythonAPI = global.tblPythonAPI.find(elem => elem.isActive === true && elem.isDefault === true);
+      pythonId = pythonAPI?.id;
+      pythonURI = pythonAPI?.URI;
+    }
+    let shuffle = {
+      Wicket : false,
+      OverComplete : false,
+      MinCardRemain : false,
+      InningsComplete : false
+    }
+    let reqSuffle = request.body.shuffleOn ? request.body.shuffleOn : null;
+    let suffleNo = reqSuffle?.split(",") || []
+    if(suffleNo.length > 0){
+      for (let i of suffleNo){  
+        i = parseInt(i)
+        switch(i) {
+          case 1 :
+              shuffle.Wicket = true
+              break;
+          case 2 : 
+              shuffle.OverComplete = true
+              break;
+          case 3 : 
+            shuffle.MinCardRemain = true;
+            break;
+          case 4:
+            shuffle.InningsComplete = true
+            break;
+          default :
+            break;
+        }
+      }
+    }
+
+    let dataToInsert = {
+      ...request.body,
+      ...checkComp,
+      isPredictMarket,
+      pythonId,
+      pythonURI,
+      shuffle,
+      setOfRules: checkComp.setOfRules ? checkComp.setOfRules : null
+    };
+
+    const commentaryData = await insertVirtualEventQuery(
+      dataToInsert,
+      request,
+      fastify
+    );
+    global.tblCommentaries.push(commentaryData);
+    comId = commentaryData.commentaryId;
+    request.body.team1GroupId = await getGroupId(request.body.team1Id, request, fastify);
+    request.body.team2GroupId = await getGroupId(request.body.team2Id, request, fastify);
+    const virtualTeamData = {
+      commentaryId: commentaryData.commentaryId,
+      team1Id: request.body.team1Id,
+      team2Id: request.body.team2Id,
+      teamMaxOver: matchType.maxOversInFirstInings,
+      subInning: request.body?.subInning ?? null,
+      team1TpId: team1?.tpId ?? null,
+      team2TpId: team2?.tpId ?? null,
+      team1GroupId: request.body.team1GroupId,
+      team2GroupId: request.body.team2GroupId,
+    };
+    const insertVirtualTeamsData = await insertVirtualCommentaryTeams(
+      virtualTeamData,
+      request,
+      fastify
+    );
+    for (let team of insertVirtualTeamsData) {
+      global.tblCommentaryTeams.push(team);
+    }
+
+    if (team1Players.length >= 2 && team2Players.length >= 2) {
+      const team1PlayerId = team1Players.map(t1p => t1p.playerId);
+      const team2PlayerId = team2Players.map(t2p => t2p.playerId);
+      const teamPlayers = global.tblPlayers.filter(tp => [...team1PlayerId, ...team2PlayerId].includes(tp.playerId));
+      const data = [
+        ...team1Players.map((item, i) => {
+          const player = teamPlayers.find(elem => elem.playerId == item.playerId);
+          return {
+            commentaryId: commentaryData.commentaryId,
+            teamId: request.body.team1Id,
+            playerId: item.playerId,
+            tpId: player?.tpId ?? null,
+            displayOrder: i + 1,
+          };
+        }),
+        ...team2Players.map((item, i) => {
+          const player = teamPlayers.find(elem => elem.playerId == item.playerId);
+          return {
+            commentaryId: commentaryData.commentaryId,
+            teamId: request.body.team2Id,
+            playerId: item.playerId,
+            tpId: player?.tpId ?? null,
+            displayOrder: i + 1,
+          };
+        }),
+      ];
+      for (let info of data) {
+        let playerData = await insertVirtualCommentaryPlayers(
+          info,
+          fastify,
+          request
+        );
+        const teamPlayerData = await getAllTeamPlayersByTeamIdAndPlayerIdQuery(
+          { playerId: playerData.playerId, teamId: playerData.teamId },
+          fastify,
+          request
+        );
+        if (teamPlayerData && teamPlayerData?.jerseyPlayerImage) {
+          await updateCommentaryPlayerJerseyImageQuery(
+            {
+              commentaryPlayerId: playerData.commentaryPlayerId,
+              jerseyPlayerImage: teamPlayerData?.jerseyPlayerImage,
+              jerseyPlayerImagePath: teamPlayerData?.jerseyPlayerImagePath,
+            },
+            fastify
+          );
+        } else {
+          const checkTeamData = global.tblTeams.find(
+            (item) => item.teamId == playerData.teamId
+          );
+          const playerImgData = global.tblPlayers.find(
+            (elem) => elem.playerId == playerData.playerId
+          );
+
+          if (playerImgData.image && checkTeamData.jersey) {
+            mergeAndSaveImage(
+              {
+                playerImage: playerImgData.image,
+                jersey: checkTeamData.jersey,
+                playerName: playerImgData.playerName,
+                teamName: checkTeamData.teamName,
+                commentaryPlayerId: playerData.commentaryPlayerId,
+                teamPlayerId: null,
+                commentaryId: commentaryData.commentaryId,
+              },
+              fastify
+            );
+          }
+        }
+
+        global.tblCommentaryPlayers.push(playerData);
+      }
+
+      for (const team of [request.body.team1Id, request.body.team2Id]) {
+        const playerOrder = global.tblCommentaryPlayers
+          .filter(
+            (item) =>
+              item.commentaryId == commentaryData.commentaryId &&
+              item.teamId == team
+          )
+          .sort((a, b) => a.displayOrder - b.displayOrder);
+
+        const updateTeamData = {
+          teamStatus: null,
+          teamBattingOrder: null,
+          teamCaptain: playerOrder[0].playerId,
+          teamKipper: playerOrder[1].playerId,
+          commentaryPlayerTeamCaptain: playerOrder[0].commentaryPlayerId,
+          commentaryPlayerTeamKipper: playerOrder[1].commentaryPlayerId,
+          commentaryId: commentaryData.commentaryId,
+          teamId: team,
+        };
+
+        const updateVirtualTeamData = await virtualEventTeamUpdateQuery(
+          updateTeamData,
+          request,
+          fastify
+        );
+        const teamIndex = global.tblCommentaryTeams.findIndex(
+          (item) =>
+            item.commentaryId == commentaryData.commentaryId &&
+            item.teamId == team
+        );
+        if (teamIndex !== -1) {
+          global.tblCommentaryTeams[teamIndex] = {
+            ...global.tblCommentaryTeams[teamIndex],
+            ...updateVirtualTeamData[0],
+          };
+        }
+      }
+    }
+    if (commentaryData?.isPredictMarket) {
+      let comp = global.tblCompetitions.find(
+        (elem) => elem.competitionId == commentaryData.competitionId
+      );
+      if (comp && comp.matchTypeId != null && comp.matchTypeId == commentaryData.matchTypeId) {
+        await addCompTempQuery(
+          {
+            commentaryId: commentaryData.commentaryId,
+            matchTypeId: commentaryData.matchTypeId,
+            competitionId: commentaryData.competitionId,
+          },
+          request,
+          fastify
+        );
+      }
+
+      callDataProvider(
+        {
+          commentaryId: commentaryData.commentaryId,
+          serviceType: ServiceType.dataProviderAPI,
+          moduleType: APIEndpointModuleType.commentaryUpdate,
+          type: "create",
+        },
+        fastify
+      ).catch((err) => {
+        console.log("call data provider console", err);
+        errorLogger(
+          fastify,
+          err.message,
+          "ERROR --> services/virtual.js/playstationCricketCreateVirtualEventService",
+          request
+        );
+      });
+
+      const { marketTemplate, eventMarket, teamAndPlayers, commentary, matchType } = await getDetailsByCIdV1Service({ ...request, body: { commentaryId: commentaryData.commentaryId } }, fastify);
+      const processedMarkets = processMarketData(marketTemplate, eventMarket, teamAndPlayers, commentary, matchType, commentaryData);
+      if (processedMarkets) {
+        for (const d of Object.keys(processedMarkets)) {
+          const data = processedMarkets[d]
+          await createEventMarketsServiceV1({ ...request, body: { eventMarket: data } }, fastify);
+        }
+      }
+    }
+    let cData = await getMatchDataByCId(
+        {
+          commentaryId: commentaryData.commentaryId,
+        },
+        request,
+        fastify
+    );
+    await callClientAPI(
+      {
+        moduleType: APIEndpointModuleType.commentaryUpdate,
+        data: cData,
+      },
+      request,
+      fastify,
+      "services/virtual.js/createVirtualEventService"
+    );
+  }
+
+  const comData = await commentaryResponseSerivce(comId);
+  return comData;
+};
+
+const createVirtualEventService = async (request, fastify) => {
+  if (request.body?.team1Name || request.body?.team2Name) {
+    return playstationCricketCreateVirtualEventService(request, fastify);
+  } else {
+    return cardCricketCreateVirtualEventService(request, fastify);
+  }
 };
 
 const virtualEventTossService = async (request, fastify) => {
