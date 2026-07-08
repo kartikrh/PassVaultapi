@@ -855,9 +855,9 @@ const playstationCricketCreateVirtualEventService = async (request, fastify) => 
 
 const createVirtualEventService = async (request, fastify) => {
   if (request.body?.team1Name || request.body?.team2Name) {
-    return playstationCricketCreateVirtualEventService(request, fastify);
+    return await playstationCricketCreateVirtualEventService(request, fastify);
   } else {
-    return cardCricketCreateVirtualEventService(request, fastify);
+    return await cardCricketCreateVirtualEventService(request, fastify);
   }
 };
 
