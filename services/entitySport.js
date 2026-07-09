@@ -3183,7 +3183,7 @@ const matchCompleteService = async (data , fastify,comDetails) =>{
   },fastify)
 
 
-   if (comDetails && comDetails?.isTest === false && !isOldCommentary) {
+   if (comDetails && comDetails?.isTest === false && !isOldCommentary && response?.match_info?.status && Number(response?.match_info?.status) === EntityInningsStatus.Completed) {
     try {
       const result = await fastify.db.query(
         `SELECT * FROM fn_insert_auto_update_player_statistics_by_commentary(:commentaryId, :createdBy)`,
