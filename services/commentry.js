@@ -105,7 +105,8 @@ const {
   getAllCommentaryByCompetitionIdQuery,
   deleteCommentaryTeamQuery,
   abandonedCommentaryQuery,
-  getAllOversDataQuery
+  getAllOversDataQuery,
+  getCommentariesDataQuery
 } = require("../repository/TableCommentary");
 const moment = require("moment");
 const { withSentryCronProfiling } = require("../utilities/sentryCron");
@@ -23868,69 +23869,72 @@ const matchImportService = async (data, fastify, request = null) => {
   if (teamAData && teamBData) {
     checkCommentary = global.tblCommentaries.find(item => item.tpId === data.mid);
     if (!checkCommentary) {
-      let onfieldUmpires = null, thirdUmpire = null;
-      if (matchInfoResponse?.umpires) {
-        onfieldUmpires = parseUmpires(matchInfoResponse?.umpires).onFieldUmpires.join(', ') || null;
-        thirdUmpire = parseUmpires(matchInfoResponse?.umpires).thirdUmpire || null;
+      checkCommentary = await getCommentariesDataQuery(fastify, `tc."wrCompetitionId" = ${checkCompetition.competitionId} AND tc."wrTpId" = ${data.mid}`);
+      if (!checkCommentary) {
+        let onfieldUmpires = null, thirdUmpire = null;
+        if (matchInfoResponse?.umpires) {
+          onfieldUmpires = parseUmpires(matchInfoResponse?.umpires).onFieldUmpires.join(', ') || null;
+          thirdUmpire = parseUmpires(matchInfoResponse?.umpires).thirdUmpire || null;
+        }
+
+        let commentaryData = {
+          eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
+          matchTypeId: matchType?.matchTypeId,
+          competitionId: checkCompetition?.competitionId,
+          eventDate: matchInfoResponse?.date_start,
+          eventName: matchInfoResponse?.title,
+          team1Id: teamAData?.teamId,
+          team2Id: teamBData?.teamId,
+          location: checkVenue?.name && checkVenue?.city ? `${checkVenue.name}, ${checkVenue.city}` : null,
+          displayStatus: matchInfoResponse?.status_note,
+          isClientShow: false,
+          commentaryStatus: 1,
+          tpId: entitySportMatchResponse?.match_id,
+          createdBy: -2,
+          CurrentInnings: -1,
+          isPlayersShow: false,
+          isPredictMarket: false,
+          delay: 0,
+          isActive: true,
+          isTeamPredictionOn: true,
+          isClientShow: true,
+          eventNo: matchInfoResponse?.match_number,
+          isVirtual: false,
+          session: 1,
+          pythonId: pythonIdData?.id,
+          pythonURI: pythonIdData?.URI,
+          isMatchDraw: false,
+          isWheelShow: false,
+          shotType: false,
+          tossRmk: false,
+          matchReferee: matchInfoResponse?.referee,
+          onfieldUmpires,
+          thirdUmpire,
+          isTest: matchInfoResponse?.status_str.includes('test') ? true : false,
+          isSignalROn: false,
+          isEventStart: false,
+          isCountInPoint: checkCompetition?.isPointTable,
+          countryId: checkCountry?.id,
+          venueId: checkVenue?.id,
+          scoringType: EntitlyLiveStates.includes(matchInfoResponse?.game_state) ? ScoringTypes.Panel : ScoringTypes.Entity,
+          statusNote: matchInfoResponse?.game_state_str ?? null,
+        }
+
+        if (!checkCompetition?.matchTypeId) {
+          const esAllCompetitionMatches = await esGetMatchNumberFromCompetitionMatchAPI(checkCompetition.tpId);
+          const getMatchNumber = esAllCompetitionMatches.find(m => m.match_id === entitySportMatchResponse?.match_id);
+          commentaryData.eventNo = getMatchNumber.match_number ?? matchInfoResponse?.match_number;
+        }
+
+        const insertCommentary = await insertCommentaryQuery({
+          ...request,
+          body: commentaryData
+        }, fastify);
+
+        global.tblCommentaries.push(insertCommentary);
+        checkCommentary = insertCommentary;
+        newCommentaryImport = true;
       }
-
-      let commentaryData = {
-        eventTypeId: eventType?.eventTypeId || EventType['Cricket'],
-        matchTypeId: matchType?.matchTypeId,
-        competitionId: checkCompetition?.competitionId,
-        eventDate: matchInfoResponse?.date_start,
-        eventName: matchInfoResponse?.title,
-        team1Id: teamAData?.teamId,
-        team2Id: teamBData?.teamId,
-        location: checkVenue?.name && checkVenue?.city ? `${checkVenue.name}, ${checkVenue.city}` : null,
-        displayStatus: matchInfoResponse?.status_note,
-        isClientShow: false,
-        commentaryStatus: 1,
-        tpId: entitySportMatchResponse?.match_id,
-        createdBy: -2,
-        CurrentInnings: -1,
-        isPlayersShow: false,
-        isPredictMarket: false,
-        delay: 0,
-        isActive: true,
-        isTeamPredictionOn: true,
-        isClientShow: true,
-        eventNo: matchInfoResponse?.match_number,
-        isVirtual: false,
-        session: 1,
-        pythonId: pythonIdData?.id,
-        pythonURI: pythonIdData?.URI,
-        isMatchDraw: false,
-        isWheelShow: false,
-        shotType: false,
-        tossRmk: false,
-        matchReferee: matchInfoResponse?.referee,
-        onfieldUmpires,
-        thirdUmpire,
-        isTest: matchInfoResponse?.status_str.includes('test') ? true : false,
-        isSignalROn: false,
-        isEventStart: false,
-        isCountInPoint: checkCompetition?.isPointTable,
-        countryId: checkCountry?.id,
-        venueId: checkVenue?.id,
-        scoringType: EntitlyLiveStates.includes(matchInfoResponse?.game_state) ? ScoringTypes.Panel : ScoringTypes.Entity,
-        statusNote: matchInfoResponse?.game_state_str ?? null,
-      }
-
-      if (!checkCompetition?.matchTypeId) {
-        const esAllCompetitionMatches = await esGetMatchNumberFromCompetitionMatchAPI(checkCompetition.tpId);
-        const getMatchNumber = esAllCompetitionMatches.find(m => m.match_id === entitySportMatchResponse?.match_id);
-        commentaryData.eventNo = getMatchNumber.match_number ?? matchInfoResponse?.match_number;
-      }
-
-      const insertCommentary = await insertCommentaryQuery({
-        ...request,
-        body: commentaryData
-      }, fastify);
-
-      global.tblCommentaries.push(insertCommentary);
-      checkCommentary = insertCommentary;
-      newCommentaryImport = true;
     }
 
     if (checkCommentary && checkCommentary?.commentaryId) {
@@ -24133,8 +24137,50 @@ const matchImportService = async (data, fastify, request = null) => {
       let teamBSquad = matchPlaying11Squad?.teamb?.squads?.length > 0 ? matchPlaying11Squad?.teamb?.squads : [];
 
       const tournamentTeamsPlayers = global.tblTournamentTeamPlayers.filter(tttp => tttp.competitionId === checkCompetition.competitionId);
-      const commentaryTeams = global.tblCommentaryTeams.filter(tct => tct.commentaryId === checkCommentary.commentaryId && [teamAData.teamId, teamBData.teamId].includes(tct.teamId));
-      const commentaryPlayers = global.tblCommentaryPlayers.filter(item => item.commentaryId === checkCommentary.commentaryId && [teamAData.teamId, teamBData.teamId].includes(item.teamId));
+      let commentaryTeams = global.tblCommentaryTeams.filter(tct => tct.commentaryId === checkCommentary.commentaryId && [teamAData.teamId, teamBData.teamId].includes(tct.teamId));
+      if (!commentaryTeams.find(ct => ct.teamId === checkCommentary.team1Id)) {
+        const commentaryTeam = await getCommentaryTeamsQuery({
+          commentaryId,
+          teamId: checkCommentary.team1Id
+        }, fastify, request);
+        if (commentaryTeam) {
+          commentaryTeams.push(commentaryTeam);
+        }
+      }
+      if (!commentaryTeams.find(ct => ct.teamId === checkCommentary.team2Id)) {
+        const commentaryTeam = await getCommentaryTeamsQuery({
+          commentaryId,
+          teamId: checkCommentary.team2Id
+        }, fastify, request);
+        if (commentaryTeam) {
+          commentaryTeams.push(commentaryTeam);
+        }
+      }
+
+      let commentaryPlayers = global.tblCommentaryPlayers.filter(item => item.commentaryId === checkCommentary.commentaryId && [teamAData.teamId, teamBData.teamId].includes(item.teamId));
+      let commentaryTeam1Exist = true, commentaryTeam2Exist = true;
+      if (!commentaryPlayers.find(cp => cp.teamId === checkCommentary.team1Id)) {
+        commentaryTeam1Exist = false;
+      }
+      if (!commentaryPlayers.find(cp => cp.teamId === checkCommentary.team2Id)) {
+        commentaryTeam1Exist = false;
+      }
+
+      let query = [];
+      if (!commentaryTeam1Exist) {
+        query.push(checkCommentary.team1Id);
+      }
+      if (!checkCommentary.team2Id) {
+        query.push(checkCommentary.team2Id);
+      }
+
+      if (query.length > 0) {
+        const commentaryTeamPlayers = await getAllCommentaryPlayerDataQuery(`tcp."wrCommentaryId" = ${commentaryId} AND tcp."wrTeamId" IN ${query} AND tcp."wrIsDelete" = FALSE`, fastify);
+        if (commentaryTeamPlayers && commentaryTeamPlayers.length > 0) {
+          commentaryPlayers.push(...commentaryTeamPlayers);
+        }
+      }
+
       for (let i = 1; i <= noOfInning; i++) {
         // teamA
         await upsertCommentaryTeamsAndPlayersService(checkCompetition, tournamentTeamsPlayers, checkCommentary, maxOver, commentaryTeams, teamAData, i, commentaryPlayers, teamASquad, entitySportMatchResponse?.players, entitySocketData, request, fastify);
