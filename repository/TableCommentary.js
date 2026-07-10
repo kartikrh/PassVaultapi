@@ -169,6 +169,7 @@ const getCommentariesDataQuery = async (fastify , where = null) => {
     tc."wrIsCountInPoint" as "isCountInPoint",
     "wrShotType" as "shotType",
     "wrIsWheelShow" as "isWheelShow",
+    tc."wrIsTest" as "isTest",
     tc."wrEventNo" as "eventNo",
     tc."wrIsEventStart" as "isEventStart",
     tc."wrDifficulty" as "difficulty",
@@ -195,6 +196,8 @@ const getCommentariesDataQuery = async (fastify , where = null) => {
     tc."wrStreamingUrl" as "streamingUrl",
     tc."wrViews" as "views",
     tc."wrStreamingType" as "streamingType",
+    tc."wrShuffle" as "shuffle",
+    tc."wrSetOfRules" as "setOfRules",
     tc."wrStatusNote" as "statusNote"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
@@ -2117,7 +2120,8 @@ const getAllCommentaryPlayerDataQuery = async (whereCondition = null, fastify) =
         tcp."wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
         tp."wrDisplayName" as "displayName",
         tcp."wrTpId" as "tpId",
-        tcp."wrIsPlayInEvent" as "isPlayInEvent"
+        tcp."wrIsPlayInEvent" as "isPlayInEvent",
+        tcp."wrCreatedDate" as "createdDate"
     from "tblCommentaryPlayers" AS tcp
     LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
     LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
