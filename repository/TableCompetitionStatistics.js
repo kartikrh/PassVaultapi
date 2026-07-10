@@ -141,7 +141,7 @@ const insertCompetitionStatisticsQuery = async (data, fastify, request) => {
                     data?.teamId ?? null,
                     data?.playerId ?? null,
                     data?.displayOrder ?? null,
-                    data?.value ? Number(data.value).toString() : null,
+                    data?.value != null ? String(data.value) : null,
                     data?.inningsCount ?? null,
                     data?.isActive ?? true,
                     request?.userTokenInfo?.WrUserId ?? -5,
