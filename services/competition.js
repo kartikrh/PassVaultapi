@@ -2228,7 +2228,7 @@ const competitionImportService = async (data, fastify, request) => {
         }
       }
 
-      let commentaryPlayers = global.tblCommentaryPlayers.filter(item => item.commentaryId === commentaryId && [teamA.teamId, teamB.teamId].includes(item.teamId));
+      let commentaryPlayers = global.tblCommentaryPlayers.filter(item => item.commentaryId === checkCommentary.commentaryId && [teamA.teamId, teamB.teamId].includes(item.teamId));
       let commentaryTeam1Exist = true, commentaryTeam2Exist = true;
       if (!commentaryPlayers.find(cp => cp.teamId === checkCommentary.team1Id)) {
         commentaryTeam1Exist = false;
