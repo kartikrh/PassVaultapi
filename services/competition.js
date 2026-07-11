@@ -2211,7 +2211,7 @@ const competitionImportService = async (data, fastify, request) => {
       let commentaryTeams = global.tblCommentaryTeams.filter(tct => tct.commentaryId === commentaryId && [teamA.teamId, teamB.teamId].includes(tct.teamId));
       if (!commentaryTeams.find(ct => ct.teamId === checkCommentary.team1Id)) {
         const commentaryTeam = await getCommentaryTeamsQuery({
-          commentaryId,
+          commentaryId: checkCommentary.commentaryId,
           teamId: checkCommentary.team1Id
         }, fastify, request);
         if (commentaryTeam) {
@@ -2220,7 +2220,7 @@ const competitionImportService = async (data, fastify, request) => {
       }
       if (!commentaryTeams.find(ct => ct.teamId === checkCommentary.team2Id)) {
         const commentaryTeam = await getCommentaryTeamsQuery({
-          commentaryId,
+          commentaryId: checkCommentary.commentaryId,
           teamId: checkCommentary.team2Id
         }, fastify, request);
         if (commentaryTeam) {
@@ -2228,25 +2228,25 @@ const competitionImportService = async (data, fastify, request) => {
         }
       }
 
-      let commentaryPlayers = global.tblCommentaryPlayers.filter(item => item.commentaryId === commentaryId && [teamA.teamId, teamB.teamId].includes(item.teamId));
+      let commentaryPlayers = global.tblCommentaryPlayers.filter(item => item.commentaryId === checkCommentary.commentaryId && [teamA.teamId, teamB.teamId].includes(item.teamId));
       let commentaryTeam1Exist = true, commentaryTeam2Exist = true;
       if (!commentaryPlayers.find(cp => cp.teamId === checkCommentary.team1Id)) {
         commentaryTeam1Exist = false;
       }
       if (!commentaryPlayers.find(cp => cp.teamId === checkCommentary.team2Id)) {
-        commentaryTeam1Exist = false;
+        commentaryTeam2Exist = false;
       }
 
       let query = [];
       if (!commentaryTeam1Exist) {
         query.push(checkCommentary.team1Id);
       }
-      if (!checkCommentary.team2Id) {
+      if (!commentaryTeam2Exist) {
         query.push(checkCommentary.team2Id);
       }
 
       if (query.length > 0) {
-        const commentaryTeamPlayers = await getAllCommentaryPlayerDataQuery(`tcp."wrCommentaryId" = ${commentaryId} AND tcp."wrTeamId" IN ${query} AND tcp."wrIsDelete" = FALSE`, fastify);
+        const commentaryTeamPlayers = await getAllCommentaryPlayerDataQuery(`tcp."wrCommentaryId" = ${checkCommentary.commentaryId} AND tcp."wrTeamId" IN (${query.join(",")}) AND tcp."wrIsDelete" = FALSE`, fastify);
         if (commentaryTeamPlayers && commentaryTeamPlayers.length > 0) {
           commentaryPlayers.push(...commentaryTeamPlayers);
         }
