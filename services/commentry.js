@@ -24141,7 +24141,7 @@ const matchImportService = async (data, fastify, request = null) => {
       let commentaryTeams = global.tblCommentaryTeams.filter(tct => tct.commentaryId === checkCommentary.commentaryId && [teamAData.teamId, teamBData.teamId].includes(tct.teamId));
       if (!commentaryTeams.find(ct => ct.teamId === checkCommentary.team1Id)) {
         const commentaryTeam = await getCommentaryTeamsQuery({
-          commentaryId,
+          commentaryId: checkCommentary.commentaryId,
           teamId: checkCommentary.team1Id
         }, fastify, request);
         if (commentaryTeam) {
@@ -24150,7 +24150,7 @@ const matchImportService = async (data, fastify, request = null) => {
       }
       if (!commentaryTeams.find(ct => ct.teamId === checkCommentary.team2Id)) {
         const commentaryTeam = await getCommentaryTeamsQuery({
-          commentaryId,
+          commentaryId: checkCommentary.commentaryId,
           teamId: checkCommentary.team2Id
         }, fastify, request);
         if (commentaryTeam) {
