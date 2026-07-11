@@ -2211,7 +2211,7 @@ const competitionImportService = async (data, fastify, request) => {
       let commentaryTeams = global.tblCommentaryTeams.filter(tct => tct.commentaryId === commentaryId && [teamA.teamId, teamB.teamId].includes(tct.teamId));
       if (!commentaryTeams.find(ct => ct.teamId === checkCommentary.team1Id)) {
         const commentaryTeam = await getCommentaryTeamsQuery({
-          commentaryId,
+          commentaryId: checkCommentary.commentaryId,
           teamId: checkCommentary.team1Id
         }, fastify, request);
         if (commentaryTeam) {
@@ -2220,7 +2220,7 @@ const competitionImportService = async (data, fastify, request) => {
       }
       if (!commentaryTeams.find(ct => ct.teamId === checkCommentary.team2Id)) {
         const commentaryTeam = await getCommentaryTeamsQuery({
-          commentaryId,
+          commentaryId: checkCommentary.commentaryId,
           teamId: checkCommentary.team2Id
         }, fastify, request);
         if (commentaryTeam) {
