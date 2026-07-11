@@ -23868,11 +23868,9 @@ const matchImportService = async (data, fastify, request = null) => {
   let checkCommentary = null;
   if (teamAData && teamBData) {
     checkCommentary = global.tblCommentaries.find(item => item.tpId === data.mid);
-    console.log("🚀 ~ matchImportService ~ checkCommentary:", checkCommentary)
     if (!checkCommentary) {
       checkCommentary = await getCommentariesDataQuery(fastify, `tc."wrCompetitionId" = ${checkCompetition.competitionId} AND tc."wrTpId" = ${data.mid}`);
       checkCommentary = checkCommentary?.[0];
-      console.log("🚀 ~ matchImportService ~ checkCommentary:", checkCommentary)
       if (!checkCommentary) {
         let onfieldUmpires = null, thirdUmpire = null;
         if (matchInfoResponse?.umpires) {
@@ -24141,13 +24139,11 @@ const matchImportService = async (data, fastify, request = null) => {
 
       const tournamentTeamsPlayers = global.tblTournamentTeamPlayers.filter(tttp => tttp.competitionId === checkCompetition.competitionId);
       let commentaryTeams = global.tblCommentaryTeams.filter(tct => tct.commentaryId === checkCommentary.commentaryId && [teamAData.teamId, teamBData.teamId].includes(tct.teamId));
-      console.log("🚀 ~ matchImportService ~ commentaryTeams:start", commentaryTeams)
       if (!commentaryTeams.find(ct => ct.teamId === checkCommentary.team1Id)) {
         const commentaryTeam = await getCommentaryTeamsQuery({
           commentaryId: checkCommentary.commentaryId,
           teamId: checkCommentary.team1Id
         }, fastify, request);
-        console.log("🚀 ~ matchImportService ~ commentaryTeam:1", commentaryTeam)
         if (commentaryTeam) {
           commentaryTeams.push(commentaryTeam);
         }
@@ -24157,15 +24153,12 @@ const matchImportService = async (data, fastify, request = null) => {
           commentaryId: checkCommentary.commentaryId,
           teamId: checkCommentary.team2Id
         }, fastify, request);
-        console.log("🚀 ~ matchImportService ~ commentaryTeam:2", commentaryTeam)
         if (commentaryTeam) {
           commentaryTeams.push(commentaryTeam);
         }
       }
-      console.log("🚀 ~ matchImportService ~ commentaryTeams:end", commentaryTeams)
 
       let commentaryPlayers = global.tblCommentaryPlayers.filter(item => item.commentaryId === checkCommentary.commentaryId && [teamAData.teamId, teamBData.teamId].includes(item.teamId));
-      console.log("🚀 ~ matchImportService ~ commentaryPlayers:start", commentaryPlayers)
       let commentaryTeam1Exist = true, commentaryTeam2Exist = true;
       if (!commentaryPlayers.find(cp => cp.teamId === checkCommentary.team1Id)) {
         commentaryTeam1Exist = false;
@@ -24175,24 +24168,19 @@ const matchImportService = async (data, fastify, request = null) => {
       }
 
       let query = [];
-      console.log("🚀 ~ matchImportService ~ commentaryTeam1Exist:", commentaryTeam1Exist)
       if (!commentaryTeam1Exist) {
         query.push(checkCommentary.team1Id);
       }
-      console.log("🚀 ~ matchImportService ~ checkCommentary:", checkCommentary)
       if (!commentaryTeam2Exist) {
         query.push(checkCommentary.team2Id);
       }
 
-      console.log("🚀 ~ matchImportService ~ query:", query)
       if (query.length > 0) {
-        const commentaryTeamPlayers = await getAllCommentaryPlayerDataQuery(`tcp."wrCommentaryId" = ${checkCommentary.commentaryId} AND tcp."wrTeamId" IN ${query} AND tcp."wrIsDelete" = FALSE`, fastify);
-        console.log("🚀 ~ matchImportService ~ commentaryTeamPlayers:", commentaryTeamPlayers)
+        const commentaryTeamPlayers = await getAllCommentaryPlayerDataQuery(`tcp."wrCommentaryId" = ${checkCommentary.commentaryId} AND tcp."wrTeamId" IN (${query.join(",")}) AND tcp."wrIsDelete" = FALSE`, fastify);
         if (commentaryTeamPlayers && commentaryTeamPlayers.length > 0) {
           commentaryPlayers.push(...commentaryTeamPlayers);
         }
       }
-      console.log("🚀 ~ matchImportService ~ commentaryPlayers:end", commentaryPlayers)
 
       for (let i = 1; i <= noOfInning; i++) {
         // teamA
