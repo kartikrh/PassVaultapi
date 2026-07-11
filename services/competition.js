@@ -2234,14 +2234,14 @@ const competitionImportService = async (data, fastify, request) => {
         commentaryTeam1Exist = false;
       }
       if (!commentaryPlayers.find(cp => cp.teamId === checkCommentary.team2Id)) {
-        commentaryTeam1Exist = false;
+        commentaryTeam2Exist = false;
       }
 
       let query = [];
       if (!commentaryTeam1Exist) {
         query.push(checkCommentary.team1Id);
       }
-      if (!checkCommentary.team2Id) {
+      if (!commentaryTeam2Exist) {
         query.push(checkCommentary.team2Id);
       }
 
