@@ -2246,7 +2246,7 @@ const competitionImportService = async (data, fastify, request) => {
       }
 
       if (query.length > 0) {
-        const commentaryTeamPlayers = await getAllCommentaryPlayerDataQuery(`tcp."wrCommentaryId" = ${commentaryId} AND tcp."wrTeamId" IN ${query} AND tcp."wrIsDelete" = FALSE`, fastify);
+        const commentaryTeamPlayers = await getAllCommentaryPlayerDataQuery(`tcp."wrCommentaryId" = ${checkCommentary.commentaryId} AND tcp."wrTeamId" IN (${query.join(",")}) AND tcp."wrIsDelete" = FALSE`, fastify);
         if (commentaryTeamPlayers && commentaryTeamPlayers.length > 0) {
           commentaryPlayers.push(...commentaryTeamPlayers);
         }
