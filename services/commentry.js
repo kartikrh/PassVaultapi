@@ -23870,6 +23870,7 @@ const matchImportService = async (data, fastify, request = null) => {
     checkCommentary = global.tblCommentaries.find(item => item.tpId === data.mid);
     if (!checkCommentary) {
       checkCommentary = await getCommentariesDataQuery(fastify, `tc."wrCompetitionId" = ${checkCompetition.competitionId} AND tc."wrTpId" = ${data.mid}`);
+      checkCommentary = checkCommentary?.[0];
       if (!checkCommentary) {
         let onfieldUmpires = null, thirdUmpire = null;
         if (matchInfoResponse?.umpires) {
