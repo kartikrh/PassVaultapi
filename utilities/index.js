@@ -1725,6 +1725,7 @@ const ICCMatchType = {
     odi: matchTypesEntity["Women ODI"],
     t20i: matchTypesEntity["Women T20"],
     t10: matchTypesEntity["TB-10"],
+    test: matchTypesEntity["Woman Test"]
   },
 };
 
@@ -2290,7 +2291,8 @@ const competitionMatchTypeEnum = {
     womenodi: 7,
     woment20: 8,
     t20i: 21,
-    lista: 4
+    lista: 4,
+    test: 16
   }
 }
 
