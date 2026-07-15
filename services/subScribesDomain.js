@@ -5,11 +5,13 @@ const {
   insertSubScribeSubDomainQuery,
   getDomainByIdQuery,
   updateActiveInactiveVideoApprovedQuery,
+  activeInactiveSubscribeDomainQuery,
+  inactiveSubscribeDomainQuery,
 } = require("../repository/TableSubScibesDomain");
 const { callClientAPI, APIEndpointModuleType } = require("../utilities");
 
 const allSubScribesDomainService = async (request) => {
-  const { isApproved, isVideoApproved } = request.body;
+  const { isApproved, isVideoApproved, isActive, startDate, endDate } = request.body;
   let result = global.tblSubScribesDomain;
   if (isApproved !== undefined) {
     result = result.filter(
@@ -20,6 +22,20 @@ const allSubScribesDomainService = async (request) => {
     result = result.filter(
       (d) => d.isVideoApproved === isVideoApproved
     );
+  }
+  if (isActive !== undefined) {
+    result = result.filter(
+      (d) => d.isActive === isActive
+    );
+  }
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    result = result.filter((item) => {
+      const createdDate = new Date(item.createdDate);
+      return createdDate >= start && createdDate <= end;
+    });
   }
   return result.sort((a, b) => b.createdDate - a.createdDate);
 };
@@ -87,6 +103,14 @@ const insertDomainsService = async (request,fastify) => {
       domainData,
       subDomainData
     };
+  } else if (domainData && domainData.isActive === false) {
+    return await activeInactiveSubscribeDomainService({
+      ...request,
+      body: {
+        subScribesDomainId: domainData.subScribesDomainId,
+        isActive: true
+      }
+    }, fastify);
   }
   else {
     return null;
@@ -152,7 +176,28 @@ const insertSubScribeDomain = async (request, fastify) => {
     global.tblSubScribesDomain.push(domainData);
     // const data = await getDomainByIdQuery(domainData.subScribesDomainId, fastify);
     // return data;
+    await callClientAPI(
+      {
+        moduleType: APIEndpointModuleType.updateSeoModule,
+        data: {
+          data: domainData,
+          type: "add",
+          module: "subScribesDomain"
+        }
+      },
+      request,
+      fastify,
+      "services/subScribesDomain.js/insertSubScribeDomain"
+    );
     return domainData;
+  } else if (domainData && domainData.isActive === false) {
+    domainData = await activeInactiveSubscribeDomainService({
+      ...request,
+      body: {
+        subScribesDomainId: domainData.subScribesDomainId,
+        isActive: true
+      }
+    }, fastify);
   }
   // check if domain exist but any subDomains is new
   if(request.body.subDomains && request.body.subDomains.length > 0){
@@ -254,6 +299,68 @@ const activeInactiveVideoApprovedService = async (request, fastify) => {
   return "Video approved updated Successfully";
 }
 
+const activeInactiveSubscribeDomainService = async (request, fastify) => {
+  const index = global.tblSubScribesDomain.findIndex(
+    (d) => d.subScribesDomainId === request.body.subScribesDomainId
+  );
+  if (index == -1) {
+    throw new Error("Domain not found");
+  }
+
+  await activeInactiveSubscribeDomainQuery(request, fastify);
+
+  global.tblSubScribesDomain[index].isActive = request.body.isActive;
+
+  await callClientAPI(
+    { 
+      moduleType: APIEndpointModuleType.updateSeoModule,
+      data: {
+        data : global.tblSubScribesDomain[index],
+        type: "active/inactive",
+        module : "subScribesDomain"
+      },
+    },
+    request,
+    fastify,
+    "services/subScribesDomain.js/activeInactiveSubscribeDomainService"
+  );
+  return global.tblSubScribesDomain[index];
+}
+
+const inactiveAllSubscribeDomainService = async (request, fastify) => {
+  await inactiveSubscribeDomainQuery(request, fastify);
+
+  const getActiveSubscribeDomain = global.tblSubScribesDomain.filter(
+    (d) => d.isActive === true
+  );
+
+  for (const domain of getActiveSubscribeDomain) {
+    const index = global.tblSubScribesDomain.findIndex(
+      (d) => d.subScribesDomainId === domain.subScribesDomainId
+    );
+    if (index !== -1) {
+      global.tblSubScribesDomain[index].isActive = false;
+    }
+  }
+
+  await callClientAPI(
+    {
+      moduleType: APIEndpointModuleType.updateSeoModule,
+      data: {
+        data: {
+          isActive: false,
+        },
+        type: "active/inactive",
+        module: "subScribesDomain"
+      },
+    },
+    request,
+    fastify,
+    "services/subScribesDomain.js/inactiveAllSubscribeDomainService"
+  );
+  return "All domains set to inactive successfully.";
+}
+
 module.exports = {
   allSubScribesDomainService,
   subScribeDomainByIdService,
@@ -263,5 +370,7 @@ module.exports = {
   activeInactiveVideoApprovedService,
   getAllSubDomainDataService,
   insertSubDomainsService,
-  insertDomainsService
+  insertDomainsService,
+  activeInactiveSubscribeDomainService,
+  inactiveAllSubscribeDomainService
 };

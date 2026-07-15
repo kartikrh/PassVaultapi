@@ -5573,7 +5573,10 @@ const SubScribesDomain = {
         type: "object",
         properties: {
           isApproved: { type: "boolean" },
-          isVideoApproved: { type: "boolean" }
+          isVideoApproved: { type: "boolean" },
+          isActive: { type: "boolean" },
+          startDate: { type: "string" },
+          endDate: { type: "string" }
         },
       },
     },
@@ -5657,6 +5660,28 @@ const SubScribesDomain = {
         required: ["subScribesDomainId", "isVideoApproved"],
       },
     },
+  },
+  activeInactiveSubscribeDomain: {
+    schema: {
+      tags: ["SubScribesDomain"],
+      description: "active inactive Subscribe Domain and Sub Domain",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          subScribesDomainId: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["subScribesDomainId", "isActive"],
+      }
+    }
+  },
+  inactiveAllSubscribeDomain: {
+    schema: {
+      tags: ["SubScribesDomain"],
+      description: "inactive all Subscribe Domain and Sub Domain",
+      security: [{ bearerAuth: [] }]
+    }
   }
 };
 const MatchTypePredictor = {
@@ -10446,24 +10471,9 @@ const VirtualEvent = {
         properties: {
           competitionId : { type: "integer" },
           eventDate : { type: "string" },
-          eventRefId : { type: "string" },
-          cardType: {type : "integer"},
-          cards : {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                key : { type: "string" },
-                value : { type: "string" },
-                count : { type: "string" },
-              },
-              required: ["key", "value", "count"],              
-            },
-            minItems: 1
-
-          }
+          eventRefId : { type: "string" }
         },
-        required: ["competitionId", "eventDate", "eventRefId", "cards", "cardType"],
+        required: ["competitionId", "eventDate", "eventRefId"],
       }
     }
   },

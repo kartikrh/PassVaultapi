@@ -169,6 +169,7 @@ const getCommentariesDataQuery = async (fastify , where = null) => {
     tc."wrIsCountInPoint" as "isCountInPoint",
     "wrShotType" as "shotType",
     "wrIsWheelShow" as "isWheelShow",
+    tc."wrIsTest" as "isTest",
     tc."wrEventNo" as "eventNo",
     tc."wrIsEventStart" as "isEventStart",
     tc."wrDifficulty" as "difficulty",
@@ -195,6 +196,8 @@ const getCommentariesDataQuery = async (fastify , where = null) => {
     tc."wrStreamingUrl" as "streamingUrl",
     tc."wrViews" as "views",
     tc."wrStreamingType" as "streamingType",
+    tc."wrShuffle" as "shuffle",
+    tc."wrSetOfRules" as "setOfRules",
     tc."wrStatusNote" as "statusNote"
     from "tblCommentaries" tc
     left join "tblTeams" tt1 on tt1."wrTeamId" = tc."wrTeam1Id"
@@ -2117,7 +2120,8 @@ const getAllCommentaryPlayerDataQuery = async (whereCondition = null, fastify) =
         tcp."wrJerseyPlayerImagePath" as "jerseyPlayerImagePath",
         tp."wrDisplayName" as "displayName",
         tcp."wrTpId" as "tpId",
-        tcp."wrIsPlayInEvent" as "isPlayInEvent"
+        tcp."wrIsPlayInEvent" as "isPlayInEvent",
+        tcp."wrCreatedDate" as "createdDate"
     from "tblCommentaryPlayers" AS tcp
     LEFT JOIN "tblPlayers" AS tp ON tcp."wrPlayerId" = tp."wrPlayerId"
     LEFT JOIN "tblPlayerTypes" AS tpt ON tp."wrPlayerTypeId" = tpt."wrPlayerTypeId"
@@ -5574,7 +5578,7 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           tc."wrCommentaryId" AS "cid",
           tc."wrEventRefId" AS "eid",
           tet."wrEventType" AS "ety",
-          tc."wrMatchTypeId" AS "matchTypeId",
+          tc."wrMatchTypeId" AS "mtid",
           mt."wrMatchType" AS "mtyp",
           mt2."wrMatchType" AS "hmtyp",
           COALESCE(co."wrCompetition", '') AS "com",
@@ -5589,7 +5593,7 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
             WHEN tc."wrChoseTo" IS NULL THEN NULL
             WHEN tc."wrChoseTo" = 1 THEN 'BAT'
             ELSE 'BOWL'
-          END AS "choseto",
+          END AS "cto",
           tt1."wrTeamName" AS "te1n",
           tt2."wrTeamName" AS "te2n",
           tct1."wrShortName" AS "s1n",
@@ -5626,9 +5630,9 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           ) AS t2s,
           tc."wrDisplayStatus" AS "dis",
           COALESCE(tc."wrRmk", '') AS "rmk",
-          COALESCE(tc."wrWinRmk", '') AS "winRmk",
-          COALESCE(tc."wrTossRmk", '') AS "tossRmk",
-          COALESCE(tc."wrCardType", 0) AS "cardType",
+          COALESCE(tc."wrWinRmk", '') AS "wrm",
+          COALESCE(tc."wrTossRmk", '') AS "trk",
+          COALESCE(tc."wrCardType", 0) AS "ct",
           COALESCE(CAST(tct1."wrCrr" AS FLOAT), 0) AS "te1crr",
           COALESCE(CAST(tct2."wrCrr" AS FLOAT), 0) AS "te2crr",
           COALESCE(CAST(tct1."wrRrr" AS FLOAT), 0) AS "te1rrr",
@@ -5676,29 +5680,29 @@ const getAllCompletedCommentaryQuery = async (request, fastify) => {
           tc."wrTeam2Id" AS "t2id",
           tc."wrIsPredictMarket" AS "isPr",
           tc."wrIsClientShow" AS "ics",
-          tc."wrIsTest" AS "isTest",
+          tc."wrIsTest" AS "tst",
           tc."wrWinnerId" AS "winId",
           tc."wrWinnerName" AS "winNm",
-          tc."wrIsActive" AS "isActive",
+          tc."wrIsActive" AS "iac",
           tet."wrEventTypeId" AS "etyId",
-          tc."wrIsVirtual" as "isVirtual",
-          tc."wrOnfieldUmpires" as "onfieldUmpires",
-          tc."wrThirdUmpire" as "thirdUmpire",
-          tc."wrMatchReferee" as "matchReferee",
-          tc."wrSession" as "session",
-          tc."wrBallDelay" as "ballDelay",
-          tc."wrOverDelay" as "overDelay",
-          tc."wrInningDelay" as "inningDelay",
-          tc."wrTossDelay" as "tossDelay",
-          tc."wrCountryId" as "countryId",
-          tc."wrVenueId" as "venueId",
-          tc."wrScoringType" as "scoringType",
-          tc."wrPythonId" as "pythonId",
-          tc."wrPythonURI" as "pythonURI",
-          tc."wrViews" as "views",
-          tc."wrEventNo" as "eventNo",
-          tc."wrCancelTime" as "cancelTime",
-          tc."wrStatusNote" as "statusNote"
+          tc."wrIsVirtual" as "ivt",
+          tc."wrOnfieldUmpires" as "ofu",
+          tc."wrThirdUmpire" as "tum",
+          tc."wrMatchReferee" as "mrf",
+          tc."wrSession" as "ses",
+          tc."wrBallDelay" as "bDel",
+          tc."wrOverDelay" as "oDel",
+          tc."wrInningDelay" as "iDel",
+          tc."wrTossDelay" as "tDel",
+          tc."wrCountryId" as "conId",
+          tc."wrVenueId" as "vnId",
+          tc."wrScoringType" as "scType",
+          tc."wrPythonId" as "pyId",
+          tc."wrPythonURI" as "pyUri",
+          tc."wrViews" as "vws",
+          tc."wrEventNo" as "eno",
+          tc."wrCancelTime" as "cTime",
+          tc."wrStatusNote" as "snt"
       FROM "tblCommentaries" tc
       LEFT JOIN "tblTeams" tt1 ON tt1."wrTeamId" = tc."wrTeam1Id" AND tt1."wrIsDeleted" = false
       LEFT JOIN "tblTeams" tt2 ON tt2."wrTeamId" = tc."wrTeam2Id" AND tt2."wrIsDeleted" = false

@@ -137,7 +137,7 @@ const changeActionTypeService = async (request, fastify) => {
     const {clientSocketId} = request.body;
     // arr of id
     let indexOfId = [];
-    for (id of clientSocketId){
+    for (const id of clientSocketId){
         let index = global.tblClientSocket.findIndex((item) => item.clientSocketId === id);
         if(index === -1){
             throw new Error(`Client with id ${id} not found`);
@@ -153,7 +153,7 @@ const changeActionTypeService = async (request, fastify) => {
         fastify
     )
 
-    for (index of indexOfId){
+    for (const index of indexOfId){
         global.tblClientSocket[index].actionType = request.body.actionType;
         const clientSocketId = global.tblClientSocket[index]?.clientSocketId
         if(request.body.actionType === clientSocketActionType.connect) {

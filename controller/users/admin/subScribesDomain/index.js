@@ -1,4 +1,4 @@
-const { allSubScribesDomainService ,subScribeDomainByIdService, saveSubScribeDomainService, deleteSubScribeDomainService, approveDomainService, activeInactiveVideoApprovedService, getAllSubDomainDataService, insertSubDomainsService, insertDomainsService} = require("../../../../services/subScribesDomain");
+const { allSubScribesDomainService ,subScribeDomainByIdService, saveSubScribeDomainService, deleteSubScribeDomainService, approveDomainService, activeInactiveVideoApprovedService, getAllSubDomainDataService, insertSubDomainsService, insertDomainsService, activeInactiveSubscribeDomainService, inactiveAllSubscribeDomainService} = require("../../../../services/subScribesDomain");
 const { error, success,ERROR_CODES } = require("../../../../utilities");
 const { errorLogger } = require("../../../../utilities/logger");
 
@@ -85,6 +85,27 @@ const activeInactiveVideoApproved = async (request, reply, fastify) => {
         reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
     }
 };
+
+const activeInactiveSubscribeDomain = async (request, reply, fastify) => {
+    try {
+        const result = await activeInactiveSubscribeDomainService(request,fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/activeInactiveSubscribeDomain", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+
+const inactiveAllSubscribeDomain = async (request, reply, fastify) => {
+    try {
+        const result = await inactiveAllSubscribeDomainService(request,fastify);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/inactiveAllSubscribeDomain", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+
 module.exports = {
     getAllSubScribesDomain,
     getSubscribeDomainById,
@@ -94,5 +115,7 @@ module.exports = {
     activeInactiveVideoApproved,
     getAllSubDomainData,
     insertSubDomains,
-    insertDomains
+    insertDomains,
+    activeInactiveSubscribeDomain,
+    inactiveAllSubscribeDomain
 }

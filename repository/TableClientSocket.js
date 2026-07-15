@@ -48,7 +48,7 @@ const updateClientSocketStatusQuery = async(data,fastify) =>{
         ]
     })
 
-    for (id of data.clientSocketId) {
+    for (const id of data.clientSocketId) {
         let index = global.tblClientSocket.findIndex((c) => c.clientSocketId === id);
         if (index !== -1) {
             global.tblClientSocket[index].status = data.status;
@@ -94,7 +94,7 @@ const updateReconnectCountQuery = async (data, fastify) => {
         if (index !== -1) {
             global.tblClientSocket[index].reconnectCount = data.reconnectCount;
         } else {
-            console.log(`Warning: Client socket ${data.entitySocketId} not found in global.tblClientSocket when updating reconnect count`);
+            console.log(`Warning: Client socket ${data.clientSocketId} not found in global.tblClientSocket when updating reconnect count`);
         }
         return result;
     } catch (error) {

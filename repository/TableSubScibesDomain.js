@@ -10,6 +10,7 @@ const getAllSubScribesDomainQuery = async (fastify) =>{
         "wrIsApproved" as "isApproved",
         "wrIsVideoApproved" as "isVideoApproved",
         tsd."wrCreatedDate" as "createdDate",
+        tsd."wrIsActive" as "isActive",
         CAST(COUNT(tssd."wrSubScribesSubDomainId") as integer) as "subDomainCount",
         COALESCE(
             CASE
@@ -144,7 +145,8 @@ const insertSubScribeDomainQuery = async (request,fastify) =>{
                 "wrSiteDomain" as "siteDomain",
                 "wrIsApproved" as "isApproved",
                 "wrIsVideoApproved" as "isVideoApproved",
-                "wrCreatedDate" as "createdDate"
+                "wrCreatedDate" as "createdDate",
+                "wrIsActive" as "isActive"
             FROM insert_data
             `,
             {
@@ -327,6 +329,68 @@ const updateActiveInactiveVideoApprovedQuery = async (request,fastify) =>{
           throw new Error(err.message);
     }
 }
+
+const activeInactiveSubscribeDomainQuery = async (request,fastify) =>{
+    try {
+        await fastify.db.query(
+            `
+            UPDATE "tblSubScribesDomains" 
+            SET 
+                "wrIsActive" = $1
+            WHERE 
+                "wrSubScribesDomainId" = $2
+            `,
+            {
+                type: fastify.db.QueryTypes.UPDATE,
+                bind: [
+                    request.body.isActive,
+                    request.body.subScribesDomainId
+                ]
+            }
+        );
+        return true;
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableSubScribesDomain.js/activeInactiveSubscribeDomainQuery",
+            request
+          );
+          throw new Error(err.message);
+    }
+}
+
+const inactiveSubscribeDomainQuery = async (request,fastify) =>{
+    try {
+        await fastify.db.query(
+            `
+            UPDATE "tblSubScribesDomains" 
+            SET 
+                "wrIsActive" = $1
+            WHERE 
+                "wrIsActive" = $2 AND "wrIsDeleted" = $3
+            `,
+            {
+                type: fastify.db.QueryTypes.UPDATE,
+                bind: [
+                    false,
+                    true,
+                    false
+                ]
+            }
+        );
+        return true;
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableSubScribesDomain.js/inactiveSubscribeDomainQuery",
+            request
+          );
+          throw new Error(err.message);
+    }
+}
+
 module.exports = {
     getAllSubScribesDomainQuery,
     getAllSubScribesSubDomainQuery,
@@ -336,5 +400,7 @@ module.exports = {
     insertSubScribeSubDomainQuery,
     getDomainByIdQuery,
     getSubDomainByDomainQuery,
-    updateActiveInactiveVideoApprovedQuery
+    updateActiveInactiveVideoApprovedQuery,
+    activeInactiveSubscribeDomainQuery,
+    inactiveSubscribeDomainQuery
 }

@@ -5,8 +5,8 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { generateImageName, storeImageOnServer, removeImage, removeImageFromServer } = require("../utilities/Images");
 
 const getAllNotificationService = async(request) => {
-    const { startDate, endDate } = request.body;
-    let result = global.tblNotifications;
+    const { startDate, endDate, commentaryId, sendType } = request.body;
+    let result = global.tblNotifications || [];
     if (startDate && endDate) {
         const start = new Date(startDate).getTime();
         const end = new Date(endDate).getTime();
@@ -16,8 +16,14 @@ const getAllNotificationService = async(request) => {
             return createdAt >= start && createdAt <= end;
         });
     }
-    return result || [];
-}
+    if (commentaryId) {
+        result = result.filter(item => item.commentaryId == commentaryId);
+    }
+    if (sendType) {
+        result = result.filter(item => item.sendType == sendType);
+    }
+    return result;
+};
 const getEventListService = async(request) =>{
     let result = global.tblCommentaries.map((item)=>{
         return {
