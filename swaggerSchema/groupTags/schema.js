@@ -10524,7 +10524,7 @@ const VirtualEvent = {
           // run : { type: "integer" },
           // ballType : { type: "integer" },
         },
-        required: ["commentaryId", "cardType", "cardValue", "cardKey"],
+        required: ["commentaryId"],
       }
     }
   },
