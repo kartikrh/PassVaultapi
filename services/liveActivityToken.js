@@ -5,12 +5,14 @@ const {
     deleteExpiredLiveActivityTokensQuery,
     deleteLiveActivityTokenByIdQuery,
 } = require("../repository/TableLiveActivityToken");
+const { getIdByValue } = require("../repository/TableUser")
 
 const registerLiveActivityTokenService = async (request, fastify) => {
-    const validateUser = global.tblClient.find((user) => user.clientId === request.body.userId);
-    if (!validateUser) {
-        throw new Error("User not existed");
+    const checkExist = await getIdByValue({ clientId: request.body.userId }, request, fastify);
+    if (!checkExist) {
+        throw new Error("Invalid UserId");
     }
+    request.body.userId = checkExist.clientId;
 
     const validateCommentary = global.tblCommentaries.find((com) => com.commentaryId === request.body.commentaryId);
     if (!validateCommentary) {
@@ -22,8 +24,11 @@ const registerLiveActivityTokenService = async (request, fastify) => {
 }
 
 const unRegisterLiveActivityTokenService = async (request, fastify) => {
-    const { userId, commentaryId } = request.body;
-    await deleteLiveActivityTokensQuery({ userId, commentaryId }, fastify, request);
+    const checkExist = await getIdByValue({ clientId: request.body.userId }, request, fastify);
+    if (!checkExist) {
+        throw new Error("Invalid UserId");
+    }
+    await deleteLiveActivityTokensQuery({ userId: checkExist.clientId, commentaryId: request.body.commentaryId }, fastify, request);
     return `Live Activity Token(s) deleted successfully`;
 }
 
