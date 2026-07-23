@@ -9437,7 +9437,7 @@ const getAllCommentaryByCompetitionIdForClientQuery = async (request, fastify) =
       LEFT JOIN "tblCommentaryTeams" tct3 ON tct3."wrCommentaryId" = tc."wrCommentaryId"
         AND tct3."wrTeamId" = tc."wrTossWonBy" 
         AND tct3."wrCurrentInnings" = tc."wrCurrentInnings" AND tct3."wrIsDelete" = false
-      LEFT JOIN "tblPitchConditions" tpc ON tpc."wrCommentaryId" = tc."wrCommentaryId"
+      LEFT JOIN "tblPitchCondition" tpc ON tpc."wrCommentaryId" = tc."wrCommentaryId"
       LEFT JOIN "tblWeather" tw ON tw."wrCommentaryId" = tc."wrCommentaryId"
       WHERE tc."wrIsDelete" = FALSE
         AND tc."wrIsActive" = TRUE AND tc."wrIsTest" = FALSE
