@@ -9403,7 +9403,7 @@ const getAllCommentaryByCompetitionIdForClientQuery = async (request, fastify) =
         tc."wrEventNo" as "eno",
         tc."wrCancelTime" as "ctm",
         tc."wrStatusNote" as "snt",
-        tc."wrDifficulty" as "dif"
+        tc."wrDifficulty" as "dif",
         tc."wrPitchHardness" as "phd",
         tc."wrPitchCracks" as "pcr",
         tc."wrPitchWareSpeed" as "pws",
