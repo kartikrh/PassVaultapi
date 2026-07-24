@@ -1,5 +1,5 @@
 const { insertCompetitionStatisticsQuery, updateCompetitionStatisticsByIdQuery, deleteCompetitionStatisticsByIdQuery, updateCompetitionStatisticsDisplayOrderQuery, removeDeletedCompetitionStatisticsQuery } = require("../repository/TableCompetitionStatistics");
-const { CompetitionStatisticsType, getKeyAndValueKey, callEntitySportAPI, RefType, competitionMatchTypeEnum } = require("../utilities");
+const { CompetitionStatisticsType, getKeyAndValueKey, callEntitySportAPI, RefType, lowerEntityMatchTypesEnums } = require("../utilities");
 const { entitySportAPIEndPoint } = require("../utilities/entityConst");
 const { errorLogger } = require("../utilities/logger");
 const { insertAutoImportDataService } = require("./autoImportData");
@@ -286,8 +286,9 @@ const importCompetitionstatisticsService = async (data, fastify, request) => {
     }
 
     const getCompetitionStatisticsType = global.tblCompetitionStatisticsType.filter(tcst => tcst.isActive);
+    const entityMatchTypeEnums = lowerEntityMatchTypesEnums();
     for (const esMatchType of getEntitySportCompetitionStatisticsResponse) {
-        const getMatchType = global.tblMatchTypes.find(tmt => tmt.entityEnum === competitionMatchTypeEnum[isMen ? "men" : "women"][esMatchType]);
+        const getMatchType = global.tblMatchTypes.find(tmt => tmt.entityEnum === entityMatchTypeEnums[esMatchType.toLowerCase()]);
         if (!getMatchType) {
             errorLogger(
                 fastify,
