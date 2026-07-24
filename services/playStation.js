@@ -335,7 +335,7 @@ const tossService = async (request, fastify) => {
   return true;
 };
 const plyStationService = async (request, fastify) => {
-  const { commentaryId, teamName, over, score, inningChange } = request.body;
+  const { commentaryId, teamName, over, score, inningChange,wicket } = request.body;
   let commentaryDetails = global.tblCommentaries.find(
     (item) => item?.commentaryId === commentaryId,
   );
@@ -346,11 +346,11 @@ const plyStationService = async (request, fastify) => {
     throw new Error("Event is already completed");
   }
   if (commentaryDetails.commentaryStatus == commentaryStatus.OPEN) {
-    // throw new Error("Toss is not done yet");
-    await tossService(request, fastify);
-    commentaryDetails = global.tblCommentaries.find(
-      (item) => item?.commentaryId === commentaryId,
-    );
+    throw new Error("Toss is not done yet");
+    // await tossService(request, fastify);
+    // commentaryDetails = global.tblCommentaries.find(
+    //   (item) => item?.commentaryId === commentaryId,
+    // );
   }
     let matchType = global.tblMatchTypes.find(
     (i) => i.matchTypeId == commentaryDetails.matchTypeId,
@@ -374,10 +374,11 @@ const plyStationService = async (request, fastify) => {
   let run = 0,
     isWicket = false,
     ballType = BALL_TYPE.REGULAR;
-  const [runs = 0, wickets = 0] = (score || "0-0").split("-").map(Number);
+  const runs = (score || 0);
   run = runs - (battingTeam.teamScore || 0);
-  isWicket = wickets > (battingTeam.teamWicket || 0);
+  isWicket = wicket > (battingTeam.teamWicket || 0);
   const [overNumber, ball] = over.toString().split(".").map(Number);
+
   let onStrikePlayer = global.tblCommentaryPlayers.find(
     (item) =>
       item.commentaryId == commentaryId &&
