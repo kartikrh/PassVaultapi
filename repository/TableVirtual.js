@@ -525,6 +525,34 @@ const createCommWicketQuery = async (data, fastify, request) => {
     throw new Error(err.message);
   }
 };
+const virtualOverCompleteQuery = async (data, fastify, request) => {
+  try {
+    return await fastify.db.query(
+      `
+      update "tblOvers" set
+        "wrIsComplete" = $1
+      where "wrOverId" = $2
+      AND "wrCurrentInnings" = $3
+      `,
+      {
+        type: fastify.db.QueryTypes.UPDATE,
+        bind: [
+          data.isComplete,
+          data.overId,
+          data.currentInnings,
+        ],
+      }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableCommentary.js/updateOverQuery",
+      request
+    );
+    throw new Error(err.message);
+  }
+};
 
 module.exports = {
   virtualOverQuery,
@@ -533,4 +561,5 @@ module.exports = {
   comStatusUpdateQuery,
   saveComCardQuery,
   createCommWicketQuery,
+  virtualOverCompleteQuery
 };
