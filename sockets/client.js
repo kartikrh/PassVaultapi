@@ -59,6 +59,9 @@ const connectClients = async (fastify, clientSocketId) => {
           "Client Socket --> sockets/client.js/connectClients - connect",
           null
         );
+
+        client.emit("isAPNSEnable", config?.isAPNSEnable ? config : null);
+
         try {
           await updateClientSocketStatusQuery(
             {
@@ -218,6 +221,7 @@ const disconnectClientSockets = async (fastify, clientSocketId) => {
           clientSocket.cronJob = null;
         }
         try {
+          clientSocket.client?.emit("isAPNSEnable", getClient.isAPNSEnable ? global.tblClientSocket[index] : null);
           clientSocket.client?.removeAllListeners();
           clientSocket.client?.disconnect(true);
         } catch (_) {}
