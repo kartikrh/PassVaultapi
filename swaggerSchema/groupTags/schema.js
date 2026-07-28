@@ -6908,6 +6908,14 @@ const ClientSocket = {
           reconnectCount: { type: "integer" },
           actionType: { type: "integer" },
           updateInterval: { type: "integer" },
+          isAPNSEnable: { type: "boolean" },
+          APNSProdHost: { type: "string" },
+          APNSSandboxHost: { type: "string" },
+          APNSKeyId: { type: "string" },
+          APNSTeamId: { type: "string" },
+          APNSBundleId: { type: "string" },
+          APNSKeyPath: { type: "string" },
+          APNSEnv: { type: "string" }
         },
         required: ["clientSocketId", "url"],
       },
@@ -6976,6 +6984,21 @@ const ClientSocket = {
           isUpdateView: { type: "boolean" },
         },
         required: ["clientSocketId", "isUpdateView"],
+      },
+    },
+  },
+  activeInactiveAPNS: {
+    schema: {
+      tags: ["ClientSocket"],
+      description: "Update Active/Inactive APNS notification",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          clientSocketId: { type: "integer" },
+          isAPNSEnable: { type: "boolean" },
+        },
+        required: ["clientSocketId", "isAPNSEnable"],
       },
     },
   },
