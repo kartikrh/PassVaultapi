@@ -60,6 +60,7 @@ const connectClients = async (fastify, clientSocketId) => {
           null
         );
 
+        console.log("🚀 ~ connectClients ~ config:", config)
         client.emit("isAPNSEnable", config?.isAPNSEnable ? config : null);
 
         try {
