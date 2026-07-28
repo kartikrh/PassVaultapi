@@ -250,7 +250,7 @@ const updateAPNSActiveInactiveClientSocketService = async (request, fastify) => 
 
     const getClient = global.clientSocketIo.find(item => item.clientSocketId === clientSocketId);
     if (getClient) {
-        getClient?.client?.emit("isAPNSEnable", getClient.isAPNSEnable ? global.tblClientSocket[index] : null);
+        getClient?.client?.emit("isAPNSEnable", isAPNSEnable ? global.tblClientSocket[index] : null);
     }
 
     return `Client Socket updated successfully`;
