@@ -31,6 +31,27 @@ const getClientSocketByIdService = async (request, fastify) => {
 }
 const saveClientSocketService = async (request, fastify) => {
     const {clientSocketId} = request.body;
+
+    if (request.body.isAPNSEnable) {
+        const requiredFields = [
+            "APNSProdHost",
+            "APNSSandboxHost",
+            "APNSKeyId",
+            "APNSTeamId",
+            "APNSBundleId",
+            "APNSKeyPath",
+            "APNSEnv",
+        ];
+
+        const missingField = requiredFields.find(
+            field => request.body[field] == null
+        );
+
+        if (missingField) {
+            throw new Error(`${missingField} is required!`);
+        }
+    }
+
     if(clientSocketId === 0){
        return await createClientSocketService(request, fastify);
     }
@@ -113,6 +134,27 @@ const updateClientSocketService = async (request, fastify) => {
         APNSKeyPath: request.body.APNSKeyPath || result.APNSKeyPath,
         APNSEnv: request.body.APNSEnv || result.APNSEnv
     }
+
+    if (body.isAPNSEnable) {
+        const requiredFields = [
+            "APNSProdHost",
+            "APNSSandboxHost",
+            "APNSKeyId",
+            "APNSTeamId",
+            "APNSBundleId",
+            "APNSKeyPath",
+            "APNSEnv",
+        ];
+
+        const missingField = requiredFields.find(
+            field => body[field] == null
+        );
+
+        if (missingField) {
+            throw new Error(`${missingField} is required!`);
+        }
+    }
+
     const data = await updateClientSocketQuery(
         body,
         request,
@@ -245,6 +287,27 @@ const updateAPNSActiveInactiveClientSocketService = async (request, fastify) => 
     if (index === -1) {
         throw new Error(`Client with this id not found`);
     }
+
+    if (isAPNSEnable) {
+        const requiredFields = [
+            "APNSProdHost",
+            "APNSSandboxHost",
+            "APNSKeyId",
+            "APNSTeamId",
+            "APNSBundleId",
+            "APNSKeyPath",
+            "APNSEnv",
+        ];
+
+        const missingField = requiredFields.find(
+            field => global.tblClientSocket[index][field] == null
+        );
+
+        if (missingField) {
+            throw new Error(`${missingField} is required!`);
+        }
+    }
+
     await updateAPNSActiveInactiveClientSocketQuery(request, fastify);
     global.tblClientSocket[index].isAPNSEnable = isAPNSEnable;
 
