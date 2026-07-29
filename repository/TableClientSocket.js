@@ -23,7 +23,7 @@ const getAllClientSocketQuery =async (fastify) =>{
             "wrAPNSTeamId" as "APNSTeamId",
             "wrAPNSBundleId" as "APNSBundleId",
             "wrAPNSKeyPath" as "APNSKeyPath",
-            "wrAPNSEnv" as "APNSEnv"
+            "wrAPNSEnvType" as "APNSEnvType"
         FROM "tblClientSockets"
         WHERE "wrIsDeleted" = false
     `,
@@ -151,7 +151,7 @@ const createClientSocketQuery =async (data,request,fastify) =>{
             "wrAPNSTeamId" as "APNSTeamId",
             "wrAPNSBundleId" as "APNSBundleId",
             "wrAPNSKeyPath" as "APNSKeyPath",
-            "wrAPNSEnv" as "APNSEnv"
+            "wrAPNSEnvType" as "APNSEnvType"
         `;
         const result = await fastify.db.query(query,
             {
@@ -199,7 +199,7 @@ const updateClientSocketQuery = async(data,request,fastify) =>{
                 "wrAPNSTeamId" = $13,
                 "wrAPNSBundleId" = $14,
                 "wrAPNSKeyPath" = $15,
-                "wrAPNSEnv" = $16
+                "wrAPNSEnvType" = $16
             WHERE "wrId" = $6
             RETURNING "wrId" as "clientSocketId",
             "wrServerName" as "serverName",
@@ -221,7 +221,7 @@ const updateClientSocketQuery = async(data,request,fastify) =>{
             "wrAPNSTeamId" as "APNSTeamId",
             "wrAPNSBundleId" as "APNSBundleId",
             "wrAPNSKeyPath" as "APNSKeyPath",
-            "wrAPNSEnv" as "APNSEnv"
+            "wrAPNSEnvType" as "APNSEnvType"
         `;
         const result = await  fastify.db.query(query,
             {
@@ -242,7 +242,7 @@ const updateClientSocketQuery = async(data,request,fastify) =>{
                     data.APNSTeamId,
                     data.APNSBundleId,
                     data.APNSKeyPath,
-                    data.APNSEnv
+                    data.APNSEnvType
                 ]
             }
         )
