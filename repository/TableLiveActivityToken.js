@@ -12,7 +12,7 @@ const getAllLiveActivityTokensQuery = async (fastify) => {
             tc."wrEventName" AS "eventName",
             tlat."wrApnsToken" AS "apnsToken",
             tlat."wrBundleId" AS "bundleId",
-            tlat."wrEnv" AS "env",
+            tlat."wrEnvType" AS "envType",
             tlat."wrExpiresAt" AS "expiresAt",
             tlat."wrCreatedAt" AS "createdAt"
         FROM "tblLiveActivityTokens" tlat
@@ -42,7 +42,7 @@ const getAllLiveActivityTokensByCommentaryQuery = async (request, fastify) => {
             tc."wrEventName" AS "eventName",
             tlat."wrApnsToken" AS "apnsToken",
             tlat."wrBundleId" AS "bundleId",
-            tlat."wrEnv" AS "env",
+            tlat."wrEnvType" AS "envType",
             tlat."wrExpiresAt" AS "expiresAt",
             tlat."wrCreatedAt" AS "createdAt"
         FROM "tblLiveActivityTokens" tlat
@@ -208,7 +208,7 @@ const upsertLiveActivityTokenQuery = async (request, fastify) => {
                     "wrCommentaryId",
                     "wrApnsToken",
                     "wrBundleId",
-                    "wrEnv",
+                    "wrEnvType",
                     "wrExpiresAt",
                     "wrCreatedAt"
                 )
@@ -228,7 +228,7 @@ const upsertLiveActivityTokenQuery = async (request, fastify) => {
                 SET
                     "wrApnsToken" = EXCLUDED."wrApnsToken",
                     "wrBundleId" = EXCLUDED."wrBundleId",
-                    "wrEnv" = EXCLUDED."wrEnv",
+                    "wrEnvType" = EXCLUDED."wrEnvType",
                     "wrExpiresAt" = NOW() + INTERVAL '8 hours'
 
                 RETURNING *
@@ -242,7 +242,7 @@ const upsertLiveActivityTokenQuery = async (request, fastify) => {
                 tc."wrEventName" AS "eventName",
                 u."wrApnsToken" AS "apnsToken",
                 u."wrBundleId" AS "bundleId",
-                u."wrEnv" AS "env",
+                u."wrEnvType" AS "envType",
                 u."wrExpiresAt" AS "expiresAt",
                 u."wrCreatedAt" AS "createdAt"
             FROM upserted u
@@ -259,7 +259,7 @@ const upsertLiveActivityTokenQuery = async (request, fastify) => {
                     data.commentaryId || null,
                     data.apnsToken,
                     data.bundleId,
-                    data.env || null,
+                    data.envType || null,
                 ],
             }
         );
