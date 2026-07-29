@@ -371,11 +371,11 @@ const plyStationService = async (request, fastify) => {
     )
     .sort((a, b) => b.commentaryPartnershipId - a.commentaryPartnershipId)[0];
 
-  let run = 0,
+  let run = Number(score || 0),
     isWicket = false,
     ballType = BALL_TYPE.REGULAR;
-  const runs = (score || 0);
-  run = runs - (battingTeam.teamScore || 0);
+  // const runs = (score || 0);
+  // run = runs - (battingTeam.teamScore || 0);
   isWicket = wicket > (battingTeam.teamWicket || 0);
   const [overNumber, ball] = over.toString().split(".").map(Number);
 
@@ -612,9 +612,12 @@ const runUpdateService = async (data, request, fastify) => {
     matchType,
     isOverComplete,
   } = data;
-  const [runs = 0, wickets = 0] = (request.body.score || "0-0")
-    .split("-")
-    .map(Number);
+
+  const runs = Number(request.body.score || 0);
+  const wickets = Number(request.body.wicket || 0)
+  // const [runs = 0, wickets = 0] = (request.body.score || "0-0")
+  //   .split("-")
+  //   .map(Number);
 
   updateBowler["bowlerOver"] = request.body.over;
   updateBowler["bowlerRun"] = (currentBowler.bowlerRun || 0) + runToUpdate;
@@ -634,11 +637,11 @@ const runUpdateService = async (data, request, fastify) => {
   updateBall["nextBatNonStrikeId"] = nonStrikePlayer.commentaryPlayerId;
   updateBatter["batRun"] = onStrikePlayer.batRun + runToUpdate;
   updateBatter["batBall"] = onStrikePlayer.batBall + ball;
-  updateBowler["bowlerRun"] = currentBowler.bowlerRun + runToUpdate;
+  // updateBowler["bowlerRun"] = currentBowler.bowlerRun + runToUpdate;
   updateBowler["bowlerTotalBall"] = currentBowler.bowlerTotalBall + ball;
-  updateBowler["bowlerOver"] = request.body.over;
+  // updateBowler["bowlerOver"] = request.body.over;
   updateOver["ballCount"] = ball;
-  updateOver["totalRun"] = over.totalRun + runToUpdate;
+  // updateOver["totalRun"] = over.totalRun + runToUpdate;
   updateBattingTeam["teamOver"] = request.body.over;
   updateOver["teamScore"] = `${runs || 0}/${wickets || 0}`;
   updateBall["overCount"] = request.body.over;
