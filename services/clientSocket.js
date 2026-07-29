@@ -161,9 +161,14 @@ const updateClientSocketService = async (request, fastify) => {
         fastify
     )
     // update the global variable
-    global.tblClientSocket[
-        global.tblClientSocket.findIndex((item) => item.clientSocketId === clientSocketId)
-    ] = data;
+
+    const index = global.tblClientSocket.findIndex((item) => item.clientSocketId === clientSocketId)
+    global.tblClientSocket[index] = data;
+
+    const getClient = global.clientSocketIo.find(item => item.clientSocketId === clientSocketId);
+    if (getClient) {
+        getClient?.client?.emit("isAPNSEnable", data?.isAPNSEnable ? global.tblClientSocket[index] : null);
+    }
     
     return data;
     
