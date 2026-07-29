@@ -8,6 +8,7 @@ const {
   activeInactiveClientSocket,
   socketCount,
   changeIsUpdateViewClientSocket,
+  updateAPNSActiveInactiveClientSocket,
 } = require("../../../controller/users/admin/clientSocket");
 const { ClientSocket } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -104,5 +105,16 @@ module.exports = async (fastify, opts) => {
       })
     ],
     handler : (request, reply) => changeIsUpdateViewClientSocket(request, reply, fastify)
+  });
+  fastify.post("/activeInactiveAPNS",{
+    schema : ClientSocket.activeInactiveAPNS.schema,
+    preHandler : [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) => checkPermission(request, reply, fastify, {
+        tabName : "ClientSocket",
+        mode : "edit"
+      })
+    ],
+    handler : (request, reply) => updateAPNSActiveInactiveClientSocket(request, reply, fastify)
   });
 };

@@ -7,6 +7,7 @@ const {
     changeIsUpdateViewClientSocketQuery,
     resetAllClientSocketReconnectCountQuery,
     disconnectAllClientSocketQuery,
+    updateAPNSActiveInactiveClientSocketQuery,
 } = require("../repository/TableClientSocket");
 // const { connectClients2, disconnectClients, disconnectInactiveClients,connectClients } = require("../sockets");
 const { 
@@ -30,6 +31,27 @@ const getClientSocketByIdService = async (request, fastify) => {
 }
 const saveClientSocketService = async (request, fastify) => {
     const {clientSocketId} = request.body;
+
+    if (request.body.isAPNSEnable) {
+        const requiredFields = [
+            "APNSProdHost",
+            "APNSSandboxHost",
+            "APNSKeyId",
+            "APNSTeamId",
+            "APNSBundleId",
+            "APNSKeyPath",
+            "APNSEnv",
+        ];
+
+        const missingField = requiredFields.find(
+            field => request.body[field] == null
+        );
+
+        if (missingField) {
+            throw new Error(`${missingField} is required!`);
+        }
+    }
+
     if(clientSocketId === 0){
        return await createClientSocketService(request, fastify);
     }
@@ -103,7 +125,36 @@ const updateClientSocketService = async (request, fastify) => {
         actionType : request.body.actionType || result.actionType,
         isUpdateView : request.body.hasOwnProperty("isUpdateView") ? request.body.isUpdateView : result.isUpdateView,
         updateInterval : request.body.updateInterval || result.updateInterval,
+        isAPNSEnable: request.body.hasOwnProperty("isAPNSEnable") ? request.body.isAPNSEnable : result.isAPNSEnable,
+        APNSProdHost: request.body.APNSProdHost || result.APNSProdHost,
+        APNSSandboxHost: request.body.APNSSandboxHost || result.APNSSandboxHost,
+        APNSKeyId: request.body.APNSKeyId || result.APNSKeyId,
+        APNSTeamId: request.body.APNSTeamId || result.APNSTeamId,
+        APNSBundleId: request.body.APNSBundleId || result.APNSBundleId,
+        APNSKeyPath: request.body.APNSKeyPath || result.APNSKeyPath,
+        APNSEnv: request.body.APNSEnv || result.APNSEnv
     }
+
+    if (body.isAPNSEnable) {
+        const requiredFields = [
+            "APNSProdHost",
+            "APNSSandboxHost",
+            "APNSKeyId",
+            "APNSTeamId",
+            "APNSBundleId",
+            "APNSKeyPath",
+            "APNSEnv",
+        ];
+
+        const missingField = requiredFields.find(
+            field => body[field] == null
+        );
+
+        if (missingField) {
+            throw new Error(`${missingField} is required!`);
+        }
+    }
+
     const data = await updateClientSocketQuery(
         body,
         request,
@@ -230,6 +281,44 @@ const disconnectAllClientSocketService = async (request, fastify) => {
     return result;
 }
 
+const updateAPNSActiveInactiveClientSocketService = async (request, fastify) => {
+    const { clientSocketId, isAPNSEnable } = request.body;
+    let index = global.tblClientSocket.findIndex((item) => item.clientSocketId === clientSocketId);
+    if (index === -1) {
+        throw new Error(`Client with this id not found`);
+    }
+
+    if (isAPNSEnable) {
+        const requiredFields = [
+            "APNSProdHost",
+            "APNSSandboxHost",
+            "APNSKeyId",
+            "APNSTeamId",
+            "APNSBundleId",
+            "APNSKeyPath",
+            "APNSEnv",
+        ];
+
+        const missingField = requiredFields.find(
+            field => global.tblClientSocket[index][field] == null
+        );
+
+        if (missingField) {
+            throw new Error(`${missingField} is required!`);
+        }
+    }
+
+    await updateAPNSActiveInactiveClientSocketQuery(request, fastify);
+    global.tblClientSocket[index].isAPNSEnable = isAPNSEnable;
+
+    const getClient = global.clientSocketIo.find(item => item.clientSocketId === clientSocketId);
+    if (getClient) {
+        getClient?.client?.emit("isAPNSEnable", isAPNSEnable ? global.tblClientSocket[index] : null);
+    }
+
+    return `Client Socket updated successfully`;
+}
+
 module.exports = {
     getAllClientSocketService,
     getClientSocketByIdService,
@@ -240,5 +329,6 @@ module.exports = {
     socketCountService,
     changeIsUpdateViewClientSocketService,
     resetAllClientSocketReconnectCountService,
-    disconnectAllClientSocketService
+    disconnectAllClientSocketService,
+    updateAPNSActiveInactiveClientSocketService
 }
