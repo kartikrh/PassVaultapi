@@ -32,7 +32,7 @@ const getAllLiveActivityTokensQuery = async (fastify) => {
 
 const getAllLiveActivityTokensByCommentaryQuery = async (request, fastify) => {
     try {
-        const { commentaryId } = request.body;
+        const { commentaryId, clientSocketId } = request.body;
         return await fastify.db.query(
             `
         SELECT
@@ -53,11 +53,11 @@ const getAllLiveActivityTokensByCommentaryQuery = async (request, fastify) => {
             AND tc."wrIsDelete" = FALSE
         LEFT JOIN "tblClient" tu
             ON tu."wrClientID" = tlat."wrUserId"
-        WHERE tlat."wrCommentaryId" = $1 AND tlat."wrExpiresAt" > NOW();
+        WHERE tlat."wrCommentaryId" = $1 AND tlat."wrExpiresAt" > NOW() AND "wrClientSocketId" = $2;
         `,
             {
                 type: fastify.db.QueryTypes.SELECT,
-                bind: [commentaryId]
+                bind: [commentaryId, clientSocketId]
             }
         );
     } catch (error) {
