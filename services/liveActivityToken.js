@@ -28,7 +28,7 @@ const unRegisterLiveActivityTokenService = async (request, fastify) => {
     if (!checkExist) {
         throw new Error("Invalid UserId");
     }
-    await deleteLiveActivityTokensQuery({ userId: checkExist.clientId, commentaryId: request.body.commentaryId }, fastify, request);
+    await deleteLiveActivityTokensQuery({ userId: checkExist.clientId, commentaryId: request.body.commentaryId, clientSocketId: request.body.clientSocketId }, fastify, request);
     return `Live Activity Token(s) deleted successfully`;
 }
 
