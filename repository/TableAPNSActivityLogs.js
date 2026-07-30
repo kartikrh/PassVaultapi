@@ -1,3 +1,5 @@
+const { errorLogger } = require("../utilities/logger");
+
 const insertAPNSActivityLogsQuery = async (request, fastify) => {
     try {
         const { liveActivityTokenId, host, header, body, response } = request.body;
