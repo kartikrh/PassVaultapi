@@ -285,10 +285,10 @@ const upsertLiveActivityTokenQuery = async (request, fastify) => {
 const deleteLiveActivityTokensQuery = async (data, fastify, request) => {
     try {
         return await fastify.db.query(
-            'DELETE FROM "tblLiveActivityTokens" WHERE "wrUserId" = $1 AND "wrCommentaryId" = $2',
+            'DELETE FROM "tblLiveActivityTokens" WHERE "wrUserId" = $1 AND "wrCommentaryId" = $2 AND "wrClientSocketId" = $3',
             {
                 type: fastify.db.QueryTypes.DELETE,
-                bind: [data.userId, data.commentaryId],
+                bind: [data.userId, data.commentaryId, data.clientSocketId],
             }
         );
     } catch (err) {
