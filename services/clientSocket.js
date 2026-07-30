@@ -40,7 +40,7 @@ const saveClientSocketService = async (request, fastify) => {
             "APNSTeamId",
             "APNSBundleId",
             "APNSKeyPath",
-            "APNSEnv",
+            "APNSEnvType",
         ];
 
         const missingField = requiredFields.find(
@@ -132,7 +132,7 @@ const updateClientSocketService = async (request, fastify) => {
         APNSTeamId: request.body.APNSTeamId || result.APNSTeamId,
         APNSBundleId: request.body.APNSBundleId || result.APNSBundleId,
         APNSKeyPath: request.body.APNSKeyPath || result.APNSKeyPath,
-        APNSEnv: request.body.APNSEnv || result.APNSEnv
+        APNSEnvType: request.body.APNSEnvType || result.APNSEnvType
     }
 
     if (body.isAPNSEnable) {
@@ -143,7 +143,7 @@ const updateClientSocketService = async (request, fastify) => {
             "APNSTeamId",
             "APNSBundleId",
             "APNSKeyPath",
-            "APNSEnv",
+            "APNSEnvType",
         ];
 
         const missingField = requiredFields.find(
@@ -161,9 +161,14 @@ const updateClientSocketService = async (request, fastify) => {
         fastify
     )
     // update the global variable
-    global.tblClientSocket[
-        global.tblClientSocket.findIndex((item) => item.clientSocketId === clientSocketId)
-    ] = data;
+
+    const index = global.tblClientSocket.findIndex((item) => item.clientSocketId === clientSocketId)
+    global.tblClientSocket[index] = data;
+
+    const getClient = global.clientSocketIo.find(item => item.clientSocketId === clientSocketId);
+    if (getClient) {
+        getClient?.client?.emit("isAPNSEnable", data?.isAPNSEnable ? global.tblClientSocket[index] : null);
+    }
     
     return data;
     
@@ -296,7 +301,7 @@ const updateAPNSActiveInactiveClientSocketService = async (request, fastify) => 
             "APNSTeamId",
             "APNSBundleId",
             "APNSKeyPath",
-            "APNSEnv",
+            "APNSEnvType",
         ];
 
         const missingField = requiredFields.find(

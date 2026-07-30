@@ -194,6 +194,10 @@ const connectClients = async (fastify, clientSocketId) => {
           null
         );
       });
+
+      client.on("getAPNSEnableData", () => {
+        client.emit("isAPNSEnable", config?.isAPNSEnable ? config : null);
+      })
     })
 
     await Promise.all(promises);

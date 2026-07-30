@@ -6915,7 +6915,7 @@ const ClientSocket = {
           APNSTeamId: { type: "string" },
           APNSBundleId: { type: "string" },
           APNSKeyPath: { type: "string" },
-          APNSEnv: { type: "string" }
+          APNSEnvType: { type: "integer" }
         },
         required: ["clientSocketId", "url"],
       },
