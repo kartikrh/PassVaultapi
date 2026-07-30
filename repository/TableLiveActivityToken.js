@@ -14,7 +14,8 @@ const getAllLiveActivityTokensQuery = async (fastify) => {
             tlat."wrBundleId" AS "bundleId",
             tlat."wrEnvType" AS "envType",
             tlat."wrExpiresAt" AS "expiresAt",
-            tlat."wrCreatedAt" AS "createdAt"
+            tlat."wrCreatedAt" AS "createdAt",
+            tlat."wrClientSocketId" AS "clientSocketId"
         FROM "tblLiveActivityTokens" tlat
         LEFT JOIN "tblCommentaries" tc
             ON tc."wrCommentaryId" = tlat."wrCommentaryId"
@@ -44,7 +45,8 @@ const getAllLiveActivityTokensByCommentaryQuery = async (request, fastify) => {
             tlat."wrBundleId" AS "bundleId",
             tlat."wrEnvType" AS "envType",
             tlat."wrExpiresAt" AS "expiresAt",
-            tlat."wrCreatedAt" AS "createdAt"
+            tlat."wrCreatedAt" AS "createdAt",
+            tlat."wrClientSocketId" AS "clientSocketId"
         FROM "tblLiveActivityTokens" tlat
         LEFT JOIN "tblCommentaries" tc
             ON tc."wrCommentaryId" = tlat."wrCommentaryId"
@@ -210,7 +212,8 @@ const upsertLiveActivityTokenQuery = async (request, fastify) => {
                     "wrBundleId",
                     "wrEnvType",
                     "wrExpiresAt",
-                    "wrCreatedAt"
+                    "wrCreatedAt",
+                    "wrClientSocketId"
                 )
                 VALUES
                 (
@@ -220,10 +223,11 @@ const upsertLiveActivityTokenQuery = async (request, fastify) => {
                     $4,
                     $5,
                     NOW() + INTERVAL '8 hours',
-                    NOW()
+                    NOW(),
+                    $6
                 )
 
-                ON CONFLICT ("wrUserId", "wrCommentaryId")
+                ON CONFLICT ("wrUserId", "wrCommentaryId", "wrClientSocketId")
                 DO UPDATE
                 SET
                     "wrApnsToken" = EXCLUDED."wrApnsToken",
@@ -244,7 +248,8 @@ const upsertLiveActivityTokenQuery = async (request, fastify) => {
                 u."wrBundleId" AS "bundleId",
                 u."wrEnvType" AS "envType",
                 u."wrExpiresAt" AS "expiresAt",
-                u."wrCreatedAt" AS "createdAt"
+                u."wrCreatedAt" AS "createdAt",
+                u."wrClientSocketId" AS "clientSocketId"
             FROM upserted u
             LEFT JOIN "tblClient" tu
                 ON tu."wrClientID" = u."wrUserId"
@@ -260,6 +265,7 @@ const upsertLiveActivityTokenQuery = async (request, fastify) => {
                     data.apnsToken,
                     data.bundleId,
                     data.envType || null,
+                    data.clientSocketId,
                 ],
             }
         );
@@ -278,7 +284,6 @@ const upsertLiveActivityTokenQuery = async (request, fastify) => {
 
 const deleteLiveActivityTokensQuery = async (data, fastify, request) => {
     try {
-        console.log(data)
         return await fastify.db.query(
             'DELETE FROM "tblLiveActivityTokens" WHERE "wrUserId" = $1 AND "wrCommentaryId" = $2',
             {
