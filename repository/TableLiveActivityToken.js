@@ -63,7 +63,7 @@ const getAllLiveActivityTokensByCommentaryQuery = async (request, fastify) => {
     } catch (error) {
         errorLogger(
             fastify,
-            err.message,
+            error.message,
             "DB ERROR --> repository/TableLiveActivityToken.js/getAllLiveActivityTokensByCommentaryQuery",
             request
         );
