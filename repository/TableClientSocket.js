@@ -23,7 +23,8 @@ const getAllClientSocketQuery =async (fastify) =>{
             "wrAPNSTeamId" as "APNSTeamId",
             "wrAPNSBundleId" as "APNSBundleId",
             "wrAPNSKeyPath" as "APNSKeyPath",
-            "wrAPNSEnvType" as "APNSEnvType"
+            "wrAPNSEnvType" as "APNSEnvType",
+            "wrIsAPNSLogEnable" as "isAPNSLogEnable"
         FROM "tblClientSockets"
         WHERE "wrIsDeleted" = false
     `,
@@ -151,7 +152,8 @@ const createClientSocketQuery =async (data,request,fastify) =>{
             "wrAPNSTeamId" as "APNSTeamId",
             "wrAPNSBundleId" as "APNSBundleId",
             "wrAPNSKeyPath" as "APNSKeyPath",
-            "wrAPNSEnvType" as "APNSEnvType"
+            "wrAPNSEnvType" as "APNSEnvType",
+            "wrIsAPNSLogEnable" as "isAPNSLogEnable"
         `;
         const result = await fastify.db.query(query,
             {
@@ -199,7 +201,8 @@ const updateClientSocketQuery = async(data,request,fastify) =>{
                 "wrAPNSTeamId" = $13,
                 "wrAPNSBundleId" = $14,
                 "wrAPNSKeyPath" = $15,
-                "wrAPNSEnvType" = $16
+                "wrAPNSEnvType" = $16,
+                "wrIsAPNSLogEnable" = $17
             WHERE "wrId" = $6
             RETURNING "wrId" as "clientSocketId",
             "wrServerName" as "serverName",
@@ -221,7 +224,8 @@ const updateClientSocketQuery = async(data,request,fastify) =>{
             "wrAPNSTeamId" as "APNSTeamId",
             "wrAPNSBundleId" as "APNSBundleId",
             "wrAPNSKeyPath" as "APNSKeyPath",
-            "wrAPNSEnvType" as "APNSEnvType"
+            "wrAPNSEnvType" as "APNSEnvType",
+            "wrIsAPNSLogEnable" as "isAPNSLogEnable"
         `;
         const result = await  fastify.db.query(query,
             {
@@ -242,7 +246,8 @@ const updateClientSocketQuery = async(data,request,fastify) =>{
                     data.APNSTeamId,
                     data.APNSBundleId,
                     data.APNSKeyPath,
-                    data.APNSEnvType
+                    data.APNSEnvType,
+                    data.isAPNSLogEnable
                 ]
             }
         )
