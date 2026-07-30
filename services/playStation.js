@@ -643,7 +643,7 @@ const runUpdateService = async (data, request, fastify) => {
   updateOver["ballCount"] = ball;
   // updateOver["totalRun"] = over.totalRun + runToUpdate;
   updateBattingTeam["teamOver"] = request.body.over;
-  updateOver["teamScore"] = `${runs || 0}/${wickets || 0}`;
+  // updateOver["teamScore"] = `${runs || 0}/${wickets || 0}`;
   updateBall["overCount"] = request.body.over;
   updateBall["currentOverBalls"] = ball;
   updatePartnership["totalRuns"] = partnership.totalRuns + runToUpdate;
@@ -1484,8 +1484,6 @@ const psMatchCompleteService = async (data,request, fastify) => {
   const bowlTeam = teams.find((t) => t.teamStatus == 2);
   const maxNoOfWicket =
     matchType?.noOfPlayer - (matchType?.isLastManStand ? 0 : 1);
-    console.log("maxNoOfWicket", maxNoOfWicket);
-    
   const isLastInnigs =
     commentaryDetails.currentInnings >= matchType.noOfIningsPerSide;
   let target = 0;
@@ -1500,17 +1498,17 @@ const psMatchCompleteService = async (data,request, fastify) => {
         item.currentInnings == commentaryDetails.currentInnings
     )
     .sort((a, b) => b.overId - a.overId)[0];
-  let conditionsToCheck = [];
+  const ballsPerOver = matchType?.ballsPerOver || 6;
   let overLimit, wicketLimit, isRunTargetAchieved;
   overLimit =
         matchType.isLimitedOvers &&
-        Math.ceil(+overdetails.over || 0) + 1 >= batTeam?.teamMaxOver;
+        overdetails &&
+        (Math.floor(+overdetails.over || 0) + 1 >= batTeam?.teamMaxOver) && ((+overdetails.ballCount || 0) >= ballsPerOver);
       wicketLimit = batTeam?.teamWicket >= maxNoOfWicket;
       isRunTargetAchieved =
         isLastInnigs && target !== 0 && batTeam?.teamScore >= target;
-
-      conditionsToCheck.push(overLimit, wicketLimit, isRunTargetAchieved);
-  if (conditionsToCheck.some((condition) => condition)) {
+  let matchComplete = false;
+  if (overLimit || wicketLimit || isRunTargetAchieved) {
     if (bowlTeam.isBattingComplete && isLastInnigs) {
       result = await psCheckWinner({
         ...request.body,
@@ -1534,10 +1532,23 @@ const psMatchCompleteService = async (data,request, fastify) => {
       result: result,
     }
     }
-    else {
+    else if (!bowlTeam.isBattingComplete && isLastInnigs && (overLimit || wicketLimit)) {
+      await psInningChangeService(
+        {
+          ...request.body,
+          commentaryDetails,
+          matchType,
+        },
+        request,
+        fastify
+      );
       return {
         isMatchComplete: false,
+        inningChange: true,
       }
+    }
+    return {
+      isMatchComplete: false,
     }
   }
   else{
@@ -1545,7 +1556,6 @@ const psMatchCompleteService = async (data,request, fastify) => {
       isMatchComplete: false,
     }
   }
-  
 }
 const psCheckWinner = async (data) => {
   const { isWonByInnings, bowlTeam, batTeam, target, commentaryDetails } = data;
