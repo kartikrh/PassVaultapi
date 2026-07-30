@@ -41,6 +41,7 @@ const saveClientSocketService = async (request, fastify) => {
             "APNSBundleId",
             "APNSKeyPath",
             "APNSEnvType",
+            "isAPNSLogEnable"
         ];
 
         const missingField = requiredFields.find(
@@ -132,7 +133,8 @@ const updateClientSocketService = async (request, fastify) => {
         APNSTeamId: request.body.APNSTeamId || result.APNSTeamId,
         APNSBundleId: request.body.APNSBundleId || result.APNSBundleId,
         APNSKeyPath: request.body.APNSKeyPath || result.APNSKeyPath,
-        APNSEnvType: request.body.APNSEnvType || result.APNSEnvType
+        APNSEnvType: request.body.APNSEnvType || result.APNSEnvType,
+        isAPNSLogEnable: request.body.hasOwnProperty("isAPNSLogEnable") ? request.body.isAPNSLogEnable : result.isAPNSLogEnable
     }
 
     if (body.isAPNSEnable) {
@@ -144,6 +146,7 @@ const updateClientSocketService = async (request, fastify) => {
             "APNSBundleId",
             "APNSKeyPath",
             "APNSEnvType",
+            "isAPNSLogEnable"
         ];
 
         const missingField = requiredFields.find(
@@ -302,6 +305,7 @@ const updateAPNSActiveInactiveClientSocketService = async (request, fastify) => 
             "APNSBundleId",
             "APNSKeyPath",
             "APNSEnvType",
+            "isAPNSLogEnable"
         ];
 
         const missingField = requiredFields.find(
