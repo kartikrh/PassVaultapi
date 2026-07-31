@@ -836,6 +836,7 @@ const plySWicketService = async (data, request, fastify) => {
   };
   let upBatTeam = {
     ...battingTeam,
+    teamScore: battingTeam.teamScore || 0,
     teamWicket: (battingTeam.teamWicket || 0) + 1,
     teamOver: request.body.over,
   };
