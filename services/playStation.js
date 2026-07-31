@@ -549,40 +549,49 @@ const plyStationService = async (request, fastify) => {
       fastify,
     );
   }
-  if (
-    commentaryDetails.commentaryStatus == commentaryStatus.INPROGRESS &&
-    inningChange
-  ) {
-    await psInningChangeService(
-      {
-        ...request.body,
-        commentaryDetails,
-        matchType,
-      },
-      request,
-      fastify,
-    );
-      let getRes = await comResponseService2(request, fastify);
-    return {
-      inningChange: request.body.inningChange,
-      isMatchComplete: false,
-      isOverComplete: true,
-      isWicket: isWicket,
-      ...getRes,
-    };
-  }
-    // check if the match is complete
-  let matchComplete = await psMatchCompleteService({
-    matchType
-  },request, fastify);
-  let getRes = await comResponseService2(request, fastify);
-  return {
-    inningChange: request.body.inningChange,
-    isMatchComplete: matchComplete.isMatchComplete,
-    isOverComplete: isOverComplete,
-    isWicket: isWicket,
-    ...getRes,
-  };
+   let matchComplete = await psMatchCompleteService({
+     matchType
+   },request, fastify);
+   if (matchComplete.isMatchComplete) {
+     let getRes = await comResponseService2(request, fastify);
+     return {
+       inningChange: false,
+       isMatchComplete: true,
+       isOverComplete: isOverComplete,
+       isWicket: isWicket,
+       ...getRes,
+     };
+   }
+   if (
+     commentaryDetails.commentaryStatus == commentaryStatus.INPROGRESS &&
+     inningChange
+   ) {
+     await psInningChangeService(
+       {
+         ...request.body,
+         commentaryDetails,
+         matchType,
+       },
+       request,
+       fastify,
+     );
+       let getRes = await comResponseService2(request, fastify);
+     return {
+       inningChange: request.body.inningChange,
+       isMatchComplete: false,
+       isOverComplete: true,
+       isWicket: isWicket,
+       ...getRes,
+     };
+   }
+   let getRes = await comResponseService2(request, fastify);
+   return {
+     inningChange: request.body.inningChange,
+     isMatchComplete: matchComplete.isMatchComplete,
+     isOverComplete: isOverComplete,
+     isWicket: isWicket,
+     ...getRes,
+   };
 
 };
 const runUpdateService = async (data, request, fastify) => {
