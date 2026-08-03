@@ -11947,6 +11947,26 @@ const ClientLikeDislikeActivity = {
   }
 }
 
+const LiveActivityToken = {
+  getAll :{
+    schema : {
+      tags : ["LiveActivityToken"],
+      description : "get all APNS Live Activity Token Data",
+      secaurity : [{bearerAuth : []}]
+    }
+  }
+}
+
+const APNSLiveActivityLogs = {
+  getAll :{
+    schema : {
+      tags : ["APNSLiveActivityLogs"],
+      description : "get all APNS Live Activity Token Data",
+      secaurity : [{bearerAuth : []}]
+    }
+  }
+}
+
 module.exports = {
   Auth,
   Tabs,
@@ -12032,5 +12052,7 @@ module.exports = {
   CompititionStatisticsType,
   CompititionStatistics,
   TeamMatchType,
-  ClientLikeDislikeActivity
+  ClientLikeDislikeActivity,
+  LiveActivityToken,
+  APNSLiveActivityLogs
 };

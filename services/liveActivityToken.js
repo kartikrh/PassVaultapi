@@ -4,6 +4,7 @@ const {
     getAllLiveActivityTokensByCommentaryQuery,
     deleteExpiredLiveActivityTokensQuery,
     deleteLiveActivityTokenByIdQuery,
+    getAllLiveActivityTokensQuery,
 } = require("../repository/TableLiveActivityToken");
 const { getIdByValue } = require("../repository/TableUser")
 
@@ -48,10 +49,16 @@ const deleteLiveActivityTokenByIdService = async (request, fastify) => {
     return `Live Activity Token deleted successfully`;
 }
 
+const getAllLiveActivityTokensService = async (request, fastify) => {
+    const commentaryLiveActivityData = await getAllLiveActivityTokensQuery(request, fastify);
+    return commentaryLiveActivityData;
+}
+
 module.exports = {
     registerLiveActivityTokenService,
     unRegisterLiveActivityTokenService,
     getAllLiveActivityTokensByCommentaryService,
     deleteExpiredLiveActivityTokenService,
-    deleteLiveActivityTokenByIdService
+    deleteLiveActivityTokenByIdService,
+    getAllLiveActivityTokensService
 }
