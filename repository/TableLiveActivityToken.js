@@ -1,7 +1,7 @@
 const { errorLogger } = require("../utilities/logger");
 
 const getAllLiveActivityTokensQuery = async (request, fastify) => {
-    const { startDate, endDate, envType, page = 1, limit = 50 } = request.body;
+    const { startDate, endDate, envType, clientSocketId, page = 1, limit = 50 } = request.body;
 
     const whereConditions = [`tlat."wrIsDeleted" = FALSE`];
     const bind = [];
@@ -16,6 +16,12 @@ const getAllLiveActivityTokensQuery = async (request, fastify) => {
     if (envType) {
         whereConditions.push(`tlat."wrEnvType" = $${index}`);
         bind.push(envType);
+        index += 1;
+    }
+
+    if (clientSocketId) {
+        whereConditions.push(`tlat."wrClientSocketId" = $${index}`);
+        bind.push(clientSocketId);
         index += 1;
     }
 
@@ -102,7 +108,7 @@ const getAllLiveActivityTokensByCommentaryQuery = async (request, fastify) => {
             AND tc."wrIsDelete" = FALSE
         LEFT JOIN "tblClient" tu
             ON tu."wrClientID" = tlat."wrUserId"
-        WHERE tlat."wrCommentaryId" = $1 AND tlat."wrExpiresAt" > NOW() AND "wrClientSocketId" = $2 AND tlat."wrIsDeleted" = FALSE;
+        WHERE tlat."wrCommentaryId" = $1 AND tlat."wrExpiresAt" > NOW() AND tlat."wrClientSocketId" = $2 AND tlat."wrIsDeleted" = FALSE;
         `,
             {
                 type: fastify.db.QueryTypes.SELECT,
