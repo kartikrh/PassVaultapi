@@ -11948,21 +11948,45 @@ const ClientLikeDislikeActivity = {
 }
 
 const LiveActivityToken = {
-  getAll :{
-    schema : {
-      tags : ["LiveActivityToken"],
-      description : "get all APNS Live Activity Token Data",
-      secaurity : [{bearerAuth : []}]
+  getAll: {
+    schema: {
+      tags: ["LiveActivityToken"],
+      description: "get all APNS Live Activity Token Data",
+      secaurity: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          limit: { type: "integer" },
+          page: { type: "string" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
+          envType: { type: "integer" },
+          clientSocketId: { type: "integer" }
+        },
+        required: ["limit", "page"]
+      }
     }
   }
 }
 
 const APNSLiveActivityLogs = {
-  getAll :{
-    schema : {
-      tags : ["APNSLiveActivityLogs"],
-      description : "get all APNS Live Activity Token Data",
-      secaurity : [{bearerAuth : []}]
+  getAll: {
+    schema: {
+      tags: ["APNSLiveActivityLogs"],
+      description: "get all APNS Live Activity Token Data",
+      secaurity: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          limit: { type: "integer" },
+          page: { type: "string" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
+          envType: { type: "integer" },
+          clientSocketId: { type: "integer" }
+        },
+        required: ["limit", "page"]
+      }
     }
   }
 }
