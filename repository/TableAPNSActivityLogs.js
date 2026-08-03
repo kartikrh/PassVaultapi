@@ -73,6 +73,9 @@ const getAllAPNSActivityLogsQuery = async (request, fastify) => {
             `
                 SELECT COUNT(*)::int AS total
                 FROM "tblAPNSActivityLogs" aal
+                LEFT JOIN "tblLiveActivityTokens" lat ON aal."wrLiveActivityTokenId" = lat."wrId" AND lat."wrIsDeleted" = FALSE
+                LEFT JOIN "tblCommentaries" c ON lat."wrCommentaryId" = c."wrCommentaryId"
+                LEFT JOIN "tblClientSockets" cs ON lat."wrClientSocketId" = cs."wrId"
                 ${whereClause};
             `,
             {
@@ -128,7 +131,7 @@ const getAllAPNSActivityLogsQuery = async (request, fastify) => {
             "DB ERROR --> repository/TableAPNSActivityLogs.js/getAllAPNSActivityLogsQuery",
             request
         );
-        throw err;
+        throw error;
     }
 };
 

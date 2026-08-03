@@ -1510,6 +1510,13 @@ const psMatchCompleteService = async (data, request, fastify) => {
   );
   const batTeam = teams.find((t) => t.teamStatus == 1);
   const bowlTeam = teams.find((t) => t.teamStatus == 2);
+  let target = 0;
+  if (bowlTeam?.isBattingComplete) {
+    const trail = +batTeam?.teamTrialRuns || 0;
+    if (trail > -1) {
+      target = trail + 1;
+    }
+  }
   const overdetails = global.tblOvers
     .filter(
       (item) =>
