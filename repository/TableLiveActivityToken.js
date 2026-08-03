@@ -1,7 +1,7 @@
 const { errorLogger } = require("../utilities/logger");
 
 const getAllLiveActivityTokensQuery = async (request, fastify) => {
-    const { startDate, endDate, page = 1, limit = 50 } = request.body;
+    const { startDate, endDate, envType, page = 1, limit = 50 } = request.body;
 
     const whereConditions = [`tlat."wrIsDeleted" = FALSE`];
     const bind = [];
@@ -11,6 +11,12 @@ const getAllLiveActivityTokensQuery = async (request, fastify) => {
         whereConditions.push(`tlat."wrCreatedAt" BETWEEN $${index} AND $${index + 1}`);
         bind.push(startDate, endDate);
         index += 2;
+    }
+
+    if (envType) {
+        whereConditions.push(`tlat."wrEnvType" = $${index}`);
+        bind.push(envType);
+        index += 1;
     }
 
     const whereClause = whereConditions.length
@@ -368,7 +374,7 @@ const deleteLiveActivityTokenByIdQuery = async (id, fastify, request) => {
 const deleteExpiredLiveActivityTokensQuery = async (fastify, request) => {
     try {
         return await fastify.db.query(
-            'UPDATE "tblLiveActivityTokens" SET "wrIsDeleted" = TRUE AND "wrDeletedAt" = NOW() WHERE "wrExpiresAt" < NOW()',
+            'UPDATE "tblLiveActivityTokens" SET "wrIsDeleted" = TRUE, "wrDeletedAt" = NOW() WHERE "wrExpiresAt" < NOW()',
             {
                 type: fastify.db.QueryTypes.UPDATE,
             }
