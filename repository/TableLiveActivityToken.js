@@ -1,8 +1,35 @@
 const { errorLogger } = require("../utilities/logger");
 
+const getAllLiveActivityTokensQuery = async (request, fastify) => {
+    const { startDate, endDate, page = 1, limit = 50 } = request.body;
 
-const getAllLiveActivityTokensQuery = async (fastify) => {
-    return await fastify.db.query(
+    const whereConditions = [];
+    const bind = [];
+    let index = 1;
+
+    if (startDate && endDate) {
+        whereConditions.push(`tlat."wrCreatedAt" BETWEEN $${index} AND $${index + 1}`);
+        bind.push(startDate, endDate);
+        index += 2;
+    }
+
+    const whereClause = whereConditions.length
+        ? `WHERE ${whereConditions.join(" AND ")}`
+        : "";
+
+    const [{ total }] = await fastify.db.query(
+        `
+        SELECT COUNT(*)::int AS total
+        FROM "tblLiveActivityTokens" tlat
+        ${whereClause};
+        `,
+        {
+            type: fastify.db.QueryTypes.SELECT,
+            bind,
+        }
+    );
+
+    const result = await fastify.db.query(
         `
         SELECT
             tlat."wrId" AS "id",
@@ -15,19 +42,33 @@ const getAllLiveActivityTokensQuery = async (fastify) => {
             tlat."wrEnvType" AS "envType",
             tlat."wrExpiresAt" AS "expiresAt",
             tlat."wrCreatedAt" AS "createdAt",
-            tlat."wrClientSocketId" AS "clientSocketId"
+            tlat."wrClientSocketId" AS "clientSocketId",
+            tcs."wrServerName" AS "serverName"
         FROM "tblLiveActivityTokens" tlat
-        LEFT JOIN "tblCommentaries" tc
-            ON tc."wrCommentaryId" = tlat."wrCommentaryId"
-            AND tc."wrIsDelete" = FALSE
-        LEFT JOIN "tblClient" tu
-            ON tu."wrClientID" = tlat."wrUserId"
-        WHERE tlat."wrExpiresAt" > NOW();
+        LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tlat."wrCommentaryId" AND tc."wrIsDelete" = FALSE
+        LEFT JOIN "tblClient" tu ON tu."wrClientID" = tlat."wrUserId"
+        LEFT JOIN "tblClientSockets" tcs ON tcs."wrId" = tlat."wrClientSocketId"
+        ${whereClause}
+        ORDER BY tlat."wrCreatedAt" DESC
+        LIMIT $${index} OFFSET $${index + 1};
         `,
         {
             type: fastify.db.QueryTypes.SELECT,
+            bind: [
+                ...bind,
+                Number(limit),
+                (Number(page) - 1) * Number(limit),
+            ],
         }
     );
+
+    return {
+        data: result,
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(total / Number(limit)),
+    };
 };
 
 const getAllLiveActivityTokensByCommentaryQuery = async (request, fastify) => {
