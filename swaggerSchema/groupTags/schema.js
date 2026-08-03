@@ -11956,7 +11956,6 @@ const LiveActivityToken = {
       body: {
         type: "object",
         properties: {
-          isActive: { type: "boolean" },
           limit: { type: "integer" },
           page: { type: "string" },
           startDate: { type: "string" },
@@ -11964,7 +11963,7 @@ const LiveActivityToken = {
           envType: { type: "integer" },
           clientSocketId: { type: "integer" }
         },
-        required: ["isActive", "limit", "page"]
+        required: ["limit", "page"]
       }
     }
   }
@@ -11979,7 +11978,6 @@ const APNSLiveActivityLogs = {
       body: {
         type: "object",
         properties: {
-          isActive: { type: "boolean" },
           limit: { type: "integer" },
           page: { type: "string" },
           startDate: { type: "string" },
@@ -11987,7 +11985,7 @@ const APNSLiveActivityLogs = {
           envType: { type: "integer" },
           clientSocketId: { type: "integer" }
         },
-        required: ["isActive", "limit", "page"]
+        required: ["limit", "page"]
       }
     }
   }
