@@ -1479,94 +1479,104 @@ const psInningChangeService = async (data, request, fastify) => {
     inningChange: true,
   };
 };
-const psMatchCompleteService = async (data,request, fastify) => {
+const getMatchCompletionState = ({
+  matchType,
+  batTeam,
+  overdetails,
+}) => {
+  const ballsPerOver = matchType?.ballsPerOver || 6;
+  const overCompleted = Boolean(
+    matchType?.isLimitedOvers &&
+      overdetails &&
+      (+overdetails.ballCount || 0) >= ballsPerOver &&
+      (Math.floor(+overdetails.over || 0) + 1 >= batTeam?.teamMaxOver)
+  );
+
+  return {
+    overCompleted,
+  };
+};
+
+const psMatchCompleteService = async (data, request, fastify) => {
   let { commentaryId } = request.body;
-  let {matchType} = data;
+  let { matchType } = data;
   let commentaryDetails = global.tblCommentaries.find(
     (item) => item?.commentaryId === commentaryId
   );
-   let teams = global.tblCommentaryTeams.filter(
+  let teams = global.tblCommentaryTeams.filter(
     (i) =>
       i.commentaryId == commentaryId &&
       i.currentInnings == commentaryDetails.currentInnings
   );
   const batTeam = teams.find((t) => t.teamStatus == 1);
   const bowlTeam = teams.find((t) => t.teamStatus == 2);
-  const maxNoOfWicket =
-    matchType?.noOfPlayer - (matchType?.isLastManStand ? 0 : 1);
-  const isLastInnigs =
-    commentaryDetails.currentInnings >= matchType.noOfIningsPerSide;
-  let target = 0;
-  if (bowlTeam.isBattingComplete) {
-    const trail = +batTeam?.teamTrialRuns || 0;
-    if (trail > -1) target = trail + 1;
-  }
-    const overdetails = global.tblOvers
+  const overdetails = global.tblOvers
     .filter(
       (item) =>
         item?.commentaryId === commentaryId &&
         item.currentInnings == commentaryDetails.currentInnings
     )
     .sort((a, b) => b.overId - a.overId)[0];
-  const ballsPerOver = matchType?.ballsPerOver || 6;
-  let overLimit, wicketLimit, isRunTargetAchieved;
-  overLimit =
-        matchType.isLimitedOvers &&
-        overdetails &&
-        (Math.floor(+overdetails.over || 0) + 1 >= batTeam?.teamMaxOver) && ((+overdetails.ballCount || 0) >= ballsPerOver);
-      wicketLimit = batTeam?.teamWicket >= maxNoOfWicket;
-      isRunTargetAchieved =
-        isLastInnigs && target !== 0 && batTeam?.teamScore >= target;
-  let matchComplete = false;
-  if (overLimit || wicketLimit || isRunTargetAchieved) {
-    if (bowlTeam.isBattingComplete && isLastInnigs) {
-      result = await psCheckWinner({
+
+  const completionState = getMatchCompletionState({
+    matchType,
+    batTeam,
+    overdetails,
+  });
+
+  const shouldComplete = completionState.overCompleted;
+
+  if (!shouldComplete) {
+    return {
+      isMatchComplete: false,
+    };
+  }
+
+  let result;
+  let res;
+  if (shouldComplete) {
+    result = await psCheckWinner({
+      ...request.body,
+      commentaryDetails,
+      target,
+      bowlTeam,
+      batTeam,
+      isWonByInnings: false,
+      matchType,
+    });
+    res = await saveComVirtual(
+      {
+        ...request,
+        body: result.objToSave,
+      },
+      fastify
+    );
+    return {
+      isMatchComplete: true,
+      result,
+    };
+  }
+
+  if (request.body.inningChange) {
+    await psInningChangeService(
+      {
         ...request.body,
         commentaryDetails,
-        target,
-        bowlTeam,
-        batTeam,
-        isWonByInnings: false,
         matchType,
-      });
-      matchComplete = true;
-      res = await saveComVirtual(
-        {
-          ...request,
-          body: result.objToSave,
-        },
-        fastify
-      );
-         return {
-      isMatchComplete: true,
-      result: result,
-    }
-    }
-    else if (!bowlTeam.isBattingComplete && isLastInnigs && (overLimit || wicketLimit)) {
-      await psInningChangeService(
-        {
-          ...request.body,
-          commentaryDetails,
-          matchType,
-        },
-        request,
-        fastify
-      );
-      return {
-        isMatchComplete: false,
-        inningChange: true,
-      }
-    }
+      },
+      request,
+      fastify
+    );
     return {
       isMatchComplete: false,
-    }
+      inningChange: true,
+    };
   }
-  else{
-    return {
-      isMatchComplete: false,
-    }
-  }
-}
+
+  return {
+    isMatchComplete: false,
+  };
+};
 const psCheckWinner = async (data) => {
   const { isWonByInnings, bowlTeam, batTeam, target, commentaryDetails } = data;
   let winMsg, winTeam, isBatTeamWon;
@@ -1633,4 +1643,5 @@ const psCheckWinner = async (data) => {
 module.exports = {
   tossService,
   plyStationService,
+  getMatchCompletionState,
 };

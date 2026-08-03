@@ -3,7 +3,7 @@ const { errorLogger } = require("../utilities/logger");
 const getAllLiveActivityTokensQuery = async (request, fastify) => {
     const { startDate, endDate, page = 1, limit = 50 } = request.body;
 
-    const whereConditions = [];
+    const whereConditions = [`tlat."wrIsDeleted" = FALSE`];
     const bind = [];
     let index = 1;
 

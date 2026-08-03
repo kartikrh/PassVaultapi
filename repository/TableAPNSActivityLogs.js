@@ -97,7 +97,7 @@ const getAllAPNSActivityLogsQuery = async (request, fastify) => {
                     lat."wrClientSocketId" AS "clientSocketId",
                     cs."wrServerName" AS "clientServerName"
                 FROM "tblAPNSActivityLogs" aal
-                LEFT JOIN "tblLiveActivityTokens" lat ON aal."wrLiveActivityTokenId" = lat."wrId"
+                LEFT JOIN "tblLiveActivityTokens" lat ON aal."wrLiveActivityTokenId" = lat."wrId" AND lat."wrIsDeleted" = FALSE
                 LEFT JOIN "tblCommentaries" c ON lat."wrCommentaryId" = c."wrCommentaryId"
                 LEFT JOIN "tblClientSockets" cs ON lat."wrClientSocketId" = cs."wrId"
                 ${whereClause}
