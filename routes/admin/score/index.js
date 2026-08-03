@@ -98,7 +98,8 @@ const {
   getAllLiveActivityTokensByCommentary,
   deleteExpiredLiveActivityToken,
   deleteLiveActivityTokenById,
-} = require("../../../controller/users/admin/lilveActivityToken")
+} = require("../../../controller/users/admin/lilveActivityToken");
+const { saveAPNSActivityLogs } = require("../../../controller/users/admin/apnsActivityLogs");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/getscore", {
@@ -526,6 +527,9 @@ module.exports = async (fastify, opts) => {
   });
   fastify.post("/deleteExpiredLiveActivityToken", {
     handler: (request , reply) => deleteExpiredLiveActivityToken(request, reply, fastify)
+  });
+  fastify.post("/addAPNSLogs", {
+    handler: (request , reply) => saveAPNSActivityLogs(request, reply, fastify)
   });
 };
 

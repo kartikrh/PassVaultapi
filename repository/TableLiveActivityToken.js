@@ -32,7 +32,7 @@ const getAllLiveActivityTokensQuery = async (fastify) => {
 
 const getAllLiveActivityTokensByCommentaryQuery = async (request, fastify) => {
     try {
-        const { commentaryId } = request.body;
+        const { commentaryId, clientSocketId } = request.body;
         return await fastify.db.query(
             `
         SELECT
@@ -53,17 +53,17 @@ const getAllLiveActivityTokensByCommentaryQuery = async (request, fastify) => {
             AND tc."wrIsDelete" = FALSE
         LEFT JOIN "tblClient" tu
             ON tu."wrClientID" = tlat."wrUserId"
-        WHERE tlat."wrCommentaryId" = $1 AND tlat."wrExpiresAt" > NOW();
+        WHERE tlat."wrCommentaryId" = $1 AND tlat."wrExpiresAt" > NOW() AND "wrClientSocketId" = $2;
         `,
             {
                 type: fastify.db.QueryTypes.SELECT,
-                bind: [commentaryId]
+                bind: [commentaryId, clientSocketId]
             }
         );
     } catch (error) {
         errorLogger(
             fastify,
-            err.message,
+            error.message,
             "DB ERROR --> repository/TableLiveActivityToken.js/getAllLiveActivityTokensByCommentaryQuery",
             request
         );
@@ -285,10 +285,10 @@ const upsertLiveActivityTokenQuery = async (request, fastify) => {
 const deleteLiveActivityTokensQuery = async (data, fastify, request) => {
     try {
         return await fastify.db.query(
-            'DELETE FROM "tblLiveActivityTokens" WHERE "wrUserId" = $1 AND "wrCommentaryId" = $2',
+            'DELETE FROM "tblLiveActivityTokens" WHERE "wrUserId" = $1 AND "wrCommentaryId" = $2 AND "wrClientSocketId" = $3',
             {
                 type: fastify.db.QueryTypes.DELETE,
-                bind: [data.userId, data.commentaryId],
+                bind: [data.userId, data.commentaryId, data.clientSocketId],
             }
         );
     } catch (err) {
