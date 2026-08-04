@@ -47,7 +47,7 @@ const insertAPNSActivityLogsQuery = async (request, fastify) => {
 
 const getAllAPNSActivityLogsQuery = async (request, fastify) => {
     try {
-        const { startDate, endDate, envType, clientSocketId, page = 1, limit = 50 } = request.body;
+        const { startDate, endDate, envType, clientSocketId, commentaryId, page = 1, limit = 50 } = request.body;
 
         const whereConditions = [];
         const bind = [];
@@ -68,6 +68,12 @@ const getAllAPNSActivityLogsQuery = async (request, fastify) => {
         if (clientSocketId) {
             whereConditions.push(`cs."wrId" = $${index}`);
             bind.push(clientSocketId);
+            index += 1;
+        }
+
+        if (commentaryId) {
+            whereConditions.push(`lat."wrCommentaryId" = $${index}`);
+            bind.push(commentaryId);
             index += 1;
         }
 
