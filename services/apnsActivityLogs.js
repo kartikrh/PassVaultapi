@@ -1,4 +1,4 @@
-const { insertAPNSActivityLogsQuery, getAllAPNSActivityLogsQuery } = require("../repository/TableAPNSActivityLogs");
+const { insertAPNSActivityLogsQuery, getAllAPNSActivityLogsQuery, deleteAPNSActivityLogsByIdQuery } = require("../repository/TableAPNSActivityLogs");
 
 const insertAPNSActivityLogsService = async (request, fastify) => {
     const result = await insertAPNSActivityLogsQuery(request, fastify);
@@ -10,7 +10,13 @@ const getAllAPNSActivityLogsService = async (request, fastify) => {
     return result;
 }
 
+const deleteAPNSActivityLogsByIdService = async (request, fastify) => {
+    await deleteAPNSActivityLogsByIdQuery(request, fastify);
+    return `APNS Activity Logs successfully deleted`;
+}
+
 module.exports = {
     insertAPNSActivityLogsService,
-    getAllAPNSActivityLogsService
+    getAllAPNSActivityLogsService,
+    deleteAPNSActivityLogsByIdService
 }
