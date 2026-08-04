@@ -363,13 +363,13 @@ const deleteLiveActivityTokensQuery = async (data, fastify, request) => {
     }
 };
 
-const deleteLiveActivityTokenByIdQuery = async (id, fastify, request) => {
+const deleteLiveActivityTokenByIdQuery = async (request, fastify) => {
     try {
         return await fastify.db.query(
-            'UPDATE "tblLiveActivityTokens" SET "wrIsDeleted" = TRUE AND "wrDeletedAt" = NOW() WHERE "wrId" = ANY ($1)',
+            'UPDATE "tblLiveActivityTokens" SET "wrIsDeleted" = TRUE, "wrDeletedAt" = NOW() WHERE "wrId" = ANY ($1)',
             {
                 type: fastify.db.QueryTypes.UPDATE,
-                bind: [id],
+                bind: [request.body.id],
             }
         );
     } catch (err) {

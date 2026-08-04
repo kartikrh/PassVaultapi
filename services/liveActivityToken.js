@@ -44,8 +44,7 @@ const deleteExpiredLiveActivityTokenService = async (request, fastify) => {
 }
 
 const deleteLiveActivityTokenByIdService = async (request, fastify) => {
-    const { id } = request.body;
-    await deleteLiveActivityTokenByIdQuery(id, fastify, request);
+    await deleteLiveActivityTokenByIdQuery(request, fastify);
     return `Live Activity Token deleted successfully`;
 }
 
