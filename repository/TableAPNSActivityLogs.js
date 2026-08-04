@@ -147,7 +147,31 @@ const getAllAPNSActivityLogsQuery = async (request, fastify) => {
     }
 };
 
+const deleteAPNSActivityLogsByIdQuery = async (id, request, fastify) => {
+    try {
+        return await fastify.db.query(
+            `
+                DELETE FROM "tblAPNSActivityLogs"
+                WHERE "wrId" = ANY ($1)
+            `,
+            {
+                type: fastify.db.QueryTypes.DELETE,
+                bind: [id],
+            }
+        );
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB ERROR --> repository/TableAPNSActivityLogs/deleteAPNSActivityLogsByIdQuery",
+            request
+        );
+        throw new Error(err.message);
+    }
+};
+
 module.exports = {
     insertAPNSActivityLogsQuery,
-    getAllAPNSActivityLogsQuery
+    getAllAPNSActivityLogsQuery,
+    deleteAPNSActivityLogsByIdQuery
 };

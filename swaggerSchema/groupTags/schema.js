@@ -11950,7 +11950,7 @@ const ClientLikeDislikeActivity = {
 const LiveActivityToken = {
   getAll: {
     schema: {
-      tags: ["LiveActivityToken"],
+      tags: ["Live Activity Token"],
       description: "get all APNS Live Activity Token Data",
       secaurity: [{ bearerAuth: [] }],
       body: {
@@ -11967,13 +11967,31 @@ const LiveActivityToken = {
         required: ["limit", "page"]
       }
     }
+  },
+  delete: {
+    schema: {
+      tags: ["Live Activity Token"],
+      description: "delete Live Activity Token data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1
+          }
+        },
+        required: ["id"]
+      }
+    }
   }
 }
 
 const APNSLiveActivityLogs = {
   getAll: {
     schema: {
-      tags: ["APNSLiveActivityLogs"],
+      tags: ["APNS Live Activity Logs"],
       description: "get all APNS Live Activity Token Data",
       secaurity: [{ bearerAuth: [] }],
       body: {
@@ -11988,6 +12006,24 @@ const APNSLiveActivityLogs = {
           commentaryId: { type: "integer" }
         },
         required: ["limit", "page"]
+      }
+    }
+  },
+  delete: {
+    schema: {
+      tags: ["APNS Live Activity Logs"],
+      description: "delete APNS Live Activity Logs data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          }
+        },
+        required: ["id"],
       }
     }
   }
