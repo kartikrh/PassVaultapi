@@ -11961,7 +11961,8 @@ const LiveActivityToken = {
           startDate: { type: "string" },
           endDate: { type: "string" },
           envType: { type: "integer" },
-          clientSocketId: { type: "integer" }
+          clientSocketId: { type: "integer" },
+          commentaryId: { type: "integer" }
         },
         required: ["limit", "page"]
       }
@@ -11983,7 +11984,8 @@ const APNSLiveActivityLogs = {
           startDate: { type: "string" },
           endDate: { type: "string" },
           envType: { type: "integer" },
-          clientSocketId: { type: "integer" }
+          clientSocketId: { type: "integer" },
+          commentaryId: { type: "integer" }
         },
         required: ["limit", "page"]
       }

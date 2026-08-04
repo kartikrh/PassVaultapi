@@ -1,7 +1,7 @@
 const { errorLogger } = require("../utilities/logger");
 
 const getAllLiveActivityTokensQuery = async (request, fastify) => {
-    const { startDate, endDate, envType, clientSocketId, page = 1, limit = 50 } = request.body;
+    const { startDate, endDate, envType, clientSocketId, commentaryId, page = 1, limit = 50 } = request.body;
 
     const whereConditions = [`tlat."wrIsDeleted" = FALSE`];
     const bind = [];
@@ -22,6 +22,12 @@ const getAllLiveActivityTokensQuery = async (request, fastify) => {
     if (clientSocketId) {
         whereConditions.push(`tlat."wrClientSocketId" = $${index}`);
         bind.push(clientSocketId);
+        index += 1;
+    }
+
+    if (commentaryId) {
+        whereConditions.push(`tlat."wrCommentaryId" = $${index}`);
+        bind.push(commentaryId);
         index += 1;
     }
 
