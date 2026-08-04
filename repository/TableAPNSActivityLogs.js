@@ -147,7 +147,7 @@ const getAllAPNSActivityLogsQuery = async (request, fastify) => {
     }
 };
 
-const deleteAPNSActivityLogsByIdQuery = async (id, request, fastify) => {
+const deleteAPNSActivityLogsByIdQuery = async (request, fastify) => {
     try {
         return await fastify.db.query(
             `
@@ -156,7 +156,7 @@ const deleteAPNSActivityLogsByIdQuery = async (id, request, fastify) => {
             `,
             {
                 type: fastify.db.QueryTypes.DELETE,
-                bind: [id],
+                bind: [request.body.id],
             }
         );
     } catch (err) {
