@@ -43,7 +43,6 @@ const { default: fastify } = require("fastify")
 const { commentaryLogger, errorLogger } = require("../utilities/logger")
 const { playerMarketQuery } = require("../repository/TableEventMarkets")
 const { playerBattingHistSummarycalculationService } = require("./playerHistory")
-const commentary = require("../routes/admin/commentary")
 const { upActivePartQuery } = require("../repository/entitySportCom")
 const { assignAwardService } = require("./commentaryAward")
 const { insertAutoImportDataQuery, updateAutoImportDataQuery } = require("../repository/TableAutoImportData");
@@ -623,7 +622,13 @@ const setEntityCom2Service = async (request , fastify) =>{
         let choseTo = comDetails.choseTo;
         if(team1.teamId != comWinTeam || choseTo != tossInfo.decision){
           // update toss info again
-          await updateToss(request , fastify,comDetails);
+          await updateToss({
+            ...request,
+            body: {
+              ...request.body,
+              comDetails
+            }
+          } , fastify);
           return true;
         }
         return true;
@@ -762,6 +767,26 @@ const setEntityCom2Service = async (request , fastify) =>{
             });
         }
         comDetails = global.tblCommentaries.find((i) => i.commentaryId == comDetails.commentaryId)
+        if(comDetails.commentaryStatus == commentaryStatus.INPROGRESS){
+            const tossInfo = response.match_info?.toss;
+            if (tossInfo?.winner && tossInfo?.decision) {
+                let comTossTeam = global.tblCommentaryTeams.find((ct) => ct.commentaryId == comDetails.commentaryId && ct.tpId == tossInfo.winner && ct.currentInnings == comDetails.currentInnings);
+                if (comTossTeam) {
+                    let comWinTeam = comDetails.tossWonBy;
+                    let choseTo = comDetails.choseTo;
+                    if (comTossTeam.teamId != comWinTeam || choseTo != tossInfo.decision) {
+                        await updateToss({
+                          ...request,
+                          body: {
+                            ...request.body,
+                            comDetails
+                          }
+                        }, fastify);
+                        return true;
+                    }
+                }
+            }
+        }
         if(comDetails.commentaryStatus == commentaryStatus.TOSSDONE){
             const entityInning = response?.scorecard?.innings || [];
             const bTeam = entityInning.find(inn => inn.number === comDetails.currentInnings);
@@ -1288,19 +1313,26 @@ const checkBattingTeamService = async (response, comDetails) => {
   return batTeamId == liveBattingTeamId
 }
 
-const updateToss = async (request , fastify,comDetails = null) =>{
-    const {response} = request.body;
+const updateToss = async (request , fastify) =>{
+    const {response, comDetails = null} = request.body;
     const scoreResponse = {};
     const sendDataForSocketUpdate = {};
     sendDataForSocketUpdate.commentaryId = comDetails?.commentaryId;
     sendDataForSocketUpdate.eventRefId = comDetails?.eventRefId;
     sendDataForSocketUpdate.dataToUpdate = [];
-    let matchID = request.body?.response?.match_id
     const tossInfo = response.match_info.toss;
-    // get in comteam
-    let team1 = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.tpId == tossInfo.winner && ct.currentInnings == comDetails.currentInnings)
-    if(!team1){
-      throw new Error("Team1 not found in commentary teams.,updateToss")
+    let team1 = null;
+    if (tossInfo?.winnerTeamId) {
+      team1 = global.tblCommentaryTeams.find((ct) => ct.commentaryId == comDetails.commentaryId && ct.teamId == tossInfo.winnerTeamId && ct.currentInnings == comDetails.currentInnings)
+      if (!team1) {
+        throw new Error("Team1 not found in commentary teams.,updateToss")
+      }
+    } else {
+      // get in comteam
+      team1 = global.tblCommentaryTeams.find((ct) => ct.commentaryId == comDetails.commentaryId && ct.tpId == tossInfo.winner && ct.currentInnings == comDetails.currentInnings)
+      if (!team1) {
+        throw new Error("Team1 not found in commentary teams.,updateToss")
+      }
     }
     let team2 = global.tblCommentaryTeams.find((ct)=> ct.commentaryId == comDetails.commentaryId && ct.commentaryTeamId != team1.commentaryTeamId && ct.currentInnings == comDetails.currentInnings)
     if(!team1 || !team2){
@@ -1344,7 +1376,7 @@ const updateToss = async (request , fastify,comDetails = null) =>{
     let upComData = {
     ...comDetails,
     statusNote,
-    commentaryStatus : commentaryStatus.TOSSDONE,
+    commentaryStatus : comDetails.commentaryStatus === commentaryStatus.INPROGRESS ? commentaryStatus.INPROGRESS : commentaryStatus.TOSSDONE,
     tossWonBy : team1.teamId,
     choseTo : tossInfo.decision,
     tossRmk : `Toss won by ${team1.teamName} and chose to ${teamChoseTo}.`,
@@ -6622,4 +6654,5 @@ module.exports = {
     saveTournamentTeamPlayerService,
     handleStoreBall,
     storeInningWiseEntityDataService,
+    updateToss
 }
