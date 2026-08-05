@@ -32,6 +32,14 @@ const {
 } = require("../utilities/configConstants");
 const { saveComVirtual } = require("./commentry");
 
+const toNumber = (value, defaultValue = 0) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : defaultValue;
+};
+
+const getMaxWickets = (matchType) =>
+  toNumber(matchType?.noOfPlayer) - (matchType?.isLastManStand ? 0 : 1);
+
 const tossService = async (request, fastify) => {
   const { commentaryId, teamName } = request.body;
   const commentary = global.tblCommentaries.find(
@@ -355,6 +363,9 @@ const plyStationService = async (request, fastify) => {
     let matchType = global.tblMatchTypes.find(
     (i) => i.matchTypeId == commentaryDetails.matchTypeId,
   );
+  if (!matchType) {
+    throw new Error("MatchType with this id not Found");
+  }
 
   let teams = global.tblCommentaryTeams.filter(
     (item) =>
@@ -363,6 +374,12 @@ const plyStationService = async (request, fastify) => {
   );
   let battingTeam = teams.find((item) => item.teamStatus === 1);
   let bowlingTeam = teams.find((item) => item.teamStatus === 2);
+  if (!battingTeam) {
+    throw new Error("Batting team is not selected for current innings");
+  }
+  if (!bowlingTeam) {
+    throw new Error("Bowling team is not selected for current innings");
+  }
   const partnership = global.tblCommentaryPartnership
     .filter(
       (item) =>
@@ -403,6 +420,18 @@ const plyStationService = async (request, fastify) => {
       item.teamId == bowlingTeam.teamId
   );
 
+  if (!onStrikePlayer) {
+    throw new Error("On-strike batter is not selected for current innings");
+  }
+  if (!nonStrikePlayer) {
+    throw new Error("Non-striker batter is not selected for current innings");
+  }
+  if (!currentBowler) {
+    throw new Error("Current bowler is not selected for current innings");
+  }
+  if (!partnership) {
+    throw new Error("Active partnership is not available for current innings");
+  }
 
   let dbOver = global.tblOvers.find(
     (item) =>
@@ -564,9 +593,9 @@ const plyStationService = async (request, fastify) => {
    }
    if (
      commentaryDetails.commentaryStatus == commentaryStatus.INPROGRESS &&
-     inningChange
+     (matchComplete.inningChange || inningChange)
    ) {
-     await psInningChangeService(
+     const inningChangeResult = await psInningChangeService(
        {
          ...request.body,
          commentaryDetails,
@@ -577,7 +606,7 @@ const plyStationService = async (request, fastify) => {
      );
        let getRes = await comResponseService2(request, fastify);
      return {
-       inningChange: request.body.inningChange,
+       inningChange: inningChangeResult.inningChange,
        isMatchComplete: false,
        isOverComplete: true,
        isWicket: isWicket,
@@ -961,6 +990,16 @@ const plySWicketService = async (data, request, fastify) => {
     },
     fastify,
   );
+  const maxNoOfWicket = getMaxWickets(matchType);
+  const allWicketsLost =
+    maxNoOfWicket > 0 && upBatTeam.teamWicket >= maxNoOfWicket;
+  if (allWicketsLost || request.body.inningChange) {
+    return {
+      isWicket: true,
+      isOverComplete: false,
+      ...(await comResponseService2(request, fastify)),
+    };
+  }
   const { player } = await psChangePlayer({
     plytyp: playerType.ON_STRIKE,
     bowlingTeam,
@@ -1074,15 +1113,17 @@ const comResponseService2 = async (request, fastify, completeOver = false) => {
           item.currentInnings == commentaryDetails.currentInnings,
       )
       .sort((a, b) => b.overId - a.overId)[1];
-    over = {
-      overId: over.overId,
-      over: over.over,
-      teamId: over.teamId,
-      ballCount: over.ballCount,
-      teamScore: over.teamScore,
-      isComplete: over.isComplete,
-      overCount,
-    };
+    over = over
+      ? {
+          overId: over.overId,
+          over: over.over,
+          teamId: over.teamId,
+          ballCount: over.ballCount,
+          teamScore: over.teamScore,
+          isComplete: over.isComplete,
+          overCount,
+        }
+      : null;
   }
   // get latest over
   else {
@@ -1102,15 +1143,17 @@ const comResponseService2 = async (request, fastify, completeOver = false) => {
           item.currentInnings == commentaryDetails.currentInnings,
       )
       .sort((a, b) => b.overId - a.overId)[0];
-    over = {
-      overId: over.overId,
-      over: over.over,
-      teamId: over.teamId,
-      ballCount: over.ballCount,
-      teamScore: over.teamScore,
-      isComplete: over.isComplete,
-      overCount,
-    };
+    over = over
+      ? {
+          overId: over.overId,
+          over: over.over,
+          teamId: over.teamId,
+          ballCount: over.ballCount,
+          teamScore: over.teamScore,
+          isComplete: over.isComplete,
+          overCount,
+        }
+      : null;
   }
   return {
     teams,
@@ -1126,6 +1169,9 @@ const psChangePlayer = async (data) => {
   let playerToreturn;
   if (plytyp == playerType.CURRENT_BOWLER) {
     team = bowlingTeam;
+    if (!team) {
+      throw new Error("Bowling team is not selected for current innings");
+    }
     teamPlayers = global.tblCommentaryPlayers.filter(
       (i) =>
         i.commentaryId == commentaryId &&
@@ -1139,6 +1185,9 @@ const psChangePlayer = async (data) => {
     let oldBowler = teamPlayers
       .filter((i) => i.bowlerOrder != null)
       .sort((a, b) => b.bowlerOrder - a.bowlerOrder)[0];
+    if (!playerToreturn || !oldBowler) {
+      throw new Error("Next bowler is not available for current innings");
+    }
     playerToreturn = {
       ...playerToreturn,
       isPlay: true,
@@ -1146,6 +1195,9 @@ const psChangePlayer = async (data) => {
     };
   } else {
     team = battingTeam;
+    if (!team) {
+      throw new Error("Batting team is not selected for current innings");
+    }
     teamPlayers = global.tblCommentaryPlayers.filter(
       (i) =>
         // i.isPlay == null &&
@@ -1160,6 +1212,9 @@ const psChangePlayer = async (data) => {
     let oldBatter = teamPlayers
       .filter((i) => i.batterOrder != null)
       .sort((a, b) => b.batterOrder - a.batterOrder)[0];
+    if (!playerToreturn || !oldBatter) {
+      throw new Error("Next batter is not available for current innings");
+    }
     playerToreturn = {
       ...playerToreturn,
       isPlay: true,
@@ -1172,6 +1227,10 @@ const psChangePlayer = async (data) => {
 };
 const psInningChangeService = async (data, request, fastify) => {
   let { commentaryDetails, commentaryId } = data;
+  commentaryId = commentaryId || commentaryDetails?.commentaryId;
+  if (!commentaryDetails) {
+    throw new Error("Commentary details are required for innings change");
+  }
 
   const teams = global.tblCommentaryTeams.filter(
     (item) =>
@@ -1180,6 +1239,19 @@ const psInningChangeService = async (data, request, fastify) => {
   );
   const batTeam = teams.find((item) => item.teamStatus === 1);
   const bowlTeam = teams.find((item) => item.teamStatus === 2);
+  if (!batTeam) {
+    throw new Error("Batting team is not selected for current innings");
+  }
+  if (!bowlTeam) {
+    throw new Error("Bowling team is not selected for current innings");
+  }
+  if (bowlTeam.isBattingComplete === true) {
+    return {
+      result: null,
+      inningChange: false,
+      alreadyChanged: true,
+    };
+  }
   const runDifference =
     (batTeam.teamScore || 0) +
     (batTeam.teamLeadRuns || 0) -
@@ -1193,6 +1265,9 @@ const psInningChangeService = async (data, request, fastify) => {
         item.currentInnings == commentaryDetails.currentInnings,
     )
     .sort((a, b) => b.commentaryPartnershipId - a.commentaryPartnershipId)[0];
+  if (!currentPartnership) {
+    throw new Error("Active partnership is not available for innings change");
+  }
 
   let teamUpdates = [
     { ...batTeam, isBattingComplete: true, teamStatus: 2, subInning: 2 },
@@ -1254,6 +1329,7 @@ const psInningChangeService = async (data, request, fastify) => {
     },
     fastify,
   );
+  let isOverComplete = false;
       const preOver = global.tblOvers
       .filter(
         (item) =>
@@ -1288,6 +1364,12 @@ const psInningChangeService = async (data, request, fastify) => {
       t.commentaryId == commentaryDetails.commentaryId &&
       t.teamStatus == 2,
   );
+  if (!battingTeamId) {
+    throw new Error("Next batting team is not available after innings change");
+  }
+  if (!bowlingTeamId) {
+    throw new Error("Next bowling team is not available after innings change");
+  }
 
   const batters = global.tblCommentaryPlayers
     .filter(
@@ -1297,6 +1379,9 @@ const psInningChangeService = async (data, request, fastify) => {
     )
     .sort((a, b) => a.displayOrder - b.displayOrder)
     .slice(0, 2);
+  if (batters.length < 2) {
+    throw new Error("At least two batters are required after innings change");
+  }
   let onStrikePlayerId = null;
   let nonStrikerPlayerId = null;
   let onStrikePlayer = {};
@@ -1350,6 +1435,9 @@ const psInningChangeService = async (data, request, fastify) => {
     .sort((a, b) => a.displayOrder - b.displayOrder);
 
   const bowler = bowlers[0];
+  if (!bowler) {
+    throw new Error("Bowler is required after innings change");
+  }
   if (bowler) {
     const updateData = {
       isPlay: true,
@@ -1481,19 +1569,58 @@ const psInningChangeService = async (data, request, fastify) => {
 };
 const getMatchCompletionState = ({
   matchType,
+  commentaryDetails,
   batTeam,
+  bowlTeam,
   overdetails,
+  target = 0,
 }) => {
   const ballsPerOver = matchType?.ballsPerOver || 6;
+  const maxNoOfWicket = getMaxWickets(matchType);
   const overCompleted = Boolean(
     matchType?.isLimitedOvers &&
       overdetails &&
       (+overdetails.ballCount || 0) >= ballsPerOver &&
       (Math.floor(+overdetails.over || 0) + 1 >= batTeam?.teamMaxOver)
   );
+  const allWicketsLost = Boolean(
+    maxNoOfWicket > 0 && toNumber(batTeam?.teamWicket) >= maxNoOfWicket,
+  );
+  const inningsCompleted = overCompleted || allWicketsLost;
+  const isLastInnings = Boolean(
+    bowlTeam?.isBattingComplete ||
+      commentaryDetails?.currentInnings >= matchType?.noOfIningsPerSide,
+  );
+  const isChaseInnings = Boolean(bowlTeam?.isBattingComplete);
+  const runDifference =
+    toNumber(batTeam?.teamScore) +
+    toNumber(batTeam?.teamLeadRuns) -
+    toNumber(batTeam?.teamTrialRuns);
+  const wonByInnings = Boolean(
+    inningsCompleted &&
+      !isChaseInnings &&
+      commentaryDetails?.currentInnings >= matchType?.noOfIningsPerSide &&
+      runDifference < 0,
+  )
+    ? runDifference * -1
+    : false;
+  const targetReached = Boolean(
+    bowlTeam?.isBattingComplete &&
+      target > 0 &&
+      toNumber(batTeam?.teamScore) >= target,
+  );
+  const matchCompleted =
+    targetReached || (inningsCompleted && isChaseInnings) || Boolean(wonByInnings);
 
   return {
     overCompleted,
+    allWicketsLost,
+    targetReached,
+    inningsCompleted,
+    isLastInnings,
+    isChaseInnings,
+    wonByInnings,
+    matchCompleted,
   };
 };
 
@@ -1503,6 +1630,9 @@ const psMatchCompleteService = async (data, request, fastify) => {
   let commentaryDetails = global.tblCommentaries.find(
     (item) => item?.commentaryId === commentaryId
   );
+  if (!commentaryDetails) {
+    throw new Error("Commentary with this id not found");
+  }
   let teams = global.tblCommentaryTeams.filter(
     (i) =>
       i.commentaryId == commentaryId &&
@@ -1510,6 +1640,12 @@ const psMatchCompleteService = async (data, request, fastify) => {
   );
   const batTeam = teams.find((t) => t.teamStatus == 1);
   const bowlTeam = teams.find((t) => t.teamStatus == 2);
+  if (!batTeam) {
+    throw new Error("Batting team is not selected for current innings");
+  }
+  if (!bowlTeam) {
+    throw new Error("Bowling team is not selected for current innings");
+  }
   let target = 0;
   if (bowlTeam?.isBattingComplete) {
     const trail = +batTeam?.teamTrialRuns || 0;
@@ -1527,15 +1663,21 @@ const psMatchCompleteService = async (data, request, fastify) => {
 
   const completionState = getMatchCompletionState({
     matchType,
+    commentaryDetails,
     batTeam,
+    bowlTeam,
     overdetails,
+    target,
   });
 
-  const shouldComplete = completionState.overCompleted;
+  const shouldComplete = completionState.matchCompleted;
 
   if (!shouldComplete) {
     return {
       isMatchComplete: false,
+      inningChange:
+        completionState.inningsCompleted && !bowlTeam.isBattingComplete,
+      completionState,
     };
   }
 
@@ -1548,7 +1690,7 @@ const psMatchCompleteService = async (data, request, fastify) => {
       target,
       bowlTeam,
       batTeam,
-      isWonByInnings: false,
+      isWonByInnings: completionState.wonByInnings,
       matchType,
     });
     res = await saveComVirtual(
@@ -1561,40 +1703,22 @@ const psMatchCompleteService = async (data, request, fastify) => {
     return {
       isMatchComplete: true,
       result,
+      completionState,
     };
   }
-
-  if (request.body.inningChange) {
-    await psInningChangeService(
-      {
-        ...request.body,
-        commentaryDetails,
-        matchType,
-      },
-      request,
-      fastify
-    );
-    return {
-      isMatchComplete: false,
-      inningChange: true,
-    };
-  }
-
-  return {
-    isMatchComplete: false,
-  };
 };
 const psCheckWinner = async (data) => {
   const { isWonByInnings, bowlTeam, batTeam, target, commentaryDetails } = data;
   let winMsg, winTeam, isBatTeamWon;
   let isMatchTie;
+  const batScore = toNumber(batTeam?.teamScore);
   if (isWonByInnings) {
     isBatTeamWon = false;
     winTeam = bowlTeam;
     winMsg = `${bowlTeam.shortName} won by innings and ${isWonByInnings} runs.`;
   } else {
-    isMatchTie = batTeam?.teamScore === target - 1;
-    isBatTeamWon = batTeam?.teamScore >= target;
+    isMatchTie = batScore === target - 1;
+    isBatTeamWon = batScore >= target;
     winTeam = isBatTeamWon ? batTeam : bowlTeam;
     winMsg = isMatchTie
       ? `Match tied  between ${batTeam.teamName} and ${bowlTeam.teamName}`
