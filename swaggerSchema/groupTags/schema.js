@@ -4197,6 +4197,40 @@ const Commentary = {
         required: ["commentaryId"],
       },
     },
+  },
+  updateCommentaryToss: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update Commentary toss",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          response: {
+            type: "object",
+            required: ["match_info"],
+            properties: {
+              match_info: {
+                type: "object",
+                required: ["toss"],
+                properties: {
+                  toss: {
+                    type: "object",
+                    required: ["winnerTeamId", "decision"],
+                    properties: {
+                      winnerTeamId: { type: "integer" },
+                      decision: { type: "integer" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          comDetails: { type: "object" }
+        },
+        required: ["response", "comDetails"]
+      }
+    }
   }
 };
 
@@ -11947,6 +11981,88 @@ const ClientLikeDislikeActivity = {
   }
 }
 
+const LiveActivityToken = {
+  getAll: {
+    schema: {
+      tags: ["Live Activity Token"],
+      description: "get all APNS Live Activity Token Data",
+      secaurity: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          limit: { type: "integer" },
+          page: { type: "string" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
+          envType: { type: "integer" },
+          clientSocketId: { type: "integer" },
+          commentaryId: { type: "integer" }
+        },
+        required: ["limit", "page"]
+      }
+    }
+  },
+  delete: {
+    schema: {
+      tags: ["Live Activity Token"],
+      description: "delete Live Activity Token data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1
+          }
+        },
+        required: ["id"]
+      }
+    }
+  }
+}
+
+const APNSLiveActivityLogs = {
+  getAll: {
+    schema: {
+      tags: ["APNS Live Activity Logs"],
+      description: "get all APNS Live Activity Token Data",
+      secaurity: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          limit: { type: "integer" },
+          page: { type: "string" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
+          envType: { type: "integer" },
+          clientSocketId: { type: "integer" },
+          commentaryId: { type: "integer" }
+        },
+        required: ["limit", "page"]
+      }
+    }
+  },
+  delete: {
+    schema: {
+      tags: ["APNS Live Activity Logs"],
+      description: "delete APNS Live Activity Logs data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          }
+        },
+        required: ["id"],
+      }
+    }
+  }
+}
+
 module.exports = {
   Auth,
   Tabs,
@@ -12032,5 +12148,7 @@ module.exports = {
   CompititionStatisticsType,
   CompititionStatistics,
   TeamMatchType,
-  ClientLikeDislikeActivity
+  ClientLikeDislikeActivity,
+  LiveActivityToken,
+  APNSLiveActivityLogs
 };

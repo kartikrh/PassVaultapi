@@ -1,8 +1,53 @@
 const { errorLogger } = require("../utilities/logger");
 
+const getAllLiveActivityTokensQuery = async (request, fastify) => {
+    const { startDate, endDate, envType, clientSocketId, commentaryId, page = 1, limit = 50 } = request.body;
 
-const getAllLiveActivityTokensQuery = async (fastify) => {
-    return await fastify.db.query(
+    const whereConditions = [`tlat."wrIsDeleted" = FALSE`];
+    const bind = [];
+    let index = 1;
+
+    if (startDate && endDate) {
+        whereConditions.push(`tlat."wrCreatedAt" BETWEEN $${index} AND $${index + 1}`);
+        bind.push(startDate, endDate);
+        index += 2;
+    }
+
+    if (envType) {
+        whereConditions.push(`tlat."wrEnvType" = $${index}`);
+        bind.push(envType);
+        index += 1;
+    }
+
+    if (clientSocketId) {
+        whereConditions.push(`tlat."wrClientSocketId" = $${index}`);
+        bind.push(clientSocketId);
+        index += 1;
+    }
+
+    if (commentaryId) {
+        whereConditions.push(`tlat."wrCommentaryId" = $${index}`);
+        bind.push(commentaryId);
+        index += 1;
+    }
+
+    const whereClause = whereConditions.length
+        ? `WHERE ${whereConditions.join(" AND ")}`
+        : "";
+
+    const [{ total }] = await fastify.db.query(
+        `
+        SELECT COUNT(*)::int AS total
+        FROM "tblLiveActivityTokens" tlat
+        ${whereClause};
+        `,
+        {
+            type: fastify.db.QueryTypes.SELECT,
+            bind,
+        }
+    );
+
+    const result = await fastify.db.query(
         `
         SELECT
             tlat."wrId" AS "id",
@@ -15,19 +60,35 @@ const getAllLiveActivityTokensQuery = async (fastify) => {
             tlat."wrEnvType" AS "envType",
             tlat."wrExpiresAt" AS "expiresAt",
             tlat."wrCreatedAt" AS "createdAt",
-            tlat."wrClientSocketId" AS "clientSocketId"
+            tlat."wrClientSocketId" AS "clientSocketId",
+            tcs."wrServerName" AS "serverName",
+            tlat."wrIsDeleted" AS "isDeleted",
+            tlat."wrDeletedAt" AS "deletedAt"
         FROM "tblLiveActivityTokens" tlat
-        LEFT JOIN "tblCommentaries" tc
-            ON tc."wrCommentaryId" = tlat."wrCommentaryId"
-            AND tc."wrIsDelete" = FALSE
-        LEFT JOIN "tblClient" tu
-            ON tu."wrClientID" = tlat."wrUserId"
-        WHERE tlat."wrExpiresAt" > NOW();
+        LEFT JOIN "tblCommentaries" tc ON tc."wrCommentaryId" = tlat."wrCommentaryId" AND tc."wrIsDelete" = FALSE
+        LEFT JOIN "tblClient" tu ON tu."wrClientID" = tlat."wrUserId"
+        LEFT JOIN "tblClientSockets" tcs ON tcs."wrId" = tlat."wrClientSocketId"
+        ${whereClause}
+        ORDER BY tlat."wrCreatedAt" DESC
+        LIMIT $${index} OFFSET $${index + 1};
         `,
         {
             type: fastify.db.QueryTypes.SELECT,
+            bind: [
+                ...bind,
+                Number(limit),
+                (Number(page) - 1) * Number(limit),
+            ],
         }
     );
+
+    return {
+        data: result,
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(total / Number(limit)),
+    };
 };
 
 const getAllLiveActivityTokensByCommentaryQuery = async (request, fastify) => {
@@ -53,7 +114,7 @@ const getAllLiveActivityTokensByCommentaryQuery = async (request, fastify) => {
             AND tc."wrIsDelete" = FALSE
         LEFT JOIN "tblClient" tu
             ON tu."wrClientID" = tlat."wrUserId"
-        WHERE tlat."wrCommentaryId" = $1 AND tlat."wrExpiresAt" > NOW() AND "wrClientSocketId" = $2;
+        WHERE tlat."wrCommentaryId" = $1 AND tlat."wrExpiresAt" > NOW() AND tlat."wrClientSocketId" = $2 AND tlat."wrIsDeleted" = FALSE;
         `,
             {
                 type: fastify.db.QueryTypes.SELECT,
@@ -285,9 +346,9 @@ const upsertLiveActivityTokenQuery = async (request, fastify) => {
 const deleteLiveActivityTokensQuery = async (data, fastify, request) => {
     try {
         return await fastify.db.query(
-            'DELETE FROM "tblLiveActivityTokens" WHERE "wrUserId" = $1 AND "wrCommentaryId" = $2 AND "wrClientSocketId" = $3',
+            'UPDATE "tblLiveActivityTokens" SET "wrIsDeleted" = TRUE AND "wrDeletedAt" = NOW() WHERE "wrUserId" = $1 AND "wrCommentaryId" = $2 AND "wrClientSocketId" = $3',
             {
-                type: fastify.db.QueryTypes.DELETE,
+                type: fastify.db.QueryTypes.UPDATE,
                 bind: [data.userId, data.commentaryId, data.clientSocketId],
             }
         );
@@ -302,13 +363,13 @@ const deleteLiveActivityTokensQuery = async (data, fastify, request) => {
     }
 };
 
-const deleteLiveActivityTokenByIdQuery = async (id, fastify, request) => {
+const deleteLiveActivityTokenByIdQuery = async (request, fastify) => {
     try {
         return await fastify.db.query(
-            'DELETE FROM "tblLiveActivityTokens" WHERE "wrId" = $1',
+            'UPDATE "tblLiveActivityTokens" SET "wrIsDeleted" = TRUE, "wrDeletedAt" = NOW() WHERE "wrId" = ANY ($1)',
             {
-                type: fastify.db.QueryTypes.DELETE,
-                bind: [id],
+                type: fastify.db.QueryTypes.UPDATE,
+                bind: [request.body.id],
             }
         );
     } catch (err) {
@@ -325,16 +386,16 @@ const deleteLiveActivityTokenByIdQuery = async (id, fastify, request) => {
 const deleteExpiredLiveActivityTokensQuery = async (fastify, request) => {
     try {
         return await fastify.db.query(
-            'DELETE FROM "tblLiveActivityTokens" WHERE "wrExpiresAt" < NOW()',
+            'UPDATE "tblLiveActivityTokens" SET "wrIsDeleted" = TRUE, "wrDeletedAt" = NOW() WHERE "wrExpiresAt" < NOW()',
             {
-                type: fastify.db.QueryTypes.DELETE,
+                type: fastify.db.QueryTypes.UPDATE,
             }
         );
     } catch (err) {
         errorLogger(
             fastify,
             err.message,
-            "DB ERROR --> repository/TableLiveActivityToken.js/deleteLiveActivityTokenByIdQuery",
+            "DB ERROR --> repository/TableLiveActivityToken.js/deleteExpiredLiveActivityTokensQuery",
             request
         );
         throw err;
