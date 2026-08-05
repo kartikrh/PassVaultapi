@@ -194,6 +194,14 @@ const connectClients = async (fastify, clientSocketId) => {
       });
 
       client.on("getAPNSEnableData", () => {
+        errorLogger(
+          fastify,
+          `APNS connected with ${config?.serverName}.`,
+          "Client Socket --> sockets/client.js/connectClients - getAPNSEnableData",
+          {
+            body: config
+          }
+        );
         client.emit("isAPNSEnable", config?.isAPNSEnable ? config : null);
       });
     })
