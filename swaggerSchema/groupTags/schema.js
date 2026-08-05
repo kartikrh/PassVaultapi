@@ -4197,6 +4197,40 @@ const Commentary = {
         required: ["commentaryId"],
       },
     },
+  },
+  updateCommentaryToss: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update Commentary toss",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          response: {
+            type: "object",
+            required: ["match_info"],
+            properties: {
+              match_info: {
+                type: "object",
+                required: ["toss"],
+                properties: {
+                  toss: {
+                    type: "object",
+                    required: ["winnerTeamId", "decision"],
+                    properties: {
+                      winnerTeamId: { type: "integer" },
+                      decision: { type: "integer" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          comDetails: { type: "object" }
+        },
+        required: ["response", "comDetails"]
+      }
+    }
   }
 };
 
