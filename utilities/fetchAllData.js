@@ -114,6 +114,7 @@ const { getAllICCRankingQuery } = require("../repository/TableICCRanking");
 const { getAllEntitySocketsQuery } = require("../repository/TableEntitySockets");
 const { getAllCompetitionStatisticsTypeQuery } = require("../repository/TableCompetitionStatisticsType");
 const { getAllCompetitionStatisticsQuery } = require("../repository/TableCompetitionStatistics");
+const { getAllViewersQuery } = require("../repository/TableViewers");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -264,6 +265,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllEntitySockets = await getAllEntitySocketsQuery(fastify);
     const getAllCompetitionStatisticsType = await getAllCompetitionStatisticsTypeQuery(fastify);
     const getAllCompetitionStatistics = await getAllCompetitionStatisticsQuery(fastify);
+    const getAllViewers = await getAllViewersQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -356,6 +358,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblEntitySockets = getAllEntitySockets;
     global.tblCompetitionStatisticsType = getAllCompetitionStatisticsType;
     global.tblCompetitionStatistics = getAllCompetitionStatistics;
+    global.tblViewers = getAllViewers;
 
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
@@ -845,6 +848,11 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
         case ModuleTypes.CompetitionStatistics: {
           const getAllCompetitionStatistics = await getAllCompetitionStatisticsQuery(fastify);
           global.tblCompetitionStatistics = getAllCompetitionStatistics;
+          break;
+        }
+        case ModuleTypes.Viewers: {
+          const viewers =  await getAllViewersQuery(fastify);
+          global.tblViewers = viewers;
           break;
         }
         default:
