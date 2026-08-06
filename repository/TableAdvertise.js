@@ -13,14 +13,8 @@ const getAllAdvertiseQuery = async (fastify) => {
             ta."wrEndDate" as "endDate",
             ta."wrViewerCount" as "viewerCount",
             ta."wrWhitelabelId" as "whitelabelId",
-            ta."wrDisplayOrder" as "displayOrder",
-            ed."wrValue" as "encryptWhitelabelId",
-            twl."wrDomain" as "domain"
+            ta."wrDisplayOrder" as "displayOrder"
         FROM "tblAdvertise" ta
-        LEFT JOIN "tblWhitelabel" twl 
-            ON ta."wrWhitelabelId" = twl."wrId"
-        LEFT JOIN "tblEncryptedData" ed 
-            ON ta."wrWhitelabelId" = ed."wrKey"
         WHERE ta."wrIsDeleted" = false
     `,
     {
@@ -70,14 +64,8 @@ const createAdvertiseQuery = async (data, request, fastify) => {
         ta."wrEndDate" as "endDate",
         ta."wrViewerCount" as "viewerCount",
         ta."wrWhitelabelId" as "whitelabelId",
-        ta."wrDisplayOrder" as "displayOrder",
-        ed."wrValue" as "encryptWhitelabelId",
-        twl."wrDomain" as "domain"
+        ta."wrDisplayOrder" as "displayOrder"
       FROM insert_data ta
-      LEFT JOIN "tblWhitelabel" twl 
-        ON ta."wrWhitelabelId" = twl."wrId"
-      LEFT JOIN "tblEncryptedData" ed 
-        ON ta."wrWhitelabelId" = ed."wrKey"
       `,
       {
         type: fastify.db.QueryTypes.INSERT,

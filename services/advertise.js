@@ -91,12 +91,25 @@ const createAdvertiseService = async (request, fastify) => {
       request.body.startDate = null;
       request.body.endDate = null;
     }
+
+    if (request.body.whitelabelId) {
+      request.body.whitelabelId = request.body.whitelabelId.split(",").map(id => Number(id.trim()));
+    }
     const data = await createAdvertiseQuery(
       request.body,
       request,
       fastify
     );
-    const newAdvertise = data[0];
+    let newAdvertise = data[0];
+
+    const whitelableData = global.tblWhitelabels.filter(item => newAdvertise.whitelabelId.includes(item.id));
+    newAdvertise.whitelabelId = newAdvertise.whitelabelId?.map(item => {
+      return {
+        id: item,
+        domain: whitelableData.find(wl => wl.id === item)?.domain || null,
+        encryptWhitelabelId: whitelableData.find(wl => wl.id === item)?.whitelabelId || null
+      };
+    });
     global.tblAdvertise.push(newAdvertise);
 
     const sendToClient = checkDataSendToClient(newAdvertise);
@@ -131,6 +144,8 @@ const updateAdvertiseService = async (request, fastify) => {
     throw new Error("Advertise with this Id not found");
   }
 
+  request.body.whitelabelId = request.body.whitelabelId ? request.body.whitelabelId.split(",").map(id => Number(id.trim())) : validateAdvertise.whitelabelId;
+
   const body = {
     advertiseId: request.body.advertiseId,
     title: request.body.title || validateAdvertise.title,
@@ -146,9 +161,7 @@ const updateAdvertiseService = async (request, fastify) => {
     startDate: request.body.startDate || validateAdvertise.startDate,
     endDate: request.body.endDate || validateAdvertise.endDate,
     viewerCount: validateAdvertise.viewerCount,
-    whitelabelId: request.body.hasOwnProperty("whitelabelId")
-    ? request.body.whitelabelId
-    : validateAdvertise.whitelabelId,
+    whitelabelId: request.body.whitelabelId || validateAdvertise.whitelabelId,
     displayOrder: request.body.hasOwnProperty("displayOrder")
   ? request.body.displayOrder
   : validateAdvertise.displayOrder,
@@ -183,11 +196,14 @@ const updateAdvertiseService = async (request, fastify) => {
 
   await updateAdvertiseQuery(body, request, fastify);
 
-    const whiteLabelData = global.tblWhitelabels.find(
-    (item) => item.id == body.whitelabelId
-  );
-  body.domain = whiteLabelData?.domain ?? null;
-  body.encryptWhitelabelId = whiteLabelData?.whitelabelId ?? null;
+  const whitelableData = global.tblWhitelabels.filter(item => body.whitelabelId.includes(item.id));
+  body.whitelabelId = body.whitelabelId?.map(item => {
+    return {
+      id: item,
+      domain: whitelableData.find(wl => wl.id === item)?.domain || null,
+      encryptWhitelabelId: whitelableData.find(wl => wl.id === item)?.whitelabelId || null
+    };
+  });
 
 //   callClientAPI(
 //   {
