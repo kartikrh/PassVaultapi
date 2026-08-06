@@ -152,7 +152,6 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     );
     const getAllNews = await getAllNewsQuery(fastify);
     const getAllBanners = await getAllBannerQuery(fastify);
-    const getAllAdvertise = await getAllAdvertiseQuery(fastify);
     const getAllActivityLog = await getAllActivityLogQuery(fastify);
     const getAllsubScribesDomain = await getAllSubScribesDomainQuery(fastify);
     const getAllsubScribesSubDomain = await getAllSubScribesSubDomainQuery(
@@ -209,6 +208,25 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllCardType = await getAllCardTypeQuery(fastify);
     const getAllPackages = await getAllPackagesQuery(fastify);
     const getAllWhitelabels = await getAllWhitelabelsQuery(fastify);
+    const getAllAdvertiseQueryData = await getAllAdvertiseQuery(fastify);
+    const whitelabelMap = new Map(
+      getAllWhitelabels.map(wl => [
+        wl.id,
+        {
+          domain: wl.domain,
+          encryptWhitelabelId: wl.whitelabelId
+        }
+      ])
+    );
+
+    const getAllAdvertise = getAllAdvertiseQueryData?.map(item => ({
+      ...item,
+      whitelabelId: item.whitelabelId.map(id => ({
+        id,
+        domain: whitelabelMap.get(id)?.domain || null,
+        encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
+      }))
+    }));
     const getAllNotificationConfigs = await getAllNotificationConfigsQuery(fastify);
     const allCommentaryIds = getAllCommentary.map((item) => item.commentaryId);
     let getAllEventMarketsV2 = [];
@@ -556,7 +574,26 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           break;
         }
          case ModuleTypes.Advertise: {
-          const getAllAdvertise = await getAllAdvertiseQuery(fastify);
+          const getAllWhitelabels = global.tblWhitelabels;
+          const getAllAdvertiseQueryData = await getAllAdvertiseQuery(fastify);
+          const whitelabelMap = new Map(
+            getAllWhitelabels.map(wl => [
+              wl.id,
+              {
+                domain: wl.domain,
+                encryptWhitelabelId: wl.whitelabelId
+              }
+            ])
+          );
+
+          const getAllAdvertise = getAllAdvertiseQueryData?.map(item => ({
+            ...item,
+            whitelabelId: item.whitelabelId.map(id => ({
+              id,
+              domain: whitelabelMap.get(id)?.domain || null,
+              encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
+            }))
+          }));
           global.tblAdvertise = getAllAdvertise;
           break;
         }
