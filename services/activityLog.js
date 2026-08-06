@@ -66,22 +66,10 @@ const createActivityLogService = async (request, fastify) => {
         data[0].count = global.tblNews[newsIndex].viewerCount;
       }
     }
-  } else if(request?.body?.activityType === 2) {
-    // const articleIndex = global.tblArticles.findIndex((item)=> item.id === parseInt(request.body.refId));
-    // await articleViewersCountQuery({ ...request.body },request,fastify);
-    // if (articleIndex !== -1) {
-    //   global.tblArticles[articleIndex].viewerCount = (global.tblArticles[articleIndex].viewerCount || 0) + 1;
-    // }
-    const bannerIndex = global.tblBanner.findIndex((item)=> item.bannerId === parseInt(request.body.refId));
-    await bannerViewersCountQuery({ ...request.body },request,fastify);
-    if (bannerIndex !== -1) {
-      global.tblBanner[bannerIndex].viewerCount = (global.tblBanner[bannerIndex].viewerCount || 0) + 1;
-      if (data && data.length === 1) {
-        data[0].count = global.tblBanner[bannerIndex].viewerCount;
-      }
-    }
-  } else if(request?.body?.activityType === 3) {
-    const getExistsViewerCountIndex = global.tblViewers.findIndex(item => item.type === ViewerType.Advertise && item.typeId === parseInt(request.body.refId) && item.whitelabelId === whitelabelId);
+  } else if(request.body?.activityType === 2 || request.body?.activityType === 3) {
+    const activityType = request?.body.activityType;
+    const typeEnum = request.body.activityType === 2 ? ViewerType.Banner : ViewerType.Advertise;
+    const getExistsViewerCountIndex = global.tblViewers.findIndex(item => item.type === typeEnum && item.typeId === parseInt(request.body.refId) && item.whitelabelId === whitelabelId);
     if (getExistsViewerCountIndex !== -1) {
       const data = global.tblViewers[getExistsViewerCountIndex];
       await updateViewersQuery({
@@ -95,7 +83,7 @@ const createActivityLogService = async (request, fastify) => {
       const data = await insertViewersQuery({
         ...request,
         body: {
-          type: ViewerType.Advertise,
+          type: typeEnum,
           typeId: parseInt(request.body.refId),
           whitelabelId
         }
