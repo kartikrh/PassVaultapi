@@ -7146,7 +7146,6 @@ const Banner = {
           endDate: { type: "string" },
           link: { type: "string" },
           deviceTypeId: { type: "integer" },
-          whitelabelId: { type: "integer" },
           // viewerCount: { type: "integer" },
         },
         required: ["bannerId"],

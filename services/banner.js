@@ -71,6 +71,11 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       request.body.image = fullPath;
       request.body.imagePath = imagePath;
     }
+
+    if (request.body?.whitelabelId) {
+      request.body.whitelabelId = request.body.whitelabelId.split(",").map(id => Number(id.trim()));
+    }
+
     const data = await insertBannerQuery(
       {
         ...request.body,
@@ -80,22 +85,32 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       fastify
     );
 
-    const sendToClient = checkDataSendToClient(data[0]);
+    let resultData = data[0];
+    const whitelableData = global.tblWhitelabels.filter(item => resultData.whitelabelId.includes(item.id));
+    resultData.whitelabelId = resultData.whitelabelId?.map(item => {
+      return {
+        id: item,
+        domain: whitelableData.find(wl => wl.id === item)?.domain || null,
+        encryptWhitelabelId: whitelableData.find(wl => wl.id === item)?.whitelabelId || null
+      };
+    });
+
+    const sendToClient = checkDataSendToClient(resultData);
     if (sendToClient) {
       await callClientAPI(
         {
           moduleType: APIEndpointModuleType.updateBanner,
-          data: data[0]
+          data: resultData
         },
         request,
         fastify,
         "services/banner.js/createBannerService"
       );
     } else {
-      global.pendingBannerToClient.push(data[0]);
+      global.pendingBannerToClient.push(resultData);
     }
   
-    global.tblBanner.push(data[0]);
+    global.tblBanner.push(resultData);
 
     // const urlId = data[0].bannerId;
     // const urlEndPoint = data[0].title.replace(/ /g, "-");
@@ -116,6 +131,8 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
     const isPermanent = request.body.hasOwnProperty("isPermanent")
       ? request.body.isPermanent
       : validateBannerId.isPermanent;
+
+    request.body.whitelabelId = request.body?.whitelabelId ? request.body.whitelabelId.split(",").map(id => Number(id.trim())) : validateBannerId.whitelabelId;
     const body = {
       bannerId: request.body.bannerId,
       title: request.body.title || validateBannerId.title,
@@ -167,6 +184,15 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
     body.encryptWhitelabelId = whiteLabelData?.whitelabelId ?? null
 
     global.pendingBannerToClient = global.pendingBannerToClient.filter(item => item.bannerId !== body.bannerId);
+
+    const whitelableData = global.tblWhitelabels.filter(item => body.whitelabelId.includes(item.id));
+    body.whitelabelId = body.whitelabelId?.map(item => {
+      return {
+        id: item,
+        domain: whitelableData.find(wl => wl.id === item)?.domain || null,
+        encryptWhitelabelId: whitelableData.find(wl => wl.id === item)?.whitelabelId || null
+      };
+    });
 
     await callClientAPI(
       {
