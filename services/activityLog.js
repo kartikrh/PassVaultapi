@@ -9,6 +9,8 @@ const { articleViewersCountQuery } = require("../repository/TableArticles");
 const { updateAdvertiseViewCountQuery } = require("../repository/TableAdvertise");
 const { updateVideoLibraryViewCountQuery } = require("../repository/TableVideoLibrary");
 const { updatePhotoLibraryViewCountQuery } = require("../repository/TablePhotoLibrary");
+const { ViewerType } = require("../utilities");
+const { updateViewersQuery, insertViewersQuery } = require("../repository/TableViewers");
 
 const getAllActivityLogService = async (request, fastify) => {
   return global.tblActivityLogs;
@@ -42,6 +44,11 @@ const saveActivityLogService = async (request, fastify) => {
   }
 };
 const createActivityLogService = async (request, fastify) => {
+  const encryptedWhitelabelId = request.body?.whitelabelId;
+  let whitelabelId = null;
+  if (encryptedWhitelabelId) {
+    whitelabelId = global.tblWhitelabels.find(item => item.encryptedWhitelabelId === encryptedWhitelabelId)?.id;
+  }
   let data = await insertActivityLogQuery(
     {
       ...request.body,
@@ -74,13 +81,26 @@ const createActivityLogService = async (request, fastify) => {
       }
     }
   } else if(request?.body?.activityType === 3) {
-    const advertiseIndex = global.tblAdvertise.findIndex((item)=> item.advertiseId === parseInt(request.body.refId));
-    await updateAdvertiseViewCountQuery({ ...request.body },request,fastify);
-    if (advertiseIndex !== -1) {
-      global.tblAdvertise[advertiseIndex].viewerCount = (global.tblAdvertise[advertiseIndex].viewerCount || 0) + 1;
-      if (data && data.length === 1) {
-        data[0].count = global.tblAdvertise[advertiseIndex].viewerCount;
-      }
+    const getExistsViewerCountIndex = global.tblViewers.findIndex(item => item.type === ViewerType.Advertise && item.typeId === parseInt(request.body.refId) && item.whitelabelId === whitelabelId);
+    if (getExistsViewerCountIndex !== -1) {
+      const data = global.tblViewers[getExistsViewerCountIndex];
+      await updateViewersQuery({
+        ...request,
+        body: {
+          id: data.id
+        }
+      }, fastify);
+      global.tblViewers[getExistsViewerCountIndex].viewerCount = (global.tblViewers[getExistsViewerCountIndex].viewerCount || 0) + 1;
+    } else {
+      const data = await insertViewersQuery({
+        ...request,
+        body: {
+          type: ViewerType.Advertise,
+          typeId: parseInt(request.body.refId),
+          whitelabelId
+        }
+      }, fastify);
+      global.tblViewers.push(data);
     }
   } else if(request?.body?.activityType === 4) {
     const videoLibraryIndex = global.tblVideoLibrary.findIndex((item)=> item.id === parseInt(request.body.refId));

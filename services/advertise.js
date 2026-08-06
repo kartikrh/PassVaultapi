@@ -92,7 +92,7 @@ const createAdvertiseService = async (request, fastify) => {
       request.body.endDate = null;
     }
 
-    if (request.body.whitelabelId) {
+    if (request.body?.whitelabelId) {
       request.body.whitelabelId = request.body.whitelabelId.split(",").map(id => Number(id.trim()));
     }
     const data = await createAdvertiseQuery(
@@ -144,7 +144,7 @@ const updateAdvertiseService = async (request, fastify) => {
     throw new Error("Advertise with this Id not found");
   }
 
-  request.body.whitelabelId = request.body.whitelabelId ? request.body.whitelabelId.split(",").map(id => Number(id.trim())) : validateAdvertise.whitelabelId;
+  request.body.whitelabelId = request.body?.whitelabelId ? request.body.whitelabelId.split(",").map(id => Number(id.trim())) : validateAdvertise.whitelabelId;
 
   const body = {
     advertiseId: request.body.advertiseId,

@@ -16,12 +16,8 @@ const getAllBannerQuery = async (fastify) => {
             tb."wrImagePath" as "imagePath",
             tb."wrDeviceTypeId" as "deviceTypeId",
             tb."wrWhitelabelId" as "whitelabelId",
-            ed."wrValue" as "encryptWhitelabelId",
-            twl."wrDomain" as "domain",
             tb."wrDisplayOrder" as "displayOrder"
         from "tblBanner" tb
-        LEFT JOIN "tblWhitelabel" twl ON tb."wrWhitelabelId" = twl."wrId"
-        LEFT JOIN "tblEncryptedData" ed ON tb."wrWhitelabelId" = ed."wrKey"
         where tb."wrIsDeleted" = false
         order by tb."wrDisplayOrder" ASC
         `,
@@ -72,14 +68,8 @@ const insertBannerQuery = async (data, request, fastify) => {
           tb."wrImagePath" as "imagePath",
           tb."wrDeviceTypeId" as "deviceTypeId",
           tb."wrWhitelabelId" as "whitelabelId",
-          ed."wrValue" as "encryptWhitelabelId",
-          twl."wrDomain" as "domain",
           tb."wrDisplayOrder" as "displayOrder"
         FROM "insert_data" as tb
-        LEFT JOIN "tblWhitelabel" twl 
-          ON tb."wrWhitelabelId" = twl."wrId"
-        LEFT JOIN "tblEncryptedData" ed 
-          ON tb."wrWhitelabelId" = ed."wrKey"
       `,
       {
         type: fastify.db.QueryTypes.INSERT,
