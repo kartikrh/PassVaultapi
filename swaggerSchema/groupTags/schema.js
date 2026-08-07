@@ -12062,6 +12062,23 @@ const APNSLiveActivityLogs = {
   }
 }
 
+const Viewers = {
+  get: {
+    schema: {
+      tags: ["Viewers"],
+      description: "get views count viewer data",
+      body: {
+        type: "object",
+        properties: {
+          type: { type: "integer" },
+          typeId: { type: "integer" },
+          whitelabelId: { type: "integer" }
+        }
+      }
+    }
+  }
+};
+
 module.exports = {
   Auth,
   Tabs,
@@ -12149,5 +12166,6 @@ module.exports = {
   TeamMatchType,
   ClientLikeDislikeActivity,
   LiveActivityToken,
-  APNSLiveActivityLogs
+  APNSLiveActivityLogs,
+  Viewers
 };
