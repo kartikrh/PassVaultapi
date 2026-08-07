@@ -132,7 +132,8 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       ? request.body.isPermanent
       : validateBannerId.isPermanent;
 
-    request.body.whitelabelId = request.body?.whitelabelId ? request.body.whitelabelId.split(",").map(id => Number(id.trim())) : validateBannerId.whitelabelId;
+    request.body.whitelabelId = request.body?.whitelabelId?.split(",").map(id => Number(id.trim()));
+
     const body = {
       bannerId: request.body.bannerId,
       title: request.body.title || validateBannerId.title,
@@ -151,7 +152,7 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
       viewerCount: validateBannerId.viewerCount,
       imagePath: validateBannerId.imagePath,
       deviceTypeId: Number(request.body.deviceTypeId) || validateBannerId?.deviceTypeId,
-      whitelabelId: request.body.whitelabelId ?? validateBannerId?.whitelabelId,
+      whitelabelId: request.body.whitelabelId,
       displayOrder: request.body.hasOwnProperty("displayOrder")
       ? request.body.displayOrder
       : (
