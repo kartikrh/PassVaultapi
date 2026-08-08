@@ -2657,6 +2657,15 @@ const getGlobalMemoryDataService = async (request, fastify) => {
   };
 }
 
+const autoImportStatus = {
+  Pending: 1,
+  Started: 2,
+  Ended: 3,
+  Failed: 4
+}
+
+const autoImportStatusValues = Object.values(autoImportStatus)
+
 module.exports = {    
   ERROR_CODES,
   error,
@@ -2790,5 +2799,7 @@ module.exports = {
   getDataFromTime,
   pushSessionData,
   checkDataSendToClient,
-  getGlobalMemoryDataService
+  getGlobalMemoryDataService,
+  autoImportStatus,
+  autoImportStatusValues
 };
