@@ -1,5 +1,5 @@
 const { errorLogger } = require("../utilities/logger");
-const { getPagination } = require("../utilities");
+const { RefType, AutoImportStatus } = require("../utilities");
 
 const getAllAutoImportDataQuery = async (request, fastify, whereCondition = undefined) => {
     try {
@@ -197,66 +197,100 @@ const deleteAutoImportDataQuery = async (id, request, fastify) => {
   }
 };
 
-const allAutoImportDataLogsQuery = async (body ,request, fastify) => {
+const allAutoImportDataLogsQuery = async (body, request, fastify) => {
     try {
-        const { startDate, endDate, page = 1, limit = 20 } = body;
-        const {skip , take} = getPagination(page, limit);
-        const where = startDate && endDate ? `WHERE "wrCreateDate" BETWEEN '${startDate}' AND '${endDate}'` : '';
-        const query = `
-            SELECT 
-                "wrId" as "id",
-                "wrRefId" as "refId",
-                "wrRefType" as "refType",
-                "wrSourceId" as "sourceId",
-                "wrIsImported" as "isImported",
-                "wrIsImportStart" as "isImportStart",
-                "wrImportStartTime" as "importStartTime",
-                "wrImportEndTime" as "importEndTime",
-                "wrErrorStackData" as "errorStackData",
-                "wrESApiResponseData" as "esApiResponseData",
-                tu."WrName" as "createdBy",
-                "wrCreateDate" as "createdDate"
-            FROM "tblAutoImportData"
-            LEFT JOIN "tblUsers" tu ON "tblAutoImportData"."wrCreatedBy" = tu."WrUserId"
-            ${where}
-            ORDER BY "wrId" DESC
-            LIMIT $1 OFFSET $2;
-        `;
-        const data = await fastify.db.query(query, {
-            type: fastify.db.QueryTypes.SELECT,
-            bind : [
-                take,
-                skip
-            ]
-        }); 
+        const { startDate, endDate, refType, autoImportStatus, page = 1, limit = 50 } = body;
 
-        const totalRecordsQuery = `
-            SELECT COUNT(*) as "count"
-            FROM "tblAutoImportData"
-            ${where}
-        `;
+        const whereConditions = [];
+        const bind = [];
+        let index = 1;
 
-        const totalRecordsResult = await fastify.db.query(totalRecordsQuery, {
-            type: fastify.db.QueryTypes.SELECT,
-        });
+        if (startDate && endDate) {
+            whereConditions.push(`"wrCreateDate" BETWEEN $${index} AND $${index + 1}`);
+            bind.push(startDate, endDate);
+            index += 2;
+        }
 
-        const totalRecords = parseInt(totalRecordsResult[0].count, 10);
-        const totalPages = Math.ceil(totalRecords / take);
+        if (Object.values(RefType).includes(refType)) {
+            whereConditions.push(`"wrRefType" = $${index}`);
+            bind.push(refType);
+            index += 1;
+        }
+
+        if (Object.values(AutoImportStatus).includes(autoImportStatus)) {
+            if (autoImportStatus === 1) {
+                whereConditions.push(`"wrImportStartTime" IS NULL`);
+            } else if (autoImportStatus === 2) {
+                whereConditions.push(`"wrImportStartTime" IS NOT NULL AND "wrImportEndTime" IS NULL`);
+            } else if (autoImportStatus === 3) {
+                whereConditions.push(`"wrIsImported" = 'FALSE' AND "wrImportStartTime" IS NOT NULL AND "wrImportEndTime" IS NOT NULL`);
+            } else if (autoImportStatus === 4) {
+                whereConditions.push(`NULLIF(TRIM("wrErrorStackData"), '') IS NOT NULL`);
+            }
+        }
+
+        const whereClause = whereConditions.length
+            ? `WHERE ${whereConditions.join(" AND ")}`
+            : "";
+
+        const [{ total }] = await fastify.db.query(
+            `
+                SELECT COUNT(*)::int AS total
+                FROM "tblAutoImportData"
+                LEFT JOIN "tblUsers" tu ON "tblAutoImportData"."wrCreatedBy" = tu."WrUserId"
+                ${whereClause};
+            `,
+            {
+                type: fastify.db.QueryTypes.SELECT,
+                bind,
+            }
+        );
+
+        const result = await fastify.db.query(
+            `
+                SELECT
+                    "wrId" as "id",
+                    "wrRefId" as "refId",
+                    "wrRefType" as "refType",
+                    "wrSourceId" as "sourceId",
+                    "wrIsImported" as "isImported",
+                    "wrIsImportStart" as "isImportStart",
+                    "wrImportStartTime" as "importStartTime",
+                    "wrImportEndTime" as "importEndTime",
+                    "wrErrorStackData" as "errorStackData",
+                    "wrESApiResponseData" as "esApiResponseData",
+                    tu."WrName" as "createdBy",
+                    "wrCreateDate" as "createdDate"
+                FROM "tblAutoImportData"
+                LEFT JOIN "tblUsers" tu ON "tblAutoImportData"."wrCreatedBy" = tu."WrUserId"
+                ${whereClause}
+                ORDER BY "tblAutoImportData"."wrCreateDate" DESC
+                LIMIT $${index} OFFSET $${index + 1};
+            `,
+            {
+                type: fastify.db.QueryTypes.SELECT,
+                bind: [
+                    ...bind,
+                    Number(limit),
+                    (Number(page) - 1) * Number(limit),
+                ],
+            }
+        );
 
         return {
-            totalRecords: totalRecords,
-            currentPage: page,
-            totalPages: totalPages,
-            data: data,
+            totalRecords: total,
+            currentPage: Number(page),
+            totalPages: Math.ceil(total / Number(limit)),
+            data: result
         };
-    } catch (err) {
+    } catch (error) {
         errorLogger(
             fastify,
-            err.message,
+            error.message,
             "DB ERROR --> repository/TableAutoImportData.js/allAutoImportDataLogsQuery",
             request
         );
-        throw new Error(err.message);
+        throw error;
     }
 };
 
