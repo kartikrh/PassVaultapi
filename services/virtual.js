@@ -77,6 +77,7 @@ const { cancelEventMarketsQuery, closeEventMarketByCIdQuery, cancelMarketVirtual
 const { ISPREDICATIONONCRICKETCARD, DEFAULTBALLFACED, DEFAULTPLAYERRUNS, DEFAULTPLAYERBOUNDARIES } = require("../utilities/configConstants");
 const configConstants = require("../utilities/configConstants");
 const { getDetailsByCIdV1Service, createEventMarketsServiceV1, changeMarketCloseService, changeMarketResultService } = require("./eventMarket");
+const { plyStationService } = require("./playStation");
 // const ballbyball ={
 //   commentaryBallByBallId: 0,
 //   commentaryId: commentary?.commentaryId,
@@ -1646,6 +1647,11 @@ const ballByBallVirtualEventService = async (request, fastify) => {
 const ballByBallChangeService = async (request, fastify) => {
   let ball = 1;
   let isBoundary = false;
+  let {type = 1} = request.body;
+  if(type == 2){
+    let data = await plyStationService(request, fastify);
+    return data; 
+  }
   // const { commentaryId, run, ballType, isWicket = false } = request.body;
   const { commentaryId, cardType, cardKey, cardValue } = request.body;
   cardLogger(
@@ -4510,5 +4516,6 @@ module.exports = {
   suffleCardAPIService,
   cancelEventAPIService,
   loadVirtualCom,
-  serverTimeAPIService
+  serverTimeAPIService,
+  comResponseService
 };

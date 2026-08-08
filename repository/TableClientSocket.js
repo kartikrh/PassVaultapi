@@ -15,7 +15,16 @@ const getAllClientSocketQuery =async (fastify) =>{
             "wrActionType" as "actionType",
             "wrIsUpdateView" as "isUpdateView",
             "wrUpdateInterval" as "updateInterval",
-            "wrConnectCount" as "connectCount"
+            "wrConnectCount" as "connectCount",
+            "wrIsAPNSEnable" as "isAPNSEnable",
+            "wrAPNSProdHost" as "APNSProdHost",
+            "wrAPNSSandboxHost" as "APNSSandboxHost",
+            "wrAPNSKeyId" as "APNSKeyId",
+            "wrAPNSTeamId" as "APNSTeamId",
+            "wrAPNSBundleId" as "APNSBundleId",
+            "wrAPNSKeyPath" as "APNSKeyPath",
+            "wrAPNSEnvType" as "APNSEnvType",
+            "wrIsAPNSLogEnable" as "isAPNSLogEnable"
         FROM "tblClientSockets"
         WHERE "wrIsDeleted" = false
     `,
@@ -135,7 +144,16 @@ const createClientSocketQuery =async (data,request,fastify) =>{
             "wrActionType" as "actionType",
             "wrConnectCount" as "connectCount",
             "wrIsUpdateView" as "isUpdateView",
-            "wrUpdateInterval" as "updateInterval"
+            "wrUpdateInterval" as "updateInterval",
+            "wrIsAPNSEnable" as "isAPNSEnable",
+            "wrAPNSProdHost" as "APNSProdHost",
+            "wrAPNSSandboxHost" as "APNSSandboxHost",
+            "wrAPNSKeyId" as "APNSKeyId",
+            "wrAPNSTeamId" as "APNSTeamId",
+            "wrAPNSBundleId" as "APNSBundleId",
+            "wrAPNSKeyPath" as "APNSKeyPath",
+            "wrAPNSEnvType" as "APNSEnvType",
+            "wrIsAPNSLogEnable" as "isAPNSLogEnable"
         `;
         const result = await fastify.db.query(query,
             {
@@ -175,7 +193,16 @@ const updateClientSocketQuery = async(data,request,fastify) =>{
                 "wrReconnectAttempts" = $4,
                 "wrReconnectMaxDelay" = $5,
                 "wrIsUpdateView" = $7,
-                "wrUpdateInterval" = $8
+                "wrUpdateInterval" = $8,
+                "wrIsAPNSEnable" = $9,
+                "wrAPNSProdHost" = $10,
+                "wrAPNSSandboxHost" = $11,
+                "wrAPNSKeyId" = $12,
+                "wrAPNSTeamId" = $13,
+                "wrAPNSBundleId" = $14,
+                "wrAPNSKeyPath" = $15,
+                "wrAPNSEnvType" = $16,
+                "wrIsAPNSLogEnable" = $17
             WHERE "wrId" = $6
             RETURNING "wrId" as "clientSocketId",
             "wrServerName" as "serverName",
@@ -189,7 +216,16 @@ const updateClientSocketQuery = async(data,request,fastify) =>{
             "wrActionType" as "actionType",
             "wrConnectCount" as "connectCount",
             "wrIsUpdateView" as "isUpdateView",
-            "wrUpdateInterval" as "updateInterval"
+            "wrUpdateInterval" as "updateInterval",
+            "wrIsAPNSEnable" as "isAPNSEnable",
+            "wrAPNSProdHost" as "APNSProdHost",
+            "wrAPNSSandboxHost" as "APNSSandboxHost",
+            "wrAPNSKeyId" as "APNSKeyId",
+            "wrAPNSTeamId" as "APNSTeamId",
+            "wrAPNSBundleId" as "APNSBundleId",
+            "wrAPNSKeyPath" as "APNSKeyPath",
+            "wrAPNSEnvType" as "APNSEnvType",
+            "wrIsAPNSLogEnable" as "isAPNSLogEnable"
         `;
         const result = await  fastify.db.query(query,
             {
@@ -203,6 +239,15 @@ const updateClientSocketQuery = async(data,request,fastify) =>{
                     data.clientSocketId,
                     data.isUpdateView,
                     data.updateInterval,
+                    data.isAPNSEnable,
+                    data.APNSProdHost,
+                    data.APNSSandboxHost,
+                    data.APNSKeyId,
+                    data.APNSTeamId,
+                    data.APNSBundleId,
+                    data.APNSKeyPath,
+                    data.APNSEnvType,
+                    data.isAPNSLogEnable
                 ]
             }
         )
@@ -408,6 +453,34 @@ const disconnectAllClientSocketQuery = async (request, fastify) => {
         throw new Error(error.message);
     }
 }
+const updateAPNSActiveInactiveClientSocketQuery = async(request, fastify) => {
+    try {
+        const query = `
+            UPDATE "tblClientSockets"
+            SET
+                "wrIsAPNSEnable" = $1
+            WHERE "wrId" = $2
+        `;
+        const result = await fastify.db.query(query,
+            {
+                type: fastify.db.QueryTypes.SELECT,
+                bind: [
+                    request.body.isAPNSEnable,
+                    request.body.clientSocketId
+                ]
+            }
+        )
+        return result[0];
+    } catch (err) {
+        errorLogger(
+            fastify,
+            err.message,
+            "DB Error --> repository/TableClientSocket/updateAPNSActiveInactiveClientSocketQuery",
+            request
+        )
+        throw new Error(err.message);
+    }
+}
   
 module.exports = {
     getAllClientSocketQuery,
@@ -421,5 +494,6 @@ module.exports = {
     disConnectClientSocketQuery,
     changeIsUpdateViewClientSocketQuery,
     resetAllClientSocketReconnectCountQuery,
-    disconnectAllClientSocketQuery
+    disconnectAllClientSocketQuery,
+    updateAPNSActiveInactiveClientSocketQuery
 }

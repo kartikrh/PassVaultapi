@@ -92,6 +92,14 @@ const { getPlayerHistoryByPlayerIdForClient } = require("../../../controller/use
 const { getCommentaryPlayerHistoryByPlayerIdForClient } = require("../../../controller/users/admin/commPlayerHistory");
 const { getTournamentTeamPlayersByCompetitionIdForClient } = require("../../../controller/users/admin/tournamentTeamPlayers");
 const { getAllAdvertise } = require("../../../controller/users/admin/advertise");
+const {
+  registerLiveActivityToken,
+  unRegisterLiveActivityToken,
+  getAllLiveActivityTokensByCommentary,
+  deleteExpiredLiveActivityToken,
+  deleteLiveActivityTokenById,
+} = require("../../../controller/users/admin/lilveActivityToken");
+const { saveAPNSActivityLogs } = require("../../../controller/users/admin/apnsActivityLogs");
 
 module.exports = async (fastify, opts) => {
   fastify.post("/getscore", {
@@ -504,6 +512,24 @@ module.exports = async (fastify, opts) => {
   fastify.post("/getCommentaryScoreStats", {
     schema: Score.getCommentaryScoreStats.schema,
     handler: (request , reply) => getCommentaryScoreStats(request, reply, fastify)
+  });
+  fastify.post("/register", {
+    handler: (request , reply) => registerLiveActivityToken(request, reply, fastify)
+  });
+  fastify.post("/unregister", {
+    handler: (request , reply) => unRegisterLiveActivityToken(request, reply, fastify)
+  });
+  fastify.post("/liveMatchToken", {
+    handler: (request , reply) => getAllLiveActivityTokensByCommentary(request, reply, fastify)
+  });
+  fastify.post("/deleteLiveActivityToken", {
+    handler: (request , reply) => deleteLiveActivityTokenById(request, reply, fastify)
+  });
+  fastify.post("/deleteExpiredLiveActivityToken", {
+    handler: (request , reply) => deleteExpiredLiveActivityToken(request, reply, fastify)
+  });
+  fastify.post("/addAPNSLogs", {
+    handler: (request , reply) => saveAPNSActivityLogs(request, reply, fastify)
   });
 };
 

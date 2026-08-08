@@ -116,6 +116,7 @@ const {
   getHeadToHeadCommentary,
   getCommentaryStatistics,
   abandonedCommentary,
+  updateCommentaryToss,
 } = require("../../../controller/users/admin/commentary/commentary");
 const {
   getCompetitionListByeventTypeId,
@@ -1559,5 +1560,17 @@ module.exports = async (fastify, opts) => {
         }),
     ],
     handler: (request, reply) => abandonedCommentary(request, reply, fastify),
+  });
+  fastify.post("/updateCommentaryToss", {
+    schema: Commentary.updateCommentaryToss.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply, done) =>
+        multiTabPermissionCheck(request, reply, fastify, {
+          tabName:[ "Commentary", "Commentary List" ],
+          mode: "edit",
+        }),
+    ],
+    handler: (request, reply) => updateCommentaryToss(request, reply, fastify),
   });
 };

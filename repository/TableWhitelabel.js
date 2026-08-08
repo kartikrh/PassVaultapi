@@ -37,7 +37,8 @@ const getAllWhitelabelsQuery = async (fastify) => {
                 "wrMobileOTPVerify" as "mobileOTPVerify",
                 "wrSendMail_MaxSendlimit" as "sendMailMaxSendLimit",
                 "wrClientOTP" as "clientOTP",
-                "wrIsDefault" as "isDefault"
+                "wrIsDefault" as "isDefault",
+                ed."wrValue" as "encryptedWhitelabelId"
             FROM "tblWhitelabel" tw
             LEFT JOIN "tblEncryptedData" ed ON tw."wrId" = ed."wrKey"
             WHERE "wrIsDeleted" = FALSE;`,
@@ -105,7 +106,8 @@ const insertWhitelabelQuery = async (data, fastify, request) => {
                 "wrMobileOTPVerify" as "mobileOTPVerify",
                 "wrSendMail_MaxSendlimit" as "sendMailMaxSendLimit",
                 "wrClientOTP" as "clientOTP",
-                "wrIsDefault" as "isDefault"
+                "wrIsDefault" as "isDefault",
+                ed."wrValue" as "encryptedWhitelabelId"
             FROM insert_data
             LEFT JOIN "tblEncryptedData" ed ON insert_data."wrId" = ed."wrKey"
             `,
@@ -402,7 +404,8 @@ const getAllEncryptWhitelabelsQuery = async (fastify, whereCondition = null) => 
                 "wrMobileOTPVerify" as "mobileOTPVerify",
                 "wrSendMail_MaxSendlimit" as "sendMailMaxSendLimit",
                 "wrClientOTP" as "clientOTP",
-                tw."wrIsDefault" as "isDefault"
+                tw."wrIsDefault" as "isDefault",
+                ed."wrValue" as "encryptedWhitelabelId"
             FROM "tblWhitelabel" tw
             left join "tblEncryptedData" ed on tw."wrId" = ed."wrKey"
             ${whereCondition ? `WHERE ${whereCondition}` : ""}`,

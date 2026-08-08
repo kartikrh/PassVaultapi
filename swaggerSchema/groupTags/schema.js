@@ -4197,6 +4197,40 @@ const Commentary = {
         required: ["commentaryId"],
       },
     },
+  },
+  updateCommentaryToss: {
+    schema: {
+      tags: ["Commentary"],
+      description: "update Commentary toss",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          response: {
+            type: "object",
+            required: ["match_info"],
+            properties: {
+              match_info: {
+                type: "object",
+                required: ["toss"],
+                properties: {
+                  toss: {
+                    type: "object",
+                    required: ["winnerTeamId", "decision"],
+                    properties: {
+                      winnerTeamId: { type: "integer" },
+                      decision: { type: "integer" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          comDetails: { type: "object" }
+        },
+        required: ["response", "comDetails"]
+      }
+    }
   }
 };
 
@@ -6908,6 +6942,14 @@ const ClientSocket = {
           reconnectCount: { type: "integer" },
           actionType: { type: "integer" },
           updateInterval: { type: "integer" },
+          isAPNSEnable: { type: "boolean" },
+          APNSProdHost: { type: "string" },
+          APNSSandboxHost: { type: "string" },
+          APNSKeyId: { type: "string" },
+          APNSTeamId: { type: "string" },
+          APNSBundleId: { type: "string" },
+          APNSKeyPath: { type: "string" },
+          APNSEnvType: { type: "integer" }
         },
         required: ["clientSocketId", "url"],
       },
@@ -6976,6 +7018,21 @@ const ClientSocket = {
           isUpdateView: { type: "boolean" },
         },
         required: ["clientSocketId", "isUpdateView"],
+      },
+    },
+  },
+  activeInactiveAPNS: {
+    schema: {
+      tags: ["ClientSocket"],
+      description: "Update Active/Inactive APNS notification",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          clientSocketId: { type: "integer" },
+          isAPNSEnable: { type: "boolean" },
+        },
+        required: ["clientSocketId", "isAPNSEnable"],
       },
     },
   },
@@ -7089,7 +7146,6 @@ const Banner = {
           endDate: { type: "string" },
           link: { type: "string" },
           deviceTypeId: { type: "integer" },
-          whitelabelId: { type: "integer" },
           // viewerCount: { type: "integer" },
         },
         required: ["bannerId"],
@@ -10524,7 +10580,7 @@ const VirtualEvent = {
           // run : { type: "integer" },
           // ballType : { type: "integer" },
         },
-        required: ["commentaryId", "cardType", "cardValue", "cardKey"],
+        required: ["commentaryId"],
       }
     }
   },
@@ -11926,6 +11982,105 @@ const ClientLikeDislikeActivity = {
   }
 }
 
+const LiveActivityToken = {
+  getAll: {
+    schema: {
+      tags: ["Live Activity Token"],
+      description: "get all APNS Live Activity Token Data",
+      secaurity: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          limit: { type: "integer" },
+          page: { type: "string" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
+          envType: { type: "integer" },
+          clientSocketId: { type: "integer" },
+          commentaryId: { type: "integer" }
+        },
+        required: ["limit", "page"]
+      }
+    }
+  },
+  delete: {
+    schema: {
+      tags: ["Live Activity Token"],
+      description: "delete Live Activity Token data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1
+          }
+        },
+        required: ["id"]
+      }
+    }
+  }
+}
+
+const APNSLiveActivityLogs = {
+  getAll: {
+    schema: {
+      tags: ["APNS Live Activity Logs"],
+      description: "get all APNS Live Activity Token Data",
+      secaurity: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          limit: { type: "integer" },
+          page: { type: "string" },
+          startDate: { type: "string" },
+          endDate: { type: "string" },
+          envType: { type: "integer" },
+          clientSocketId: { type: "integer" },
+          commentaryId: { type: "integer" }
+        },
+        required: ["limit", "page"]
+      }
+    }
+  },
+  delete: {
+    schema: {
+      tags: ["APNS Live Activity Logs"],
+      description: "delete APNS Live Activity Logs data",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          }
+        },
+        required: ["id"],
+      }
+    }
+  }
+}
+
+const Viewers = {
+  get: {
+    schema: {
+      tags: ["Viewers"],
+      description: "get views count viewer data",
+      body: {
+        type: "object",
+        properties: {
+          type: { type: "integer" },
+          typeId: { type: "integer" },
+          whitelabelId: { type: "integer" }
+        }
+      }
+    }
+  }
+};
+
 module.exports = {
   Auth,
   Tabs,
@@ -12011,5 +12166,8 @@ module.exports = {
   CompititionStatisticsType,
   CompititionStatistics,
   TeamMatchType,
-  ClientLikeDislikeActivity
+  ClientLikeDislikeActivity,
+  LiveActivityToken,
+  APNSLiveActivityLogs,
+  Viewers
 };

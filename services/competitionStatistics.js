@@ -410,7 +410,7 @@ const getCompetitionStatisticsByCompetitionIdService = async (request, fastify) 
     }
 
     if (!competition.isCompetitionStatisticsCalculation) {
-        throw new Error(`Competition with this id ${competitionId} is not available for client.`);
+        throw new Error(`Competition statistics of competition id ${competitionId} is not available for client.`);
     }
 
     const competitionStatistics = global.tblCompetitionStatistics.filter(

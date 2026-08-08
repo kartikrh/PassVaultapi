@@ -114,6 +114,7 @@ const { getAllICCRankingQuery } = require("../repository/TableICCRanking");
 const { getAllEntitySocketsQuery } = require("../repository/TableEntitySockets");
 const { getAllCompetitionStatisticsTypeQuery } = require("../repository/TableCompetitionStatisticsType");
 const { getAllCompetitionStatisticsQuery } = require("../repository/TableCompetitionStatistics");
+const { getAllViewersQuery } = require("../repository/TableViewers");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -152,7 +153,6 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     );
     const getAllNews = await getAllNewsQuery(fastify);
     const getAllBanners = await getAllBannerQuery(fastify);
-    const getAllAdvertise = await getAllAdvertiseQuery(fastify);
     const getAllActivityLog = await getAllActivityLogQuery(fastify);
     const getAllsubScribesDomain = await getAllSubScribesDomainQuery(fastify);
     const getAllsubScribesSubDomain = await getAllSubScribesSubDomainQuery(
@@ -209,6 +209,25 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllCardType = await getAllCardTypeQuery(fastify);
     const getAllPackages = await getAllPackagesQuery(fastify);
     const getAllWhitelabels = await getAllWhitelabelsQuery(fastify);
+    const getAllAdvertiseQueryData = await getAllAdvertiseQuery(fastify);
+    const whitelabelMap = new Map(
+      getAllWhitelabels.map(wl => [
+        wl.id,
+        {
+          domain: wl.domain,
+          encryptWhitelabelId: wl.whitelabelId
+        }
+      ])
+    );
+
+    const getAllAdvertise = getAllAdvertiseQueryData?.map(item => ({
+      ...item,
+      whitelabelId: item.whitelabelId.map(id => ({
+        id,
+        domain: whitelabelMap.get(id)?.domain || null,
+        encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
+      }))
+    }));
     const getAllNotificationConfigs = await getAllNotificationConfigsQuery(fastify);
     const allCommentaryIds = getAllCommentary.map((item) => item.commentaryId);
     let getAllEventMarketsV2 = [];
@@ -246,6 +265,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllEntitySockets = await getAllEntitySocketsQuery(fastify);
     const getAllCompetitionStatisticsType = await getAllCompetitionStatisticsTypeQuery(fastify);
     const getAllCompetitionStatistics = await getAllCompetitionStatisticsQuery(fastify);
+    const getAllViewers = await getAllViewersQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -338,6 +358,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblEntitySockets = getAllEntitySockets;
     global.tblCompetitionStatisticsType = getAllCompetitionStatisticsType;
     global.tblCompetitionStatistics = getAllCompetitionStatistics;
+    global.tblViewers = getAllViewers;
 
     // global.responseLogs = responseLogs;
     // global.thirdPartyAPILogs = thirdPartyAPILogs;
@@ -556,7 +577,26 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           break;
         }
          case ModuleTypes.Advertise: {
-          const getAllAdvertise = await getAllAdvertiseQuery(fastify);
+          const getAllWhitelabels = global.tblWhitelabels;
+          const getAllAdvertiseQueryData = await getAllAdvertiseQuery(fastify);
+          const whitelabelMap = new Map(
+            getAllWhitelabels.map(wl => [
+              wl.id,
+              {
+                domain: wl.domain,
+                encryptWhitelabelId: wl.whitelabelId
+              }
+            ])
+          );
+
+          const getAllAdvertise = getAllAdvertiseQueryData?.map(item => ({
+            ...item,
+            whitelabelId: item.whitelabelId.map(id => ({
+              id,
+              domain: whitelabelMap.get(id)?.domain || null,
+              encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
+            }))
+          }));
           global.tblAdvertise = getAllAdvertise;
           break;
         }
@@ -808,6 +848,11 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
         case ModuleTypes.CompetitionStatistics: {
           const getAllCompetitionStatistics = await getAllCompetitionStatisticsQuery(fastify);
           global.tblCompetitionStatistics = getAllCompetitionStatistics;
+          break;
+        }
+        case ModuleTypes.Viewers: {
+          const viewers =  await getAllViewersQuery(fastify);
+          global.tblViewers = viewers;
           break;
         }
         default:

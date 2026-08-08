@@ -53,12 +53,19 @@ const connectClients = async (fastify, clientSocketId) => {
 
         const socketObj = { ...config, client, cronJob: null };
         global.clientSocketIo.push(socketObj);
+
+        // Proactively push APNS settings on every (re)connect so the client API
+        // always has data even if its getAPNSEnableData pull is missed or a
+        // stale socket's disconnect event later clears the value back to null.
+        client.emit("isAPNSEnable", config?.isAPNSEnable ? config : null);
+
         errorLogger(
           fastify,
           `Client socket connected to ${config.serverName}`,
           "Client Socket --> sockets/client.js/connectClients - connect",
           null
         );
+
         try {
           await updateClientSocketStatusQuery(
             {
@@ -191,6 +198,18 @@ const connectClients = async (fastify, clientSocketId) => {
           null
         );
       });
+
+      client.on("getAPNSEnableData", () => {
+        errorLogger(
+          fastify,
+          `APNS connected with ${config?.serverName}.`,
+          "Client Socket --> sockets/client.js/connectClients - getAPNSEnableData",
+          {
+            body: config
+          }
+        );
+        client.emit("isAPNSEnable", config?.isAPNSEnable ? config : null);
+      });
     })
 
     await Promise.all(promises);
@@ -218,6 +237,7 @@ const disconnectClientSockets = async (fastify, clientSocketId) => {
           clientSocket.cronJob = null;
         }
         try {
+          clientSocket.client?.emit("isAPNSEnable", null);
           clientSocket.client?.removeAllListeners();
           clientSocket.client?.disconnect(true);
         } catch (_) {}
