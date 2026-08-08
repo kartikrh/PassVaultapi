@@ -2663,14 +2663,12 @@ const ViewerType = {
   Banner: 2
 }
 
-const autoImportStatus = {
+const AutoImportStatus = {
   Pending: 1,
   Started: 2,
   Ended: 3,
   Failed: 4
 }
-
-const autoImportStatusValues = Object.values(autoImportStatus)
 
 module.exports = {    
   ERROR_CODES,
@@ -2807,6 +2805,5 @@ module.exports = {
   checkDataSendToClient,
   getGlobalMemoryDataService,
   ViewerType,
-  autoImportStatus,
-  autoImportStatusValues
+  AutoImportStatus
 };
