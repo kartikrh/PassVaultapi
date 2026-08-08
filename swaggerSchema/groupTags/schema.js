@@ -11178,7 +11178,9 @@ const AutoImportData = {
           skip : {type : "integer"},
           limit : {type : "integer"},
           startDate : {type : "string"},
-          endDate : {type : "string"}
+          endDate : {type : "string"},
+          refType: { type: "integer" },
+          autoImportStatus: { type: "integer" }
         },
         required : ["page", "limit"]
       }
