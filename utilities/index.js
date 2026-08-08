@@ -1119,7 +1119,8 @@ const ModuleTypes = {
   EntitySocket: 44,
   CompetitionStatisticsType: 45,
   CompetitionStatistics: 46,
-  Advertise: 47
+  Advertise: 47,
+  Viewers: 48
 };
 const callTPAPI = async (data, fastify) => {
   try {
@@ -2657,6 +2658,11 @@ const getGlobalMemoryDataService = async (request, fastify) => {
   };
 }
 
+const ViewerType = {
+  Advertise: 1,
+  Banner: 2
+}
+
 const AutoImportStatus = {
   Pending: 1,
   Started: 2,
@@ -2798,5 +2804,6 @@ module.exports = {
   pushSessionData,
   checkDataSendToClient,
   getGlobalMemoryDataService,
+  ViewerType,
   AutoImportStatus
 };

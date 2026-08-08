@@ -7146,7 +7146,6 @@ const Banner = {
           endDate: { type: "string" },
           link: { type: "string" },
           deviceTypeId: { type: "integer" },
-          whitelabelId: { type: "integer" },
           // viewerCount: { type: "integer" },
         },
         required: ["bannerId"],
@@ -12065,6 +12064,23 @@ const APNSLiveActivityLogs = {
   }
 }
 
+const Viewers = {
+  get: {
+    schema: {
+      tags: ["Viewers"],
+      description: "get views count viewer data",
+      body: {
+        type: "object",
+        properties: {
+          type: { type: "integer" },
+          typeId: { type: "integer" },
+          whitelabelId: { type: "integer" }
+        }
+      }
+    }
+  }
+};
+
 module.exports = {
   Auth,
   Tabs,
@@ -12152,5 +12168,6 @@ module.exports = {
   TeamMatchType,
   ClientLikeDislikeActivity,
   LiveActivityToken,
-  APNSLiveActivityLogs
+  APNSLiveActivityLogs,
+  Viewers
 };
