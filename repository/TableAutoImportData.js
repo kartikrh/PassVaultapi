@@ -1,5 +1,5 @@
 const { errorLogger } = require("../utilities/logger");
-const { getPagination, autoImportStatusValues } = require("../utilities");
+const { RefType, AutoImportStatus } = require("../utilities");
 
 const getAllAutoImportDataQuery = async (request, fastify, whereCondition = undefined) => {
     try {
@@ -211,13 +211,13 @@ const allAutoImportDataLogsQuery = async (body, request, fastify) => {
             index += 2;
         }
 
-        if (refType) {
+        if (Object.values(RefType).includes(refType)) {
             whereConditions.push(`"wrRefType" = $${index}`);
             bind.push(refType);
             index += 1;
         }
 
-        if (autoImportStatusValues.includes(autoImportStatus)) {
+        if (Object.values(AutoImportStatus).includes(autoImportStatus)) {
             if (autoImportStatus === 1) {
                 whereConditions.push(`"wrImportStartTime" IS NULL`);
             } else if (autoImportStatus === 2) {
