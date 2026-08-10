@@ -683,7 +683,7 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
                 id,
                 domain: whitelabel?.domain || null,
                 encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
-                viewCount: viewersMap.get(`${ViewerType.ADVERTISE}_${item.bannerId}_${id}`)
+                viewCount: viewersMap.get(`${ViewerType.BANNER}_${item.bannerId}_${id}`)
               }
             })
           }));

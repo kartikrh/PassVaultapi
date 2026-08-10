@@ -58,6 +58,7 @@ const createActivityLogService = async (request, fastify) => {
   );
 
   request.body.refId = Number(request.body.refId);
+  let viewCount = 0;
   if (Number(request?.body?.activityType || 0) > 0 && Object.values(ViewerType).includes(request?.body?.activityType)) {
     const activityType = Number(request?.body.activityType);
     const getExistsViewerCountIndex = global.tblViewers.findIndex(item => item.type === activityType && item.typeId === request.body.refId && item.whitelabelId === whitelabelId);
@@ -70,6 +71,7 @@ const createActivityLogService = async (request, fastify) => {
         }
       }, fastify);
       global.tblViewers[getExistsViewerCountIndex].viewerCount = (global.tblViewers[getExistsViewerCountIndex].viewerCount || 0) + 1;
+      viewCount = global.tblViewers[getExistsViewerCountIndex].viewerCount;
     } else {
       const data = await insertViewersQuery({
         ...request,
@@ -80,6 +82,89 @@ const createActivityLogService = async (request, fastify) => {
         }
       }, fastify);
       global.tblViewers.push(data);
+      viewCount = 1;
+    }
+
+    if (activityType === ViewerType.ADVERTISE) {
+      const advertiseIndex = global.tblAdvertise.findIndex(item => item.advertiseId === request.body.refId);
+      if (advertiseIndex !== -1) {
+        global.tblAdvertise[advertiseIndex] = {
+          ...global.tblAdvertise[advertiseIndex],
+          whitelabelId: global.tblAdvertise[advertiseIndex].whitelabelId?.map(item => {
+            if (item.id === whitelabelId) {
+              return {
+                ...item,
+                viewCount
+              }
+            }
+            return item;
+          })
+        }
+      }
+    } else if (activityType === ViewerType.BANNER) {
+      const bannerIndex = global.tblBanner.findIndex(item => item.bannerId === request.body.refId);
+      if (bannerIndex !== -1) {
+        global.tblBanner[bannerIndex] = {
+          ...global.tblBanner[bannerIndex],
+          whitelabelId: global.tblBanner[bannerIndex].whitelabelId?.map(item => {
+            if (item.id === whitelabelId) {
+              return {
+                ...item,
+                viewCount
+              }
+            }
+            return item;
+          })
+        }
+      }
+    } else if (activityType === ViewerType.NEWS) {
+      const newsIndex = global.tblNews.findIndex(item => item.newsId === request.body.refId);
+      if (newsIndex !== -1) {
+        global.tblNews[newsIndex] = {
+          ...global.tblNews[newsIndex],
+          whitelabelId: global.tblNews[newsIndex].whitelabelId?.map(item => {
+            if (item.id === whitelabelId) {
+              return {
+                ...item,
+                viewCount
+              }
+            }
+            return item;
+          })
+        }
+      }
+    } else if (activityType === ViewerType.PHOTO_LIBRARY) {
+      const photoLibraryIndex = global.tblPhotoLibrary.findIndex(item => item.photoLibraryId === request.body.refId);
+      if (photoLibraryIndex !== -1) {
+        global.tblPhotoLibrary[photoLibraryIndex] = {
+          ...global.tblPhotoLibrary[photoLibraryIndex],
+          whitelabelId: global.tblPhotoLibrary[photoLibraryIndex].whitelabelId?.map(item => {
+            if (item.id === whitelabelId) {
+              return {
+                ...item,
+                viewCount
+              }
+            }
+            return item;
+          })
+        }
+      }
+    } else if (activityType === ViewerType.VIDEO_LIBRARY) {
+      const videoLibraryIndex = global.tblVideoLibrary.findIndex(item => item.id === request.body.refId);
+      if (videoLibraryIndex !== -1) {
+        global.tblVideoLibrary[videoLibraryIndex] = {
+          ...global.tblVideoLibrary[videoLibraryIndex],
+          whitelabelId: global.tblVideoLibrary[videoLibraryIndex].whitelabelId?.map(item => {
+            if (item.id === whitelabelId) {
+              return {
+                ...item,
+                viewCount
+              }
+            }
+            return item;
+          })
+        }
+      }
     }
   } else {
     // const bannerIndex = global.tblBanner.findIndex((item)=> item.bannerId === parseInt(request.body.refId));
