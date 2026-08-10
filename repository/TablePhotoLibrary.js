@@ -48,12 +48,8 @@ const getAllPhotoLibraryQuery = async (fastify) => {
         tpl."wrDisplayOrder" AS "displayOrder",
         tpl."wrCommentaryId" AS "commentaryId",
         tpl."wrWhitelabelId" AS "whitelabelId",
-        ed."wrValue" AS "encryptWhitelabelId",
-        twl."wrDomain" AS "domain",
         tpl."wrViewCount" AS "viewCount"
      FROM "tblPhotoLibrary" tpl
-     LEFT JOIN "tblWhitelabel" twl ON tpl."wrWhitelabelId" = twl."wrId"
-     LEFT JOIN "tblEncryptedData" ed ON tpl."wrWhitelabelId" = ed."wrKey"
      WHERE tpl."wrIsDeleted" = false
      ORDER BY tpl."wrPhotoLibraryId" ASC`,
     {
@@ -119,14 +115,8 @@ const insertPhotoLibraryQuery = async (data, fastify, request) => {
         tpl."wrDisplayOrder" AS "displayOrder",
         tpl."wrCommentaryId" AS "commentaryId",
         tpl."wrWhitelabelId" AS "whitelabelId",
-        ed."wrValue" AS "encryptWhitelabelId",
-        twl."wrDomain" AS "domain",
         tpl."wrViewCount" AS "viewCount"
-      FROM insert_data tpl
-      LEFT JOIN "tblWhitelabel" twl
-        ON tpl."wrWhitelabelId" = twl."wrId"
-      LEFT JOIN "tblEncryptedData" ed
-        ON tpl."wrWhitelabelId" = ed."wrKey";`,
+      FROM insert_data tpl;`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
@@ -185,12 +175,8 @@ const updatePhotoLibraryQuery = async (data, fastify, request) => {
         upd."wrDisplayOrder" AS "displayOrder",
         upd."wrCommentaryId" AS "commentaryId",
         upd."wrWhitelabelId" AS "whitelabelId",
-        ed."wrValue" AS "encryptWhitelabelId",
-        twl."wrDomain" AS "domain",
         upd."wrViewCount" AS "viewCount"
-      FROM update_data upd
-      LEFT JOIN "tblWhitelabel" twl ON upd."wrWhitelabelId" = twl."wrId"
-      LEFT JOIN "tblEncryptedData" ed ON upd."wrWhitelabelId" = ed."wrKey";`,
+      FROM update_data upd;`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [

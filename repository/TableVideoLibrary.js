@@ -20,14 +20,10 @@ const getAllVideoLibraryQuery = async (fastify) => {
       tvb."wrIsActive" AS "isActive",
       tvb."wrDisplayOrder" as "displayOrder",
       tvb."wrWhitelabelId" as "whitelabelId",
-      ed."wrValue" as "encryptWhitelabelId",
-      twl."wrDomain" as "domain",
       tvb."wrViewCount" as "viewCount",
       COALESCE(lc."likeCount", 0) AS "likeCount",
       COALESCE(lc."dislikeCount", 0) AS "dislikeCount"
     FROM "tblVideoLibrary" as tvb
-    LEFT JOIN "tblWhitelabel" twl ON tvb."wrWhitelabelId" = twl."wrId"
-    LEFT JOIN "tblEncryptedData" ed ON tvb."wrWhitelabelId" = ed."wrKey"
     LEFT JOIN (
       SELECT
         t."wrRefId",
@@ -77,14 +73,10 @@ const insertVideoLibraryQuery = async (data, fastify, request) => {
                 tvb."wrIsActive" AS "isActive",
                 tvb."wrDisplayOrder" as "displayOrder",
                 tvb."wrWhitelabelId" as "whitelabelId",
-                ed."wrValue" as "encryptWhitelabelId",
-                twl."wrDomain" as "domain",
                 tvb."wrViewCount" as "viewCount",
                 COALESCE(lc."likeCount", 0) AS "likeCount",
                 COALESCE(lc."dislikeCount", 0) AS "dislikeCount"
               FROM insert_data as tvb
-              LEFT JOIN "tblWhitelabel" twl ON tvb."wrWhitelabelId" = twl."wrId"
-              LEFT JOIN "tblEncryptedData" ed ON tvb."wrWhitelabelId" = ed."wrKey"
               LEFT JOIN (
                 SELECT
                   t."wrRefId",
@@ -167,19 +159,11 @@ const updateVideoLibraryQuery = async (data, fastify, request) => {
         u."wrIsActive" AS "isActive",
         u."wrDisplayOrder" AS "displayOrder",
         u."wrWhitelabelId" AS "whitelabelId",
-        ed."wrValue" AS "encryptWhitelabelId",
-        twl."wrDomain" AS "domain",
         u."wrViewCount" AS "viewCount",
         lc."likeCount",
         lc."dislikeCount"
 
       FROM updated u
-
-      LEFT JOIN "tblWhitelabel" twl 
-        ON u."wrWhitelabelId" = twl."wrId"
-
-      LEFT JOIN "tblEncryptedData" ed 
-        ON u."wrWhitelabelId" = ed."wrKey"
 
       LEFT JOIN (
         SELECT

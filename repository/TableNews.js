@@ -20,14 +20,8 @@ const getAllNewsQuery = async (fastify) => {
             tn."wrImagePath" as "imagePath",
             tn."wrDisplayOrder" as "displayOrder",
             tn."wrWhitelabelId" as "whitelabelId",
-            ed."wrValue" as "encryptWhitelabelId",
-            twl."wrDomain" as "domain",
             tn."wrCommentaryId" as "commentaryId"
         FROM "tblNews" as tn
-        LEFT JOIN "tblWhitelabel" twl 
-            ON tn."wrWhitelabelId" = twl."wrId"
-        LEFT JOIN "tblEncryptedData" ed 
-            ON tn."wrWhitelabelId" = ed."wrKey"
         WHERE tn."wrIsDeleted" = false
         `,
     {
@@ -87,14 +81,8 @@ const insertNewsQuery = async (data, request, fastify) => {
         tn."wrImagePath" as "imagePath",
         tn."wrWhitelabelId" as "whitelabelId",
         tn."wrDisplayOrder" as "displayOrder",
-        ed."wrValue" as "encryptWhitelabelId",
-        twl."wrDomain" as "domain",
         tn."wrCommentaryId" as "commentaryId"
       FROM insert_data tn
-      LEFT JOIN "tblWhitelabel" twl 
-        ON tn."wrWhitelabelId" = twl."wrId"
-      LEFT JOIN "tblEncryptedData" ed 
-        ON tn."wrWhitelabelId" = ed."wrKey"
       `,
       {
         type: fastify.db.QueryTypes.INSERT,
