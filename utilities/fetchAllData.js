@@ -231,7 +231,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
           id,
           domain: whitelabel?.domain || null,
           encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
-          viewCount: viewersMap.get(`${ViewerType.ADVERTISE}_${item.advertiseId}_${id}`) || 0
+          viewerCount: viewersMap.get(`${ViewerType.ADVERTISE}_${item.advertiseId}_${id}`) || 0
         }
       })
     }));
@@ -245,7 +245,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
           id,
           domain: whitelabel?.domain || null,
           encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
-          viewCount: viewersMap.get(`${ViewerType.NEWS}_${item.newsId}_${id}`) || 0
+          viewerCount: viewersMap.get(`${ViewerType.NEWS}_${item.newsId}_${id}`) || 0
         }
       })
     }));
@@ -259,7 +259,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
           id,
           domain: whitelabel?.domain || null,
           encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
-          viewCount: viewersMap.get(`${ViewerType.BANNER}_${item.bannerId}_${id}`) || 0
+          viewerCount: viewersMap.get(`${ViewerType.BANNER}_${item.bannerId}_${id}`) || 0
         }
       })
     }));
@@ -274,7 +274,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
           id,
           domain: whitelabel?.domain || null,
           encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
-          viewCount: viewersMap.get(`${ViewerType.PHOTO_LIBRARY}_${item.photoLibraryId}_${id}`) || 0
+          viewerCount: viewersMap.get(`${ViewerType.PHOTO_LIBRARY}_${item.photoLibraryId}_${id}`) || 0
         }
       })
     }));
@@ -288,7 +288,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
           id,
           domain: whitelabel?.domain || null,
           encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
-          viewCount: viewersMap.get(`${ViewerType.VIDEO_LIBRARY}_${item.id}_${id}`) || 0
+          viewerCount: viewersMap.get(`${ViewerType.VIDEO_LIBRARY}_${item.id}_${id}`) || 0
         }
       })
     }));
@@ -666,7 +666,7 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
                 id,
                 domain: whitelabel?.domain || null,
                 encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
-                viewCount: viewersMap.get(`${ViewerType.NEWS}_${item.newsId}_${id}`) || 0
+                viewerCount: viewersMap.get(`${ViewerType.NEWS}_${item.newsId}_${id}`) || 0
               }
             })
           }));
@@ -683,7 +683,7 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
                 id,
                 domain: whitelabel?.domain || null,
                 encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
-                viewCount: viewersMap.get(`${ViewerType.BANNER}_${item.bannerId}_${id}`) || 0
+                viewerCount: viewersMap.get(`${ViewerType.BANNER}_${item.bannerId}_${id}`) || 0
               }
             })
           }));
@@ -700,7 +700,7 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
                 id,
                 domain: whitelabel?.domain || null,
                 encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
-                viewCount: viewersMap.get(`${ViewerType.ADVERTISE}_${item.advertiseId}_${id}`) || 0
+                viewerCount: viewersMap.get(`${ViewerType.ADVERTISE}_${item.advertiseId}_${id}`) || 0
               }
             })
           }));
@@ -732,7 +732,7 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
                 id,
                 domain: whitelabel?.domain || null,
                 encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
-                viewCount: viewersMap.get(`${ViewerType.PHOTO_LIBRARY}_${item.photoLibraryId}_${id}`) || 0
+                viewerCount: viewersMap.get(`${ViewerType.PHOTO_LIBRARY}_${item.photoLibraryId}_${id}`) || 0
               }
             })
           }));
@@ -749,7 +749,7 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
                 id,
                 domain: whitelabel?.domain || null,
                 encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
-                viewCount: viewersMap.get(`${ViewerType.VIDEO_LIBRARY}_${item.id}_${id}`) || 0
+                viewerCount: viewersMap.get(`${ViewerType.VIDEO_LIBRARY}_${item.id}_${id}`) || 0
               }
             })
           }));

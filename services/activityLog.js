@@ -58,7 +58,7 @@ const createActivityLogService = async (request, fastify) => {
   );
 
   request.body.refId = Number(request.body.refId);
-  let viewCount = 0;
+  let viewerCount = 0;
   if (Number(request?.body?.activityType || 0) > 0 && Object.values(ViewerType).includes(request?.body?.activityType)) {
     const activityType = Number(request?.body.activityType);
     const getExistsViewerCountIndex = global.tblViewers.findIndex(item => item.type === activityType && item.typeId === request.body.refId && item.whitelabelId === whitelabelId);
@@ -71,7 +71,7 @@ const createActivityLogService = async (request, fastify) => {
         }
       }, fastify);
       global.tblViewers[getExistsViewerCountIndex].viewerCount = (global.tblViewers[getExistsViewerCountIndex].viewerCount || 0) + 1;
-      viewCount = global.tblViewers[getExistsViewerCountIndex].viewerCount;
+      viewerCount = global.tblViewers[getExistsViewerCountIndex].viewerCount;
     } else {
       const data = await insertViewersQuery({
         ...request,
@@ -82,7 +82,7 @@ const createActivityLogService = async (request, fastify) => {
         }
       }, fastify);
       global.tblViewers.push(data);
-      viewCount = 1;
+      viewerCount = 1;
     }
 
     if (activityType === ViewerType.ADVERTISE) {
@@ -94,7 +94,7 @@ const createActivityLogService = async (request, fastify) => {
             if (item.id === whitelabelId) {
               return {
                 ...item,
-                viewCount
+                viewerCount
               }
             }
             return item;
@@ -110,7 +110,7 @@ const createActivityLogService = async (request, fastify) => {
             if (item.id === whitelabelId) {
               return {
                 ...item,
-                viewCount
+                viewerCount
               }
             }
             return item;
@@ -126,7 +126,7 @@ const createActivityLogService = async (request, fastify) => {
             if (item.id === whitelabelId) {
               return {
                 ...item,
-                viewCount
+                viewerCount
               }
             }
             return item;
@@ -142,7 +142,7 @@ const createActivityLogService = async (request, fastify) => {
             if (item.id === whitelabelId) {
               return {
                 ...item,
-                viewCount
+                viewerCount
               }
             }
             return item;
@@ -158,7 +158,7 @@ const createActivityLogService = async (request, fastify) => {
             if (item.id === whitelabelId) {
               return {
                 ...item,
-                viewCount
+                viewerCount
               }
             }
             return item;
