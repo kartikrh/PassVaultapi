@@ -74,7 +74,7 @@ const createActivityLogService = async (request, fastify) => {
       const data = await insertViewersQuery({
         ...request,
         body: {
-          type: typeEnum,
+          type: Number(activityType),
           typeId: parseInt(request.body.refId),
           whitelabelId
         }
