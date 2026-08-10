@@ -59,7 +59,7 @@ const createActivityLogService = async (request, fastify) => {
 
   request.body.refId = Number(request.body.refId);
   if (Number(request?.body?.activityType || 0) > 0 && Object.values(ViewerType).includes(request?.body?.activityType)) {
-    const activityType = request?.body.activityType;
+    const activityType = Number(request?.body.activityType);
     const getExistsViewerCountIndex = global.tblViewers.findIndex(item => item.type === activityType && item.typeId === request.body.refId && item.whitelabelId === whitelabelId);
     if (getExistsViewerCountIndex !== -1) {
       const data = global.tblViewers[getExistsViewerCountIndex];
@@ -74,7 +74,7 @@ const createActivityLogService = async (request, fastify) => {
       const data = await insertViewersQuery({
         ...request,
         body: {
-          type: Number(activityType),
+          type: activityType,
           typeId: request.body.refId,
           whitelabelId
         }
