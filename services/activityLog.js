@@ -75,7 +75,7 @@ const createActivityLogService = async (request, fastify) => {
         ...request,
         body: {
           type: Number(activityType),
-          typeId: parseInt(request.body.refId),
+          typeId: request.body.refId,
           whitelabelId
         }
       }, fastify);
