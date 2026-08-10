@@ -151,8 +151,6 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllCommentaryPartnership = await getAllCommentaryPartnershipQuery(
       fastify
     );
-    const getAllNews = await getAllNewsQuery(fastify);
-    const getAllBanners = await getAllBannerQuery(fastify);
     const getAllActivityLog = await getAllActivityLogQuery(fastify);
     const getAllsubScribesDomain = await getAllSubScribesDomainQuery(fastify);
     const getAllsubScribesSubDomain = await getAllSubScribesSubDomainQuery(
@@ -199,9 +197,6 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     // const getEventMarketRunnerV1 = await getMarketRunnerQueryV1(fastify);
     const getAllPlayerBattingHistory = await getAllBattingHistory(fastify);
     const getAllPlayerBowlingHistory = await getAllBowlingHistory(fastify);
-    const getAllPhotoLibrary = await getAllPhotoLibraryQuery(fastify);
-    const getAllLibraryImages = await getAllLibraryImagesQuery(fastify);
-    const getAllVideoLibrary = await getAllVideoLibraryQuery(fastify);
     const getAllShotTypes = await getAllShotTypesQuery(fastify);
     const getAllTips = await getAllTipsQuery(fastify);
     const getAllMatchTypeBowling = await getAllMatchTypeBowlingPredictor(fastify)
@@ -209,7 +204,6 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllCardType = await getAllCardTypeQuery(fastify);
     const getAllPackages = await getAllPackagesQuery(fastify);
     const getAllWhitelabels = await getAllWhitelabelsQuery(fastify);
-    const getAllAdvertiseQueryData = await getAllAdvertiseQuery(fastify);
     const whitelabelMap = new Map(
       getAllWhitelabels.map(wl => [
         wl.id,
@@ -219,7 +213,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
         }
       ])
     );
-
+    
+    const getAllAdvertiseQueryData = await getAllAdvertiseQuery(fastify);
     const getAllAdvertise = getAllAdvertiseQueryData?.map(item => ({
       ...item,
       whitelabelId: item.whitelabelId.map(id => ({
@@ -228,6 +223,48 @@ const fetchAllDataFromDb = async (fastify, reply) => {
         encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
       }))
     }));
+
+    const getAllNewsQueryData = await getAllNewsQuery(fastify);
+    const getAllNews = getAllNewsQueryData?.map(item => ({
+      ...item,
+      whitelabelId: item.whitelabelId.map(id => ({
+        id,
+        domain: whitelabelMap.get(id)?.domain || null,
+        encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
+      }))
+    }));
+
+    const getAllBannersQueryData = await getAllBannerQuery(fastify);
+    const getAllBanners = getAllBannersQueryData?.map(item => ({
+      ...item,
+      whitelabelId: item.whitelabelId.map(id => ({
+        id,
+        domain: whitelabelMap.get(id)?.domain || null,
+        encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
+      }))
+    }));
+
+    const getAllLibraryImages = await getAllLibraryImagesQuery(fastify);
+    const getAllPhotoLibraryQueryData = await getAllPhotoLibraryQuery(fastify);
+    const getAllPhotoLibrary = getAllPhotoLibraryQueryData?.map(item => ({
+      ...item,
+      whitelabelId: item.whitelabelId.map(id => ({
+        id,
+        domain: whitelabelMap.get(id)?.domain || null,
+        encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
+      }))
+    }));
+
+    const getAllVideoLibraryQueryData = await getAllVideoLibraryQuery(fastify);
+    const getAllVideoLibrary = getAllVideoLibraryQueryData?.map(item => ({
+      ...item,
+      whitelabelId: item.whitelabelId.map(id => ({
+        id,
+        domain: whitelabelMap.get(id)?.domain || null,
+        encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
+      }))
+    }));
+
     const getAllNotificationConfigs = await getAllNotificationConfigsQuery(fastify);
     const allCommentaryIds = getAllCommentary.map((item) => item.commentaryId);
     let getAllEventMarketsV2 = [];
@@ -516,6 +553,16 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
       throw new Error("Invalid password");
     }
     let {module, commentaryId} = request.body;
+    const getAllWhitelabels = global.tblWhitelabels;
+    const whitelabelMap = new Map(
+      getAllWhitelabels.map(wl => [
+        wl.id,
+        {
+          domain: wl.domain,
+          encryptWhitelabelId: wl.whitelabelId
+        }
+      ])
+    );
     for (const mod of module) {
       switch (mod) {
         case ModuleTypes.Commentary: {
@@ -567,28 +614,33 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           break;
         }
         case ModuleTypes.News: {
-          const getAllNews = await getAllNewsQuery(fastify);
+          const getAllNewsQueryData = await getAllNewsQuery(fastify);
+          const getAllNews = getAllNewsQueryData?.map(item => ({
+            ...item,
+            whitelabelId: item.whitelabelId.map(id => ({
+              id,
+              domain: whitelabelMap.get(id)?.domain || null,
+              encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
+            }))
+          }));
           global.tblNews = getAllNews;
           break;
         }
         case ModuleTypes.Banners: {
-          const getAllBanners = await getAllBannerQuery(fastify);
+          const getAllBannersQueryData = await getAllBannerQuery(fastify);
+          const getAllBanners = getAllBannersQueryData?.map(item => ({
+            ...item,
+            whitelabelId: item.whitelabelId.map(id => ({
+              id,
+              domain: whitelabelMap.get(id)?.domain || null,
+              encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
+            }))
+          }));
           global.tblBanner = getAllBanners;
           break;
         }
          case ModuleTypes.Advertise: {
-          const getAllWhitelabels = global.tblWhitelabels;
           const getAllAdvertiseQueryData = await getAllAdvertiseQuery(fastify);
-          const whitelabelMap = new Map(
-            getAllWhitelabels.map(wl => [
-              wl.id,
-              {
-                domain: wl.domain,
-                encryptWhitelabelId: wl.whitelabelId
-              }
-            ])
-          );
-
           const getAllAdvertise = getAllAdvertiseQueryData?.map(item => ({
             ...item,
             whitelabelId: item.whitelabelId.map(id => ({
@@ -613,15 +665,32 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           break;
         }
         case ModuleTypes.PhotoLibrary: {
-          const getAllPhotoLibrary = await getAllPhotoLibraryQuery(fastify);
           const getAllLibraryImages = await getAllLibraryImagesQuery(fastify);
+          global.tblLibraryImages = getAllLibraryImages;
+
+          const getAllPhotoLibraryQueryData = await getAllPhotoLibraryQuery(fastify);
+          const getAllPhotoLibrary = getAllPhotoLibraryQueryData?.map(item => ({
+            ...item,
+            whitelabelId: item.whitelabelId.map(id => ({
+              id,
+              domain: whitelabelMap.get(id)?.domain || null,
+              encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
+            }))
+          }));
 
           global.tblPhotoLibrary = getAllPhotoLibrary;
-          global.tblLibraryImages = getAllLibraryImages;
           break;
         }
         case ModuleTypes.VideoLibrary: {
-          const getAllVideoLibrary = await getAllVideoLibraryQuery(fastify);
+          const getAllVideoLibraryQueryData = await getAllVideoLibraryQuery(fastify);
+          const getAllVideoLibrary = getAllVideoLibraryQueryData?.map(item => ({
+            ...item,
+            whitelabelId: item.whitelabelId.map(id => ({
+              id,
+              domain: whitelabelMap.get(id)?.domain || null,
+              encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
+            }))
+          }));
           global.tblVideoLibrary = getAllVideoLibrary;
           break;
         }
