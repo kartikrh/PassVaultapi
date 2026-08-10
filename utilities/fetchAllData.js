@@ -1,4 +1,4 @@
-const { ModuleTypes, EventName, GlobalModuleType, StoreTypes } = require("../utilities/index");
+const { ModuleTypes, EventName, GlobalModuleType, StoreTypes, ViewerType } = require("../utilities/index");
 const { errorLogger } = require("./logger");
 const { getAllActiveInactiveTabsQuery } = require("../repository/TableTabs");
 const { getAllBlocksQuery } = require("../repository/TableBlock");
@@ -213,56 +213,84 @@ const fetchAllDataFromDb = async (fastify, reply) => {
         }
       ])
     );
+
+    const getAllViewers = await getAllViewersQuery(fastify);
+    const viewersMap = new Map(
+      getAllViewers.map(item => [
+        `${item.type}_${item.typeId}_${item.whitelabelId}`,
+        item.viewerCount
+      ])
+    );
     
     const getAllAdvertiseQueryData = await getAllAdvertiseQuery(fastify);
     const getAllAdvertise = getAllAdvertiseQueryData?.map(item => ({
       ...item,
-      whitelabelId: item.whitelabelId.map(id => ({
-        id,
-        domain: whitelabelMap.get(id)?.domain || null,
-        encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
-      }))
+      whitelabelId: item.whitelabelId.map(id => {
+        const whitelabel = whitelabelMap.get(id);
+        return {
+          id,
+          domain: whitelabel?.domain || null,
+          encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
+          viewCount: viewersMap.get(`${ViewerType.ADVERTISE}_${item.advertiseId}_${id}`)
+        }
+      })
     }));
 
     const getAllNewsQueryData = await getAllNewsQuery(fastify);
     const getAllNews = getAllNewsQueryData?.map(item => ({
       ...item,
-      whitelabelId: item.whitelabelId.map(id => ({
-        id,
-        domain: whitelabelMap.get(id)?.domain || null,
-        encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
-      }))
+      whitelabelId: item.whitelabelId.map(id => {
+        const whitelabel = whitelabelMap.get(id);
+        return {
+          id,
+          domain: whitelabel?.domain || null,
+          encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
+          viewCount: viewersMap.get(`${ViewerType.NEWS}_${item.newsId}_${id}`)
+        }
+      })
     }));
 
     const getAllBannersQueryData = await getAllBannerQuery(fastify);
     const getAllBanners = getAllBannersQueryData?.map(item => ({
       ...item,
-      whitelabelId: item.whitelabelId.map(id => ({
-        id,
-        domain: whitelabelMap.get(id)?.domain || null,
-        encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
-      }))
+      whitelabelId: item.whitelabelId.map(id => {
+        const whitelabel = whitelabelMap.get(id);
+        return {
+          id,
+          domain: whitelabel?.domain || null,
+          encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
+          viewCount: viewersMap.get(`${ViewerType.ADVERTISE}_${item.bannerId}_${id}`)
+        }
+      })
     }));
 
     const getAllLibraryImages = await getAllLibraryImagesQuery(fastify);
     const getAllPhotoLibraryQueryData = await getAllPhotoLibraryQuery(fastify);
     const getAllPhotoLibrary = getAllPhotoLibraryQueryData?.map(item => ({
       ...item,
-      whitelabelId: item.whitelabelId.map(id => ({
-        id,
-        domain: whitelabelMap.get(id)?.domain || null,
-        encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
-      }))
+      whitelabelId: item.whitelabelId.map(id => {
+        const whitelabel = whitelabelMap.get(id);
+        return {
+          id,
+          domain: whitelabel?.domain || null,
+          encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
+          viewCount: viewersMap.get(`${ViewerType.PHOTO_LIBRARY}_${item.photoLibraryId}_${id}`)
+        }
+      })
     }));
 
     const getAllVideoLibraryQueryData = await getAllVideoLibraryQuery(fastify);
     const getAllVideoLibrary = getAllVideoLibraryQueryData?.map(item => ({
       ...item,
-      whitelabelId: item.whitelabelId.map(id => ({
-        id,
-        domain: whitelabelMap.get(id)?.domain || null,
-        encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
-      }))
+      whitelabelId: item.whitelabelId.map(id => {
+        const whitelabel = whitelabelMap.get(id);
+        return {
+          id,
+          domain: whitelabel?.domain || null,
+          encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
+          viewCount: viewersMap.get(`${ViewerType.VIDEO_LIBRARY}_${item.id}_${id}`)
+        }
+      })
     }));
 
     const getAllNotificationConfigs = await getAllNotificationConfigsQuery(fastify);
@@ -302,7 +330,6 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllEntitySockets = await getAllEntitySocketsQuery(fastify);
     const getAllCompetitionStatisticsType = await getAllCompetitionStatisticsTypeQuery(fastify);
     const getAllCompetitionStatistics = await getAllCompetitionStatisticsQuery(fastify);
-    const getAllViewers = await getAllViewersQuery(fastify);
 
     global.tblTabs = getAllTabs;
     global.tblRoles = getAllRoles;
@@ -553,16 +580,32 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
       throw new Error("Invalid password");
     }
     let {module, commentaryId} = request.body;
-    const getAllWhitelabels = global.tblWhitelabels;
-    const whitelabelMap = new Map(
-      getAllWhitelabels.map(wl => [
-        wl.id,
-        {
-          domain: wl.domain,
-          encryptWhitelabelId: wl.whitelabelId
-        }
-      ])
-    );
+
+    if ([ModuleTypes.Viewers].includes(module)) {
+      module = [...module, ModuleTypes.News, ModuleTypes.Banners, ModuleTypes.Advertise, ModuleTypes.PhotoLibrary, ModuleTypes.VideoLibrary];
+    }
+
+    let whitelabelMap = new Map(), viewersMap = new Map();
+    if ([ModuleTypes.News, ModuleTypes.Banners, ModuleTypes.Advertise, ModuleTypes.PhotoLibrary, ModuleTypes.VideoLibrary].includes(module)) {
+      const getAllWhitelabels = global.tblWhitelabels;
+      whitelabelMap = new Map(
+        getAllWhitelabels.map(wl => [
+          wl.id,
+          {
+            domain: wl.domain,
+            encryptWhitelabelId: wl.whitelabelId
+          }
+        ])
+      );
+
+      viewersMap = new Map(
+        global.tblViewers.map(item => [
+          `${item.type}_${item.typeId}_${item.whitelabelId}`,
+          item.viewerCount
+        ])
+      );
+    }
+
     for (const mod of module) {
       switch (mod) {
         case ModuleTypes.Commentary: {
@@ -617,11 +660,15 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           const getAllNewsQueryData = await getAllNewsQuery(fastify);
           const getAllNews = getAllNewsQueryData?.map(item => ({
             ...item,
-            whitelabelId: item.whitelabelId.map(id => ({
-              id,
-              domain: whitelabelMap.get(id)?.domain || null,
-              encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
-            }))
+            whitelabelId: item.whitelabelId.map(id => {
+              const whitelabel = whitelabelMap.get(id);
+              return {
+                id,
+                domain: whitelabel?.domain || null,
+                encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
+                viewCount: viewersMap.get(`${ViewerType.NEWS}_${item.newsId}_${id}`)
+              }
+            })
           }));
           global.tblNews = getAllNews;
           break;
@@ -630,11 +677,15 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           const getAllBannersQueryData = await getAllBannerQuery(fastify);
           const getAllBanners = getAllBannersQueryData?.map(item => ({
             ...item,
-            whitelabelId: item.whitelabelId.map(id => ({
-              id,
-              domain: whitelabelMap.get(id)?.domain || null,
-              encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
-            }))
+            whitelabelId: item.whitelabelId.map(id => {
+              const whitelabel = whitelabelMap.get(id);
+              return {
+                id,
+                domain: whitelabel?.domain || null,
+                encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
+                viewCount: viewersMap.get(`${ViewerType.ADVERTISE}_${item.bannerId}_${id}`)
+              }
+            })
           }));
           global.tblBanner = getAllBanners;
           break;
@@ -643,11 +694,15 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           const getAllAdvertiseQueryData = await getAllAdvertiseQuery(fastify);
           const getAllAdvertise = getAllAdvertiseQueryData?.map(item => ({
             ...item,
-            whitelabelId: item.whitelabelId.map(id => ({
-              id,
-              domain: whitelabelMap.get(id)?.domain || null,
-              encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
-            }))
+            whitelabelId: item.whitelabelId.map(id => {
+              const whitelabel = whitelabelMap.get(id);
+              return {
+                id,
+                domain: whitelabel?.domain || null,
+                encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
+                viewCount: viewersMap.get(`${ViewerType.ADVERTISE}_${item.advertiseId}_${id}`)
+              }
+            })
           }));
           global.tblAdvertise = getAllAdvertise;
           break;
@@ -671,13 +726,16 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           const getAllPhotoLibraryQueryData = await getAllPhotoLibraryQuery(fastify);
           const getAllPhotoLibrary = getAllPhotoLibraryQueryData?.map(item => ({
             ...item,
-            whitelabelId: item.whitelabelId.map(id => ({
-              id,
-              domain: whitelabelMap.get(id)?.domain || null,
-              encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
-            }))
+            whitelabelId: item.whitelabelId.map(id => {
+              const whitelabel = whitelabelMap.get(id);
+              return {
+                id,
+                domain: whitelabel?.domain || null,
+                encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
+                viewCount: viewersMap.get(`${ViewerType.PHOTO_LIBRARY}_${item.photoLibraryId}_${id}`)
+              }
+            })
           }));
-
           global.tblPhotoLibrary = getAllPhotoLibrary;
           break;
         }
@@ -685,11 +743,15 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           const getAllVideoLibraryQueryData = await getAllVideoLibraryQuery(fastify);
           const getAllVideoLibrary = getAllVideoLibraryQueryData?.map(item => ({
             ...item,
-            whitelabelId: item.whitelabelId.map(id => ({
-              id,
-              domain: whitelabelMap.get(id)?.domain || null,
-              encryptWhitelabelId: whitelabelMap.get(id)?.encryptWhitelabelId || null
-            }))
+            whitelabelId: item.whitelabelId.map(id => {
+              const whitelabel = whitelabelMap.get(id);
+              return {
+                id,
+                domain: whitelabel?.domain || null,
+                encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
+                viewCount: viewersMap.get(`${ViewerType.VIDEO_LIBRARY}_${item.id}_${id}`)
+              }
+            })
           }));
           global.tblVideoLibrary = getAllVideoLibrary;
           break;
