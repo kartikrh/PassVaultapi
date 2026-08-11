@@ -171,11 +171,15 @@ const createActivityLogService = async (request, fastify) => {
     await articleViewersCountQuery({ ...request.body },request,fastify);
     if (articleIndex !== -1) {
       global.tblArticles[articleIndex].viewerCount = (global.tblArticles[articleIndex].viewerCount || 0) + 1;
+      viewerCount = global.tblArticles[articleIndex].viewerCount;
     }
   }
   global.tblActivityLogs.push(data[0]);
 
-  return data;
+  return {
+    ...data[0],
+    viewerCount
+  };
 };
 const updateActivityLogService = async (request, fastify) => {
   // validate the activityLogId
