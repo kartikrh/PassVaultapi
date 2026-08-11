@@ -9294,8 +9294,8 @@ const getAllCommentaryByCompetitionIdForClientQuery = async (request, fastify) =
           WHEN tc."wrChoseTo" = 1 THEN 'BAT'
           ELSE 'BOWL'
         END AS "cto",
-        tt1."wrTeamName" AS "t1n",
-        tt2."wrTeamName" AS "t2n",
+        tt1."wrTeamName" AS "te1n",
+        tt2."wrTeamName" AS "te2n",
         tct1."wrShortName" AS "s1n",
         tct2."wrShortName" AS "s2n",
         COALESCE(tt1."wrImage", '') AS "te1i",
