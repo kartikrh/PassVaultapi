@@ -20,7 +20,6 @@ const getAllVideoLibraryQuery = async (fastify) => {
       tvb."wrIsActive" AS "isActive",
       tvb."wrDisplayOrder" as "displayOrder",
       tvb."wrWhitelabelId" as "whitelabelId",
-      tvb."wrViewCount" as "viewCount",
       COALESCE(lc."likeCount", 0) AS "likeCount",
       COALESCE(lc."dislikeCount", 0) AS "dislikeCount"
     FROM "tblVideoLibrary" as tvb
@@ -73,7 +72,6 @@ const insertVideoLibraryQuery = async (data, fastify, request) => {
                 tvb."wrIsActive" AS "isActive",
                 tvb."wrDisplayOrder" as "displayOrder",
                 tvb."wrWhitelabelId" as "whitelabelId",
-                tvb."wrViewCount" as "viewCount",
                 COALESCE(lc."likeCount", 0) AS "likeCount",
                 COALESCE(lc."dislikeCount", 0) AS "dislikeCount"
               FROM insert_data as tvb
@@ -159,7 +157,6 @@ const updateVideoLibraryQuery = async (data, fastify, request) => {
         u."wrIsActive" AS "isActive",
         u."wrDisplayOrder" AS "displayOrder",
         u."wrWhitelabelId" AS "whitelabelId",
-        u."wrViewCount" AS "viewCount",
         lc."likeCount",
         lc."dislikeCount"
 
@@ -279,27 +276,6 @@ const updateDisplayOrder = async (body, request, fastify) => {
   }
 }
 
-const updateVideoLibraryViewCountQuery = async (body, request, fastify) => {
-  try {
-    return await fastify.db.query(
-      `UPDATE "tblVideoLibrary" SET
-        "wrViewCount" = COALESCE("wrViewCount", 0) + 1
-      WHERE "wrId" = $1 `,
-      {
-        bind: [body.refId],
-      }
-    );
-  } catch (err) {
-    errorLogger(
-      fastify,
-      err.message,
-      "DB ERROR --> repository/TableVideoLibrary.js/updateVideoLibraryViewCountQuery",
-      request
-    );
-    throw new Error(err.message);
-  }
-}
-
 module.exports = {
   getAllVideoLibraryQuery,
   insertVideoLibraryQuery,
@@ -307,5 +283,4 @@ module.exports = {
   deleteVideoLibraryQuery,
   updateVideoLibraryStatusQuery,
   updateDisplayOrder,
-  updateVideoLibraryViewCountQuery
 };

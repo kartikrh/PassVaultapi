@@ -58,10 +58,6 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING(10000),
         allowNull: true,
       },
-      wrViewerCount: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
       wrCredit : {
         type : DataTypes.TEXT,
         allowNull : true,

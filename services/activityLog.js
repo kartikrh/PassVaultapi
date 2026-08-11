@@ -3,12 +3,7 @@ const {
   updateActivityLogQuery,
   deleteActivityLogQuery,
 } = require("../repository/TableActivityLog");
-const { bannerViewersCountQuery } = require("../repository/TableBanner");
-const { newsViewersCountQuery } = require("../repository/TableNews");
 const { articleViewersCountQuery } = require("../repository/TableArticles");
-const { updateAdvertiseViewCountQuery } = require("../repository/TableAdvertise");
-const { updateVideoLibraryViewCountQuery } = require("../repository/TableVideoLibrary");
-const { updatePhotoLibraryViewCountQuery } = require("../repository/TablePhotoLibrary");
 const { ViewerType } = require("../utilities");
 const { updateViewersQuery, insertViewersQuery } = require("../repository/TableViewers");
 

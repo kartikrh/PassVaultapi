@@ -47,10 +47,6 @@ module.exports = (sequelize) => {
       wrDeletedAt: {
         type: DataTypes.DATE,
         allowNull: true,
-      },
-      wrViewCount: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
       }
     },
     {

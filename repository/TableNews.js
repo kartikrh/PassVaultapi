@@ -12,7 +12,6 @@ const getAllNewsQuery = async (fastify) => {
             tn."wrStartDate" as "startDate",
             tn."wrEndDate" as "endDate",
             tn."wrTags" as "tags",
-            tn."wrViewerCount" as "viewerCount",
             tn."wrCredit" as "credit",
             tn."wrSEO" as "SEO",
             tn."wrType" as "type",
@@ -45,7 +44,6 @@ const insertNewsQuery = async (data, request, fastify) => {
           "wrCreatedBy",
           "wrCreatedDate",
           "wrTags",
-          "wrViewerCount",
           "wrCredit",
           "wrSEO",
           "wrSEODescription",
@@ -57,9 +55,9 @@ const insertNewsQuery = async (data, request, fastify) => {
         )
         VALUES (
           $1, $2, $3, $4, $5, $6, $7, $8, now(),
-          $9, $10, $11, $12, $13, $14, $15, $16,
+          $9, $10, $11, $12, $13, $14, $15,
           (SELECT COALESCE(MAX("wrDisplayOrder"), 0) + 1 FROM "tblNews" WHERE "wrIsDeleted" = false),
-          $17
+          $16
         )
         RETURNING *
       )
@@ -73,7 +71,6 @@ const insertNewsQuery = async (data, request, fastify) => {
         tn."wrStartDate" as "startDate",
         tn."wrEndDate" as "endDate",
         tn."wrTags" as "tags",
-        tn."wrViewerCount" as "viewerCount",
         tn."wrCredit" as "credit",
         tn."wrSEO" as "SEO",
         tn."wrSEODescription" as "SEODescription",
@@ -96,7 +93,6 @@ const insertNewsQuery = async (data, request, fastify) => {
           data.endDate ? new Date(data.endDate) : null,
           data.userId,
           data.tags,
-          data.viewerCount || null,
           data.credit || null,
           data.SEO || null,
           data.SEODescription || null,
@@ -140,14 +136,13 @@ const updateNewsQuery = async (data, request, fastify) => {
         "wrModifyBy" = $8,
         "wrModifyDate" = now(),
         "wrTags" = $10,
-        "wrViewerCount" = $11,
-        "wrCredit" = $12,
-        "wrSEO" = $13,
-        "wrSEODescription" = $14,
-        "wrType" = $15,
-        "wrImagePath" = $16,
-        "wrWhitelabelId" = $17,
-        "wrCommentaryId" = $18
+        "wrCredit" = $11,
+        "wrSEO" = $12,
+        "wrSEODescription" = $13,
+        "wrType" = $14,
+        "wrImagePath" = $15,
+        "wrWhitelabelId" = $16,
+        "wrCommentaryId" = $17
       where "wrNewsId" = $9
       `,
       {
@@ -162,7 +157,6 @@ const updateNewsQuery = async (data, request, fastify) => {
           data.userId,
           data.newsId,
           data.tags,
-          data.viewerCount || null,
           data.credit || null,
           data.SEO || null,
           data.SEODescription || null,
@@ -232,28 +226,6 @@ const activeInactiveNewsQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
-const newsViewersCountQuery = async (data, request, fastify) => {
-  try {
-    return await fastify.db.query(
-      `
-                update "tblNews" set
-                "wrViewerCount" = COALESCE("wrViewerCount", 0) + 1
-                where "wrNewsId" = $1
-            `,
-      {
-        bind: [data.refId],
-      }
-    );
-  } catch (err) {
-    errorLogger(
-      fastify,
-      err.message,
-      "DB ERROR --> repository/TableNews/newsViewersCountQuery",
-      request
-    );
-    throw new Error(err.message);
-  }
-}
 
 const changeeDisplayOrderQuery = async (data, request, fastify) => {
   try {
@@ -284,6 +256,5 @@ module.exports = {
   deleteNewsQuery,
   getAllNewsQuery,
   activeInactiveNewsQuery,
-  newsViewersCountQuery,
   changeeDisplayOrderQuery
 };
