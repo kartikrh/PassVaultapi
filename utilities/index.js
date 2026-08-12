@@ -2424,7 +2424,7 @@ const getComDataByCId = async (data, request, fastify) => {
 
   if (commentaryTeamsTwo) {
     t2sn = commentaryTeamsTwo.shortName;
-    t2n = commentaryTeamsTwo.teamName;
+    te2n = commentaryTeamsTwo.teamName;
     const wicket1 =
       commentaryTeamsTwo.teamWicket === null
         ? 0
