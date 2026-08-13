@@ -115,6 +115,7 @@ const { getAllEntitySocketsQuery } = require("../repository/TableEntitySockets")
 const { getAllCompetitionStatisticsTypeQuery } = require("../repository/TableCompetitionStatisticsType");
 const { getAllCompetitionStatisticsQuery } = require("../repository/TableCompetitionStatistics");
 const { getAllViewersQuery } = require("../repository/TableViewers");
+const { getAllClientLikeDislikeActivityQuery } = require("../repository/TableClientLikeDislikeActivity");
 
 const fetchAllDataFromDb = async (fastify, reply) => {
   try {
@@ -221,6 +222,8 @@ const fetchAllDataFromDb = async (fastify, reply) => {
         item.viewerCount
       ])
     );
+
+    const getAllClientLikeDislikeActivityQueryData = await getAllClientLikeDislikeActivityQuery(fastify);
     
     const getAllAdvertiseQueryData = await getAllAdvertiseQuery(fastify);
     const getAllAdvertise = getAllAdvertiseQueryData?.map(item => ({
@@ -280,15 +283,35 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     }));
 
     const getAllVideoLibraryQueryData = await getAllVideoLibraryQuery(fastify);
+    const clientLikeDislikeVideoLibraryMap = new Map();
+    for (const activity of getAllClientLikeDislikeActivityQueryData?.filter(clda => clda.type === ViewerType.VIDEO_LIBRARY) ?? []) {
+      const key = `${activity.refId}_${activity.whitelabelId}`;
+
+      const counts = clientLikeDislikeVideoLibraryMap.get(key) ?? {
+        likeCount: 0,
+        dislikeCount: 0
+      };
+
+      if (activity.isLike) {
+        counts.likeCount++;
+      } else {
+        counts.dislikeCount++;
+      }
+
+      clientLikeDislikeVideoLibraryMap.set(key, counts);
+    }
     const getAllVideoLibrary = getAllVideoLibraryQueryData?.map(item => ({
       ...item,
       whitelabelId: item.whitelabelId.map(id => {
         const whitelabel = whitelabelMap.get(id);
+        const likedislike = clientLikeDislikeVideoLibraryMap.get(`${item.id}_${id}`);
         return {
           id,
           domain: whitelabel?.domain || null,
           encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
-          viewerCount: viewersMap.get(`${ViewerType.VIDEO_LIBRARY}_${item.id}_${id}`) || 0
+          viewerCount: viewersMap.get(`${ViewerType.VIDEO_LIBRARY}_${item.id}_${id}`) || 0,
+          likeCount: likedislike?.likeCount ?? 0,
+          dislikeCount: likedislike?.dislikeCount ?? 0
         }
       })
     }));
@@ -740,16 +763,37 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           break;
         }
         case ModuleTypes.VideoLibrary: {
+          const clientLikeDislikeVideoLibraryMap = new Map();
+          const getAllClientLikeDislikeActivityQueryData = await getAllClientLikeDislikeActivityQuery(fastify);
+          for (const activity of getAllClientLikeDislikeActivityQueryData?.filter(clda => clda.type === ViewerType.VIDEO_LIBRARY) ?? []) {
+            const key = `${activity.refId}_${activity.whitelabelId}`;
+
+            const counts = clientLikeDislikeVideoLibraryMap.get(key) ?? {
+              likeCount: 0,
+              dislikeCount: 0
+            };
+
+            if (activity.isLike) {
+              counts.likeCount++;
+            } else {
+              counts.dislikeCount++;
+            }
+
+            clientLikeDislikeVideoLibraryMap.set(key, counts);
+          }
           const getAllVideoLibraryQueryData = await getAllVideoLibraryQuery(fastify);
           const getAllVideoLibrary = getAllVideoLibraryQueryData?.map(item => ({
             ...item,
             whitelabelId: item.whitelabelId.map(id => {
               const whitelabel = whitelabelMap.get(id);
+              const likedislike = clientLikeDislikeVideoLibraryMap.get(`${item.id}_${id}`);
               return {
                 id,
                 domain: whitelabel?.domain || null,
                 encryptWhitelabelId: whitelabel?.encryptWhitelabelId || null,
-                viewerCount: viewersMap.get(`${ViewerType.VIDEO_LIBRARY}_${item.id}_${id}`) || 0
+                viewerCount: viewersMap.get(`${ViewerType.VIDEO_LIBRARY}_${item.id}_${id}`) || 0,
+                likeCount: likedislike?.likeCount ?? 0,
+                dislikeCount: likedislike?.dislikeCount ?? 0
               }
             })
           }));

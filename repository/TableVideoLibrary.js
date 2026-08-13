@@ -19,19 +19,8 @@ const getAllVideoLibraryQuery = async (fastify) => {
       tvb."wrVideoPath" AS "videoPath",
       tvb."wrIsActive" AS "isActive",
       tvb."wrDisplayOrder" as "displayOrder",
-      tvb."wrWhitelabelId" as "whitelabelId",
-      COALESCE(lc."likeCount", 0) AS "likeCount",
-      COALESCE(lc."dislikeCount", 0) AS "dislikeCount"
+      tvb."wrWhitelabelId" as "whitelabelId"
     FROM "tblVideoLibrary" as tvb
-    LEFT JOIN (
-      SELECT
-        t."wrRefId",
-        COUNT(*) FILTER (WHERE t."wrIsLike" = true)::int AS "likeCount",
-        COUNT(*) FILTER (WHERE t."wrIsLike" = false)::int AS "dislikeCount"
-      FROM "tblClientLikeDislikeActivity" t
-      WHERE t."wrType" = 1
-      GROUP BY t."wrRefId"
-    ) lc ON lc."wrRefId" = tvb."wrId"
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -71,19 +60,8 @@ const insertVideoLibraryQuery = async (data, fastify, request) => {
                 tvb."wrVideoPath" AS "videoPath",
                 tvb."wrIsActive" AS "isActive",
                 tvb."wrDisplayOrder" as "displayOrder",
-                tvb."wrWhitelabelId" as "whitelabelId",
-                COALESCE(lc."likeCount", 0) AS "likeCount",
-                COALESCE(lc."dislikeCount", 0) AS "dislikeCount"
-              FROM insert_data as tvb
-              LEFT JOIN (
-                SELECT
-                  t."wrRefId",
-                  COUNT(*) FILTER (WHERE t."wrIsLike" = true)::int AS "likeCount",
-                  COUNT(*) FILTER (WHERE t."wrIsLike" = false)::int AS "dislikeCount"
-                FROM "tblClientLikeDislikeActivity" t
-                WHERE t."wrType" = 1
-                GROUP BY t."wrRefId"
-              ) lc ON lc."wrRefId" = tvb."wrId";`,
+                tvb."wrWhitelabelId" as "whitelabelId"
+              FROM insert_data as tvb;`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
@@ -156,22 +134,9 @@ const updateVideoLibraryQuery = async (data, fastify, request) => {
         u."wrVideoPath" AS "videoPath",
         u."wrIsActive" AS "isActive",
         u."wrDisplayOrder" AS "displayOrder",
-        u."wrWhitelabelId" AS "whitelabelId",
-        lc."likeCount",
-        lc."dislikeCount"
+        u."wrWhitelabelId" AS "whitelabelId"
 
-      FROM updated u
-
-      LEFT JOIN (
-        SELECT
-          t."wrRefId",
-          COUNT(*) FILTER (WHERE t."wrIsLike" = true)::int AS "likeCount",
-          COUNT(*) FILTER (WHERE t."wrIsLike" = false)::int AS "dislikeCount"
-        FROM "tblClientLikeDislikeActivity" t
-        WHERE t."wrType" = 1
-        GROUP BY t."wrRefId"
-      ) lc 
-        ON lc."wrRefId" = u."wrId";`,
+      FROM updated u;`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
