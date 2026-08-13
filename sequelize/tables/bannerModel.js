@@ -46,10 +46,6 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING,
         allowNull: true,
       },
-      wrViewerCount: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
       wrIsActive: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

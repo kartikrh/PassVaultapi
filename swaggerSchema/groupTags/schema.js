@@ -11957,9 +11957,10 @@ const ClientLikeDislikeActivity = {
         properties: {
           type: { type: "integer" },
           refId: { type: "integer" },
-          clientId: { type: "string" }
+          clientId: { type: "string" },
+          whitelabelId: { type: "string" }
         },
-        required: ["type", "refId", "clientId"]
+        required: ["type", "refId", "clientId", "whitelabelId"]
       }
     }
   },
@@ -11974,9 +11975,10 @@ const ClientLikeDislikeActivity = {
           type: { type: "integer" },
           refId: { type: "integer" },
           clientId: { type: "string" },
-          isLike: { type: "boolean", nullable: true }
+          isLike: { type: "boolean", nullable: true },
+          whitelabelId: { type: "string" }
         },
-        required: ["type", "refId", "clientId", "isLike"]
+        required: ["type", "refId", "clientId", "isLike", "whitelabelId"]
       }
     }
   }

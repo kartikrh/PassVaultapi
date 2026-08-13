@@ -12,9 +12,10 @@ const {
 } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
-const { VideoLibraryType, getDataFromTime, checkDataSendToClient } = require("../utilities/index");
+const { VideoLibraryType, getDataFromTime, checkDataSendToClient, ViewerType } = require("../utilities/index");
 const { callClientAPI, APIEndpointModuleType } = require("../utilities");
 const { sendNotificationByType } = require("../utilities/index");
+const { getlikeDislikeByTypeRefIdQuery } = require("../repository/TableClientLikeDislikeActivity");
 
 const saveVideoLibraryService = async (request, fastify) => {
   const validateId = global.tblVideoLibrary.find(
@@ -47,11 +48,39 @@ const saveVideoLibraryService = async (request, fastify) => {
     }
   }
 
+  if (request.body?.whitelabelId) {
+    request.body.whitelabelId = request.body.whitelabelId.split(",").map(id => Number(id.trim()));
+  }
+
   const saveData = await insertVideoLibraryQuery(
     request.body,
     fastify,
     request
   );
+
+  const whitelableData = global.tblWhitelabels.filter(item => saveData.whitelabelId.includes(item.id));
+  const getLikeDislikeCount = await getlikeDislikeByTypeRefIdQuery({
+    ...request,
+    body: {
+      type: ViewerType.VIDEO_LIBRARY,
+      refId: saveData.id,
+      whitelabelId: whitelableData?.map(item => item.id)
+    }
+  }, fastify);
+  const whitelabelIdData = [];
+  for (const data of saveData.whitelabelId) {
+    const whitelabelDataById = whitelableData.find(wl => wl.id === data);
+    const likeDislikeCountData = getLikeDislikeCount.find(item => item.id === data);
+    whitelabelIdData.push({
+      id: data,
+      domain: whitelabelDataById?.domain || null,
+      encryptWhitelabelId: whitelabelDataById?.whitelabelId || null,
+      likeCount: getLikeDislikeCount?.likeCount || 0,
+      dislikeCount: getLikeDislikeCount?.dislikeCount || 0
+    });
+  }
+  saveData.whitelabelId = whitelabelIdData;
+
   global.tblVideoLibrary.push(saveData);
 
   const sendToClient = checkDataSendToClient(saveData, "from", "to");
@@ -113,6 +142,8 @@ const editVideoLibraryService = async (request, fastify, data) => {
     }
   }
 
+  request.body.whitelabelId = request.body?.whitelabelId?.split(",").map(id => Number(id.trim()));
+
   const updateData = {
     title: request.body.title ?? validateId.title,
     isPermanent: request.body.isPermanent ?? validateId.isPermanent,
@@ -127,7 +158,7 @@ const editVideoLibraryService = async (request, fastify, data) => {
     commentaryId: request.body.commentaryId ?? validateId.commentaryId,
     id: parseInt(request.body.id, 10),
     videoPath: request.body.videoPath ?? validateId.videoPath,
-    whitelabelId: request.body.whitelabelId ?? validateId.whitelabelId,
+    whitelabelId: request.body.whitelabelId,
     isActive: request.body.isActive ?? validateId.isActive
   };
   if(updateData.type === 2) {
@@ -143,18 +174,42 @@ const editVideoLibraryService = async (request, fastify, data) => {
     request
   );
 
+  const resultData = modifiedData[0];
+  const whitelableData = global.tblWhitelabels.filter(item => resultData.whitelabelId.includes(item.id));
+  const getLikeDislikeCount = await getlikeDislikeByTypeRefIdQuery({
+    ...request,
+    body: {
+      type: ViewerType.VIDEO_LIBRARY,
+      refId: resultData.id,
+      whitelabelId: whitelableData?.map(item => item.id)
+    }
+  }, fastify);
+  const whitelabelIdData = [];
+  for (const data of resultData.whitelabelId) {
+    const whitelabelDataById = whitelableData.find(wl => wl.id === data);
+    const likeDislikeCountData = getLikeDislikeCount.find(item => item.id === data);
+    whitelabelIdData.push({
+      id: data,
+      domain: whitelabelDataById?.domain || null,
+      encryptWhitelabelId: whitelabelDataById?.whitelabelId || null,
+      likeCount: likeDislikeCountData.likeCount || 0,
+      dislikeCount: likeDislikeCountData.dislikeCount || 0
+    });
+  }
+  resultData.whitelabelId = whitelabelIdData;
+
   const index = global.tblVideoLibrary.findIndex(
     (item) => item.id == request.body.id
   );
 
   if (index != -1) {
-    global.tblVideoLibrary[index] = modifiedData[0];
+    global.tblVideoLibrary[index] = resultData;
   }
 
   global.pendingVideoLibraryToClient = global.pendingVideoLibraryToClient.filter(item => item.id !== updateData.id);
-  const sendToClient = checkDataSendToClient(modifiedData[0], "from", "to");
+  const sendToClient = checkDataSendToClient(resultData, "from", "to");
   if (sendToClient) {
-    sendNotificationByType({ ...modifiedData[0], type: "video", sendType: 3 }, request, fastify);
+    sendNotificationByType({ ...resultData, type: "video", sendType: 3 }, request, fastify);
   }
   await callClientAPI(
     {
@@ -162,13 +217,13 @@ const editVideoLibraryService = async (request, fastify, data) => {
       data: {
         module: 'videoLibrary',
         type: "update",
-        data: modifiedData[0]
+        data: resultData
       }
     }, request, fastify,
     "services/videoLibrary.js/editVideoLibraryService"
   );
 
-  return modifiedData[0];
+  return resultData;
 };
 
 const allVideoLibraryService = async (request) => {

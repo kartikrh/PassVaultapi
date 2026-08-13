@@ -23,11 +23,24 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { callClientAPI, APIEndpointModuleType } = require("../utilities");
 
 const savePhotoLibraryService = async (request, fastify) => {
+  if (request.body?.whitelabelId) {
+    request.body.whitelabelId = request.body.whitelabelId.split(",").map(id => Number(id.trim()));
+  }
   const saveData = await insertPhotoLibraryQuery(
     request.body,
     fastify,
     request
   );
+
+  const whitelableData = global.tblWhitelabels.filter(item => saveData.whitelabelId.includes(item.id));
+  saveData.whitelabelId = saveData.whitelabelId?.map(item => {
+    return {
+      id: item,
+      domain: whitelableData.find(wl => wl.id === item)?.domain || null,
+      encryptWhitelabelId: whitelableData.find(wl => wl.id === item)?.whitelabelId || null
+    };
+  });
+
   global.tblPhotoLibrary.push(saveData);
 
   const sendToClient = checkDataSendToClient(saveData);
@@ -57,6 +70,8 @@ const editPhotoLibraryService = async (request, fastify, data) => {
     throw new Error("Photo library data with this Id not found");
   }
 
+  request.body.whitelabelId = request.body?.whitelabelId?.split(",").map(id => Number(id.trim()));
+
   const updateData = {
     title: request.body.title ?? validateId.title,
     SEO: request.body.SEO ?? validateId.SEO,
@@ -67,7 +82,7 @@ const editPhotoLibraryService = async (request, fastify, data) => {
     isActive: request.body.isActive ?? validateId.isActive,
     commentaryId: request.body.commentaryId ?? validateId.commentaryId,
     displayOrder: request.body.displayOrder ?? validateId.displayOrder, 
-    whitelabelId: request.body.whitelabelId ?? validateId.whitelabelId, 
+    whitelabelId: request.body.whitelabelId, 
     photoLibraryId: parseInt(request.body.photoLibraryId, 10),
   };
   
@@ -76,6 +91,15 @@ const editPhotoLibraryService = async (request, fastify, data) => {
     fastify,
     request
   );
+
+  const whitelableData = global.tblWhitelabels.filter(item => modifiedData.whitelabelId.includes(item.id));
+  modifiedData.whitelabelId = modifiedData.whitelabelId?.map(item => {
+    return {
+      id: item,
+      domain: whitelableData.find(wl => wl.id === item)?.domain || null,
+      encryptWhitelabelId: whitelableData.find(wl => wl.id === item)?.whitelabelId || null
+    };
+  });
 
   const index = global.tblPhotoLibrary.findIndex(
     (item) => item.photoLibraryId == request.body.photoLibraryId

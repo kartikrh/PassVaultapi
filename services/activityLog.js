@@ -3,12 +3,7 @@ const {
   updateActivityLogQuery,
   deleteActivityLogQuery,
 } = require("../repository/TableActivityLog");
-const { bannerViewersCountQuery } = require("../repository/TableBanner");
-const { newsViewersCountQuery } = require("../repository/TableNews");
 const { articleViewersCountQuery } = require("../repository/TableArticles");
-const { updateAdvertiseViewCountQuery } = require("../repository/TableAdvertise");
-const { updateVideoLibraryViewCountQuery } = require("../repository/TableVideoLibrary");
-const { updatePhotoLibraryViewCountQuery } = require("../repository/TablePhotoLibrary");
 const { ViewerType } = require("../utilities");
 const { updateViewersQuery, insertViewersQuery } = require("../repository/TableViewers");
 
@@ -57,19 +52,11 @@ const createActivityLogService = async (request, fastify) => {
     fastify
   );
 
-  if(request?.body?.activityType === 1) {
-    const newsIndex = global.tblNews.findIndex((item)=> item.newsId === parseInt(request.body.refId));
-    await newsViewersCountQuery({ ...request.body },request,fastify);
-    if (newsIndex !== -1) {
-      global.tblNews[newsIndex].viewerCount = (global.tblNews[newsIndex].viewerCount || 0) + 1;
-      if (data && data.length === 1) {
-        data[0].count = global.tblNews[newsIndex].viewerCount;
-      }
-    }
-  } else if(request.body?.activityType === 2 || request.body?.activityType === 3) {
-    const activityType = request?.body.activityType;
-    const typeEnum = request.body.activityType === 2 ? ViewerType.Banner : ViewerType.Advertise;
-    const getExistsViewerCountIndex = global.tblViewers.findIndex(item => item.type === typeEnum && item.typeId === parseInt(request.body.refId) && item.whitelabelId === whitelabelId);
+  request.body.refId = Number(request.body.refId);
+  let viewerCount = 0;
+  if (Number(request?.body?.activityType || 0) > 0 && Object.values(ViewerType).includes(request?.body?.activityType)) {
+    const activityType = Number(request?.body.activityType);
+    const getExistsViewerCountIndex = global.tblViewers.findIndex(item => item.type === activityType && item.typeId === request.body.refId && item.whitelabelId === whitelabelId);
     if (getExistsViewerCountIndex !== -1) {
       const data = global.tblViewers[getExistsViewerCountIndex];
       await updateViewersQuery({
@@ -79,33 +66,99 @@ const createActivityLogService = async (request, fastify) => {
         }
       }, fastify);
       global.tblViewers[getExistsViewerCountIndex].viewerCount = (global.tblViewers[getExistsViewerCountIndex].viewerCount || 0) + 1;
+      viewerCount = global.tblViewers[getExistsViewerCountIndex].viewerCount;
     } else {
       const data = await insertViewersQuery({
         ...request,
         body: {
-          type: typeEnum,
-          typeId: parseInt(request.body.refId),
+          type: activityType,
+          typeId: request.body.refId,
           whitelabelId
         }
       }, fastify);
       global.tblViewers.push(data);
+      viewerCount = 1;
     }
-  } else if(request?.body?.activityType === 4) {
-    const videoLibraryIndex = global.tblVideoLibrary.findIndex((item)=> item.id === parseInt(request.body.refId));
-    await updateVideoLibraryViewCountQuery({ ...request.body },request,fastify);
-    if (videoLibraryIndex !== -1) {
-      global.tblVideoLibrary[videoLibraryIndex].viewCount = (global.tblVideoLibrary[videoLibraryIndex].viewCount || 0) + 1;
-      if (data && data.length === 1) {
-        data[0].count = global.tblVideoLibrary[videoLibraryIndex].viewCount;
+
+    if (activityType === ViewerType.ADVERTISE) {
+      const advertiseIndex = global.tblAdvertise.findIndex(item => item.advertiseId === request.body.refId);
+      if (advertiseIndex !== -1) {
+        global.tblAdvertise[advertiseIndex] = {
+          ...global.tblAdvertise[advertiseIndex],
+          whitelabelId: global.tblAdvertise[advertiseIndex].whitelabelId?.map(item => {
+            if (item.id === whitelabelId) {
+              return {
+                ...item,
+                viewerCount
+              }
+            }
+            return item;
+          })
+        }
       }
-    }
-  } else if(request?.body?.activityType === 5) {
-    const photoLibraryIndex = global.tblPhotoLibrary.findIndex((item)=> item.photoLibraryId === parseInt(request.body.refId));
-    await updatePhotoLibraryViewCountQuery({ ...request.body },request,fastify);
-    if (photoLibraryIndex !== -1) {
-      global.tblPhotoLibrary[photoLibraryIndex].viewCount = (global.tblPhotoLibrary[photoLibraryIndex].viewCount || 0) + 1;
-      if (data && data.length === 1) {
-        data[0].count = global.tblPhotoLibrary[photoLibraryIndex].viewCount;
+    } else if (activityType === ViewerType.BANNER) {
+      const bannerIndex = global.tblBanner.findIndex(item => item.bannerId === request.body.refId);
+      if (bannerIndex !== -1) {
+        global.tblBanner[bannerIndex] = {
+          ...global.tblBanner[bannerIndex],
+          whitelabelId: global.tblBanner[bannerIndex].whitelabelId?.map(item => {
+            if (item.id === whitelabelId) {
+              return {
+                ...item,
+                viewerCount
+              }
+            }
+            return item;
+          })
+        }
+      }
+    } else if (activityType === ViewerType.NEWS) {
+      const newsIndex = global.tblNews.findIndex(item => item.newsId === request.body.refId);
+      if (newsIndex !== -1) {
+        global.tblNews[newsIndex] = {
+          ...global.tblNews[newsIndex],
+          whitelabelId: global.tblNews[newsIndex].whitelabelId?.map(item => {
+            if (item.id === whitelabelId) {
+              return {
+                ...item,
+                viewerCount
+              }
+            }
+            return item;
+          })
+        }
+      }
+    } else if (activityType === ViewerType.PHOTO_LIBRARY) {
+      const photoLibraryIndex = global.tblPhotoLibrary.findIndex(item => item.photoLibraryId === request.body.refId);
+      if (photoLibraryIndex !== -1) {
+        global.tblPhotoLibrary[photoLibraryIndex] = {
+          ...global.tblPhotoLibrary[photoLibraryIndex],
+          whitelabelId: global.tblPhotoLibrary[photoLibraryIndex].whitelabelId?.map(item => {
+            if (item.id === whitelabelId) {
+              return {
+                ...item,
+                viewerCount
+              }
+            }
+            return item;
+          })
+        }
+      }
+    } else if (activityType === ViewerType.VIDEO_LIBRARY) {
+      const videoLibraryIndex = global.tblVideoLibrary.findIndex(item => item.id === request.body.refId);
+      if (videoLibraryIndex !== -1) {
+        global.tblVideoLibrary[videoLibraryIndex] = {
+          ...global.tblVideoLibrary[videoLibraryIndex],
+          whitelabelId: global.tblVideoLibrary[videoLibraryIndex].whitelabelId?.map(item => {
+            if (item.id === whitelabelId) {
+              return {
+                ...item,
+                viewerCount
+              }
+            }
+            return item;
+          })
+        }
       }
     }
   } else {
@@ -118,11 +171,15 @@ const createActivityLogService = async (request, fastify) => {
     await articleViewersCountQuery({ ...request.body },request,fastify);
     if (articleIndex !== -1) {
       global.tblArticles[articleIndex].viewerCount = (global.tblArticles[articleIndex].viewerCount || 0) + 1;
+      viewerCount = global.tblArticles[articleIndex].viewerCount;
     }
   }
   global.tblActivityLogs.push(data[0]);
 
-  return data;
+  return {
+    ...data[0],
+    viewerCount
+  };
 };
 const updateActivityLogService = async (request, fastify) => {
   // validate the activityLogId
