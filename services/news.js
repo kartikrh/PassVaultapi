@@ -79,6 +79,11 @@ const createNewsService = async (request, fastify) => {
     request.body.image = fullPath;
     request.body.imagePath = imagePath;
   }
+
+  if (request.body?.whitelabelId) {
+    request.body.whitelabelId = request.body.whitelabelId.split(",").map(id => Number(id.trim()));
+  }
+
   const data = await insertNewsQuery(
     {
       ...request.body,
@@ -89,29 +94,39 @@ const createNewsService = async (request, fastify) => {
     fastify
   );
 
-  global.tblNews.push(data[0]);
+  let resultData = data[0];
+  const whitelableData = global.tblWhitelabels.filter(item => resultData.whitelabelId.includes(item.id));
+  resultData.whitelabelId = resultData.whitelabelId?.map(item => {
+    return {
+      id: item,
+      domain: whitelableData.find(wl => wl.id === item)?.domain || null,
+      encryptWhitelabelId: whitelableData.find(wl => wl.id === item)?.whitelabelId || null
+    };
+  });
 
-  // const urlId = data[0].newsId;
-  // const urlEndPoint = data[0].title.replace(/ /g, "-");
+  global.tblNews.push(resultData);
+
+  // const urlId = resultData.newsId;
+  // const urlEndPoint = resultData.title.replace(/ /g, "-");
 
   // await handleSitemapUpdate(`news/${urlId}/${urlEndPoint}`)
 
-  const sendToClient = checkDataSendToClient(data[0]);
+  const sendToClient = checkDataSendToClient(resultData);
   if (sendToClient) {
-    sendNotificationByType({ ...data[0], type: "news", sendType: 3 }, request, fastify);
+    sendNotificationByType({ ...resultData, type: "news", sendType: 3 }, request, fastify);
     await callClientAPI(
       {
         moduleType: APIEndpointModuleType.updateSeoModule,
         data: {
           module: 'news',
           type: "add",
-          data: data[0]
+          data: resultData
         }
       }, request, fastify,
       "services/news.js/createNewsService"
     );
   } else {
-    global.pendingNewsToClient.push(data[0]);
+    global.pendingNewsToClient.push(resultData);
   }
 
   return data;
@@ -128,6 +143,9 @@ const updateNewsService = async (request, fastify) => {
   const isPermanent = request.body.hasOwnProperty("isPermanent")
     ? request.body.isPermanent
     : validateNewsId.isPermanent;
+
+  request.body.whitelabelId = request.body?.whitelabelId?.split(",").map(id => Number(id.trim()));
+
   const body = {
     newsId: request.body.newsId,
     title: request.body.title || validateNewsId.title,
@@ -149,7 +167,7 @@ const updateNewsService = async (request, fastify) => {
     type: request.body.type || validateNewsId.type,
     SEODescription: request.body.SEODescription || validateNewsId.SEODescription,
     imagePath: validateNewsId.imagePath,
-    whitelabelId: Number(request.body.whitelabelId) ?? validateNewsId?.whitelabelId,
+    whitelabelId: request.body.whitelabelId = request.body.whitelabelId,
     commentaryId: Number(request.body.commentaryId) ?? validateNewsId?.commentaryId,
 
     displayOrder: request.body.hasOwnProperty("displayOrder")
@@ -177,11 +195,15 @@ const updateNewsService = async (request, fastify) => {
   }
 
   await updateNewsQuery(body, request, fastify);
-  const whiteLabelData = global.tblWhitelabels.find(
-    (item) => item.id == body.whitelabelId
-  );
-  body.domain = whiteLabelData?.domain ?? null
-  body.encryptWhitelabelId = whiteLabelData?.whitelabelId ?? null
+
+  const whitelableData = global.tblWhitelabels.filter(item => body.whitelabelId.includes(item.id));
+  body.whitelabelId = body.whitelabelId?.map(item => {
+    return {
+      id: item,
+      domain: whitelableData.find(wl => wl.id === item)?.domain || null,
+      encryptWhitelabelId: whitelableData.find(wl => wl.id === item)?.whitelabelId || null
+    };
+  });
   const index = global.tblNews.findIndex(
     (item) => item.newsId === request.body.newsId
   );

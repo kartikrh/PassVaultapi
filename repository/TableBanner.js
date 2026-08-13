@@ -12,7 +12,6 @@ const getAllBannerQuery = async (fastify) => {
             tb."wrStartDate" as "startDate",
             tb."wrEndDate" as "endDate",
             tb."wrLink" as "link",
-            tb."wrViewerCount" as "viewerCount",
             tb."wrImagePath" as "imagePath",
             tb."wrDeviceTypeId" as "deviceTypeId",
             tb."wrWhitelabelId" as "whitelabelId",
@@ -42,14 +41,13 @@ const insertBannerQuery = async (data, request, fastify) => {
             "wrCreatedBy",
             "wrCreatedDate",
             "wrLink",
-            "wrViewerCount",
             "wrImagePath",
             "wrDeviceTypeId",
             "wrWhitelabelId",
             "wrDisplayOrder"
           )
           VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10, $11, $12, $13,
+            $1, $2, $3, $4, $5, $6, $7, $8, now(), $9, $10, $11, $12,
             (SELECT COALESCE(MAX("wrDisplayOrder"), 0) + 1 FROM "tblBanner" WHERE "wrIsDeleted" = false)
           )
           RETURNING *
@@ -64,7 +62,6 @@ const insertBannerQuery = async (data, request, fastify) => {
           tb."wrStartDate" as "startDate",
           tb."wrEndDate" as "endDate",
           tb."wrLink" as "link",
-          tb."wrViewerCount" as "viewerCount",
           tb."wrImagePath" as "imagePath",
           tb."wrDeviceTypeId" as "deviceTypeId",
           tb."wrWhitelabelId" as "whitelabelId",
@@ -83,7 +80,6 @@ const insertBannerQuery = async (data, request, fastify) => {
           data.endDate ? new Date(data.endDate) : null,
           data.userId,
           data.link || null,
-          data.viewerCount || null,
           data.imagePath || null,
           data?.deviceTypeId ?? null,
           data?.whitelabelId ?? null
@@ -116,11 +112,10 @@ const updateBannerQuery = async (data, request, fastify) => {
                 "wrCreatedBy" = $8,
                 "wrCreatedDate" = now(),
                 "wrLink" = $10,
-                "wrViewerCount" = $11,
-                "wrImagePath" = $12,
-                "wrDeviceTypeId" = $13,
-                "wrWhitelabelId" = $14,
-                "wrDisplayOrder" = $15
+                "wrImagePath" = $11,
+                "wrDeviceTypeId" = $12,
+                "wrWhitelabelId" = $13,
+                "wrDisplayOrder" = $14
                 where "wrId" = $9
             `,
       {
@@ -135,7 +130,6 @@ const updateBannerQuery = async (data, request, fastify) => {
           data.userId,
           data.bannerId,
           data.link || null,
-          data.viewerCount || null,
           data.imagePath,
           data?.deviceTypeId ?? null,
           data?.whitelabelId ?? null,
@@ -200,28 +194,7 @@ const activeInactiveBannerQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
-const bannerViewersCountQuery = async (data, request, fastify) => {
-  try {
-    return await fastify.db.query(
-      `
-                update "tblBanner" set
-                "wrViewerCount" = COALESCE("wrViewerCount", 0) + 1
-                where "wrId" = $1
-            `,
-      {
-        bind: [data.refId],
-      }
-    );
-  } catch (err) {
-    errorLogger(
-      fastify,
-      err.message,
-      "DB ERROR --> repository/TableBanner/bannerViewersCountQuery",
-      request
-    );
-    throw new Error(err.message);
-  }
-};
+
 const updateDisplayOrderBannerQuery = async (data, request, fastify) => {
   try {
     return await fastify.db.query(
@@ -250,6 +223,5 @@ module.exports = {
   deleteBannerQuery,
   getAllBannerQuery,
   activeInactiveBannerQuery,
-  bannerViewersCountQuery,
   updateDisplayOrderBannerQuery
 };

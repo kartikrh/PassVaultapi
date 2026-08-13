@@ -33,6 +33,10 @@ module.exports = (sequelize) => {
             wrUpdatedAt: {
                 type: DataTypes.DATE,
                 allowNull: true,
+            },
+            wrWhitelabelId: {
+                type: DataTypes.INTEGER,
+                allowNull: true,
             }
         },
         {

@@ -2659,8 +2659,11 @@ const getGlobalMemoryDataService = async (request, fastify) => {
 }
 
 const ViewerType = {
-  Advertise: 1,
-  Banner: 2
+  ADVERTISE: 1,
+  BANNER: 2,
+  NEWS: 3,
+  PHOTO_LIBRARY: 4,
+  VIDEO_LIBRARY: 5
 }
 
 const AutoImportStatus = {

@@ -19,24 +19,8 @@ const getAllVideoLibraryQuery = async (fastify) => {
       tvb."wrVideoPath" AS "videoPath",
       tvb."wrIsActive" AS "isActive",
       tvb."wrDisplayOrder" as "displayOrder",
-      tvb."wrWhitelabelId" as "whitelabelId",
-      ed."wrValue" as "encryptWhitelabelId",
-      twl."wrDomain" as "domain",
-      tvb."wrViewCount" as "viewCount",
-      COALESCE(lc."likeCount", 0) AS "likeCount",
-      COALESCE(lc."dislikeCount", 0) AS "dislikeCount"
+      tvb."wrWhitelabelId" as "whitelabelId"
     FROM "tblVideoLibrary" as tvb
-    LEFT JOIN "tblWhitelabel" twl ON tvb."wrWhitelabelId" = twl."wrId"
-    LEFT JOIN "tblEncryptedData" ed ON tvb."wrWhitelabelId" = ed."wrKey"
-    LEFT JOIN (
-      SELECT
-        t."wrRefId",
-        COUNT(*) FILTER (WHERE t."wrIsLike" = true)::int AS "likeCount",
-        COUNT(*) FILTER (WHERE t."wrIsLike" = false)::int AS "dislikeCount"
-      FROM "tblClientLikeDislikeActivity" t
-      WHERE t."wrType" = 1
-      GROUP BY t."wrRefId"
-    ) lc ON lc."wrRefId" = tvb."wrId"
     `,
     {
       type: fastify.db.QueryTypes.SELECT,
@@ -76,24 +60,8 @@ const insertVideoLibraryQuery = async (data, fastify, request) => {
                 tvb."wrVideoPath" AS "videoPath",
                 tvb."wrIsActive" AS "isActive",
                 tvb."wrDisplayOrder" as "displayOrder",
-                tvb."wrWhitelabelId" as "whitelabelId",
-                ed."wrValue" as "encryptWhitelabelId",
-                twl."wrDomain" as "domain",
-                tvb."wrViewCount" as "viewCount",
-                COALESCE(lc."likeCount", 0) AS "likeCount",
-                COALESCE(lc."dislikeCount", 0) AS "dislikeCount"
-              FROM insert_data as tvb
-              LEFT JOIN "tblWhitelabel" twl ON tvb."wrWhitelabelId" = twl."wrId"
-              LEFT JOIN "tblEncryptedData" ed ON tvb."wrWhitelabelId" = ed."wrKey"
-              LEFT JOIN (
-                SELECT
-                  t."wrRefId",
-                  COUNT(*) FILTER (WHERE t."wrIsLike" = true)::int AS "likeCount",
-                  COUNT(*) FILTER (WHERE t."wrIsLike" = false)::int AS "dislikeCount"
-                FROM "tblClientLikeDislikeActivity" t
-                WHERE t."wrType" = 1
-                GROUP BY t."wrRefId"
-              ) lc ON lc."wrRefId" = tvb."wrId";`,
+                tvb."wrWhitelabelId" as "whitelabelId"
+              FROM insert_data as tvb;`,
       {
         type: fastify.db.QueryTypes.SELECT,
         bind: [
@@ -166,31 +134,9 @@ const updateVideoLibraryQuery = async (data, fastify, request) => {
         u."wrVideoPath" AS "videoPath",
         u."wrIsActive" AS "isActive",
         u."wrDisplayOrder" AS "displayOrder",
-        u."wrWhitelabelId" AS "whitelabelId",
-        ed."wrValue" AS "encryptWhitelabelId",
-        twl."wrDomain" AS "domain",
-        u."wrViewCount" AS "viewCount",
-        lc."likeCount",
-        lc."dislikeCount"
+        u."wrWhitelabelId" AS "whitelabelId"
 
-      FROM updated u
-
-      LEFT JOIN "tblWhitelabel" twl 
-        ON u."wrWhitelabelId" = twl."wrId"
-
-      LEFT JOIN "tblEncryptedData" ed 
-        ON u."wrWhitelabelId" = ed."wrKey"
-
-      LEFT JOIN (
-        SELECT
-          t."wrRefId",
-          COUNT(*) FILTER (WHERE t."wrIsLike" = true)::int AS "likeCount",
-          COUNT(*) FILTER (WHERE t."wrIsLike" = false)::int AS "dislikeCount"
-        FROM "tblClientLikeDislikeActivity" t
-        WHERE t."wrType" = 1
-        GROUP BY t."wrRefId"
-      ) lc 
-        ON lc."wrRefId" = u."wrId";`,
+      FROM updated u;`,
       {
         type: fastify.db.QueryTypes.UPDATE,
         bind: [
@@ -295,27 +241,6 @@ const updateDisplayOrder = async (body, request, fastify) => {
   }
 }
 
-const updateVideoLibraryViewCountQuery = async (body, request, fastify) => {
-  try {
-    return await fastify.db.query(
-      `UPDATE "tblVideoLibrary" SET
-        "wrViewCount" = COALESCE("wrViewCount", 0) + 1
-      WHERE "wrId" = $1 `,
-      {
-        bind: [body.refId],
-      }
-    );
-  } catch (err) {
-    errorLogger(
-      fastify,
-      err.message,
-      "DB ERROR --> repository/TableVideoLibrary.js/updateVideoLibraryViewCountQuery",
-      request
-    );
-    throw new Error(err.message);
-  }
-}
-
 module.exports = {
   getAllVideoLibraryQuery,
   insertVideoLibraryQuery,
@@ -323,5 +248,4 @@ module.exports = {
   deleteVideoLibraryQuery,
   updateVideoLibraryStatusQuery,
   updateDisplayOrder,
-  updateVideoLibraryViewCountQuery
 };
