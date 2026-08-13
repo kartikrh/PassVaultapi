@@ -115,10 +115,10 @@ const setShortCommenrty = (eventId) => {
   );
   let teamScore = battingTeam?.teamScore || 0 + "/" + battingTeam?.teamWicket || 0 + "(" + battingTeam?.teamOver || 0.0 + ")";
 
-  let teamScore1, teamScore2, t1sn, t1n, t2sn, t2n;
+  let teamScore1, teamScore2, t1sn, te1n, t2sn, te2n;
   if (commentaryTeamsOne) {
     t1sn = commentaryTeamsTwo.shortName;
-    t1n = commentaryTeamsTwo.teamName;
+    te1n = commentaryTeamsTwo.teamName;
     const wicket1 =
       commentaryTeamsOne.teamWicket === null
         ? 0
@@ -131,7 +131,7 @@ const setShortCommenrty = (eventId) => {
 
   if (commentaryTeamsTwo) {
     t2sn = commentaryTeamsTwo.shortName;
-    t2n = commentaryTeamsTwo.teamName;
+    te2n = commentaryTeamsTwo.teamName;
     const wicket1 =
       commentaryTeamsTwo.teamWicket === null
         ? 0
@@ -145,8 +145,8 @@ const setShortCommenrty = (eventId) => {
     eti: parseInt(commentary.eventTypeId) || "",
     eid: commentary.eventRefId || "",
     en: commentary.eventName || "",
-    te1n: t1n || "",
-    te2n: t2n || "",
+    te1n: te1n || "",
+    te2n: te2n || "",
     t1s: teamScore1 || "",
     t2s: teamScore2 || "",
     pt: 0,

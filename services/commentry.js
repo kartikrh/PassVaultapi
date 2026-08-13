@@ -5762,10 +5762,10 @@ const setShortCommenrty = (eventId) => {
       item.currentInnings === commentary.currentInnings
   );
   let teamScore = (battingTeam?.teamScore || 0) + "/" + (battingTeam?.teamWicket || 0) + "(" + (battingTeam?.teamOver || 0.0) + ")";
-  let teamScore1, teamScore2, t1sn, t1n, t2sn, t2n;
+  let teamScore1, teamScore2, t1sn, te1n, t2sn, te2n;
   if (commentaryTeamsOne) {
     t1sn = commentaryTeamsTwo.shortName;
-    t1n = commentaryTeamsTwo.teamName;
+    te1n = commentaryTeamsTwo.teamName;
     const wicket1 =
       commentaryTeamsOne.teamWicket === null
         ? 0
@@ -5778,7 +5778,7 @@ const setShortCommenrty = (eventId) => {
 
   if (commentaryTeamsTwo) {
     t2sn = commentaryTeamsTwo.shortName;
-    t2n = commentaryTeamsTwo.teamName;
+    te2n = commentaryTeamsTwo.teamName;
     const wicket1 =
       commentaryTeamsTwo.teamWicket === null
         ? 0
@@ -5792,8 +5792,8 @@ const setShortCommenrty = (eventId) => {
     eti: parseInt(commentary.eventTypeId) || "",
     eid: commentary.eventRefId || "",
     en: commentary.eventName || "",
-    te1n: t1n || "",
-    te2n: t2n || "",
+    te1n: te1n || "",
+    te2n: te2n || "",
     t1s: teamScore1 || "",
     t2s: teamScore2 || "",
     pt: 0,
@@ -7109,11 +7109,11 @@ const commentaryDetailsByEventIdService = async (
     scot: "",
     scor: "",
     scov: "",
-    t1n: "",
+    te1n: "",
     t1sn: "",
     t1s: "",
     // t1im: "",
-    t2n: "",
+    te2n: "",
     t2sn: "",
     t2s: "",
     // t2im: "",
@@ -7165,7 +7165,7 @@ const commentaryDetailsByEventIdService = async (
   let scot;
   let scor;
   let scov;
-  let t1n;
+  let te1n;
   let t1nid = 0;
   let t1sn;
   let t1s;
@@ -7176,7 +7176,7 @@ const commentaryDetailsByEventIdService = async (
   // let nt1jr;
   // let nt2jr;
   // let nt2im;
-  let t2n;
+  let te2n;
   let t2nid = 0;
   let t2sn;
   let t2s;
@@ -7256,7 +7256,7 @@ const commentaryDetailsByEventIdService = async (
   );
   if (commentaryTeamsOne.length > 0) {
     t1sn = commentaryTeamsOne[0]?.shortName;
-    t1n = commentaryTeamsOne[0]?.teamName;
+    te1n = commentaryTeamsOne[0]?.teamName;
     t1co = commentaryTeamsOne[0].teamColor || "";
     t1bg = commentaryTeamsOne[0].backgroundColor || "";
     const wicket1 =
@@ -7274,7 +7274,7 @@ const commentaryDetailsByEventIdService = async (
 
   if (commentaryTeamsTwo.length > 0) {
     t2sn = commentaryTeamsTwo[0]?.shortName;
-    t2n = commentaryTeamsTwo[0]?.teamName;
+    te2n = commentaryTeamsTwo[0]?.teamName;
     t2co = commentaryTeamsTwo[0]?.teamColor || "";
     t2bg = commentaryTeamsTwo[0]?.backgroundColor || "";
 
@@ -7317,7 +7317,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.scot = "";
     resultArr.scor = "";
     resultArr.scov = "";
-    resultArr.t1n = t1n;
+    resultArr.te1n = te1n;
     resultArr.t1sn = t1sn;
     resultArr.t1s = t1s;
     // resultArr.t1im = t1im;
@@ -7327,7 +7327,7 @@ const commentaryDetailsByEventIdService = async (
     // resultArr.nt1jr = nt1jr;
     // resultArr.nt2jr = nt2jr;
     // resultArr.nt2im = nt2im;
-    resultArr.t2n = t2n;
+    resultArr.te2n = te2n;
     resultArr.t2sn = t2sn;
     resultArr.t2s = t2s;
     // resultArr.t2im = t2im;
@@ -7394,7 +7394,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.scot = "";
     resultArr.scor = "";
     resultArr.scov = "";
-    resultArr.t1n = t1n;
+    resultArr.te1n = te1n;
     resultArr.t1sn = t1sn;
     resultArr.t1s = t1s;
     // resultArr.t1im = t1im;
@@ -7404,7 +7404,7 @@ const commentaryDetailsByEventIdService = async (
     // resultArr.nt1jr = nt1jr;
     // resultArr.nt2jr = nt2jr;
     // resultArr.nt2im = nt2im;
-    resultArr.t2n = t2n;
+    resultArr.te2n = te2n;
     resultArr.t2sn = t2sn;
     resultArr.t2s = t2s;
     // resultArr.t2im = t2im;
@@ -7518,7 +7518,7 @@ const commentaryDetailsByEventIdService = async (
     resultArr.scot = scot;
     resultArr.scor = scor;
     resultArr.scov = scov;
-    resultArr.t1n = t1n;
+    resultArr.te1n = te1n;
     resultArr.t1sn = t1sn;
     resultArr.t1s = t1s;
     // resultArr.t1im = t1im;
@@ -7528,7 +7528,7 @@ const commentaryDetailsByEventIdService = async (
     // resultArr.nt1jr = nt1jr;
     // resultArr.nt2jr = nt2jr;
     // resultArr.nt2im = nt2im;
-    resultArr.t2n = t2n;
+    resultArr.te2n = te2n;
     resultArr.t2sn = t2sn;
     resultArr.t2s = t2s;
     // resultArr.t2im = t2im;
@@ -7821,13 +7821,13 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     scot: "",
     scor: "",
     scov: "",
-    t1n: "",
+    te1n: "",
     t1sn: "",
     t1s: "",
     t1im: "",
     t1jr: "",
     t2jr: "",
-    t2n: "",
+    te2n: "",
     t2sn: "",
     t2s: "",
     t2im: "",
@@ -7864,14 +7864,14 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   let scot;
   let scor;
   let scov;
-  let t1n;
+  let te1n;
   let t1nid = 0;
   let t1sn;
   let t1s;
   let t1im;
   let t1jr;
   let t2jr;
-  let t2n;
+  let te2n;
   let t2nid = 0;
   let t2sn;
   let t2s;
@@ -7954,7 +7954,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
   );
   if (commentaryTeamsOne.length > 0) {
     t1sn = commentaryTeamsOne[0].shortName;
-    t1n = commentaryTeamsOne[0].teamName;
+    te1n = commentaryTeamsOne[0].teamName;
     t1co = commentaryTeamsOne[0].teamColor || "";
     t1bg = commentaryTeamsOne[0].backgroundColor || "";
     const wicket1 =
@@ -7972,7 +7972,7 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
 
   if (commentaryTeamsTwo.length > 0) {
     t2sn = commentaryTeamsTwo[0].shortName;
-    t2n = commentaryTeamsTwo[0].teamName;
+    te2n = commentaryTeamsTwo[0].teamName;
     t2co = commentaryTeamsTwo[0].teamColor || "";
     t2bg = commentaryTeamsTwo[0].backgroundColor || "";
     const wicket1 =
@@ -8007,13 +8007,13 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.scot = "";
     resultArr.scor = "";
     resultArr.scov = "";
-    resultArr.t1n = t1n;
+    resultArr.te1n = te1n;
     resultArr.t1sn = t1sn;
     resultArr.t1s = t1s;
     resultArr.t1im = t1im;
     resultArr.t1jr = t1jr;
     resultArr.t2jr = t2jr;
-    resultArr.t2n = t2n;
+    resultArr.te2n = te2n;
     resultArr.t2sn = t2sn;
     resultArr.t2s = t2s;
     resultArr.t2im = t2im;
@@ -8066,13 +8066,13 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.scot = "";
     resultArr.scor = "";
     resultArr.scov = "";
-    resultArr.t1n = t1n;
+    resultArr.te1n = te1n;
     resultArr.t1sn = t1sn;
     resultArr.t1s = t1s;
     resultArr.t1im = t1im;
     resultArr.t1jr = t1jr;
     resultArr.t2jr = t2jr;
-    resultArr.t2n = t2n;
+    resultArr.te2n = te2n;
     resultArr.t2sn = t2sn;
     resultArr.t2s = t2s;
     resultArr.t2im = t2im;
@@ -8181,13 +8181,13 @@ const commentaryDetailsByCommentaryIdService = async (request, fastify) => {
     resultArr.scot = scot;
     resultArr.scor = scor;
     resultArr.scov = scov;
-    resultArr.t1n = t1n;
+    resultArr.te1n = te1n;
     resultArr.t1sn = t1sn;
     resultArr.t1s = t1s;
     resultArr.t1im = t1im;
     resultArr.t1jr = t1jr;
     resultArr.t2jr = t2jr;
-    resultArr.t2n = t2n;
+    resultArr.te2n = te2n;
     resultArr.t2sn = t2sn;
     resultArr.t2s = t2s;
     resultArr.t2im = t2im;
@@ -8629,7 +8629,7 @@ const getMatchListByStatus = async (body, request, fastify) => {
 
     if (commentaryTeamsTwo) {
       t2sn = commentaryTeamsTwo?.shortName;
-      t2n = commentaryTeamsTwo?.teamName;
+      te2n = commentaryTeamsTwo?.teamName;
       const wicket1 =
         commentaryTeamsTwo.teamWicket === null
           ? 0
@@ -8919,7 +8919,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
 
   if (commentaryTeamsTwo) {
     t2sn = commentaryTeamsTwo.shortName;
-    t2n = commentaryTeamsTwo.teamName;
+    te2n = commentaryTeamsTwo.teamName;
     const wicket1 =
       commentaryTeamsTwo.teamWicket === null
         ? 0
@@ -9131,7 +9131,7 @@ const getMatchDataByCId = async (data, request, fastify) => {
 
 //   if (commentaryTeamsTwo) {
 //     t2sn = commentaryTeamsTwo.shortName;
-//     t2n = commentaryTeamsTwo.teamName;
+//     te2n = commentaryTeamsTwo.teamName;
 //     const wicket1 =
 //       commentaryTeamsTwo.teamWicket === null
 //         ? 0
@@ -9345,7 +9345,7 @@ const getAllDetailsByEventIdService = async (request, fastify) => {
 
     if (commentaryTeamsTwo) {
       t2sn = commentaryTeamsTwo.shortName;
-      t2n = commentaryTeamsTwo.teamName;
+      te2n = commentaryTeamsTwo.teamName;
       const wicket1 =
         commentaryTeamsTwo.teamWicket === null
           ? 0
@@ -9915,7 +9915,7 @@ const getCommenrtySquadDetailsService = async (request, fastify) => {
 
   if (commentaryTeamsTwo) {
     t2sn = commentaryTeamsTwo.shortName;
-    t2n = commentaryTeamsTwo.teamName;
+    te2n = commentaryTeamsTwo.teamName;
     const wicket1 =
       commentaryTeamsTwo.teamWicket === null
         ? 0
@@ -10029,7 +10029,7 @@ const getPartnershipListService = async (request, fastify) => {
 
   if (commentaryTeamsTwo) {
     t2sn = commentaryTeamsTwo.shortName;
-    t2n = commentaryTeamsTwo.teamName;
+    te2n = commentaryTeamsTwo.teamName;
     const wicket1 =
       commentaryTeamsTwo.teamWicket === null
         ? 0
@@ -10182,7 +10182,7 @@ const getCommentaryTeamsListService = async (request, fastify) => {
 
   if (commentaryTeamsTwo) {
     t2sn = commentaryTeamsTwo.shortName;
-    t2n = commentaryTeamsTwo.teamName;
+    te2n = commentaryTeamsTwo.teamName;
     const wicket1 =
       commentaryTeamsTwo.teamWicket === null
         ? 0
@@ -10433,7 +10433,7 @@ const getNodeEventbyEidService = async (request, fastify) => {
 
       if (commentaryTeamsTwo) {
         t2sn = commentaryTeamsTwo.shortName;
-        t2n = commentaryTeamsTwo.teamName;
+        te2n = commentaryTeamsTwo.teamName;
         const wicket1 =
           commentaryTeamsTwo.teamWicket === null
             ? 0
@@ -10561,7 +10561,7 @@ const getActiveCommertyService = async (fastify) => {
 
       if (commentaryTeamsTwo) {
         t2sn = commentaryTeamsTwo.shortName;
-        t2n = commentaryTeamsTwo.teamName;
+        te2n = commentaryTeamsTwo.teamName;
         const wicket1 =
           commentaryTeamsTwo.teamWicket === null
             ? 0
@@ -11401,7 +11401,7 @@ const getShortCommertyService = async (request, fastify) => {
 
       if (commentaryTeamsTwo) {
         t2sn = commentaryTeamsTwo.shortName;
-        t2n = commentaryTeamsTwo.teamName;
+        te2n = commentaryTeamsTwo.teamName;
         const wicket1 =
           commentaryTeamsTwo.teamWicket === null
             ? 0
