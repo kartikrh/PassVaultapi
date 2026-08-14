@@ -58,7 +58,7 @@ const saveVideoLibraryService = async (request, fastify) => {
     request
   );
 
-  const whitelableData = global.tblWhitelabels.filter(item => saveData.whitelabelId.includes(item.id));
+  const whitelableData = global.tblWhitelabels.filter(item => saveData.whitelabelId?.includes(item.id));
   const getLikeDislikeCount = await getlikeDislikeByTypeRefIdQuery({
     ...request,
     body: {
@@ -175,7 +175,7 @@ const editVideoLibraryService = async (request, fastify, data) => {
   );
 
   const resultData = modifiedData[0];
-  const whitelableData = global.tblWhitelabels.filter(item => resultData.whitelabelId.includes(item.id));
+  const whitelableData = global.tblWhitelabels.filter(item => resultData.whitelabelId?.includes(item.id));
   const getLikeDislikeCount = await getlikeDislikeByTypeRefIdQuery({
     ...request,
     body: {
