@@ -196,7 +196,7 @@ const updateAdvertiseService = async (request, fastify) => {
 
   await updateAdvertiseQuery(body, request, fastify);
 
-  const whitelableData = global.tblWhitelabels.filter(item => body.whitelabelId.includes(item.id));
+  const whitelableData = global.tblWhitelabels.filter(item => body.whitelabelId?.includes(item.id));
   body.whitelabelId = body.whitelabelId?.map(item => {
     return {
       id: item,

@@ -86,7 +86,7 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
     );
 
     let resultData = data[0];
-    const whitelableData = global.tblWhitelabels.filter(item => resultData.whitelabelId.includes(item.id));
+    const whitelableData = global.tblWhitelabels.filter(item => resultData.whitelabelId?.includes(item.id));
     resultData.whitelabelId = resultData.whitelabelId?.map(item => {
       return {
         id: item,
@@ -181,7 +181,7 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
 
     global.pendingBannerToClient = global.pendingBannerToClient.filter(item => item.bannerId !== body.bannerId);
 
-    const whitelableData = global.tblWhitelabels.filter(item => body.whitelabelId.includes(item.id));
+    const whitelableData = global.tblWhitelabels.filter(item => body.whitelabelId?.includes(item.id));
     body.whitelabelId = body.whitelabelId?.map(item => {
       return {
         id: item,
