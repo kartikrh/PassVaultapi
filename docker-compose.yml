@@ -3,12 +3,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        PORT: ${PORT}
-    restart: unless-stopped
     container_name: SocreAPI
     ports:
-      - "8000:${PORT}"
+      - "${DOCKER_CONTAINER_PORT:-8000}:${PORT}"
     environment:
       POSTGRES_USERNAME: ${POSTGRES_USERNAME}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
