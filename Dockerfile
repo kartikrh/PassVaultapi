@@ -8,8 +8,4 @@ RUN npm ci --omit=dev && npm cache clean --force
 
 COPY . .
 
-ARG PORT
-
-EXPOSE ${PORT}
-
 CMD ["npx", "fastify", "start", "-a", "0.0.0.0", "app.js"]
