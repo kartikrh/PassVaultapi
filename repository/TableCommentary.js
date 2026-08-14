@@ -5875,7 +5875,7 @@ const getCommentariesDataQueryV1 = async (fastify) => {
         tc."wrPitchCracks" as "pitchCracks",
         tc."wrTossWonBy" as "twonby",
         tc."wrChoseTo" as "choseto",
-        tc."wrWinnerId" as "winid",
+        tc."wrWinnerId" as "winId",
         tc."wrWinnerName" as "winn",
         tc."wrIsClientShow" as "icshow",
         tc."wrDisplayStatus" as "ds",
@@ -9294,8 +9294,8 @@ const getAllCommentaryByCompetitionIdForClientQuery = async (request, fastify) =
           WHEN tc."wrChoseTo" = 1 THEN 'BAT'
           ELSE 'BOWL'
         END AS "cto",
-        tt1."wrTeamName" AS "t1n",
-        tt2."wrTeamName" AS "t2n",
+        tt1."wrTeamName" AS "te1n",
+        tt2."wrTeamName" AS "te2n",
         tct1."wrShortName" AS "s1n",
         tct2."wrShortName" AS "s2n",
         COALESCE(tt1."wrImage", '') AS "te1i",
@@ -9381,7 +9381,7 @@ const getAllCommentaryByCompetitionIdForClientQuery = async (request, fastify) =
         tc."wrIsPredictMarket" AS "isPr",
         tc."wrIsClientShow" AS "ics",
         tc."wrIsTest" AS "isTest",
-        tc."wrWinnerId" AS "winid",
+        tc."wrWinnerId" AS "winId",
         tc."wrWinnerName" AS "winnm",
         tc."wrIsActive" AS "iac",
         tet."wrEventTypeId" AS "etid",
