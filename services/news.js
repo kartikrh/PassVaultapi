@@ -95,7 +95,7 @@ const createNewsService = async (request, fastify) => {
   );
 
   let resultData = data[0];
-  const whitelableData = global.tblWhitelabels.filter(item => resultData.whitelabelId.includes(item.id));
+  const whitelableData = global.tblWhitelabels.filter(item => resultData.whitelabelId?.includes(item.id));
   resultData.whitelabelId = resultData.whitelabelId?.map(item => {
     return {
       id: item,
@@ -167,7 +167,7 @@ const updateNewsService = async (request, fastify) => {
     type: request.body.type || validateNewsId.type,
     SEODescription: request.body.SEODescription || validateNewsId.SEODescription,
     imagePath: validateNewsId.imagePath,
-    whitelabelId: request.body.whitelabelId = request.body.whitelabelId,
+    whitelabelId: request.body.whitelabelId,
     commentaryId: Number(request.body.commentaryId) ?? validateNewsId?.commentaryId,
 
     displayOrder: request.body.hasOwnProperty("displayOrder")
@@ -196,7 +196,7 @@ const updateNewsService = async (request, fastify) => {
 
   await updateNewsQuery(body, request, fastify);
 
-  const whitelableData = global.tblWhitelabels.filter(item => body.whitelabelId.includes(item.id));
+  const whitelableData = global.tblWhitelabels.filter(item => body.whitelabelId?.includes(item.id));
   body.whitelabelId = body.whitelabelId?.map(item => {
     return {
       id: item,

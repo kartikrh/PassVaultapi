@@ -228,7 +228,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllAdvertiseQueryData = await getAllAdvertiseQuery(fastify);
     const getAllAdvertise = getAllAdvertiseQueryData?.map(item => ({
       ...item,
-      whitelabelId: item.whitelabelId.map(id => {
+      whitelabelId: item.whitelabelId?.map(id => {
         const whitelabel = whitelabelMap.get(id);
         return {
           id,
@@ -242,7 +242,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllNewsQueryData = await getAllNewsQuery(fastify);
     const getAllNews = getAllNewsQueryData?.map(item => ({
       ...item,
-      whitelabelId: item.whitelabelId.map(id => {
+      whitelabelId: item.whitelabelId?.map(id => {
         const whitelabel = whitelabelMap.get(id);
         return {
           id,
@@ -256,7 +256,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllBannersQueryData = await getAllBannerQuery(fastify);
     const getAllBanners = getAllBannersQueryData?.map(item => ({
       ...item,
-      whitelabelId: item.whitelabelId.map(id => {
+      whitelabelId: item.whitelabelId?.map(id => {
         const whitelabel = whitelabelMap.get(id);
         return {
           id,
@@ -271,7 +271,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllPhotoLibraryQueryData = await getAllPhotoLibraryQuery(fastify);
     const getAllPhotoLibrary = getAllPhotoLibraryQueryData?.map(item => ({
       ...item,
-      whitelabelId: item.whitelabelId.map(id => {
+      whitelabelId: item.whitelabelId?.map(id => {
         const whitelabel = whitelabelMap.get(id);
         return {
           id,
@@ -302,7 +302,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     }
     const getAllVideoLibrary = getAllVideoLibraryQueryData?.map(item => ({
       ...item,
-      whitelabelId: item.whitelabelId.map(id => {
+      whitelabelId: item.whitelabelId?.map(id => {
         const whitelabel = whitelabelMap.get(id);
         const likedislike = clientLikeDislikeVideoLibraryMap.get(`${item.id}_${id}`);
         return {
@@ -604,12 +604,12 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
     }
     let {module, commentaryId} = request.body;
 
-    if ([ModuleTypes.Viewers].includes(module)) {
+    if (module?.includes(ModuleTypes.Viewers)) {
       module = [...module, ModuleTypes.News, ModuleTypes.Banners, ModuleTypes.Advertise, ModuleTypes.PhotoLibrary, ModuleTypes.VideoLibrary];
     }
 
     let whitelabelMap = new Map(), viewersMap = new Map();
-    if ([ModuleTypes.News, ModuleTypes.Banners, ModuleTypes.Advertise, ModuleTypes.PhotoLibrary, ModuleTypes.VideoLibrary].includes(module)) {
+    if (module?.some(num => [ModuleTypes.News, ModuleTypes.Banners, ModuleTypes.Advertise, ModuleTypes.PhotoLibrary, ModuleTypes.VideoLibrary].includes(num))) {
       const getAllWhitelabels = global.tblWhitelabels;
       whitelabelMap = new Map(
         getAllWhitelabels.map(wl => [
@@ -683,7 +683,7 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           const getAllNewsQueryData = await getAllNewsQuery(fastify);
           const getAllNews = getAllNewsQueryData?.map(item => ({
             ...item,
-            whitelabelId: item.whitelabelId.map(id => {
+            whitelabelId: item.whitelabelId?.map(id => {
               const whitelabel = whitelabelMap.get(id);
               return {
                 id,
@@ -700,7 +700,7 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           const getAllBannersQueryData = await getAllBannerQuery(fastify);
           const getAllBanners = getAllBannersQueryData?.map(item => ({
             ...item,
-            whitelabelId: item.whitelabelId.map(id => {
+            whitelabelId: item.whitelabelId?.map(id => {
               const whitelabel = whitelabelMap.get(id);
               return {
                 id,
@@ -717,7 +717,7 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           const getAllAdvertiseQueryData = await getAllAdvertiseQuery(fastify);
           const getAllAdvertise = getAllAdvertiseQueryData?.map(item => ({
             ...item,
-            whitelabelId: item.whitelabelId.map(id => {
+            whitelabelId: item.whitelabelId?.map(id => {
               const whitelabel = whitelabelMap.get(id);
               return {
                 id,
@@ -749,7 +749,7 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           const getAllPhotoLibraryQueryData = await getAllPhotoLibraryQuery(fastify);
           const getAllPhotoLibrary = getAllPhotoLibraryQueryData?.map(item => ({
             ...item,
-            whitelabelId: item.whitelabelId.map(id => {
+            whitelabelId: item.whitelabelId?.map(id => {
               const whitelabel = whitelabelMap.get(id);
               return {
                 id,
@@ -784,7 +784,7 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
           const getAllVideoLibraryQueryData = await getAllVideoLibraryQuery(fastify);
           const getAllVideoLibrary = getAllVideoLibraryQueryData?.map(item => ({
             ...item,
-            whitelabelId: item.whitelabelId.map(id => {
+            whitelabelId: item.whitelabelId?.map(id => {
               const whitelabel = whitelabelMap.get(id);
               const likedislike = clientLikeDislikeVideoLibraryMap.get(`${item.id}_${id}`);
               return {

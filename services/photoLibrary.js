@@ -32,7 +32,7 @@ const savePhotoLibraryService = async (request, fastify) => {
     request
   );
 
-  const whitelableData = global.tblWhitelabels.filter(item => saveData.whitelabelId.includes(item.id));
+  const whitelableData = global.tblWhitelabels.filter(item => saveData.whitelabelId?.includes(item.id));
   saveData.whitelabelId = saveData.whitelabelId?.map(item => {
     return {
       id: item,
@@ -92,7 +92,7 @@ const editPhotoLibraryService = async (request, fastify, data) => {
     request
   );
 
-  const whitelableData = global.tblWhitelabels.filter(item => modifiedData.whitelabelId.includes(item.id));
+  const whitelableData = global.tblWhitelabels.filter(item => modifiedData.whitelabelId?.includes(item.id));
   modifiedData.whitelabelId = modifiedData.whitelabelId?.map(item => {
     return {
       id: item,
