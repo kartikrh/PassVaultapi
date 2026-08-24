@@ -1,4 +1,4 @@
-{
+ {
   "name": "scoreapi",
   "version": "3.0.0",
   "description": "score-api project using the fastify framework ",
@@ -11,6 +11,7 @@
     "start": "fastify start app.js",
     "info": "fastify print-routes ./routes/root.js",
     "dev": "fastify start -w -a 0.0.0.0 app.js",
+    "dev:debug": "fastify start -w -d -I 9320 -a 0.0.0.0 app.js",
     "dev:local": "env-cmd -f .env.local npm run dev"
   },
   "keywords": [],

@@ -1,4 +1,4 @@
-const { ERROR_CODES, error, success, fetchDataForClient, getGlobalMemoryDataService } = require("../../utilities/index");
+const { ERROR_CODES, error, success, getGlobalMemoryDataService } = require("../../utilities/index");
 const {
   signUpUserService,
   signInUserServices,
@@ -14,41 +14,11 @@ const {
   getUserDecryptedPassword,
   changeUserPasswordByUSerIDService,
   getAllUsersWithCurrentService,
-  //loginRegistrationClientService,
-  loginClientService,
-  registrationClientService,
-  updateClientService,
   sendNotificationWebService,
   sendNotificationMobileService,
-  signOutClientService,
-  registerDetailsService,
-  registerMobileService,
-  validateOtpService,
-  setPasswordService,
-  clientDetailsByIdService,
-  resendOtpService,
-  updateClientPasswordService,
-  forgetPasswordService,
-  verifyEmailService,
-  verifyEmailTokenService,
-  verifyMobileService,
-  verifyMobileOtpService,
-  registerClientAppService,
-  verifyMobileNoAppService,
-  signinClientAppService,
-  updateClientProfileService,
-  changePasswordService,
-  otpResendService,
-  forgotPasswordService,
-  verifyForgotPasswordOTPService,
-  updatePasswordInForgotPasswordService,
-  clientDataByIdService,
-  verifySeamlessOTPService,
 } = require("../../services/user");
-const { errorLogger,updateWebRequestLogs } = require("../../utilities/logger");
-// const fetchAllDataFromDb = require("../../utilities/fetchAllData");
+const { errorLogger } = require("../../utilities/logger");
 const { fetchAllDataFromDb, panelLoadDataByEnum, loadEnityDataOnGlobal, globalMemoryDatas } = require("../../utilities/fetchAllData");
-const { ckImageUploadService, imgUploadService } = require("../../services/ckImage");
 const configConstants = require("../../utilities/configConstants");
 
 let commonPath = "controller/users";
@@ -136,17 +106,6 @@ const loadPanelDataInGlobal = async (request, reply, fastify) => {
     // check the pass
   
     await panelLoadDataByEnum(request, fastify, reply);
-  } catch (err) {
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-};
-
-const loadClientDataInMemory = async (request, reply, fastify) => {
-  try {
-    // if (!request.userTokenInfo.WrIsSuperAdmin) {
-    //   throw new Error("You are not authorized to perform this action");
-    // }
-    return await fetchDataForClient(fastify, reply);
   } catch (err) {
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
@@ -290,160 +249,6 @@ const changeUserPassword = async (request, reply, fastify) => {
 //   }
 // }
 
-async function registrationClient(request, reply, fastify) {
-  try {
-    const result = await registrationClientService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/registrationClient", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-}
-const registerClientApp = async (request, reply, fastify) => {
-  try {
-    const result = await registerClientAppService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/registerClientApp", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-};
-const verifyMobileNoApp = async (request, reply, fastify) => {
-  try {
-    const result = await verifyMobileNoAppService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/verifyMobileNoApp", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-};
-const signinClientApp = async (request, reply, fastify) => {
-  try {
-    const result = await signinClientAppService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/signinClientApp", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-};
-async function registerDetails(request, reply, fastify) {
-  try {
-    const result = await registerDetailsService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/registerDetails", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-}
-async function resendOtp(request, reply, fastify) {
-  try {
-    const result = await resendOtpService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/resendOtp", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-}
-async function verifyMobile(request, reply, fastify) {
-  try {
-    const result = await verifyMobileService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/verifyMobile", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-}
-async function verifyMobileOtp(request, reply, fastify) {
-  try {
-    const result = await verifyMobileOtpService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/verifyMobileOtp", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-}
-async function verifyEmail(request, reply, fastify) {
-  try {
-    const result = await verifyEmailService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/verifyEmail", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-}
-async function verifyEmailToken(request, reply, fastify) {
-  try {
-    const result = await verifyEmailTokenService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/verifyEmailToken", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-}
-async function clientDetailsById(request, reply, fastify) {
-  try {
-    const result = await clientDetailsByIdService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/clientDetailsById", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-}
-async function validateOtp(request, reply, fastify) {
-  try {
-    const result = await validateOtpService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/validateOtp", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-}
-async function setPassword(request, reply, fastify) {
-  try {
-    const result = await setPasswordService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/setPassword", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-}
-async function updateClientPassword(request, reply, fastify) {
-  try {
-    const result = await updateClientPasswordService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/updateClientPassword", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-}
-async function forgetPassword(request, reply, fastify) {
-  try {
-    const result = await forgetPasswordService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/forgetPassword", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-}
-async function loginClient(request, reply, fastify) {
-  try {
-    const result = await loginClientService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/loginClient", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-}
-
-async function updateClient(request, reply, fastify) {
-  try {
-    const result = await updateClientService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/updateClient", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-}
 
 async function sendNotificationWeb(request, reply, fastify) {
   try {
@@ -465,97 +270,7 @@ async function sendNotificationMobile(request, reply, fastify) {
   }
 }
 
-async function signOutClient(request, reply, fastify) {
-  try {
-    const result = await signOutClientService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/signOutClient", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.AUTH_ERROR, 200));
-  }
-}
 
-async function AddUpdateWebLogs(request, reply, fastify) {
-  try {
-    const result = await updateWebRequestLogs(request, fastify);
-    reply.status(200).send(result);
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.AUTH_ERROR, 200));
-  }
-}
-async function updateClientProfile(request, reply, fastify) {
-  try {
-    const result = await updateClientProfileService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/updateClientProfile", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-}
-async function changePassword(request, reply, fastify) {
-  try {
-    const result = await changePasswordService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/changePassword", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-}
-const otpResend = async (request, reply, fastify) => {
-  try {
-    const result = await otpResendService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/otpResend", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-};
-const forgotPassword = async (request, reply, fastify) => {
-  try {
-    const result = await forgotPasswordService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/forgotPassword", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-};
-const verifyForgotPasswordOTP = async (request, reply, fastify) => {
-  try {
-    const result = await verifyForgotPasswordOTPService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/verifyForgotPasswordOTP", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-};
-const updatePasswordInForgot = async (request, reply, fastify) => {
-  try {
-    const result = await updatePasswordInForgotPasswordService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/updatePasswordInForgot", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-};
-const clientDataById = async (request, reply, fastify) => {
-  try {
-    const result = await clientDataByIdService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/clientDataById", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-};
-const verifySeamlessOTP = async (request, reply, fastify) => {
-  try {
-    const result = await verifySeamlessOTPService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/verifySeamlessOTP", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-};
 const loadEnityData = async (request, fastify, reply) => {
   try {
     const result = await loadEnityDataOnGlobal(request, fastify, reply);
@@ -603,38 +318,9 @@ module.exports = {
   updateUserPassword,
   changeUserPassword,
   generalImageUpload,
-  loadClientDataInMemory,
-  //loginRegistrationClient,
-  registrationClient,
-  loginClient,
-  updateClient,
   sendNotificationWeb,
   sendNotificationMobile,
-  signOutClient,
-  registerDetails,
-  validateOtp,
-  setPassword,
-  clientDetailsById,
-  resendOtp,
-  updateClientPassword,
-  forgetPassword,
-  AddUpdateWebLogs,
-  verifyEmail,
-  verifyEmailToken,
-  verifyMobile,
-  verifyMobileOtp,
   loadPanelDataInGlobal,
-  registerClientApp,
-  verifyMobileNoApp,
-  signinClientApp,
-  updateClientProfile,
-  changePassword,
-  otpResend,
-  forgotPassword,
-  verifyForgotPasswordOTP,
-  updatePasswordInForgot,
-  clientDataById,
-  verifySeamlessOTP,
   loadEnityData,
   globalMemoryData,
   getGlobalMemoryData

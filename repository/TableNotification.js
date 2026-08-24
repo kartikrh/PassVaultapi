@@ -181,31 +181,6 @@ const deleteNotificationQuery = (request , fastify) =>{
         throw new Error(error.message);
     }
 }  
-const saveNotificationLogsQuery = (data,request,fastify) =>{
-    try {
-        const query = `INSERT INTO "tblNotificationLogs" ("wrNotificationId", "wrClientId", "wrIsRead")
-        SELECT $1, "wrClientID", $2 
-        FROM "tblClient"
-        WHERE "wrIsDelete" = false;`
-
-        const result = fastify.db.query(query,{
-            bind : [
-                data.notificationId,
-                false
-            ]
-        });
-
-        return result;
-    } catch (error) {
-        errorLogger(
-            fastify,
-            error.message,
-            "repository/TableNotification/saveNotificationLogsQuery",
-            request
-        )
-        throw new Error(error.message);
-    }
-}
 const getNotificationLogByClientQuery = async (data , request , fastify)=>{
     try {
         const {skip , take} = getPagination(data.page , pageLimit.notifcationLog.limit);
@@ -385,7 +360,6 @@ module.exports = {
     updateNotificationQuery,
     insertNotificationQuery,
     deleteNotificationQuery,
-    saveNotificationLogsQuery,
     getNotificationLogByClientQuery,
     updateNotificationLogByClientQuery,
     updateIsSendNotQuery,

@@ -8,6 +8,7 @@ jwt.keys.json
 *.key
 *.crt
 *.p12
+*.sql
 
 # ---- Logs ----
 logs

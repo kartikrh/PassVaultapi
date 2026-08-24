@@ -3,22 +3,14 @@ const crypto = require("crypto");
 const moment = require("moment");
 const { default: axios } = require("axios");
 const pLimit = require("p-limit").default;
-const { mergeAndSaveImage } = require("./imageMerge");
 const configConstants = require("./configConstants");
 const {
   errorLogger,
   tblPredictorAPILogger,
   tblThirdPartyAPILogger,
 } = require("./logger");
-const {
-  getCommentaryDetailByIdQuery,
-} = require("../repository/TableCommentary");
 const { sendNotification, sendNewsNotification, sendVideoNotification } = require("../WebPushHandler");
 const { entityConstant, nullTeamtpIds } = require("./entityConst");
-const {
-  AllTeamPlayersQuery,
-  AllTeamPlayersNullImageQuery,
-} = require("../repository/TableTeamPlayer");
 const ERROR_CODES = {
   INVALID_INPUT: "INVALID_INPUT",
   SERVER_ERROR: "SERVER_ERROR",
@@ -536,42 +528,10 @@ const callDataProvider = async (data, fastify) => {
       );
       if (endpoint) {
         let url = `${ser.api}${endpoint.endPoint}`;
-        let dataTosend = {};
-        if (
-          data.moduleType == APIEndpointModuleType.commentaryUpdate &&
-          data.serviceType == ServiceType.dataProviderAPI
-        ) {
-          if (data.type == "delete") {
-            dataTosend = {
-              commentaryId: data.commentaryId,
-            };
-          } else if(data.type == "close"){
-            dataTosend = await getCommentaryDetailByIdQuery(data, fastify);
-            if(dataTosend){
-              dataTosend = {
-                ...dataTosend,
-                status : commentaryStatus.COMPLETED
-              }
-          }
-
-          } else{
-            dataTosend = await getCommentaryDetailByIdQuery(data, fastify);
-          }
-          dataTosend = {
-            ...dataTosend,
-            type: data.type,
-          };
-        } else if (
-          (data.moduleType == APIEndpointModuleType.vendorUpdate &&
-            data.serviceType == ServiceType.dataProviderAPI) ||
-          (data.moduleType == APIEndpointModuleType.vendorIpUpdate &&
-            data.serviceType == ServiceType.dataProviderAPI)
-        ) {
-          dataTosend = {
-            ...data.data,
-            type: data.type,
-          };
-        }
+        let dataTosend = {
+          ...data.data,
+          type: data.type,
+        };
 
         const result = await axios.post(url, {
           ...dataTosend,
@@ -1973,108 +1933,6 @@ const parseUmpires = (umpiresString) => {
     return { onFieldUmpires, thirdUmpire };
 };
 
-const playersMergeImageService = async (type, request, fastify) => {
-  const startTime = new Date().toISOString();
-  const startMessage =
-    type === 1
-      ? `All players merge image process started - ${startTime}`
-      : `All players null image update process started - ${startTime}`;
-
-  await errorLogger(
-    fastify,
-    startMessage,
-    `services/player.js/playersMergeImageService`,
-    null
-  );
-
-  (async () => {
-    const limit = pLimit(10);
-
-    try {
-      const teamPlayersData =
-        type === 1
-          ? await AllTeamPlayersQuery(fastify, request)
-          : await AllTeamPlayersNullImageQuery(fastify, request);
-
-      const total = teamPlayersData.length;
-      let processed = 0;
-
-      const batchSize = 5000;
-      for (let i = 0; i < total; i += batchSize) {
-        const batch = teamPlayersData.slice(i, i + batchSize);
-        const mergeTasks = batch.map((playerData) =>
-          limit(async () => {
-            try {
-              const player = global.tblPlayers.find(
-                (item) => item.playerId == playerData.refPlayerId
-              );
-              const team = global.tblTeams.find(
-                (item) => item.teamId == playerData.teamId
-              );
-
-              if (player?.image && team?.jersey) {
-                await mergeAndSaveImage(
-                  {
-                    playerImage: player.image,
-                    jersey: team.jersey,
-                    playerName: player.playerName,
-                    teamName: team.teamName,
-                    teamPlayerId: playerData.teamPlayerId,
-                    commentaryPlayerId: null,
-                    commentaryId: null,
-                  },
-                  fastify
-                );
-              }
-            } catch (err) {
-              await errorLogger(
-                fastify,
-                `Error merging playerId ${playerData.refPlayerId} - ${err.message}`,
-                `services/player.js/playersMergeImageService`,
-                null
-              );
-            }
-          })
-        );
-
-        await Promise.allSettled(mergeTasks);
-
-        processed += batch.length;
-        if (processed % 5000 === 0 || processed >= total) {
-          await errorLogger(
-            fastify,
-            `Progress: ${processed}/${total} player images processed`,
-            `services/player.js/playersMergeImageService`,
-            null
-          );
-        }
-      }
-
-      const endTime = new Date().toISOString();
-      const endMessage =
-        type === 1
-          ? `All players merge image process completed - ${endTime}`
-          : `All players null image update process completed - ${endTime}`;
-
-      await errorLogger(
-        fastify,
-        endMessage,
-        `services/player.js/playersMergeImageService`,
-        null
-      );
-    } catch (err) {
-      await errorLogger(
-        fastify,
-        `Fatal error in playersMergeImageService - ${err.message}`,
-        `services/player.js/playersMergeImageService`,
-        err.stack
-      );
-    }
-  })();
-
-  return "All Player image(s) and Jersey image(s) merge process started";
-};
-
 const roundToNearestMinutes = async (minutes) => {
     const date = new Date();
     const ms = 1000 * 60 * minutes;
@@ -2342,7 +2200,6 @@ const getInningWiseDataFromEntity = (moduleType) => {
 const comWeatherAndPitchData = async (commentaryId) => {
   const commentaryData = global.tblCommentaries.find(item => item.commentaryId == commentaryId);
   const pitchData = global.tblPitchConditions.find(elem => elem.commentaryId == commentaryId);
-  const weatherDetails = global.tblWeather.find(elem => elem.commentaryId == commentaryId);
 
   return {
     onfieldUmpires: commentaryData?.onfieldUmpires || "",
@@ -2360,15 +2217,8 @@ const comWeatherAndPitchData = async (commentaryId) => {
     pitchCondition: pitchData?.pitchCondition || "",
     paceBowlingCondition: pitchData?.paceBowlingCondition || "",
     spineBowlingConniton: pitchData?.spineBowlingConniton || "",
-    weatherCondition: weatherDetails?.weatherCondition || "",
-    // description: weatherDetails?.description || "",
-    temp: weatherDetails?.temp || null,
-    humidity: weatherDetails?.humidity || null,
-    visibility: weatherDetails?.visibility || null,
-    windSpeed: weatherDetails?.windSpeed || null,
-    clouds: weatherDetails?.clouds || null,
   }
-} 
+}
 const getComDataByCId = async (data, request, fastify) => {
   let com = global.tblCommentaries.find(
     (item) => item?.commentaryId === data.commentaryId
@@ -2784,7 +2634,6 @@ module.exports = {
   EventType,
   parseUmpires,
   ICCMatchType,
-  playersMergeImageService,
   roundToNearestMinutes,
   GAME_STATUS,
   CompetitionStatisticsType,

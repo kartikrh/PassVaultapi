@@ -8,11 +8,6 @@ const {
     demoClientEnableInIOSWhitelabel,
     isDemoClientLogin,
     upIsDefaultAPI,
-    hideEvents,
-    getEventTypes,
-    getCommentary,
-    getCompetition,
-    unhideEvents,
 } = require("../../../controller/users/admin/whitelabel");
 const { Whitelabel } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -58,40 +53,5 @@ module.exports = async (fastify, opts) => {
     fastify.post("/upIsDefault", {
         schema: Whitelabel.upIsDefault.schema,
         handler: (request, reply) => upIsDefaultAPI(request, reply, fastify),
-    });
-    fastify.post("/hideEvent", {
-        schema: Whitelabel.hideEvent.schema,
-        preHandler: [
-            (request, reply) => authorize(request, reply, fastify),
-          ],
-        handler: (request, reply) => hideEvents(request, reply, fastify),
-    });
-     fastify.post("/unHideEvent", {
-        schema: Whitelabel.unHideEvent.schema,
-        preHandler: [
-            (request, reply) => authorize(request, reply, fastify),
-          ],
-        handler: (request, reply) => unhideEvents(request, reply, fastify),
-    });
-    fastify.post("/getEventTypes", {
-        schema: Whitelabel.getEventTypes.schema,
-         preHandler: [
-            (request, reply) => authorize(request, reply, fastify),
-          ],
-        handler: (request, reply) => getEventTypes(request, reply, fastify),
-    });
-    fastify.post("/getCommentary", {
-        schema: Whitelabel.getCommentary.schema,
-         preHandler: [
-            (request, reply) => authorize(request, reply, fastify),
-          ],
-        handler: (request, reply) => getCommentary(request, reply, fastify),
-    });
-    fastify.post("/getCompetition", {
-        schema: Whitelabel.getCompetition.schema,
-         preHandler: [
-            (request, reply) => authorize(request, reply, fastify),
-          ],
-        handler: (request, reply) => getCompetition(request, reply, fastify),
     });
 };

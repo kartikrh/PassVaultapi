@@ -28,18 +28,8 @@ const { instrument } = require("@socket.io/admin-ui");
 const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 const bcrypt = require("bcrypt");
 const Tracing = require("@sentry/tracing");
-const { connectEntitySport, disconnectEntitySports } = require("./sockets/entitySport.js");
-// const { connectClients, disconnectClients ,connectClients2} = require("./sockets");
-const {
-  disConnectClientSocketQuery,
-} = require("./repository/TableClientSocket");
-const { disConnectEntitySocketQuery, resetEntitySocketReconnectCountQuery } = require("./repository/TableEntitySockets.js");
-const { startSignalR } = require("./signalrHandler/MockSignalR.js")
-const WebSocket = require("ws");
-const WebsocketConnection = require("./websocket");
 const webPush = require("web-push");
 const { webPushset } = require("./WebPushHandler/index.js");
-const { updateMarket } = require("./utilities/marketUpdate.js");
 const cron = require('node-cron');
 const { resetAllClientSocketReconnectCountService, disconnectAllClientSocketService } = require("./services/clientSocket.js");
 const { connectClients: newConnectClients } = require("./sockets/client.js");
@@ -152,8 +142,6 @@ const setupMemoryMonitor = (fastify) => {
 // });
 
 module.exports = async function (fastify, opts) {
-  const wss = new WebSocket.Server({ noServer: true });
-
   // process.stdin.resume(); // so the program will not close instantly
   // process.on("SIGTERM", async () => {
   //   console.log("Received SIGTERM signal");
@@ -172,17 +160,8 @@ module.exports = async function (fastify, opts) {
       const models = [
         "userModel", "userLoginInfoModel", "tabsModel", "roleModel", "encryptionData",
         "permissionModel", "blockModel", "menuTypeModel", "menuItemModel", "menuItemTypeModel",
-        "pageModel", "pageAliasModel", "pageFormateModel", "eventTypeModel", "teamModel",
-        "teamPlayersModel", "paneltyRunsModel", "playerModel", "matchTypeModel", "errorLogModel",
-        "playerTypeModel", "bowlingTypeModel", "configModel", "CommentaryModel", "commentaryTeamModel",
-        "commentaryPlayerModel", "compititionModel", "eventModel", "commentaryBallByBallModel",
-        "commentaryPartnershipModel", "commentaryWicketModel", "overModel", "displayStatusModel",
-        "newsModel", "subScribesDomainModel", "subScribesSubDomainModel", "matchTypePredictorModel",
-        "marketTemplateModel", "eventMarketsModel", "marketRunnerModel", "marketTemplateRunnerModel",
-        "vendorsModel", "vendorIpModel", "clientSocketModel", "activityLogModel", "mailSettingsModel",
-        "thirdPartyApisModel", "commentaryScoringLogsModel", "clientVideoModel", "awardModel", "commentaryAwardModel", "cardTypeModel",
-        "iccRankingModel", "competitionStatisticsTypeModel", "competitionStatisticsModel", "teamMatchTypeModel", "clientLikeDislikeActivityModel",
-        "viewersModel"
+        "pageModel", "pageAliasModel", "pageFormateModel", "errorLogModel", "configModel",
+        "newsModel", "clientSocketModel", "activityLogModel", "mailSettingsModel",
       ];
 
       models.forEach((model) => require(`./sequelize/tables/${model}`)(fastify.db));
@@ -192,25 +171,12 @@ module.exports = async function (fastify, opts) {
           await fetchAllDataFromDb(fastify);
           // setupMemoryMonitor(fastify);
 
-          // await disConnectClientSocketQuery(fastify);
-          // await disConnectEntitySocketQuery(fastify);
-          await startSignalR(fastify);
-          // connectClients(fastify);
-          // connectClients2(fastify);
-          // disconnectClients(fastify);
-
           // Client Sockets
           await resetAllClientSocketReconnectCountService(null, fastify);
           await disconnectAllClientSocketService(null, fastify);
           await newConnectClients(fastify);
 
-          //Entity Sockets
-          await disconnectEntitySports(fastify);
-          await resetEntitySocketReconnectCountQuery(fastify);
-          await connectEntitySport(fastify);
-
           webPushset(webPush);
-          updateMarket(fastify)
 
         } catch (error) {
           console.error(new Date(), "Error during post-sync operations:", error);
@@ -221,70 +187,6 @@ module.exports = async function (fastify, opts) {
   if (process.env.IS_CRON_ENABLE && process.env.IS_CRON_ENABLE === "true") {
     registerCronJobs(fastify);
   }
-
-  // .after(async () => {
-  //   require("./sequelize/tables/userModel")(fastify.db);
-  //   require("./sequelize/tables/userLoginInfoModel")(fastify.db);
-  //   require("./sequelize/tables/tabsModel")(fastify.db);
-  //   require("./sequelize/tables/roleModel")(fastify.db);
-  //   require("./sequelize/tables/encryptionData")(fastify.db);
-  //   require("./sequelize/tables/permissionModel")(fastify.db);
-  //   require("./sequelize/tables/blockModel")(fastify.db);
-  //   require("./sequelize/tables/menuTypeModel")(fastify.db);
-  //   require("./sequelize/tables/menuItemModel")(fastify.db);
-  //   require("./sequelize/tables/menuItemTypeModel")(fastify.db);
-  //   require("./sequelize/tables/pageModel")(fastify.db);
-  //   require("./sequelize/tables/pageAliasModel")(fastify.db);
-  //   require("./sequelize/tables/pageFormateModel")(fastify.db);
-  //   require("./sequelize/tables/eventTypeModel")(fastify.db);
-  //   require("./sequelize/tables/teamModel")(fastify.db);
-  //   require("./sequelize/tables/teamPlayersModel")(fastify.db);
-  //   require("./sequelize/tables/paneltyRunsModel")(fastify.db);
-  //   require("./sequelize/tables/playerModel")(fastify.db);
-  //   require("./sequelize/tables/matchTypeModel")(fastify.db);
-  //   require("./sequelize/tables/errorLogModel")(fastify.db);
-  //   require("./sequelize/tables/playerTypeModel")(fastify.db);
-  //   require("./sequelize/tables/bowlingTypeModel")(fastify.db);
-  //   require("./sequelize/tables/configModel")(fastify.db);
-  //   require("./sequelize/tables/CommentaryModel")(fastify.db);
-  //   require("./sequelize/tables/commentaryTeamModel")(fastify.db);
-  //   require("./sequelize/tables/commentaryPlayerModel")(fastify.db);
-  //   require("./sequelize/tables/compititionModel")(fastify.db);
-  //   require("./sequelize/tables/eventModel")(fastify.db);
-  //   require("./sequelize/tables/commentaryBallByBallModel")(fastify.db);
-  //   require("./sequelize/tables/commentaryPartnershipModel")(fastify.db);
-  //   require("./sequelize/tables/commentaryWicketModel")(fastify.db);
-  //   require("./sequelize/tables/overModel")(fastify.db);
-  //   require("./sequelize/tables/displayStatusModel")(fastify.db);
-  //   require("./sequelize/tables/newsModel")(fastify.db);
-  //   require("./sequelize/tables/subScribesDomainModel")(fastify.db);
-  //   require("./sequelize/tables/subScribesSubDomainModel")(fastify.db);
-  //   require("./sequelize/tables/matchTypePredictorModel")(fastify.db);
-  //   require("./sequelize/tables/marketTemplateModel")(fastify.db);
-  //   require("./sequelize/tables/eventMarketsModel")(fastify.db);
-  //   require("./sequelize/tables/marketRunnerModel")(fastify.db);
-  //   require("./sequelize/tables/marketTemplateRunnerModel")(fastify.db);
-  //   require("./sequelize/tables/vendorsModel")(fastify.db);
-  //   require("./sequelize/tables/vendorIpModel")(fastify.db);
-  //   require("./sequelize/tables/clientSocketModel")(fastify.db);
-  //   require("./sequelize/tables/activityLogModel")(fastify.db);
-  //   require("./sequelize/tables/mailSettingsModel")(fastify.db);
-  //   require("./sequelize/tables/thirdPartyApisModel")(fastify.db);
-  //   require("./sequelize/tables/commentaryScoringLogsModel")(fastify.db);
-  //   require("./sequelize/tables/clientVideoModel.js")(fastify.db);
-  //   try {
-  //     await fastify.db.sync();
-  //     await featchData(fastify);
-  //     await disConnectClientSocketQuery(fastify);
-  //     await startSignalR(fastify);
-  //     connectClients(fastify);
-  //     //WebsocketConnection(fastify);
-  //     disconnectClients(fastify);
-  //     webPushset(webPush);
-  //   } catch (error) {
-  //     console.log("error sync with db", error);
-  //   }
-  // });
 
   // Configure fastify to use `multipart/form-data` requests
   fastify.register(fastifyMultipart, {
@@ -308,8 +210,6 @@ module.exports = async function (fastify, opts) {
 
       // Disconnect sockets
       await disconnectAllClientSocketService(null, fastify);
-      await disconnectEntitySports(fastify);
-      await resetEntitySocketReconnectCountQuery(fastify);
       console.log("Cleanup task executed successfully");
     } catch (error) {
       console.error(new Date(), "Error during preClose hook execution:", error);
@@ -583,22 +483,6 @@ module.exports = async function (fastify, opts) {
 
   io.use(socketMiddleware);
   io.on("connection", (socket) => connection(socket, fastify));
-
-  fastify.server.on("upgrade", (request, socket, head) => {
-    if (request.url === "/ws") {
-      wss.handleUpgrade(request, socket, head, (ws) => {
-        wss.emit("connection", ws, request);
-      });
-    }
-  });
-
-  // Define your WebSocket connection handling
-  wss.on("connection", (ws, req) => {
-    // Handle WebSocket connections here
-    // You can pass the Fastify instance to your WebSocket connection handling function
-    global.wss = wss;
-    WebsocketConnection(fastify, ws, req);
-  });
 
   // connect the as a client to the socket.io admin
   // fastify.register(AutoLoad, {

@@ -3,7 +3,6 @@ const cron = require("node-cron");
 const { clientSocketStatus, clientSocketActionType } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 const { updateClientSocketStatusQuery, updateReconnectCountQuery } = require("../repository/TableClientSocket");
-const { updateCommentaryViewsQuery } = require("../repository/TableCommentary");
 const { withSentryCronProfiling } = require("../utilities/sentryCron");
 
 global.clientSocketIo = [];
@@ -90,37 +89,6 @@ const connectClients = async (fastify, clientSocketId) => {
             if (!client.connected) return;
             client.emit("updateRoomUserCount", { message: "Send me user counts" });
           }));
-        }
-      });
-
-      client.on("countData", async (data) => {
-        try {
-          const updates = [];
-
-          for (const elem of data) {
-            const increment = Number(elem.count) || 0;
-            if (!elem.commentaryId || increment <= 0) continue;
-
-            const index = global.tblCommentaries.findIndex(
-              i => i.commentaryId == elem.commentaryId
-            );
-            if (index === -1) continue;
-
-            global.tblCommentaries[index].views =
-              (Number(global.tblCommentaries[index].views) || 0) + increment;
-
-            updates.push(
-              updateCommentaryViewsQuery(
-                { views: increment, commentaryId: elem.commentaryId },
-                fastify
-              )
-            );
-          }
-
-          await Promise.all(updates);
-          client.emit("updateCommentaryCounts", data);
-        } catch (err) {
-          console.error("countData handler error:", err);
         }
       });
 

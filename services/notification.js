@@ -24,17 +24,6 @@ const getAllNotificationService = async(request) => {
     }
     return result;
 };
-const getEventListService = async(request) =>{
-    let result = global.tblCommentaries.map((item)=>{
-        return {
-            commentaryId : item.commentaryId,
-            eventDate : item.eventDate,
-            eventName : item.eventName,
-            eventRefId : item.eventRefId
-        }
-    });
-    return result || [];
-}
 const getNotificationByIdService = async(request) =>{
     let result = global.tblNotifications.find(
         (item)=> item.notificationId == request.body.notificationId
@@ -60,14 +49,7 @@ const saveNotificationService = async(request,fastify) =>{
     
 }
 const createNotificationService = async(request,fastify)=>{
-    // validate commentaryId
     const {commentaryId , image , icon , title} = request.body;
-    if(commentaryId){
-        let index = global.tblCommentaries.findIndex((item)=>item.commentaryId == commentaryId);
-        if(index == -1){
-            throw new Error("Commmentary with this id not found.")
-        }
-    }
     // store image
     let projectName =global.tblConfigs.find(
         (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
@@ -113,12 +95,6 @@ const updateNotificationService =  async (request,fastify)=>{
     const {notificationId ,title, commentaryId , image , icon} = request.body;
     console.log(typeof(request.body.isSend))
     const isSend = request.body.isSend == "true" ? true : false;
-    if(commentaryId){
-        let cIndex = global.tblCommentaries.findIndex((item)=>item.commentaryId == commentaryId);
-        if(cIndex == -1){
-            throw new Error("Commentary with this id not found.")
-        }
-    }
     let index = global.tblNotifications.findIndex(
         (item)=> item.notificationId == notificationId
     );
@@ -227,6 +203,5 @@ module.exports = {
     getNotificationByIdService,
     saveNotificationService,
     deleteNotificationService,
-    getEventListService,
     sendNotService
 }
