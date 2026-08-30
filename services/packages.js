@@ -42,6 +42,8 @@ const editPackageService = async (request, fastify) => {
       isDisplay: Boolean(request.body.isDisplay) ?? validateId.isDisplay,
       trailDays: request.body.trailDays ?? validateId.trailDays,
       isDefault: request.body.isDefault ?? validateId.isDefault,
+      maxAccounts: request.body.maxAccounts === "" ? null : request.body.maxAccounts ?? validateId.maxAccounts,
+      maxGroups: request.body.maxGroups === "" ? null : request.body.maxGroups ?? validateId.maxGroups,
       id: parseInt(request.body.id, 10),
   };
   

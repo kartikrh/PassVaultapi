@@ -4,7 +4,8 @@ const {
     createMailSettings,
     deleteMailSettings,
     changeIsDefaultStage,
-    activeInactiveMailSettings
+    activeInactiveMailSettings,
+    sendTestMail
 } = require("../../../../services/mailSettings");
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
 const { errorLogger } = require("../../../../utilities/logger");
@@ -71,11 +72,22 @@ const activeInactiveMails = async (request, reply, fastify) => {
     }
 };
 
+const testMailSettings = async (request, reply, fastify) => {
+    try {
+        const result = await sendTestMail(request);
+        reply.status(200).send(success(result, 200));
+    } catch (err) {
+        errorLogger(fastify, err.message, commonPath + "/testMailSettings", request);
+        reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+    }
+};
+
 module.exports = {
     getAllMailSettings,
     singleGetMailSettings,
     saveMailSettings,
     deleteMailSetting,
     isDefaultStage,
-    activeInactiveMails
+    activeInactiveMails,
+    testMailSettings
 };

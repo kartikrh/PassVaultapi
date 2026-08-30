@@ -420,7 +420,7 @@ module.exports = async function (fastify, opts) {
         // This is NOT recommended for production as it enables reflection exploits
         // origin: true,
         origin: true,
-        methods: ["GET", "POST", "OPTIONS"], // Allow necessary methods
+        methods: ["GET", "POST", "PUT", "OPTIONS"], // Allow necessary methods -- PUT is used by /vault/data and /vault/auth/profile
         preflightContinue: false, // Automatically handle preflight requests,
         maxAge: 300,
         preflight: true,

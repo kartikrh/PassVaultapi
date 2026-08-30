@@ -209,11 +209,43 @@ const savePageService = async (request, fastify) => {
   }
 };
 
+// GET-equivalent for a browser client (no auth, called before anyone is
+// signed in) -- unlike allPageService above (used by the staff admin panel),
+// this hands back only the fields a public page needs to render CMS content.
+// Everything else on tblPage (userId, createdBy, ...) stays server-side.
+// Same convention as services/whitelabel.js/publicWhitelabelsService.
+const PUBLIC_PAGE_FIELDS = [
+  "pageId",
+  "pageTitle",
+  "pageHeading",
+  "pageName",
+  "alias",
+  "isLink",
+  "linkURL",
+  "isOpenInNewTab",
+  "pageContent",
+  "seoWord",
+  "seoDescription",
+  "dynamicParameters",
+  "isDefault",
+];
+
+const publicPagesService = async () => {
+  return global.tblPages.map((item) => {
+    const picked = {};
+    PUBLIC_PAGE_FIELDS.forEach((key) => {
+      picked[key] = item[key];
+    });
+    return picked;
+  });
+};
+
 module.exports = {
   allPageService,
   pageByIdService,
   savePageService,
   deletePageService,
   updatePageService,
-  addPageService
+  addPageService,
+  publicPagesService,
 };

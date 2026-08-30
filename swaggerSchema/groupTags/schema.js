@@ -7468,6 +7468,21 @@ const MailSettings = {
       },
     },
   },
+
+  testMail: {
+    schema: {
+      tags: ["Mail settings"],
+      description: "send a test mail using a saved mail settings configuration",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          testEmail: { type: "string" },
+        },
+        required: ["id", "testEmail"],
+      },
+    },
+  },
 };
 const Logs = {
   responseLogs : {

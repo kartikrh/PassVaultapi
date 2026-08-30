@@ -3,7 +3,7 @@ const { errorLogger } = require("../utilities/logger");
 const getAllPackagesQuery = async (fastify) => {
     try {
         return await fastify.db.query(
-            `SELECT 
+            `SELECT
                 "wrId" as "id",
                 "wrName" as "name",
                 "wrDescription" as "description",
@@ -17,6 +17,8 @@ const getAllPackagesQuery = async (fastify) => {
                 "wrDisplayOrder" as "displayOrder",
                 "wrTrialDays" as "trailDays",
                 "wrIsDefault" as "isDefault",
+                "wrMaxAccounts" as "maxAccounts",
+                "wrMaxGroups" as "maxGroups",
                 "wrCreatedAt" as "createdAt",
                 "wrCreatedBy" as "createdBy",
                 "wrUpdatedBy" as "updatedBy",
@@ -43,16 +45,16 @@ const insertPackagesQuery = async (data, fastify, request) => {
             INSERT INTO "tblPackages" (
             "wrName", "wrDescription", "wrPrice", "wrCurrency", "wrIntervalType", "wrIntervalCount",
             "wrRazorPayPlanId", "wrIsActive", "wrIsDisplay", "wrDisplayOrder", "wrTrialDays", "wrIsDefault",
-            "wrCreatedAt", "wrCreatedBy"
-            ) 
+            "wrMaxAccounts", "wrMaxGroups", "wrCreatedAt", "wrCreatedBy"
+            )
             VALUES (
                 $1, $2, $3, $4, $5, $6, $7, $8, $9,
                 (SELECT COALESCE((SELECT MAX("wrDisplayOrder") FROM "tblPackages"), 0) + 1),
-                $10, $11, NOW(), $12
-            ) 
+                $10, $11, $12, $13, NOW(), $14
+            )
             RETURNING *
             )
-            SELECT 
+            SELECT
                 "wrId" as "id",
                 "wrName" as "name",
                 "wrDescription" as "description",
@@ -66,6 +68,8 @@ const insertPackagesQuery = async (data, fastify, request) => {
                 "wrDisplayOrder" as "displayOrder",
                 "wrTrialDays" as "trailDays",
                 "wrIsDefault" as "isDefault",
+                "wrMaxAccounts" as "maxAccounts",
+                "wrMaxGroups" as "maxGroups",
                 "wrCreatedAt" as "createdAt",
                 "wrCreatedBy" as "createdBy",
                 "wrUpdatedBy" as "updatedBy",
@@ -86,6 +90,8 @@ const insertPackagesQuery = async (data, fastify, request) => {
                     data.isDisplay,
                     data.trailDays,
                     data.isDefault,
+                    data.maxAccounts ?? null,
+                    data.maxGroups ?? null,
                     request.userTokenInfo.WrUserId,
                 ],
             }
@@ -106,7 +112,7 @@ const insertPackagesQuery = async (data, fastify, request) => {
 const updatePackagesQuery = async (data, fastify, request) => {
     try {
         const result = await fastify.db.query(
-            `UPDATE "tblPackages" SET 
+            `UPDATE "tblPackages" SET
                 "wrName" = $1,
                 "wrDescription" = $2,
                 "wrPrice" = $3,
@@ -117,10 +123,12 @@ const updatePackagesQuery = async (data, fastify, request) => {
                 "wrIsDisplay" = $8,
                 "wrTrialDays" = $9,
                 "wrIsDefault" = $10,
-                "wrUpdatedBy" = $11,
+                "wrMaxAccounts" = $11,
+                "wrMaxGroups" = $12,
+                "wrUpdatedBy" = $13,
                 "wrUpdatedAt" = now()
-            WHERE "wrId" = $12
-            RETURNING 
+            WHERE "wrId" = $14
+            RETURNING
                 "wrId" as "id",
                 "wrName" as "name",
                 "wrDescription" as "description",
@@ -134,6 +142,8 @@ const updatePackagesQuery = async (data, fastify, request) => {
                 "wrDisplayOrder" as "displayOrder",
                 "wrTrialDays" as "trailDays",
                 "wrIsDefault" as "isDefault",
+                "wrMaxAccounts" as "maxAccounts",
+                "wrMaxGroups" as "maxGroups",
                 "wrCreatedAt" as "createdAt",
                 "wrCreatedBy" as "createdBy",
                 "wrUpdatedBy" as "updatedBy",
@@ -151,6 +161,8 @@ const updatePackagesQuery = async (data, fastify, request) => {
                     data.isDisplay,
                     data.trailDays,
                     data.isDefault,
+                    data.maxAccounts ?? null,
+                    data.maxGroups ?? null,
                     request.userTokenInfo.WrUserId,
                     data.id
                 ],

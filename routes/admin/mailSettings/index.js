@@ -5,7 +5,8 @@ const {
     saveMailSettings,
     deleteMailSetting,
     isDefaultStage,
-    activeInactiveMails
+    activeInactiveMails,
+    testMailSettings
 } = require("../../../controller/users/admin/mailSettings");
 const { MailSettings } = require("../../../swaggerSchema/groupTags/schema");
 
@@ -49,5 +50,13 @@ module.exports = async (fastify, opts) => {
     fastify.post("/activeInactiveApi", {
         schema: MailSettings.activeInactiveApi.schema,
         handler: (request, reply) => activeInactiveMails(request, reply, fastify),
+    });
+
+    fastify.post("/testMail", {
+        schema: MailSettings.testMail.schema,
+        preHandler: [
+            (request, reply) => authorize(request, reply, fastify),
+        ],
+        handler: (request, reply) => testMailSettings(request, reply, fastify),
     });
 };

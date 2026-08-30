@@ -15,7 +15,7 @@ const {
 } = require("../utilities/Images");
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
-const { callClientAPI, APIEndpointModuleType } = require("../utilities");
+const { callClientAPI, APIEndpointModuleType, encrypt, decrypt } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 
 const saveWhitelabelService = async (request, fastify) => {
@@ -89,26 +89,11 @@ const editWhitelabelService = async (request, fastify) => {
     recatchKey: request.body.recatchKey ?? validateId.recatchKey,
     isGoogleLogin: request.body.isGoogleLogin ?? validateId.isGoogleLogin,
     googleKey: request.body.googleKey ?? validateId.googleKey,
-    isFacebookLogin: request.body.isFacebookLogin ?? validateId.isFacebookLogin,
-    facebookKey: request.body.facebookKey ?? validateId.facebookKey,
-    mobileGoogleFirebaseKey: request.body.mobileGoogleFirebaseKey ?? validateId.mobileGoogleFirebaseKey,
-    mobileGoogleFirebaseUrl: request.body.mobileGoogleFirebaseUrl ?? validateId.mobileGoogleFirebaseUrl,
-    isSendMobileOTP: request.body.isSendMobileOTP ?? validateId.isSendMobileOTP,
-    sendMobileOTPType: request.body.sendMobileOTPType ?? validateId.sendMobileOTPType,
-    sendMobileOTPMaxSendLimit: request.body.sendMobileOTPMaxSendLimit ?? validateId.sendMobileOTPMaxSendLimit,
-    mobileOTPAuthKey: request.body.mobileOTPAuthKey ?? validateId.mobileOTPAuthKey,
-    mobileOTPExpired: request.body.mobileOTPExpired ?? validateId.mobileOTPExpired,
-    mobileOTPSendUrl: request.body.mobileOTPSendUrl ?? validateId.mobileOTPSendUrl,
-    mobileOTPResendUrl: request.body.mobileOTPResendUrl ?? validateId.mobileOTPResendUrl,
-    mobileOTPForgotUrl: request.body.mobileOTPForgotUrl ?? validateId.mobileOTPForgotUrl,
-    mobileSemlessOTPKey: request.body.mobileSemlessOTPKey ?? validateId.mobileSemlessOTPKey,
-    isSendMailOTP: request.body.isSendMailOTP ?? validateId.isSendMailOTP,
-    sendMailType: request.body.sendMailType ?? validateId.sendMailType,
-    sendMailMaxSendLimit: request.body.sendMailMaxSendLimit ?? validateId.sendMailMaxSendLimit,
-    mobileOTPVerify: request.body.mobileOTPVerify ?? validateId.mobileOTPVerify,
+    googleSecret: request.body.googleSecret ?? validateId.googleSecret,
     clientOTP: request.body.clientOTP ?? validateId.clientOTP,
     whitelabelId : request.body.whitelabelId ?? validateId.whitelabelId,
     isDefault: request.body.isDefault ?? validateId.isDefault,
+    mailSettingId: request.body.mailSettingId ?? validateId.mailSettingId,
   };
 
   const modifiedData = await updateWhitelabelQuery(updateData, fastify, request);
@@ -155,13 +140,42 @@ const allWhitelabelsService = async (request) => {
   }
 };
 
+// GET-equivalent for a browser client (no auth, called before anyone is
+// signed in) -- unlike allWhitelabelsService above (used by the staff admin
+// panel), this hands back only what a public page needs to light up Google
+// login / reCAPTCHA. Everything else on tblWhitelabel (clientOTP,
+// mobile*AuthKey/SemlessOTPKey, encryptedWhitelabelId, createdBy, ...) stays
+// server-side.
+const PUBLIC_WHITELABEL_FIELDS = ["domain", "isGoogleLogin", "googleKey", "isRecatchEnable", "recatchKey", "isDefault"];
+
+const publicWhitelabelsService = async () => {
+  return global.tblWhitelabels
+    .filter((item) => item.isActive)
+    .map((item) => {
+      const picked = {};
+      PUBLIC_WHITELABEL_FIELDS.forEach((key) => {
+        picked[key] = item[key];
+      });
+      return picked;
+    });
+};
+
+// Decrypts googleSecret for the Add/Edit White Label form, same convention
+// as mailSettingsById decrypting Mail Settings' password field. The list
+// endpoints (allWhitelabelsService, publicWhitelabelsService) never do this
+// -- googleSecret stays encrypted everywhere except this one lookup.
 const whitelabelByIdService = async (request) => {
   const { id } = request.body;
   const result = global.tblWhitelabels.find((item) => item.id === id);
-  return result || null;
+  if (!result) return null;
+  const decryptedGoogleSecret = result.googleSecret ? await decrypt(result.googleSecret) : result.googleSecret;
+  return { ...result, googleSecret: decryptedGoogleSecret };
 };
 
 const createWhitelabelService = async (request, fastify) => {
+  if (request.body.googleSecret) {
+    request.body.googleSecret = encrypt(request.body.googleSecret);
+  }
   if (request.body.id == 0) {
     return await saveWhitelabelService(request, fastify, request);
   } else {
@@ -400,4 +414,5 @@ module.exports = {
   isDemoClientLoginService,
   clientApiWhitelabelsService,
   upIsDefaultAPIService,
+  publicWhitelabelsService,
 };

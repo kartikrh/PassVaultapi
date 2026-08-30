@@ -1,5 +1,6 @@
 const { insertMailSettingsQuery, updateMailSettingsQuery, deleteMailSettingsQuery, isDefaultChangeQuery, isDefaultFalseQuery, activeInactiveMailSettingsQuery } = require("../repository/TableMailSettings");
 const { encrypt, decrypt } = require("../utilities/index");
+const { buildMailTransporter } = require("../utilities/mailer");
 
 const saveMailSettings = async (request, fastify, data) => {
     const validateEmail = global.tblMailSettings.find((item) =>
@@ -171,11 +172,32 @@ const activeInactiveMailSettings = async (request, fastify) => {
     return `Mail settings updated successfully`;
 };
 
+const sendTestMail = async (request) => {
+    const { id, testEmail } = request.body;
+    const settings = global.tblMailSettings.find((item) => item.id === id);
+    if (!settings) {
+        throw new Error("Mail settings with this Id not found");
+    }
+
+    const decryptedPassword = await decrypt(settings.password);
+    const transporter = buildMailTransporter(settings, decryptedPassword);
+
+    await transporter.sendMail({
+        from: settings.email,
+        to: testEmail,
+        subject: "Test Mail - Mail Settings Configuration",
+        text: `This is a test email sent using the "${settings.email}" mail settings configuration to verify it is working correctly.`,
+    });
+
+    return `Test mail sent to ${testEmail} successfully`;
+};
+
 module.exports = {
     allMailSettings,
     mailSettingsById,
     createMailSettings,
     deleteMailSettings,
     changeIsDefaultStage,
-    activeInactiveMailSettings
+    activeInactiveMailSettings,
+    sendTestMail
 };

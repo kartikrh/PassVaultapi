@@ -9,6 +9,7 @@ jwt.keys.json
 *.crt
 *.p12
 *.sql
+!sql/vault/*.sql
 
 # ---- Logs ----
 logs
