@@ -16,6 +16,8 @@ const {
   getAllUsersWithCurrentService,
   sendNotificationWebService,
   sendNotificationMobileService,
+  verifyOtpUserServices,
+  resetUserOtpService,
 } = require("../../services/user");
 const { errorLogger } = require("../../utilities/logger");
 const { fetchAllDataFromDb, panelLoadDataByEnum, loadEnityDataOnGlobal, globalMemoryDatas } = require("../../utilities/fetchAllData");
@@ -300,6 +302,26 @@ const getGlobalMemoryData = async (request, reply, fastify) => {
   }
 };
 
+async function verifyOtpUser(request, reply, fastify) {
+  try {
+    const result = await verifyOtpUserServices(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/verifyOtpUser", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.AUTH_ERROR, 200));
+  }
+}
+
+async function resetUserOtp(request, reply, fastify) {
+  try {
+    const result = await resetUserOtpService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/resetUserOtp", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+}
+
 module.exports = {
   signUpUser,
   signInUser,
@@ -323,5 +345,7 @@ module.exports = {
   loadPanelDataInGlobal,
   loadEnityData,
   globalMemoryData,
-  getGlobalMemoryData
+  getGlobalMemoryData,
+  verifyOtpUser,
+  resetUserOtp,
 };

@@ -73,9 +73,45 @@ const markVaultKeyRecoveredQuery = async (keyId, fastify) => {
   }
 };
 
+// Delete Account only -- see services/vaultAccountLifecycle.js's
+// deleteAccountService. Moves every row for this client into
+// tblDeletedClientVaultKeys (sql/vault/009_deleted_client_archive_tables.sql)
+// in one atomic statement, then removes them from the live table. Called
+// before hardDeleteClientQuery (FK: tblClientVaultKey.wrClientId ->
+// tblClient, no ON DELETE CASCADE).
+//
+// Note this table still carries the wrapped vault key -- wrapped with the
+// single server-side VAULT_MASTER_KEY (utilities/vaultCrypto.js), not
+// anything derived from the client, so it's decryptable by anyone with DB +
+// that key regardless of which table the row sits in. Archiving it (rather
+// than the old behavior of dropping it entirely) was an explicit request;
+// tblDeletedClientVaultKeys should be given the same access restrictions as
+// tblClientVaultKey itself, not treated as inert history.
+const moveVaultKeysToArchiveByClientQuery = async (clientId, deletedClientId, fastify) => {
+  try {
+    return await fastify.db.query(
+      `WITH moved AS (
+        DELETE FROM "tblClientVaultKey" WHERE "wrClientId" = $1 RETURNING *
+      )
+      INSERT INTO "tblDeletedClientVaultKeys" (
+        "wrKeyId", "wrClientId", "wrWrappedKey", "wrKdfSalt", "wrKeyVersion",
+        "wrIsActive", "wrRecoveredAt", "wrRecoveredCount", "wrCreatedAt", "wrUpdatedAt", "wrDeletedClientId"
+      )
+      SELECT "wrKeyId", "wrClientId", "wrWrappedKey", "wrKdfSalt", "wrKeyVersion",
+             "wrIsActive", "wrRecoveredAt", "wrRecoveredCount", "wrCreatedAt", "wrUpdatedAt", $2
+      FROM moved`,
+      { type: fastify.db.QueryTypes.INSERT, bind: [clientId, deletedClientId] }
+    );
+  } catch (err) {
+    errorLogger(fastify, err.message, "DB ERROR --> repository/TableClientVaultKey/moveVaultKeysToArchiveByClientQuery");
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   findActiveVaultKeyByClientIdQuery,
   insertVaultKeyQuery,
   deactivateVaultKeyQuery,
   markVaultKeyRecoveredQuery,
+  moveVaultKeysToArchiveByClientQuery,
 };

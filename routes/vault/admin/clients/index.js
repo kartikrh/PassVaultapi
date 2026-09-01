@@ -5,6 +5,7 @@ const {
   updateClientStatus,
   deleteClients,
   getClientUsage,
+  getDeletedClients,
 } = require("../../../../controller/vault/adminClients");
 
 module.exports = async (fastify, opts) => {
@@ -38,6 +39,17 @@ module.exports = async (fastify, opts) => {
       (request, reply) => checkPermission(request, reply, fastify, { tabName: "Clients", mode: "edit" }),
     ],
     handler: (request, reply) => updateClientStatus(request, reply, fastify),
+  });
+
+  // "Deleted" tab on the same admin Clients screen -- reads
+  // tblDeletedClients (self-delete archive), not tblClient, so it's a
+  // separate endpoint rather than a status filter on /all.
+  fastify.post("/deleted", {
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+      (request, reply) => checkPermission(request, reply, fastify, { tabName: "Clients", mode: "view" }),
+    ],
+    handler: (request, reply) => getDeletedClients(request, reply, fastify),
   });
 
   fastify.post("/delete", {

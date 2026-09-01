@@ -44,6 +44,7 @@ const editPackageService = async (request, fastify) => {
       isDefault: request.body.isDefault ?? validateId.isDefault,
       maxAccounts: request.body.maxAccounts === "" ? null : request.body.maxAccounts ?? validateId.maxAccounts,
       maxGroups: request.body.maxGroups === "" ? null : request.body.maxGroups ?? validateId.maxGroups,
+      maxNotes: request.body.maxNotes === "" ? null : request.body.maxNotes ?? validateId.maxNotes,
       id: parseInt(request.body.id, 10),
   };
   

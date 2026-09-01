@@ -16,6 +16,18 @@ const VaultActivityCodes = {
   GROUP_DELETED: 122,
   VAULT_KEY_RECOVERED: 130,
   VAULT_KEY_ROTATED: 131,
+  TWO_FA_ENABLED: 140,
+  TWO_FA_RESET: 141,
+  NOTE_CREATED: 160,
+  NOTE_UPDATED: 161,
+  NOTE_DELETED: 162,
+  ACCOUNT_PASSWORD_VIEWED: 170,
+  PAGE_VIEWED: 171,
+  LOGIN_FAILED: 180,
+  ACCOUNT_LOCKED: 181,
+  CLIENT_SUSPENDED: 190,
+  CLIENT_REACTIVATED: 191,
+  CLIENT_SELF_DELETED: 192,
 };
 
 // Shared between the client-facing "Recent activity" list
@@ -40,11 +52,24 @@ const ACTIVITY_LABELS = {
   [VaultActivityCodes.GROUP_DELETED]: "Group deleted",
   [VaultActivityCodes.VAULT_KEY_RECOVERED]: "Vault key recovered",
   [VaultActivityCodes.VAULT_KEY_ROTATED]: "Vault key rotated",
+  [VaultActivityCodes.TWO_FA_ENABLED]: "Two-factor authentication enabled",
+  [VaultActivityCodes.TWO_FA_RESET]: "Two-factor authentication reset",
+  [VaultActivityCodes.NOTE_CREATED]: "Note created",
+  [VaultActivityCodes.NOTE_UPDATED]: "Note updated",
+  [VaultActivityCodes.NOTE_DELETED]: "Note deleted",
+  [VaultActivityCodes.ACCOUNT_PASSWORD_VIEWED]: "Account password viewed",
+  [VaultActivityCodes.PAGE_VIEWED]: "Page viewed",
+  [VaultActivityCodes.LOGIN_FAILED]: "Failed login attempt",
+  [VaultActivityCodes.ACCOUNT_LOCKED]: "Account locked after too many failed attempts",
+  [VaultActivityCodes.CLIENT_SUSPENDED]: "Account suspended",
+  [VaultActivityCodes.CLIENT_REACTIVATED]: "Account reactivated",
+  [VaultActivityCodes.CLIENT_SELF_DELETED]: "Account deleted",
 };
 
 const VaultEntryType = {
   ACCOUNT: 1,
   GROUP: 2,
+  NOTE: 3,
 };
 
 const VaultClientProvider = {
@@ -58,6 +83,21 @@ const VaultChangeType = {
   DELETE: "delete",
 };
 
+// Accounts (and their Groups) live in one Drive file, Notes in a separate
+// one -- see utilities/googleDrive.js's VAULT_FILE_NAMES. Derived from
+// entryType server-side (never trusted from the client) so an entry can
+// never be written into the wrong file.
+const VaultFileKind = {
+  ACCOUNTS: "accounts",
+  NOTES: "notes",
+};
+
+const VAULT_FILE_KIND_BY_ENTRY_TYPE = {
+  [VaultEntryType.ACCOUNT]: VaultFileKind.ACCOUNTS,
+  [VaultEntryType.GROUP]: VaultFileKind.ACCOUNTS,
+  [VaultEntryType.NOTE]: VaultFileKind.NOTES,
+};
+
 const VAULT_ENTRY_ACTIVITY_CODE_MAP = {
   [VaultEntryType.ACCOUNT]: {
     [VaultChangeType.CREATE]: VaultActivityCodes.ACCOUNT_CREATED,
@@ -68,6 +108,11 @@ const VAULT_ENTRY_ACTIVITY_CODE_MAP = {
     [VaultChangeType.CREATE]: VaultActivityCodes.GROUP_CREATED,
     [VaultChangeType.UPDATE]: VaultActivityCodes.GROUP_UPDATED,
     [VaultChangeType.DELETE]: VaultActivityCodes.GROUP_DELETED,
+  },
+  [VaultEntryType.NOTE]: {
+    [VaultChangeType.CREATE]: VaultActivityCodes.NOTE_CREATED,
+    [VaultChangeType.UPDATE]: VaultActivityCodes.NOTE_UPDATED,
+    [VaultChangeType.DELETE]: VaultActivityCodes.NOTE_DELETED,
   },
 };
 
@@ -85,5 +130,7 @@ module.exports = {
   VaultEntryType,
   VaultClientProvider,
   VaultChangeType,
+  VaultFileKind,
+  VAULT_FILE_KIND_BY_ENTRY_TYPE,
   getVaultEntryActivityCode,
 };

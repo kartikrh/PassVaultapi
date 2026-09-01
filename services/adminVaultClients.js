@@ -10,6 +10,7 @@ const { getClientPlanLimitsQuery } = require("../repository/TableClient");
 const { countActiveEntriesByTypeQuery } = require("../repository/TableClientVaultEntries");
 const { VaultEntryType } = require("../utilities/vaultConstants");
 const { ACTIVITY_LABELS } = require("./adminVaultHistory");
+const { listDeletedClientsQuery } = require("../repository/TableDeletedClients");
 
 // GET /vault/admin/clients equivalent -- metadata-only list, search/filter by
 // plan and status. This module intentionally deviates from this codebase's usual
@@ -34,9 +35,10 @@ const getClientDetailAdminService = async (request, fastify) => {
     throw new Error("Client not found");
   }
 
-  const [accountCount, groupCount, devices, activity] = await Promise.all([
+  const [accountCount, groupCount, noteCount, devices, activity] = await Promise.all([
     countActiveEntriesByTypeQuery(clientId, VaultEntryType.ACCOUNT, fastify),
     countActiveEntriesByTypeQuery(clientId, VaultEntryType.GROUP, fastify),
+    countActiveEntriesByTypeQuery(clientId, VaultEntryType.NOTE, fastify),
     getClientDevicesAdminQuery(clientId, fastify),
     listClientActivityLogsQuery({ clientId, limit: 20 }, fastify),
   ]);
@@ -46,6 +48,7 @@ const getClientDetailAdminService = async (request, fastify) => {
     usage: {
       accounts: { used: accountCount, limit: client.maxAccounts },
       groups: { used: groupCount, limit: client.maxGroups },
+      notes: { used: noteCount, limit: client.maxNotes },
     },
     devices,
     recentActivity: activity.map((row) => ({ ...row, activityLabel: ACTIVITY_LABELS[row.activityType] || "Unknown" })),
@@ -89,16 +92,29 @@ const getClientUsageAdminService = async (request, fastify) => {
     throw new Error("clientId is required");
   }
 
-  const [{ maxAccounts, maxGroups }, accountCount, groupCount] = await Promise.all([
+  const [{ maxAccounts, maxGroups, maxNotes }, accountCount, groupCount, noteCount] = await Promise.all([
     getClientPlanLimitsQuery(clientId, fastify),
     countActiveEntriesByTypeQuery(clientId, VaultEntryType.ACCOUNT, fastify),
     countActiveEntriesByTypeQuery(clientId, VaultEntryType.GROUP, fastify),
+    countActiveEntriesByTypeQuery(clientId, VaultEntryType.NOTE, fastify),
   ]);
 
   return {
     accounts: { used: accountCount, limit: maxAccounts },
     groups: { used: groupCount, limit: maxGroups },
+    notes: { used: noteCount, limit: maxNotes },
   };
+};
+
+// "Deleted" tab on the same admin Clients screen -- a wholly separate self-
+// service flow from this file's own deleteClientsAdminService (a staff
+// action, soft-delete via wrIsDeleted, keeps the row and vault data
+// intact). Self-delete (Profile > danger zone, see
+// services/vaultAccountLifecycle.js) archives here and hard-deletes the
+// live tblClient row, so there's nothing left to list except this table.
+const listDeletedClientsAdminService = async (request, fastify) => {
+  const { search } = request.body || {};
+  return listDeletedClientsQuery({ search }, fastify);
 };
 
 module.exports = {
@@ -107,4 +123,5 @@ module.exports = {
   updateClientStatusAdminService,
   deleteClientsAdminService,
   getClientUsageAdminService,
+  listDeletedClientsAdminService,
 };

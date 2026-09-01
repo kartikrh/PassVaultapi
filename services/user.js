@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 const { v4: uuidv4 } = require("uuid");
 const requestIp = require("request-ip");
 const {sendNotification,sendMobileNotifications} = require("../WebPushHandler/index");
@@ -15,6 +16,9 @@ const {
   getOriginalIdFromEncryptedId,
   updateUserPasswordQuery,
   getParentIdTreeQuery,
+  getUserOtpSecretQuery,
+  updateUserOtpSecretQuery,
+  resetUserOtpQuery,
 } = require("../repository/TableUser");
 const {
   deviceInfo,
@@ -22,7 +26,20 @@ const {
   decrypt,
   getUserChildIds,
 } = require("../utilities/index");
-const { generateToken } = require("../utilities/tokenization");
+const { generateToken, generatePurposeToken, verifyPurposeToken } = require("../utilities/tokenization");
+const { OTPType } = require("../utilities/otpConstants");
+const { generateTotpSecret, buildTotpKeyUri, generateQrCodeDataUrl, verifyTotpCode } = require("../utilities/totp");
+const { sendMail } = require("../utilities/mailer");
+
+const TWO_FACTOR_PURPOSE = "two-factor";
+const TWO_FACTOR_TOKEN_EXPIRY = "10m";
+const MAIL_OTP_LENGTH = 6;
+
+const generateNumericCode = (length = MAIL_OTP_LENGTH) => {
+  let code = "";
+  for (let i = 0; i < length; i++) code += Math.floor(Math.random() * 10);
+  return code;
+};
 
 async function signUpUserService({ body }, fastify) {
   const hashedPassword = encrypt(body.password);
@@ -36,6 +53,90 @@ async function signUpUserService({ body }, fastify) {
 
   return { token };
 }
+
+// Runs once a login is actually finishing -- either immediately (2FA off)
+// or from verifyOtpUserServices (2FA on, code confirmed). Kept out of the
+// OTP-gated path itself so a password-correct-but-no-2FA-yet request can't
+// kick the real owner's other sessions or claim the login-token slot.
+const finalizePanelLogin = (user, tokenPayload) => {
+  const WrEId = user.WrEId;
+  if (WrEId) {
+    const index = global.tblUsers.findIndex((u) => u.userId === WrEId);
+    if (index !== -1) {
+      global.tblUsers[index].loginToken = tokenPayload.wrToken;
+    }
+  }
+
+  try {
+    const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(WrEId); // get sockets in user's room
+
+    // logout all sockets and remove all sockets from the room if multiple login is false and there are multiple sockets available
+    if (clientsInRoom?.size && !user.WrAllowMultipleLogin) {
+      global.socketIo
+        .to(WrEId)
+        .emit("logout", "You have been removed from the room.");
+      Array.from(clientsInRoom).forEach((id) =>
+        global.socketIo.sockets.sockets.get(id).leave(WrEId)
+      );
+    }
+  } catch (error) {
+    console.log("Error in socket in signin", error);
+  }
+};
+
+// Builds the "otpRequired" response for a staff user whose WrOTPEnable is
+// true -- mirrors services/vaultAuth.js's beginTwoFactorChallenge. The full
+// tokenPayload (built from the already-verified credentials) travels inside
+// the pendingToken so verifyOtpUserServices can finish the exact same login
+// without re-querying the password. Deliberately never returns a `token`
+// field -- PassVaultpanel's axios response interceptor auto-persists any
+// result.token as a finished session (see Features/axios.js).
+const beginPanelTwoFactorChallenge = async (user, tokenPayload, fastify, request) => {
+  if (user.WeOTPType === OTPType.MAIL) {
+    // tblUsers has no email column -- mail OTP only works for staff whose
+    // username is itself an email address. Google Authenticator (WeOTPType=1)
+    // doesn't have this limitation and is the recommended method for staff.
+    if (!user.WrUserName?.includes("@")) {
+      throw new Error("Mail OTP requires this user's username to be an email address -- use Google Authenticator instead");
+    }
+    const code = generateNumericCode();
+    const codeHash = await bcrypt.hash(code, 10);
+    await sendMail({
+      to: user.WrUserName,
+      subject: "Your PassVault sign-in code",
+      text: `Your PassVault sign-in code is ${code}. It expires in 10 minutes. If you didn't request this, you can ignore this email.`,
+    });
+    const pendingToken = generatePurposeToken(
+      { otpType: OTPType.MAIL, codeHash, tokenPayload },
+      TWO_FACTOR_PURPOSE,
+      TWO_FACTOR_TOKEN_EXPIRY
+    );
+    return { otpRequired: true, otpType: OTPType.MAIL, pendingToken };
+  }
+
+  // GOOGLE_AUTHENTICATOR -- first time (WrUuid blank): the secret travels
+  // inside the pending token itself, not the DB, so an abandoned QR-scan
+  // never leaves a half-enrolled secret behind (verifyOtpUserServices is
+  // what actually persists it, only after the first code checks out).
+  if (!user.WrUuid) {
+    const secret = generateTotpSecret();
+    const keyUri = buildTotpKeyUri(user.WrUserName, secret);
+    const qrCode = await generateQrCodeDataUrl(keyUri);
+    const pendingToken = generatePurposeToken(
+      { otpType: OTPType.GOOGLE_AUTHENTICATOR, secret: encrypt(secret), isNewSecret: true, tokenPayload },
+      TWO_FACTOR_PURPOSE,
+      TWO_FACTOR_TOKEN_EXPIRY
+    );
+    return { otpRequired: true, otpType: OTPType.GOOGLE_AUTHENTICATOR, qrCode, pendingToken };
+  }
+
+  const pendingToken = generatePurposeToken(
+    { otpType: OTPType.GOOGLE_AUTHENTICATOR, isNewSecret: false, tokenPayload },
+    TWO_FACTOR_PURPOSE,
+    TWO_FACTOR_TOKEN_EXPIRY
+  );
+  return { otpRequired: true, otpType: OTPType.GOOGLE_AUTHENTICATOR, pendingToken };
+};
 
 async function signInUserServices(request, fastify) {
   const decryptedPassword = encrypt(request.body.password);
@@ -54,32 +155,10 @@ async function signInUserServices(request, fastify) {
   if(user?.WrUserType != 1) {
     throw new Error("Incorrect userType");
   }
-  const WrEId = user.WrEId;
   const ipAdress = requestIp.getClientIp(request);
 
   if (user.WrUserIp !== "0" && user.WrUserIp !== ipAdress) {
     throw new Error("Invalid IP Address");
-  }
-
-  if (WrEId) {
-    const index = global.tblUsers.findIndex((user) => user.userId === WrEId);
-    global.tblUsers[index].loginToken = body.token;
-  }
-
-  try {
-    const clientsInRoom = global.socketIo.sockets.adapter.rooms.get(WrEId); // get sockets in user's room
-
-    // logout all sockets and remove all sockets from the room if multiple login is false and there are multiple sockets available
-    if (clientsInRoom?.size && !user.WrAllowMultipleLogin) {
-      global.socketIo
-        .to(WrEId)
-        .emit("logout", "You have been removed from the room.");
-      Array.from(clientsInRoom).forEach((id) =>
-        global.socketIo.sockets.sockets.get(id).leave(WrEId)
-      );
-    }
-  } catch (error) {
-    console.log("Error in socket in signin", error);
   }
 
   const tokenPayload = {
@@ -94,13 +173,95 @@ async function signInUserServices(request, fastify) {
     wrToken: body.token,
   };
 
+  // Credentials + IP check passed -- if 2FA is on, stop here: no session
+  // token, no socket/global bookkeeping, until verifyOtpUserServices
+  // confirms the code.
+  if (user.WrOTPEnable) {
+    return beginPanelTwoFactorChallenge(user, tokenPayload, fastify, request);
+  }
+
+  finalizePanelLogin(user, tokenPayload);
+
   //* token created
   const token = generateToken(tokenPayload);
- 
+
   return { token, userName: user.WrUserName , refData : {
     eventTypeId : user.wrEventTypeId,
     competitionId : user.wrCompetitionId
   } };
+}
+
+// POST /signin/verifyOtp -- the second step of a 2FA-gated panel sign-in.
+// No auth header required: the pendingToken itself proves the credentials
+// already checked out (see signInUserServices/beginPanelTwoFactorChallenge).
+async function verifyOtpUserServices(request, fastify) {
+  const { pendingToken, code } = request.body || {};
+  if (!pendingToken || !code) {
+    throw new Error("pendingToken and code are required");
+  }
+
+  const decoded = verifyPurposeToken(pendingToken, TWO_FACTOR_PURPOSE);
+  const { tokenPayload } = decoded;
+  if (!tokenPayload?.WrUserId) {
+    throw new Error("Invalid token");
+  }
+
+  let verified = false;
+  let justEnrolled = false;
+
+  if (decoded.otpType === OTPType.MAIL) {
+    verified = await bcrypt.compare(String(code), decoded.codeHash);
+  } else {
+    const encryptedSecret = decoded.isNewSecret
+      ? decoded.secret
+      : await getUserOtpSecretQuery(tokenPayload.WrUserId, fastify);
+    const secret = encryptedSecret ? decrypt(encryptedSecret) : null;
+    verified = secret ? verifyTotpCode(code, secret) : false;
+    if (verified && decoded.isNewSecret) {
+      await updateUserOtpSecretQuery(tokenPayload.WrUserId, decoded.secret, fastify);
+      justEnrolled = true;
+    }
+  }
+
+  if (!verified) {
+    throw new Error("Invalid or expired code");
+  }
+
+  finalizePanelLogin(
+    { WrEId: tokenPayload.WrEId, WrAllowMultipleLogin: tokenPayload.WrAllowMultipleLogin },
+    tokenPayload
+  );
+
+  const token = generateToken(tokenPayload);
+
+  return {
+    token,
+    userName: tokenPayload.WrUserName,
+    justEnrolled,
+  };
+}
+
+// POST /2fa/reset -- self-service or admin action for a lost/reset
+// authenticator device. Clears WrUuid so the next sign-in re-issues a
+// fresh QR code. Mirrors changeUserPasswordByUSerIDService's "Admin role
+// required to reset someone else" gate; a user may always reset their own.
+async function resetUserOtpService(request, fastify) {
+  const { userId } = request.body;
+  const requestUserID = request.userTokenInfo.WrEId;
+
+  if (userId && userId !== requestUserID) {
+    const findLoginUser = global.tblUsers.find((user) => user.userId === requestUserID);
+    const validateRole = findLoginUser
+      ? global.tblRoles.find((role) => role.roleId === findLoginUser.roleId)
+      : null;
+    if (!validateRole || !validateRole.roleName.includes("Admin")) {
+      throw new Error("Only Admin Role Have Permission");
+    }
+  }
+
+  await resetUserOtpQuery(userId || requestUserID, fastify);
+
+  return "Two-factor authentication reset successfully";
 }
 
 async function signOutUserServices(request, fastify) {
@@ -605,4 +766,6 @@ module.exports = {
   changeUserPasswordByUSerIDService,
   sendNotificationWebService,
   sendNotificationMobileService,
+  verifyOtpUserServices,
+  resetUserOtpService,
 };

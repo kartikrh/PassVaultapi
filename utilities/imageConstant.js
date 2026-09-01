@@ -146,6 +146,20 @@ const ImgModuleConfig = {
     height: 0,
     width: 0,
   },
+  WhitelabelLogo: {
+    type: "whitelabelLogo",
+    formate: ".jpg,.png,.jpeg,.svg,.webp",
+    size: 0,
+    height: 0,
+    width: 0,
+  },
+  WhitelabelFavicon: {
+    type: "whitelabelFavicon",
+    formate: ".ico,.png,.jpg,.jpeg,.svg",
+    size: 0,
+    height: 0,
+    width: 0,
+  },
   TeamMatchType: {
     type: "TeamMatchType",
     formate: ".jpg,.png,.jpeg,.avif,.webp",

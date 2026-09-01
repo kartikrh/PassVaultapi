@@ -1,14 +1,28 @@
-// Thin REST wrapper around Google Drive v3, scoped to a single per-client file
-// living in the client's own hidden "appDataFolder" (drive.appdata scope) --
-// matches the spec's "one encrypted JSON file in that client's own Google Drive".
-// Built on axios + google-auth-library (both already dependencies) instead of
-// pulling in the full googleapis package for what is a handful of calls.
+// Thin REST wrapper around Google Drive v3, scoped to per-client files living
+// in the client's own hidden "appDataFolder" (drive.appdata scope) -- one
+// encrypted JSON file per VaultFileKind (see utilities/vaultConstants.js):
+// Accounts (+ Groups) in one file, Notes in a separate one, so the two can
+// be read/written/quota-tracked independently. Built on axios +
+// google-auth-library (both already dependencies) instead of pulling in the
+// full googleapis package for what is a handful of calls.
 const axios = require("axios");
 const { OAuth2Client } = require("google-auth-library");
+const { VaultFileKind } = require("./vaultConstants");
 
 const DRIVE_FILES_URL = "https://www.googleapis.com/drive/v3/files";
 const DRIVE_UPLOAD_URL = "https://www.googleapis.com/upload/drive/v3/files";
-const VAULT_FILE_NAME = "passvault-vault.json.enc";
+const VAULT_FILE_NAMES = {
+  [VaultFileKind.ACCOUNTS]: "passvault-vault-accounts.json.enc",
+  [VaultFileKind.NOTES]: "passvault-vault-notes.json.enc",
+};
+
+const resolveVaultFileName = (vaultType) => {
+  const fileName = VAULT_FILE_NAMES[vaultType];
+  if (!fileName) {
+    throw new Error(`Unknown vault file kind: ${vaultType}`);
+  }
+  return fileName;
+};
 
 // The client-side popup consent (DriveConnectionStatus.js's useGoogleLogin
 // with flow: "auth-code", default ux_mode "popup") never redirects the
@@ -49,12 +63,13 @@ const getAccessTokenFromRefreshToken = async (refreshToken, clientId, clientSecr
   return accessToken;
 };
 
-const findVaultFile = async (accessToken) => {
+const findVaultFile = async (accessToken, vaultType) => {
+  const fileName = resolveVaultFileName(vaultType);
   const { data } = await axios.get(DRIVE_FILES_URL, {
     headers: { Authorization: `Bearer ${accessToken}` },
     params: {
       spaces: "appDataFolder",
-      q: `name = '${VAULT_FILE_NAME}' and trashed = false`,
+      q: `name = '${fileName}' and trashed = false`,
       fields: "files(id, headRevisionId)",
     },
   });
@@ -71,10 +86,11 @@ const getVaultFileContent = async (accessToken, fileId) => {
   return data;
 };
 
-const createVaultFile = async (accessToken, blob) => {
+const createVaultFile = async (accessToken, blob, vaultType) => {
+  const fileName = resolveVaultFileName(vaultType);
   const { data: created } = await axios.post(
     DRIVE_FILES_URL,
-    { name: VAULT_FILE_NAME, parents: ["appDataFolder"] },
+    { name: fileName, parents: ["appDataFolder"] },
     { headers: { Authorization: `Bearer ${accessToken}` }, params: { fields: "id" } }
   );
   const { data: updated } = await axios.patch(`${DRIVE_UPLOAD_URL}/${created.id}`, blob, {
@@ -98,6 +114,16 @@ const updateVaultFile = async (accessToken, fileId, blob) => {
   return { fileId, headRevisionId: data.headRevisionId };
 };
 
+// Permanently deletes a vault file (Delete Account -- see
+// deleteAccountService). A real DELETE, not files.trash: this is the app's
+// own hidden appDataFolder file, not something the person would ever want
+// to recover from their visible Drive trash.
+const deleteVaultFile = async (accessToken, fileId) => {
+  await axios.delete(`${DRIVE_FILES_URL}/${fileId}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+};
+
 module.exports = {
   exchangeAuthCodeForTokens,
   getAccessTokenFromRefreshToken,
@@ -105,4 +131,5 @@ module.exports = {
   getVaultFileContent,
   createVaultFile,
   updateVaultFile,
+  deleteVaultFile,
 };

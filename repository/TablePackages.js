@@ -19,6 +19,7 @@ const getAllPackagesQuery = async (fastify) => {
                 "wrIsDefault" as "isDefault",
                 "wrMaxAccounts" as "maxAccounts",
                 "wrMaxGroups" as "maxGroups",
+                "wrMaxNotes" as "maxNotes",
                 "wrCreatedAt" as "createdAt",
                 "wrCreatedBy" as "createdBy",
                 "wrUpdatedBy" as "updatedBy",
@@ -45,12 +46,12 @@ const insertPackagesQuery = async (data, fastify, request) => {
             INSERT INTO "tblPackages" (
             "wrName", "wrDescription", "wrPrice", "wrCurrency", "wrIntervalType", "wrIntervalCount",
             "wrRazorPayPlanId", "wrIsActive", "wrIsDisplay", "wrDisplayOrder", "wrTrialDays", "wrIsDefault",
-            "wrMaxAccounts", "wrMaxGroups", "wrCreatedAt", "wrCreatedBy"
+            "wrMaxAccounts", "wrMaxGroups", "wrMaxNotes", "wrCreatedAt", "wrCreatedBy"
             )
             VALUES (
                 $1, $2, $3, $4, $5, $6, $7, $8, $9,
                 (SELECT COALESCE((SELECT MAX("wrDisplayOrder") FROM "tblPackages"), 0) + 1),
-                $10, $11, $12, $13, NOW(), $14
+                $10, $11, $12, $13, $14, NOW(), $15
             )
             RETURNING *
             )
@@ -70,6 +71,7 @@ const insertPackagesQuery = async (data, fastify, request) => {
                 "wrIsDefault" as "isDefault",
                 "wrMaxAccounts" as "maxAccounts",
                 "wrMaxGroups" as "maxGroups",
+                "wrMaxNotes" as "maxNotes",
                 "wrCreatedAt" as "createdAt",
                 "wrCreatedBy" as "createdBy",
                 "wrUpdatedBy" as "updatedBy",
@@ -92,6 +94,7 @@ const insertPackagesQuery = async (data, fastify, request) => {
                     data.isDefault,
                     data.maxAccounts ?? null,
                     data.maxGroups ?? null,
+                    data.maxNotes ?? null,
                     request.userTokenInfo.WrUserId,
                 ],
             }
@@ -125,9 +128,10 @@ const updatePackagesQuery = async (data, fastify, request) => {
                 "wrIsDefault" = $10,
                 "wrMaxAccounts" = $11,
                 "wrMaxGroups" = $12,
-                "wrUpdatedBy" = $13,
+                "wrMaxNotes" = $13,
+                "wrUpdatedBy" = $14,
                 "wrUpdatedAt" = now()
-            WHERE "wrId" = $14
+            WHERE "wrId" = $15
             RETURNING
                 "wrId" as "id",
                 "wrName" as "name",
@@ -144,6 +148,7 @@ const updatePackagesQuery = async (data, fastify, request) => {
                 "wrIsDefault" as "isDefault",
                 "wrMaxAccounts" as "maxAccounts",
                 "wrMaxGroups" as "maxGroups",
+                "wrMaxNotes" as "maxNotes",
                 "wrCreatedAt" as "createdAt",
                 "wrCreatedBy" as "createdBy",
                 "wrUpdatedBy" as "updatedBy",
@@ -163,6 +168,7 @@ const updatePackagesQuery = async (data, fastify, request) => {
                     data.isDefault,
                     data.maxAccounts ?? null,
                     data.maxGroups ?? null,
+                    data.maxNotes ?? null,
                     request.userTokenInfo.WrUserId,
                     data.id
                 ],

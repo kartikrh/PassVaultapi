@@ -67,7 +67,8 @@ const getClientByIdAdminQuery = async (clientId, fastify) => {
     const result = await fastify.db.query(
       `SELECT ${ADMIN_CLIENT_SELECT_COLUMNS},
         p."wrMaxAccounts" as "maxAccounts",
-        p."wrMaxGroups" as "maxGroups"
+        p."wrMaxGroups" as "maxGroups",
+        p."wrMaxNotes" as "maxNotes"
        FROM "tblClient" c
        LEFT JOIN "tblPackages" p ON p."wrId" = c."wrPackageId"
        WHERE c."wrClientId" = $1 AND c."wrIsDeleted" = false`,

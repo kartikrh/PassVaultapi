@@ -7,7 +7,7 @@ const { errorLogger } = require("../utilities/logger");
 
 const listClientActivityLogsQuery = async (filters, fastify) => {
   try {
-    const { clientId, activityType, dateFrom, dateTo, limit } = filters || {};
+    const { clientId, activityType, refId, dateFrom, dateTo, limit } = filters || {};
     const conditions = [`a."wrClientId" is not null`];
     const bind = [];
 
@@ -18,6 +18,10 @@ const listClientActivityLogsQuery = async (filters, fastify) => {
     if (activityType) {
       bind.push(activityType);
       conditions.push(`a."wrActivityType" = $${bind.length}`);
+    }
+    if (refId) {
+      bind.push(refId);
+      conditions.push(`a."wrRefID" = $${bind.length}`);
     }
     if (dateFrom) {
       bind.push(dateFrom);
@@ -39,6 +43,8 @@ const listClientActivityLogsQuery = async (filters, fastify) => {
         a."wrClientId" as "clientId",
         c."wrEmail" as "clientEmail",
         c."wrName" as "clientName",
+        a."wrLatitude" as "latitude",
+        a."wrLongitude" as "longitude",
         a."wrCreatedDate" as "createdDate"
        FROM "tblActivityLogs" a
        LEFT JOIN "tblClient" c ON c."wrClientId" = a."wrClientId"
@@ -54,4 +60,33 @@ const listClientActivityLogsQuery = async (filters, fastify) => {
   }
 };
 
-module.exports = { listClientActivityLogsQuery };
+// Delete Account only -- see services/vaultAccountLifecycle.js's
+// deleteAccountService, called after listClientActivityLogsQuery has already
+// produced the archive snapshot. Moves every row for this client into
+// tblDeletedClientActivityLogs (sql/vault/009_deleted_client_archive_tables.sql)
+// in one atomic statement (including the CLIENT_SELF_DELETED row the service
+// inserts right before calling this), then removes them from the live table.
+// Called before hardDeleteClientQuery (FK: tblActivityLogs.wrClientId ->
+// tblClient, no ON DELETE CASCADE).
+const moveActivityLogsToArchiveByClientQuery = async (clientId, deletedClientId, fastify) => {
+  try {
+    return await fastify.db.query(
+      `WITH moved AS (
+        DELETE FROM "tblActivityLogs" WHERE "wrClientId" = $1 RETURNING *
+      )
+      INSERT INTO "tblDeletedClientActivityLogs" (
+        "wrId", "wrActivityType", "wrRefID", "wrIpAddress", "wrCreatedDate",
+        "wrClientId", "wrDeviceInfo", "wrLatitude", "wrLongitude", "wrDeletedClientId"
+      )
+      SELECT "wrId", "wrActivityType", "wrRefID", "wrIpAddress", "wrCreatedDate",
+             "wrClientId", "wrDeviceInfo", "wrLatitude", "wrLongitude", $2
+      FROM moved`,
+      { type: fastify.db.QueryTypes.INSERT, bind: [clientId, deletedClientId] }
+    );
+  } catch (err) {
+    errorLogger(fastify, err.message, "DB ERROR --> repository/TableClientHistory/moveActivityLogsToArchiveByClientQuery");
+    throw new Error(err.message);
+  }
+};
+
+module.exports = { listClientActivityLogsQuery, moveActivityLogsToArchiveByClientQuery };

@@ -14,6 +14,8 @@ const {
   loadPanelDataInGlobal,
   globalMemoryData,
   getGlobalMemoryData,
+  verifyOtpUser,
+  resetUserOtp,
 } = require("../controller/users/index");
 const { Auth, sendPushNotification, Config } = require("../swaggerSchema/groupTags/schema");
 const { authorize } = require("../controller/middleware/index");
@@ -30,6 +32,15 @@ module.exports = async function (fastify, opts) {
   fastify.post("/signin", {
     schema: Auth.signIn.schema,
     handler: (request, reply) => signInUser(request, reply, fastify),
+  });
+  // No preHandler -- the pendingToken issued by /signin proves the
+  // credentials already checked out (see services/user.js verifyOtpUserServices).
+  fastify.post("/signin/verifyOtp", {
+    handler: (request, reply) => verifyOtpUser(request, reply, fastify),
+  });
+  fastify.post("/2fa/reset", {
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
+    handler: (request, reply) => resetUserOtp(request, reply, fastify),
   });
   fastify.post("/signout", {
     schema: Auth.signOut.schema,

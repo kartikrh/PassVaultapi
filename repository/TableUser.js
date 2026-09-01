@@ -29,8 +29,8 @@ async function signInUser(body, fastify) {
       SELECT
         "WrUserId", te."wrValue" as "WrEId", "WrPassword", "WrUserType", "WrRoleId", "WrUserName",
         "WrIsSuperAdmin", "WrParentId", "WrAllowMultipleLogin", "WrSubAdminId" ,"WrUserIp",
-        "wrEventTypeId","wrCompetitionId"
-      FROM "tblUsers" left join "tblEncryptedData" te on "WrUserId" = te."wrKey" 
+        "wrEventTypeId","wrCompetitionId", "WrOTPEnable", "WeOTPType", "WrUuid"
+      FROM "tblUsers" left join "tblEncryptedData" te on "WrUserId" = te."wrKey"
       WHERE "WrUserName" = $1 AND "WrPassword"=$2 AND "WrIsActive" = true AND "WrIsDelete" = false
     ),
     insert_data AS (
@@ -523,6 +523,66 @@ const getUserFullNameQuery = async (userId, request, fastify) => {
   }
 }
 
+// Only used for an already-enrolled user (WrUuid set) -- a brand-new,
+// not-yet-confirmed secret instead travels inside the pending 2FA JWT
+// itself (see services/user.js signInUserServices) so an abandoned
+// QR-scan never touches this column until verified.
+const getUserOtpSecretQuery = async (userId, fastify) => {
+  try {
+    const data = await fastify.db.query(
+      `SELECT "WrUuid" as "otpSecret" FROM "tblUsers" WHERE "WrUserId" = $1`,
+      { type: QueryTypes.SELECT, bind: [userId] }
+    );
+    return data[0]?.otpSecret || null;
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableUser/getUserOtpSecretQuery"
+    );
+    throw new Error(err.message);
+  }
+};
+
+// Persists a newly-enrolled TOTP secret (app-layer encrypted, see
+// utilities/index.js encrypt/decrypt) once the user has verified their
+// first code -- called from services/user.js verifyOtpUserServices, never
+// before verification succeeds, so an abandoned QR-scan never leaves a
+// half-enrolled secret in place.
+const updateUserOtpSecretQuery = async (userId, encryptedSecret, fastify) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblUsers" SET "WrUuid" = $1 WHERE "WrUserId" = $2`,
+      { type: QueryTypes.UPDATE, bind: [encryptedSecret, userId] }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableUser/updateUserOtpSecretQuery"
+    );
+    throw new Error(err.message);
+  }
+};
+
+// Clears a user's TOTP secret (self-service or admin "reset 2FA" action,
+// e.g. after a lost device) so their next sign-in re-issues a fresh QR code.
+const resetUserOtpQuery = async (encryptedUserId, fastify) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblUsers" SET "WrUuid" = NULL WHERE "WrUserId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)`,
+      { type: QueryTypes.UPDATE, bind: [encryptedUserId] }
+    );
+  } catch (err) {
+    errorLogger(
+      fastify,
+      err.message,
+      "DB ERROR --> repository/TableUser/resetUserOtpQuery"
+    );
+    throw new Error(err.message);
+  }
+};
+
 module.exports = {
   signInUser,
   signUpUser,
@@ -541,4 +601,7 @@ module.exports = {
   getUserListQuery,
   getParentIdTreeQuery,
   getUserFullNameQuery,
+  getUserOtpSecretQuery,
+  updateUserOtpSecretQuery,
+  resetUserOtpQuery,
 };

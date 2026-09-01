@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS public."tblClientVaultKey" (
 CREATE TABLE IF NOT EXISTS public."tblClientVaultEntries" (
     "wrEntryId"             uuid PRIMARY KEY,
     "wrClientId"            integer NOT NULL REFERENCES "tblClient"("wrClientId"),
-    "wrEntryType"           integer NOT NULL, -- 1 = account, 2 = group
+    "wrEntryType"           integer NOT NULL, -- 1 = account, 2 = group, 3 = note
     "wrIsDeleted"           boolean DEFAULT false,
     "wrCreatedAt"           timestamp with time zone DEFAULT now(),
     "wrUpdatedAt"           timestamp with time zone DEFAULT now()

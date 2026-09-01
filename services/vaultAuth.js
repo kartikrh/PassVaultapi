@@ -14,10 +14,86 @@ const {
   updateClientPasswordHashQuery,
   updateClientProfileQuery,
   updateClientEmailVerifiedQuery,
+  getClientOtpSecretQuery,
+  updateClientOtpSecretQuery,
+  resetClientOtpQuery,
+  incrementFailedLoginAttemptsQuery,
+  resetFailedLoginAttemptsQuery,
+  reactivateClientQuery,
 } = require("../repository/TableClient");
 const { insertClientActivityLogQuery } = require("../repository/TableClientActivityLog");
+const { listClientActivityLogsQuery } = require("../repository/TableClientHistory");
 const { VaultActivityCodes, VaultClientProvider } = require("../utilities/vaultConstants");
 const { sendMail } = require("../utilities/mailer");
+const { OTPType } = require("../utilities/otpConstants");
+const { generateTotpSecret, buildTotpKeyUri, generateQrCodeDataUrl, verifyTotpCode } = require("../utilities/totp");
+const { encrypt, decrypt, deviceInfo } = require("../utilities/index");
+const configConstants = require("../utilities/configConstants");
+const { checkVpn } = require("../utilities/vpnCheck");
+
+// Wrong-password lockout (loginService): after this many consecutive failed
+// attempts, the account can't try again until the lockout window passes.
+const MAX_FAILED_LOGIN_ATTEMPTS = 3;
+const LOGIN_LOCKOUT_HOURS = 24;
+
+// Every login-completing request (login, google, register) must carry the
+// browser's GPS coordinates -- passvault-client's useGeolocation hook
+// gates the whole form behind a LocationRequiredModal until
+// navigator.geolocation.getCurrentPosition() succeeds, so a request that
+// reaches here without them is either a stale/hand-crafted client or a
+// direct API call, not the real login flow. Range-checked so a client bug
+// (or malicious caller) can't slip in garbage that later reads back as a
+// bogus point on a map.
+const requireGeolocation = (body) => {
+  const { latitude, longitude } = body || {};
+  if (typeof latitude !== "number" || typeof longitude !== "number" || Number.isNaN(latitude) || Number.isNaN(longitude)) {
+    throw new Error("Location access is required to continue -- please enable location and try again");
+  }
+  if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+    throw new Error("Invalid location coordinates");
+  }
+  return { latitude, longitude };
+};
+
+// Blocks login/signup while a VPN/proxy is detected on request.ip (see
+// utilities/vpnCheck.js -- fails open on any check failure, so a
+// proxycheck.io outage or missing config never locks out real clients).
+const requireNoVpn = async (request) => {
+  const { isVpn } = await checkVpn(request.ip);
+  if (isVpn) {
+    throw new Error("A VPN or proxy was detected. Please disable it and try again.");
+  }
+};
+
+// Called right where each login-completing path (loginService,
+// googleSignInService, verifyOtpService) logs CLIENT_LOGGED_IN -- a
+// self-suspended account (Profile > danger zone's Suspend Account, wholly
+// separate from wrIsActive) is otherwise still allowed to authenticate;
+// successfully doing so is exactly what lifts the suspension.
+const reactivateIfSuspended = async (client, fastify, request) => {
+  if (!client.isSelfSuspended) return;
+  await reactivateClientQuery(client.clientId, fastify);
+  await insertClientActivityLogQuery(
+    {
+      activityType: VaultActivityCodes.CLIENT_REACTIVATED,
+      refId: String(client.clientId),
+      ipAddress: request.ip,
+      clientId: client.clientId,
+      deviceInfo: deviceInfo(request),
+    },
+    fastify
+  );
+};
+
+const TWO_FACTOR_PURPOSE = "two-factor";
+const TWO_FACTOR_TOKEN_EXPIRY = "10m";
+const MAIL_OTP_LENGTH = 6;
+
+const generateNumericCode = (length = MAIL_OTP_LENGTH) => {
+  let code = "";
+  for (let i = 0; i < length; i++) code += Math.floor(Math.random() * 10);
+  return code;
+};
 
 const MIN_PASSWORD_LENGTH = 8;
 const MIN_USERNAME_LENGTH = 3;
@@ -68,6 +144,8 @@ const googleSignInService = async (request, fastify) => {
   if (!idToken) {
     throw new Error("idToken is required");
   }
+  const { latitude, longitude } = requireGeolocation(request.body);
+  await requireNoVpn(request);
 
   // Verified against this domain's own configured Google Client ID (White
   // Label > Google Client ID), not a single global env var -- each domain
@@ -108,15 +186,44 @@ const googleSignInService = async (request, fastify) => {
     throw new Error("This account has been suspended");
   }
 
-  await insertClientActivityLogQuery(
-    {
-      activityType: isNewClient ? VaultActivityCodes.CLIENT_REGISTERED : VaultActivityCodes.CLIENT_LOGGED_IN,
-      refId: String(client.clientId),
-      ipAddress: request.ip,
-      clientId: client.clientId,
-    },
-    fastify
-  );
+  if (isNewClient) {
+    await insertClientActivityLogQuery(
+      {
+        activityType: VaultActivityCodes.CLIENT_REGISTERED,
+        refId: String(client.clientId),
+        ipAddress: request.ip,
+        clientId: client.clientId,
+        deviceInfo: deviceInfo(request),
+        latitude,
+        longitude,
+      },
+      fastify
+    );
+  }
+
+  // Google sign-in is also a full authentication event, so it's gated by
+  // 2FA the same way password login is (see loginService) -- the
+  // CLIENT_LOGGED_IN log for a returning client is deferred to
+  // verifyOtpService, same as the password flow.
+  if (client.otpEnabled) {
+    return beginTwoFactorChallenge(client, fastify, request, { latitude, longitude });
+  }
+
+  if (!isNewClient) {
+    await reactivateIfSuspended(client, fastify, request);
+    await insertClientActivityLogQuery(
+      {
+        activityType: VaultActivityCodes.CLIENT_LOGGED_IN,
+        refId: String(client.clientId),
+        ipAddress: request.ip,
+        clientId: client.clientId,
+        deviceInfo: deviceInfo(request),
+        latitude,
+        longitude,
+      },
+      fastify
+    );
+  }
 
   const token = generateClientToken(client);
   return { token, client };
@@ -127,12 +234,12 @@ const googleSignInService = async (request, fastify) => {
 // a stored token: the vault client design is already fully stateless
 // (see refreshTokenService/logoutService below), and a `purpose` claim keeps
 // this kind of token from being replayed as a session token or vice versa.
-const generatePurposeToken = (clientId, purpose, expiresIn) => {
+const generatePurposeToken = (clientId, purpose, expiresIn, extra = {}) => {
   const secretKey = process.env.VAULT_CLIENT_SECRET_KEY_TOKEN;
   if (!secretKey) {
     throw new Error("VAULT_CLIENT_SECRET_KEY_TOKEN is not configured");
   }
-  return jwt.sign({ WrClientId: clientId, purpose }, secretKey, { expiresIn });
+  return jwt.sign({ WrClientId: clientId, purpose, ...extra }, secretKey, { expiresIn });
 };
 
 const verifyPurposeToken = (token, purpose) => {
@@ -177,6 +284,252 @@ const getWhitelabelMailSettingId = (whitelabelId) => {
   return whitelabel?.mailSettingId || null;
 };
 
+// Builds the "otpRequired" response for a client whose WrOTPEnable is true
+// -- called from loginService/googleSignInService right where the real
+// session token would otherwise be issued, and again by
+// beginTwoFactorSetupService for the post-setPassword enrollment screen.
+// Deliberately never returns a `token` field: the client frontend's axios
+// interceptor auto-persists any result.token as a finished session (see
+// passvault-client's src/lib/api.js), so a half-authenticated response must
+// only carry pendingToken until verifyOtpService confirms the code.
+// geo: { latitude, longitude } captured at the initial login/signup POST
+// (loginService/googleSignInService's own requireGeolocation call) --
+// carried inside the pending token itself since nothing is persisted to the
+// DB until verifyOtpService actually confirms the code, and it's that
+// confirmation, not this challenge, that logs CLIENT_LOGGED_IN/TWO_FA_ENABLED
+// with the location. beginTwoFactorSetupService (Settings, not a login) has
+// no geolocation to give, so its calls just omit `geo` -- undefined
+// latitude/longitude are fine, insertClientActivityLogQuery already
+// defaults missing coords to null.
+const beginTwoFactorChallenge = async (client, fastify, request, geo = {}) => {
+  const { latitude, longitude } = geo;
+  if (client.otpType === OTPType.MAIL) {
+    const code = generateNumericCode();
+    const codeHash = await bcrypt.hash(code, 10);
+    await sendMail({
+      to: client.email,
+      subject: "Your PassVault sign-in code",
+      text: `Your PassVault sign-in code is ${code}. It expires in 10 minutes. If you didn't request this, you can ignore this email.`,
+      mailSettingId: getWhitelabelMailSettingId(client.whitelabelId),
+    });
+    const pendingToken = generatePurposeToken(client.clientId, TWO_FACTOR_PURPOSE, TWO_FACTOR_TOKEN_EXPIRY, {
+      otpType: OTPType.MAIL,
+      codeHash,
+      latitude,
+      longitude,
+    });
+    return { otpRequired: true, otpType: OTPType.MAIL, pendingToken };
+  }
+
+  // GOOGLE_AUTHENTICATOR -- first time (no secret saved yet): the secret
+  // travels inside the pending token itself, not the DB, so an abandoned
+  // QR-scan never leaves a half-enrolled secret behind (see
+  // verifyOtpService, which is what actually persists it).
+  if (!client.hasOtpSecret) {
+    const secret = generateTotpSecret();
+    const keyUri = buildTotpKeyUri(client.email, secret);
+    const qrCode = await generateQrCodeDataUrl(keyUri);
+    const pendingToken = generatePurposeToken(client.clientId, TWO_FACTOR_PURPOSE, TWO_FACTOR_TOKEN_EXPIRY, {
+      otpType: OTPType.GOOGLE_AUTHENTICATOR,
+      secret: encrypt(secret),
+      isNewSecret: true,
+      latitude,
+      longitude,
+    });
+    return { otpRequired: true, otpType: OTPType.GOOGLE_AUTHENTICATOR, qrCode, pendingToken };
+  }
+
+  const pendingToken = generatePurposeToken(client.clientId, TWO_FACTOR_PURPOSE, TWO_FACTOR_TOKEN_EXPIRY, {
+    otpType: OTPType.GOOGLE_AUTHENTICATOR,
+    isNewSecret: false,
+    latitude,
+    longitude,
+  });
+  return { otpRequired: true, otpType: OTPType.GOOGLE_AUTHENTICATOR, pendingToken };
+};
+
+// POST /vault/auth/verifyOtp -- the second step of every 2FA-gated sign-in
+// (password login, Google sign-in, or the post-setPassword enrollment
+// screen). No auth header is required: the pendingToken itself proves the
+// client already passed step one. Only on success does a real session token
+// get issued, matching loginService/googleSignInService's deferred
+// CLIENT_LOGGED_IN logging.
+const verifyOtpService = async (request, fastify) => {
+  const { pendingToken, code } = request.body || {};
+  if (!pendingToken || !code) {
+    throw new Error("pendingToken and code are required");
+  }
+
+  const decoded = verifyPurposeToken(pendingToken, TWO_FACTOR_PURPOSE);
+  const client = await findClientByIdQuery(decoded.WrClientId, fastify);
+  if (!client || !client.isActive) {
+    throw new Error("Account not found");
+  }
+
+  let verified = false;
+  let justEnrolled = false;
+
+  if (decoded.otpType === OTPType.MAIL) {
+    verified = await bcrypt.compare(String(code), decoded.codeHash);
+  } else {
+    const encryptedSecret = decoded.isNewSecret
+      ? decoded.secret
+      : await getClientOtpSecretQuery(client.clientId, fastify);
+    const secret = encryptedSecret ? decrypt(encryptedSecret) : null;
+    verified = secret ? verifyTotpCode(code, secret) : false;
+    if (verified && decoded.isNewSecret) {
+      await updateClientOtpSecretQuery(client.clientId, decoded.secret, fastify);
+      justEnrolled = true;
+    }
+  }
+
+  if (!verified) {
+    throw new Error("Invalid or expired code");
+  }
+
+  if (!justEnrolled) {
+    await reactivateIfSuspended(client, fastify, request);
+  }
+  await touchClientUpdatedAtQuery(client.clientId, fastify);
+  await insertClientActivityLogQuery(
+    {
+      activityType: justEnrolled ? VaultActivityCodes.TWO_FA_ENABLED : VaultActivityCodes.CLIENT_LOGGED_IN,
+      refId: String(client.clientId),
+      ipAddress: request.ip,
+      clientId: client.clientId,
+      deviceInfo: deviceInfo(request),
+      // Carried inside pendingToken from the original login/signup POST --
+      // see beginTwoFactorChallenge's own comment. undefined for a
+      // Settings-initiated /2fa/setup (no login in progress there), which
+      // insertClientActivityLogQuery already treats as no location.
+      latitude: decoded.latitude,
+      longitude: decoded.longitude,
+    },
+    fastify
+  );
+
+  const token = generateClientToken(client);
+  return { token, client: { ...client, hasOtpSecret: true } };
+};
+
+// Shared step-up gate: verifies a fresh TOTP code against client's own
+// enrolled Google Authenticator secret. Exported so services outside this
+// file (services/vaultAccountLifecycle.js's Suspend/Delete Account) can
+// require the same proof without duplicating the lookup/decrypt/compare --
+// there's no proof token issued by a prior /2fa/verify call to reuse
+// instead (see verifyStepUpOtpService below, which just returns a boolean),
+// so each of those endpoints re-verifies its own fresh code this way.
+const verifyOwnTotpCode = async (client, code, fastify) => {
+  // 2FA turned off for this client (WrOTPEnable false) -- nothing to check
+  // a code against, so this step-up is satisfied automatically. Checked
+  // first, before requiring `code` at all, so a client with 2FA off can
+  // still reveal a password / edit / delete / suspend / delete their
+  // account without ever needing a code they don't have.
+  if (!client.otpEnabled) {
+    return;
+  }
+  if (!code) {
+    throw new Error("A verification code is required for this action");
+  }
+  if (client.otpType !== OTPType.GOOGLE_AUTHENTICATOR || !client.hasOtpSecret) {
+    throw new Error("Two-factor authentication is not set up for this account");
+  }
+  const encryptedSecret = await getClientOtpSecretQuery(client.clientId, fastify);
+  const secret = encryptedSecret ? decrypt(encryptedSecret) : null;
+  const verified = secret ? verifyTotpCode(code, secret) : false;
+  if (!verified) {
+    throw new Error("Invalid or expired code");
+  }
+};
+
+// POST /vault/auth/2fa/verify -- authenticated, on-demand re-verification
+// for an already-signed-in session. Distinct from verifyOtpService, which
+// only ever consumes a login/enrollment pendingToken and issues a session
+// token -- this proves "it's still you" right now, against the already-
+// enrolled Google Authenticator secret, without touching the session at
+// all. Used to gate revealing a saved account's password (see
+// passvault-client's RevealAccountModal). Mail-OTP step-up would need its
+// own "send a fresh code" step first, so it's out of scope here for now --
+// this only supports Google Authenticator, which is also the system default.
+// entryId is optional -- present when this step-up is gating a specific
+// account's password reveal (see passvault-client's RevealAccountModal).
+// When it's there, the successful verification is itself logged as
+// ACCOUNT_PASSWORD_VIEWED (refId = entryId), and the response includes
+// whenever this same entry was last viewed *before* now, so the client can
+// show it without a separate lookup.
+const verifyStepUpOtpService = async (request, fastify) => {
+  const { code, entryId, latitude, longitude } = request.body || {};
+
+  const { WrClientId } = request.clientTokenInfo;
+  const client = await findClientByIdQuery(WrClientId, fastify);
+  if (!client || !client.isActive) {
+    throw new Error("Account not found");
+  }
+  await verifyOwnTotpCode(client, code, fastify);
+
+  let lastViewedAt = null;
+  if (entryId) {
+    const [previousView] = await listClientActivityLogsQuery(
+      { clientId: WrClientId, activityType: VaultActivityCodes.ACCOUNT_PASSWORD_VIEWED, refId: entryId, limit: 1 },
+      fastify
+    );
+    lastViewedAt = previousView?.createdDate || null;
+
+    await insertClientActivityLogQuery(
+      {
+        activityType: VaultActivityCodes.ACCOUNT_PASSWORD_VIEWED,
+        refId: entryId,
+        ipAddress: request.ip,
+        clientId: WrClientId,
+        latitude: latitude ?? null,
+        longitude: longitude ?? null,
+      },
+      fastify
+    );
+  }
+
+  return { verified: true, lastViewedAt };
+};
+
+// POST /vault/auth/2fa/setup -- authenticated. Used right after
+// setPasswordService (first-time enrollment, before the client ever reaches
+// the dashboard) and again from Settings after a self-service reset. Reuses
+// beginTwoFactorChallenge's "no secret yet" branch so the QR/pendingToken
+// shape and the confirming call (verifyOtpService) are identical to the
+// login-time challenge.
+const beginTwoFactorSetupService = async (request, fastify) => {
+  const { WrClientId } = request.clientTokenInfo;
+  const client = await findClientByIdQuery(WrClientId, fastify);
+  if (!client) {
+    throw new Error("Account not found");
+  }
+  if (client.otpType !== OTPType.GOOGLE_AUTHENTICATOR) {
+    throw new Error("Google Authenticator is not enabled for this account");
+  }
+  if (client.hasOtpSecret) {
+    throw new Error("Two-factor authentication is already set up -- reset it first to generate a new QR code");
+  }
+  return beginTwoFactorChallenge(client, fastify, request);
+};
+
+// POST /vault/auth/2fa/reset -- authenticated self-service action for a
+// lost/reset authenticator device. Clears WrUuid so the next sign-in (or a
+// fresh call to /2fa/setup) issues a brand-new QR code.
+const resetTwoFactorService = async (request, fastify) => {
+  const { WrClientId } = request.clientTokenInfo;
+  await resetClientOtpQuery(WrClientId, fastify);
+  await insertClientActivityLogQuery(
+    {
+      activityType: VaultActivityCodes.TWO_FA_RESET,
+      refId: String(WrClientId),
+      ipAddress: request.ip,
+      clientId: WrClientId,
+    },
+    fastify
+  );
+  return { reset: true };
+};
+
 // POST /vault/auth/register -- collects name+email only. No password yet:
 // the client sets one after verifying their email (setPasswordService),
 // which also doubles as the self-service "add a password" action a
@@ -186,6 +539,8 @@ const registerService = async (request, fastify) => {
   if (!email) {
     throw new Error("email is required");
   }
+  const { latitude, longitude } = requireGeolocation(request.body);
+  await requireNoVpn(request);
 
   const existing = await findClientByEmailQuery(email, fastify);
   if (existing) {
@@ -213,6 +568,9 @@ const registerService = async (request, fastify) => {
       refId: String(client.clientId),
       ipAddress: request.ip,
       clientId: client.clientId,
+      deviceInfo: deviceInfo(request),
+      latitude,
+      longitude,
     },
     fastify
   );
@@ -302,7 +660,16 @@ const setPasswordService = async (request, fastify) => {
     fastify
   );
 
-  return { passwordSet: true };
+  // Tells the frontend whether to route straight to /dashboard or into the
+  // QR-enrollment step first (see verify-email/page.js) -- every client
+  // defaults to WrOTPEnable=true/otpType=GOOGLE_AUTHENTICATOR, so this is
+  // the normal path for a brand-new signup.
+  return {
+    passwordSet: true,
+    otpEnabled: client.otpEnabled,
+    otpType: client.otpType,
+    hasOtpSecret: client.hasOtpSecret,
+  };
 };
 
 // POST /vault/auth/login -- identifier (email OR username) + password.
@@ -318,6 +685,10 @@ const loginService = async (request, fastify) => {
   if (!loginIdentifier || !password) {
     throw new Error("email/username and password are required");
   }
+  const { latitude, longitude } = requireGeolocation(request.body);
+  await requireNoVpn(request);
+
+  const fingerprint = deviceInfo(request);
 
   const client = loginIdentifier.includes("@")
     ? await getClientAuthByEmailQuery(loginIdentifier, fastify)
@@ -328,6 +699,15 @@ const loginService = async (request, fastify) => {
   if (!client.isActive) {
     throw new Error("This account has been suspended");
   }
+
+  // Locked out from too many recent wrong passwords -- checked before the
+  // email-verified/password-hash branches below, so a locked account can't
+  // be used to keep probing those responses either.
+  if (client.lockedUntil && new Date(client.lockedUntil) > new Date()) {
+    const minutesLeft = Math.max(1, Math.ceil((new Date(client.lockedUntil) - new Date()) / 60000));
+    throw new Error(`Too many failed login attempts. Try again in ${minutesLeft} minute(s).`);
+  }
+
   if (!client.isEmailVerified) {
     throw new Error("Please verify your email before logging in");
   }
@@ -337,9 +717,43 @@ const loginService = async (request, fastify) => {
 
   const passwordMatches = await bcrypt.compare(password, client.passwordHash);
   if (!passwordMatches) {
+    const { failedLoginAttempts } = await incrementFailedLoginAttemptsQuery(
+      client.clientId,
+      MAX_FAILED_LOGIN_ATTEMPTS,
+      LOGIN_LOCKOUT_HOURS,
+      fastify
+    );
+    const justLocked = failedLoginAttempts >= MAX_FAILED_LOGIN_ATTEMPTS;
+    await insertClientActivityLogQuery(
+      {
+        activityType: justLocked ? VaultActivityCodes.ACCOUNT_LOCKED : VaultActivityCodes.LOGIN_FAILED,
+        refId: String(client.clientId),
+        ipAddress: request.ip,
+        clientId: client.clientId,
+        deviceInfo: fingerprint,
+        latitude,
+        longitude,
+      },
+      fastify
+    );
+    if (justLocked) {
+      throw new Error(`Too many failed login attempts. Your account is locked for ${LOGIN_LOCKOUT_HOURS} hours.`);
+    }
     throw new Error("Invalid email/username or password");
   }
 
+  await resetFailedLoginAttemptsQuery(client.clientId, fastify);
+
+  const { passwordHash, failedLoginAttempts, lockedUntil, ...clientWithoutHash } = client;
+
+  // Password verified -- if 2FA is on, don't touch "logged in" bookkeeping
+  // or issue a session token yet, that only happens once verifyOtpService
+  // confirms the code.
+  if (clientWithoutHash.otpEnabled) {
+    return beginTwoFactorChallenge(clientWithoutHash, fastify, request, { latitude, longitude });
+  }
+
+  await reactivateIfSuspended(clientWithoutHash, fastify, request);
   await touchClientUpdatedAtQuery(client.clientId, fastify);
   await insertClientActivityLogQuery(
     {
@@ -347,11 +761,13 @@ const loginService = async (request, fastify) => {
       refId: String(client.clientId),
       ipAddress: request.ip,
       clientId: client.clientId,
+      deviceInfo: fingerprint,
+      latitude,
+      longitude,
     },
     fastify
   );
 
-  const { passwordHash, ...clientWithoutHash } = client;
   const token = generateClientToken(clientWithoutHash);
   return { token, client: clientWithoutHash };
 };
@@ -418,17 +834,73 @@ const resetPasswordService = async (request, fastify) => {
   return { reset: true };
 };
 
-// GET /vault/auth/profile -- the signed-in client's own profile, for the
-// Profile screen (name/username/email/provider/verification/hasPassword).
-// Google Drive connection status is deliberately not folded in here --
-// that's its own concern with its own endpoint (GET /vault/auth/drive/status).
+// findClientByIdQuery's row carries plenty this codebase's own services need
+// internally (isActive, isDeleted, packageId, whitelabelId, googleId,
+// createdAt/updatedAt, ...) that the frontend never actually reads -- see
+// passvault-client's DashboardHeader/useOnboardingStatus/ProfileForm/
+// TwoFactorSettings/ChangePasswordForm, the only consumers of this
+// response. Trimming happens here, at the service layer, rather than in
+// the repository query itself, since every other caller of
+// findClientByIdQuery (verifyStepUpOtpService, getDriveAccessTokenForClient,
+// etc.) still needs the full row.
+const MINIMAL_PROFILE_FIELDS = [
+  "name",
+  "username",
+  "email",
+  "hasPassword",
+  "otpEnabled",
+  "otpType",
+  "hasOtpSecret",
+  "driveConnected",
+];
+const FULL_PROFILE_FIELDS = [...MINIMAL_PROFILE_FIELDS, "mobileNo", "address"];
+
+const pickFields = (obj, fields) => fields.reduce((acc, field) => ({ ...acc, [field]: obj[field] }), {});
+
+const DEFAULT_ACCOUNT_MODAL_POPUP_INTERVAL_SECONDS = 10;
+
+// Reveal-account-modal auto-close timeout, from the existing generic
+// tblConfigs key/value table (same one PassVaultpanel's Config admin
+// screen already manages -- see repository/TableConfig.js), key
+// CLIENTACCOUNTMODELPOPUPINTERVAL. Folded straight into the profile
+// response (below) rather than its own GET /vault/auth/config endpoint --
+// every page already fetches the profile once, so there's nothing to
+// re-fetch separately every time the reveal modal opens.
+const getPopupIntervalSeconds = () => {
+  const configRow = (global.tblConfigs || []).find(
+    (item) => item.key?.toLowerCase() === configConstants.CLIENTACCOUNTMODELPOPUPINTERVAL.toLowerCase()
+  );
+  return configRow?.isActive
+    ? parseInt(configRow.value, 10) || DEFAULT_ACCOUNT_MODAL_POPUP_INTERVAL_SECONDS
+    : DEFAULT_ACCOUNT_MODAL_POPUP_INTERVAL_SECONDS;
+};
+
+// GET /vault/auth/profile -- called on every protected page (DashboardHeader's
+// name/username display, useOnboardingStatus's username/password/2FA
+// checks) so it only returns the minimal fields those need. GET
+// /vault/auth/profile/full (getFullProfileService below) is the one the
+// Profile screen itself calls, for the fields only it displays
+// (mobileNo/address via ProfileForm). popupIntervalSeconds isn't a
+// tblClient column -- it's merged in from tblConfigs on every response
+// here rather than picked via pickFields.
 const getProfileService = async (request, fastify) => {
   const { WrClientId } = request.clientTokenInfo;
   const client = await findClientByIdQuery(WrClientId, fastify);
   if (!client) {
     throw new Error("Account not found");
   }
-  return { client };
+  return { client: { ...pickFields(client, MINIMAL_PROFILE_FIELDS), popupIntervalSeconds: getPopupIntervalSeconds() } };
+};
+
+// GET /vault/auth/profile/full -- same auth/lookup as getProfileService,
+// just a wider field set. Only passvault-client's /profile page calls this.
+const getFullProfileService = async (request, fastify) => {
+  const { WrClientId } = request.clientTokenInfo;
+  const client = await findClientByIdQuery(WrClientId, fastify);
+  if (!client) {
+    throw new Error("Account not found");
+  }
+  return { client: { ...pickFields(client, FULL_PROFILE_FIELDS), popupIntervalSeconds: getPopupIntervalSeconds() } };
 };
 
 // PUT /vault/auth/profile -- update name, username, mobile number and/or
@@ -498,7 +970,10 @@ const updateProfileService = async (request, fastify) => {
   );
 
   const client = await findClientByIdQuery(WrClientId, fastify);
-  return { client };
+  // ProfileForm (the only caller) merges this straight into the Profile
+  // page's state, which needs mobileNo/address to keep displaying
+  // correctly after a save -- same shape as getFullProfileService.
+  return { client: { ...pickFields(client, FULL_PROFILE_FIELDS), popupIntervalSeconds: getPopupIntervalSeconds() } };
 };
 
 // POST /vault/auth/changePassword -- authenticated, requires the current
@@ -544,6 +1019,34 @@ const changePasswordService = async (request, fastify) => {
   return { changed: true };
 };
 
+const MAX_PAGE_PATH_LENGTH = 200; // matches tblActivityLogs.wrRefID's varchar(200)
+
+// POST /vault/auth/activity/pageView -- authenticated, fire-and-forget from
+// the frontend's own route changes (see passvault-client's
+// usePageViewLogging, mounted once in DashboardHeader). There's no
+// server-side action to hang this off of the way ACCOUNT_CREATED etc. ride
+// along on putVaultDataService -- navigating between pages is a client-only
+// event, so the client has to report it itself.
+const logPageViewService = async (request, fastify) => {
+  const { WrClientId } = request.clientTokenInfo;
+  const { page } = request.body || {};
+  if (!page) {
+    throw new Error("page is required");
+  }
+
+  await insertClientActivityLogQuery(
+    {
+      activityType: VaultActivityCodes.PAGE_VIEWED,
+      refId: String(page).slice(0, MAX_PAGE_PATH_LENGTH),
+      ipAddress: request.ip,
+      clientId: WrClientId,
+    },
+    fastify
+  );
+
+  return { logged: true };
+};
+
 const refreshTokenService = async (request) => {
   const { WrClientId, WrEmail } = request.clientTokenInfo;
   return { token: generateClientToken({ clientId: WrClientId, email: WrEmail }) };
@@ -556,10 +1059,24 @@ const logoutService = async () => {
   return { loggedOut: true };
 };
 
+// GET /vault/auth/vpnStatus -- authenticated. Polled every few minutes by
+// passvault-client's useVpnGuard (mounted in DashboardHeader, so it runs on
+// every signed-in page) to catch a client turning a VPN on mid-session --
+// login/register/google only check once, at the moment of signing in.
+// Sessions are stateless JWTs (see logoutService above), so this can't
+// revoke anything server-side; it just answers the question, and the
+// frontend is the one that clears its own token and redirects to /login
+// once it sees vpnDetected: true.
+const vpnStatusService = async (request) => {
+  const { isVpn } = await checkVpn(request.ip);
+  return { vpnDetected: isVpn };
+};
+
 module.exports = {
   googleSignInService,
   refreshTokenService,
   logoutService,
+  vpnStatusService,
   generateClientToken,
   registerService,
   verifyEmailService,
@@ -568,7 +1085,14 @@ module.exports = {
   forgotPasswordService,
   resetPasswordService,
   getProfileService,
+  getFullProfileService,
   updateProfileService,
   changePasswordService,
   resolveWhitelabelFromRequest,
+  verifyOwnTotpCode,
+  verifyOtpService,
+  verifyStepUpOtpService,
+  logPageViewService,
+  beginTwoFactorSetupService,
+  resetTwoFactorService,
 };

@@ -18,24 +18,41 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { callClientAPI, APIEndpointModuleType, encrypt, decrypt } = require("../utilities");
 const { errorLogger } = require("../utilities/logger");
 
+// Uploads whichever of logo/favicon were sent as new files on this request,
+// mutating request.body[field] in place from a raw upload into the stored
+// fullPath -- same convention as Banner's "image" field. Fields left
+// untouched (still a string, or absent) pass through unchanged so the
+// caller's existing/default value wins.
+const uploadWhitelabelImages = async (request) => {
+  const projectName = global.tblConfigs.find(
+    (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
+  )?.value;
+
+  if (request.body.logo && request.body.logo.length) {
+    const imgName = generateImageName({ name: `${request.body.domain || "whitelabel"}-logo` });
+    const { fullPath } = await storeImageOnServer({
+      image: request.body.logo[0],
+      project: projectName,
+      name: imgName,
+      ...ImgModuleConfig.WhitelabelLogo,
+    });
+    request.body.logo = fullPath;
+  }
+
+  if (request.body.favicon && request.body.favicon.length) {
+    const imgName = generateImageName({ name: `${request.body.domain || "whitelabel"}-favicon` });
+    const { fullPath } = await storeImageOnServer({
+      image: request.body.favicon[0],
+      project: projectName,
+      name: imgName,
+      ...ImgModuleConfig.WhitelabelFavicon,
+    });
+    request.body.favicon = fullPath;
+  }
+};
+
 const saveWhitelabelService = async (request, fastify) => {
-  // if (request.body.imagePath && request.body.imagePath.length) {
-  //   const imgName = generateImageName({
-  //     name: request.body.domain,
-  //   });
-
-  //   const projectName = global.tblConfigs.find(
-  //     (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
-  //   )?.value;
-
-  //   const { imagePath } = await storeImageOnServer({
-  //     image: request.body.imagePath[0],
-  //     project: projectName,
-  //     name: imgName,
-  //     ...ImgModuleConfig.Whitelable,
-  //   });
-  //   request.body.imagePath = imagePath;
-  // }
+  await uploadWhitelabelImages(request);
   const saveData = await insertWhitelabelQuery(request.body, fastify, request);
   global.tblWhitelabels.push(saveData);
   if(saveData.isActive){
@@ -62,25 +79,13 @@ const editWhitelabelService = async (request, fastify) => {
     throw new Error("Whitelabel data with this Id not found");
   }
 
-  // if (request.body.imagePath && request.body.imagePath.length) {
-  //   const imgName = generateImageName({
-  //     name: request.body.domain,
-  //   });
-  //   const projectName = global.tblConfigs.find(
-  //     (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
-  //   ).value;
-  //   const { imagePath } = await storeImageOnServer({
-  //     image: request.body.imagePath[0],
-  //     project: projectName,
-  //     name: imgName,
-  //     ...ImgModuleConfig.Whitelable,
-  //   });
-  //   request.body.imagePath = imagePath;
-  // }
+  await uploadWhitelabelImages(request);
 
   const updateData = {
     domain: request.body.domain ?? validateId.domain,
     imagePath: request.body.imagePath ?? validateId.imagePath,
+    logo: request.body.logo ?? validateId.logo,
+    favicon: request.body.favicon ?? validateId.favicon,
     isActive: Boolean(request.body.isActive) ?? validateId.isActive,
     id: request.body.id ?? validateId.id,
     isDemoClientEnableInIOS: request.body.isDemoClientEnableInIOS ?? validateId.isDemoClientEnableInIOS,
@@ -146,7 +151,7 @@ const allWhitelabelsService = async (request) => {
 // login / reCAPTCHA. Everything else on tblWhitelabel (clientOTP,
 // mobile*AuthKey/SemlessOTPKey, encryptedWhitelabelId, createdBy, ...) stays
 // server-side.
-const PUBLIC_WHITELABEL_FIELDS = ["domain", "isGoogleLogin", "googleKey", "isRecatchEnable", "recatchKey", "isDefault"];
+const PUBLIC_WHITELABEL_FIELDS = ["domain", "isGoogleLogin", "googleKey", "isRecatchEnable", "recatchKey", "isDefault", "logo", "favicon"];
 
 const publicWhitelabelsService = async () => {
   return global.tblWhitelabels
@@ -186,10 +191,20 @@ const createWhitelabelService = async (request, fastify) => {
 const deleteWhitelabelService = async (request, fastify) => {
   const { id } = request.body;
   for (const elem of id) {
-    const validateId = global.tblSocialMedia.find((item) => item.id === elem);
+    const validateId = global.tblWhitelabels.find((item) => item.id === elem);
     if (validateId && validateId.imagePath) {
       await removeImageFromServer({
         path: validateId.imagePath,
+      });
+    }
+    if (validateId && validateId.logo) {
+      await removeImageFromServer({
+        path: validateId.logo,
+      });
+    }
+    if (validateId && validateId.favicon) {
+      await removeImageFromServer({
+        path: validateId.favicon,
       });
     }
   }

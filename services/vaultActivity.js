@@ -23,6 +23,16 @@ const getRecentActivityService = async (request, fastify) => {
       activityLogId: row.activityLogId,
       activityType: row.activityType,
       activityLabel: ACTIVITY_LABELS[row.activityType] || "Activity",
+      // The page path for a PAGE_VIEWED row (see logPageViewService), an
+      // entry id for account/note events, etc. -- was already selected by
+      // listClientActivityLogsQuery, just wasn't passed through before.
+      refId: row.refId,
+      // Only present on login-completing rows (login, google, register,
+      // failed attempt, lockout -- see services/vaultAuth.js's
+      // requireGeolocation); null for everything else (page views, account/
+      // note edits, ...).
+      latitude: row.latitude,
+      longitude: row.longitude,
       createdDate: row.createdDate,
     })),
   };

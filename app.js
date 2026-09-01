@@ -243,8 +243,14 @@ module.exports = async function (fastify, opts) {
     max: 100000000,
     timeWindow: "1 hour",
     errorResponseBuilder: function (request, context) {
+      // @fastify/rate-limit `throw`s whatever this returns directly (see
+      // node_modules/@fastify/rate-limit/index.js) and reads `.statusCode`
+      // off it for the real HTTP status -- this used to return `code`
+      // instead, which the plugin doesn't look for, so `.statusCode` was
+      // always undefined and every rate-limit rejection fell through
+      // setErrorHandler's other bug straight to a generic 500.
       return {
-        code: 429,
+        statusCode: 429,
         error: "Too Many Requests",
         message: `I only allow ${context.max} requests per ${context.after} to this Website. Try again soon.`,
       };
@@ -512,14 +518,19 @@ module.exports = async function (fastify, opts) {
   });
 
   fastify.setErrorHandler(function (err, request, reply) {
-    // console.error("err",err);
     if (process.env.ENABLE_SENTRY === "TRUE") {
       Sentry.captureException(err);
     }
-    if ((err.statusCode = 400)) {
-      reply
-        .status(400)
-        .send(error(err.message, ERROR_CODES.INVALID_INPUT, 400));
+    // Was `if ((err.statusCode = 400))` -- an assignment, not a comparison,
+    // so it was always truthy and forced every single error (including a
+    // rate-limit 429) to report back as 400 INVALID_INPUT, with the
+    // `reply.status(500)` fallback below completely unreachable. Preserve
+    // the real 4xx status when the thrower set one (e.g. @fastify/rate-limit's
+    // 429), only falling back to a generic 500 for anything else.
+    const statusCode = err.statusCode && err.statusCode < 500 ? err.statusCode : null;
+    if (statusCode) {
+      reply.status(statusCode).send(error(err.message, ERROR_CODES.INVALID_INPUT, statusCode));
+      return;
     }
     reply.status(500).send({ error: "Internal Server Error" });
   });

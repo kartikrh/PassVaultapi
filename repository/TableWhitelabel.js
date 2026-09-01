@@ -8,6 +8,8 @@ const getAllWhitelabelsQuery = async (fastify) => {
                 ed."wrValue" as "whitelabelId",
                 tw."wrDomain" as "domain",
                 tw."wrImagepath" as "imagePath",
+                tw."wrLogo" as "logo",
+                tw."wrFavicon" as "favicon",
                 tw."wrIsActive" as "isActive",
                 tw."wrCreatedAt" as "createdAt",
                 tw."wrCreatedBy" as "createdBy",
@@ -46,11 +48,11 @@ const insertWhitelabelQuery = async (data, fastify, request) => {
         const result = await fastify.db.query(
             `WITH insert_data AS (
             INSERT INTO "tblWhitelabel" (
-            "wrDomain", "wrImagepath", "wrIsActive", "wrCreatedAt", "wrCreatedBy", "wrIsDemoClientEnableInIOS", "wrIsDemoClientLogin",
+            "wrDomain", "wrImagepath", "wrLogo", "wrFavicon", "wrIsActive", "wrCreatedAt", "wrCreatedBy", "wrIsDemoClientEnableInIOS", "wrIsDemoClientLogin",
             "wrIsRecatchaEnable", "wrRecatchKey", "wrIsGoogleLogin", "wrGoogle_Key", "wrGoogle_Secret", "wrClientOTP", "wrIsDefault", "wrMailSettingId"
             )
             VALUES (
-                $1, $2, $3, NOW(), $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+                $1, $2, $3, $4, $5, NOW(), $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
             )
             RETURNING *
             )
@@ -59,6 +61,8 @@ const insertWhitelabelQuery = async (data, fastify, request) => {
                 "wrValue" as "whitelabelId",
                 "wrDomain" as "domain",
                 "wrImagepath" as "imagePath",
+                "wrLogo" as "logo",
+                "wrFavicon" as "favicon",
                 "wrIsActive" as "isActive",
                 "wrCreatedAt" as "createdAt",
                 "wrCreatedBy" as "createdBy",
@@ -83,6 +87,8 @@ const insertWhitelabelQuery = async (data, fastify, request) => {
                 bind: [
                     data.domain,
                     data.imagePath || null,
+                    data.logo || null,
+                    data.favicon || null,
                     data.isActive,
                     request.userTokenInfo.WrUserId,
                     data.isDemoClientEnableInIOS || false,
@@ -117,6 +123,8 @@ const updateWhitelabelQuery = async (data, fastify, request) => {
             `UPDATE "tblWhitelabel" SET
                 "wrDomain" = $1,
                 "wrImagepath" = $2,
+                "wrLogo" = $16,
+                "wrFavicon" = $17,
                 "wrIsActive" = $3,
                 "wrUpdatedBy" = $4,
                 "wrUpdatedAt" = NOW(),
@@ -135,6 +143,8 @@ const updateWhitelabelQuery = async (data, fastify, request) => {
                 "wrId" as "id",
                 "wrDomain" as "domain",
                 "wrImagepath" as "imagePath",
+                "wrLogo" as "logo",
+                "wrFavicon" as "favicon",
                 "wrIsActive" as "isActive",
                 "wrCreatedAt" as "createdAt",
                 "wrCreatedBy" as "createdBy",
@@ -168,6 +178,8 @@ const updateWhitelabelQuery = async (data, fastify, request) => {
                     data.clientOTP,
                     data.isDefault,
                     data.mailSettingId || null,
+                    data.logo || null,
+                    data.favicon || null,
                 ],
             }
         );
@@ -282,6 +294,8 @@ const getAllEncryptWhitelabelsQuery = async (fastify, whereCondition = null) => 
                 tw."wrId" as "id",
                 "wrDomain" as "domain",
                 "wrImagepath" as "imagePath",
+                "wrLogo" as "logo",
+                "wrFavicon" as "favicon",
                 "wrIsActive" as "isActive",
                 "wrCreatedAt" as "createdAt",
                 "wrCreatedBy" as "createdBy",

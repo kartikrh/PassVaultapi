@@ -94,6 +94,13 @@ const configConstants = {
     ISPLAYERCALCULATIONON: "ISPLAYERCALCULATIONON",
     SUPDATEPASS : "SUPDATEPASS",
     ISCARDLOGGER : "ISCARDLOGGER",
-    CARDDELAY: "CARDDELAY"
+    CARDDELAY: "CARDDELAY",
+    CLIENTACCOUNTMODELPOPUPINTERVAL: "CLIENTACCOUNTMODELPOPUPINTERVAL",
+    // VPN/proxy detection for the vault client login/signup surface (see
+    // utilities/vpnCheck.js) -- same URL+key+enabled-flag shape as the
+    // existing FRAUDDET_DECTIONAPI trio above.
+    VPN_CHECK_API_URL: "VPNCHECKAPIURL",
+    VPN_CHECK_API_KEY: "VPNCHECKAPIKEY",
+    IS_VPN_CHECK_ENABLED: "ISVPNCHECKENABLED"
 }
 module.exports = configConstants;
