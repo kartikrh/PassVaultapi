@@ -10,13 +10,18 @@ const { errorLogger } = require("../utilities/logger");
 // (see passvault-client's useGeolocation/LocationRequiredModal). Both are
 // passed on every login-related event (success, failure, lockout) as the
 // login "fingerprint"; omitted (null) for activity types that aren't about
-// a login itself.
+// a login itself. entryName (optional): the vault entry's plaintext title,
+// sent by the client alongside its opaque refId on account/note/group
+// create/update/delete and password-reveal rows (see services/vaultData.js,
+// verifyStepUpOtpService) -- the only piece of a vault entry the server
+// ever sees in the clear, kept solely so Recent Activity can still show
+// which entry a row was about after it's renamed or deleted.
 const insertClientActivityLogQuery = async (data, fastify) => {
   try {
     await fastify.db.query(
       `INSERT INTO "tblActivityLogs" (
-        "wrActivityType", "wrRefID", "wrIpAddress", "wrClientId", "wrDeviceInfo", "wrLatitude", "wrLongitude", "wrCreatedDate"
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, now())`,
+        "wrActivityType", "wrRefID", "wrIpAddress", "wrClientId", "wrDeviceInfo", "wrLatitude", "wrLongitude", "wrEntryName", "wrCreatedDate"
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now())`,
       {
         type: fastify.db.QueryTypes.INSERT,
         bind: [
@@ -27,6 +32,7 @@ const insertClientActivityLogQuery = async (data, fastify) => {
           data.deviceInfo || null,
           data.latitude ?? null,
           data.longitude ?? null,
+          data.entryName || null,
         ],
       }
     );

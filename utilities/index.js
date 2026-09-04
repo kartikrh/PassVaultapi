@@ -934,10 +934,15 @@ const templateModel = {
   MobileNo: 1,
   Email: 2,
 };
+// Email sub-types for templateModel.Email rows -- see PassVaultpanel's
+// AddTemplate.jsx (Template Type = Email -> Type dropdown) and
+// utilities/templateMailer.js (looks these up in global.tblTemplate to
+// build the actual outbound emails for registration/sign-in/2FA reset).
 const templateType = {
   Welcome: 1,
-  Verify: 2,
-  NewsLetter: 3,
+  SignIn: 2,
+  Reset2FA: 3,
+  DayEndActivity: 4,
 };
 const newsType = {
   news: 1,

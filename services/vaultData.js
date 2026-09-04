@@ -81,7 +81,8 @@ const QUOTA_FIELD_BY_ENTRY_TYPE = {
 // activity log can record what kind of change happened, without ever decrypting anything.
 const putVaultDataService = async (request, fastify) => {
   const { WrClientId } = request.clientTokenInfo;
-  const { blob, entryId, entryType, changeType, expectedRevisionId, latitude, longitude } = request.body || {};
+  const { blob, entryId, entryType, changeType, expectedRevisionId, latitude, longitude, entryName } =
+    request.body || {};
 
   if (!blob || !entryId) {
     throw makeError("blob and entryId are required", "INVALID_INPUT");
@@ -137,6 +138,12 @@ const putVaultDataService = async (request, fastify) => {
       clientId: WrClientId,
       latitude: latitude ?? null,
       longitude: longitude ?? null,
+      // Plaintext title only -- see sql/vault/012_activity_log_entry_name.sql.
+      // Client-supplied and unverifiable against the blob (the server never
+      // decrypts it), same trust level entryId/entryType/changeType already
+      // have here; worst case a wrong label on the client's own activity
+      // row, not a security issue.
+      entryName: entryName || null,
     },
     fastify
   );

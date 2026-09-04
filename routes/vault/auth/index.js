@@ -12,6 +12,7 @@ const {
   resetPassword,
   getProfile,
   getFullProfile,
+  getClientPackage,
   updateProfile,
   changePassword,
   verifyOtp,
@@ -146,6 +147,13 @@ module.exports = async (fastify, opts) => {
   fastify.get("/profile/full", {
     preHandler: [(request, reply) => authorizeClient(request, reply, fastify)],
     handler: (request, reply) => getFullProfile(request, reply, fastify),
+  });
+
+  // The client's subscribed package (name/price/limits) for the /profile
+  // page's "Subscription" card.
+  fastify.get("/profile/package", {
+    preHandler: [(request, reply) => authorizeClient(request, reply, fastify)],
+    handler: (request, reply) => getClientPackage(request, reply, fastify),
   });
 
   fastify.put("/profile", {

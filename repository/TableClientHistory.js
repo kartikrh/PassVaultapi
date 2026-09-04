@@ -7,7 +7,7 @@ const { errorLogger } = require("../utilities/logger");
 
 const listClientActivityLogsQuery = async (filters, fastify) => {
   try {
-    const { clientId, activityType, refId, dateFrom, dateTo, limit } = filters || {};
+    const { clientId, activityType, refId, dateFrom, dateTo, limit, offset } = filters || {};
     const conditions = [`a."wrClientId" is not null`];
     const bind = [];
 
@@ -33,7 +33,15 @@ const listClientActivityLogsQuery = async (filters, fastify) => {
     }
 
     bind.push(limit && limit > 0 ? limit : 200);
+    const limitParamIndex = bind.length;
+    bind.push(offset && offset > 0 ? offset : 0);
+    const offsetParamIndex = bind.length;
 
+    // totalCount rides along on every row via a window function (same
+    // round trip, no separate COUNT(*) query) -- callers that page through
+    // this (services/vaultActivity.js) read it off result[0]; callers that
+    // don't care about it (adminVaultHistory.js, vaultAccountLifecycle.js,
+    // ...) just ignore the extra column.
     const result = await fastify.db.query(
       `SELECT
         a."wrId" as "activityLogId",
@@ -45,12 +53,14 @@ const listClientActivityLogsQuery = async (filters, fastify) => {
         c."wrName" as "clientName",
         a."wrLatitude" as "latitude",
         a."wrLongitude" as "longitude",
-        a."wrCreatedDate" as "createdDate"
+        a."wrEntryName" as "entryName",
+        a."wrCreatedDate" as "createdDate",
+        COUNT(*) OVER() as "totalCount"
        FROM "tblActivityLogs" a
        LEFT JOIN "tblClient" c ON c."wrClientId" = a."wrClientId"
        WHERE ${conditions.join(" AND ")}
        ORDER BY a."wrCreatedDate" DESC
-       LIMIT $${bind.length}`,
+       LIMIT $${limitParamIndex} OFFSET $${offsetParamIndex}`,
       { type: fastify.db.QueryTypes.SELECT, bind }
     );
     return result;

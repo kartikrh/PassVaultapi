@@ -13,6 +13,7 @@ const {
   resetPasswordService,
   getProfileService,
   getFullProfileService,
+  getClientPackageService,
   updateProfileService,
   changePasswordService,
   verifyOtpService,
@@ -165,6 +166,16 @@ const getFullProfile = async (request, reply, fastify) => {
   }
 };
 
+const getClientPackage = async (request, reply, fastify) => {
+  try {
+    const result = await getClientPackageService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/getClientPackage", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.AUTH_ERROR, 200));
+  }
+};
+
 const updateProfile = async (request, reply, fastify) => {
   try {
     const result = await updateProfileService(request, fastify);
@@ -248,6 +259,7 @@ module.exports = {
   resetPassword,
   getProfile,
   getFullProfile,
+  getClientPackage,
   updateProfile,
   changePassword,
   verifyOtp,

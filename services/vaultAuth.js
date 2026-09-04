@@ -9,6 +9,7 @@ const {
   getClientAuthByEmailQuery,
   getClientAuthByUsernameQuery,
   getDefaultPackageIdQuery,
+  getClientPackageQuery,
   insertClientQuery,
   touchClientUpdatedAtQuery,
   updateClientPasswordHashQuery,
@@ -25,11 +26,13 @@ const { insertClientActivityLogQuery } = require("../repository/TableClientActiv
 const { listClientActivityLogsQuery } = require("../repository/TableClientHistory");
 const { VaultActivityCodes, VaultClientProvider } = require("../utilities/vaultConstants");
 const { sendMail } = require("../utilities/mailer");
+const { sendTemplateMail, buildLogoHtml } = require("../utilities/templateMailer");
 const { OTPType } = require("../utilities/otpConstants");
 const { generateTotpSecret, buildTotpKeyUri, generateQrCodeDataUrl, verifyTotpCode } = require("../utilities/totp");
-const { encrypt, decrypt, deviceInfo } = require("../utilities/index");
+const { encrypt, decrypt, deviceInfo, templateType } = require("../utilities/index");
 const configConstants = require("../utilities/configConstants");
 const { checkVpn } = require("../utilities/vpnCheck");
+const { errorLogger } = require("../utilities/logger");
 
 // Wrong-password lockout (loginService): after this many consecutive failed
 // attempts, the account can't try again until the lockout window passes.
@@ -223,6 +226,7 @@ const googleSignInService = async (request, fastify) => {
       },
       fastify
     );
+    await sendSignInAlertEmail(client, request, latitude, longitude, fastify);
   }
 
   const token = generateClientToken(client);
@@ -282,6 +286,62 @@ const getWhitelabelMailSettingId = (whitelabelId) => {
   if (!whitelabelId) return null;
   const whitelabel = (global.tblWhitelabels || []).find((item) => item.id == whitelabelId);
   return whitelabel?.mailSettingId || null;
+};
+
+// Shared by sendSignInAlertEmail and registerService's Welcome mail -- both
+// fill a template's {{location}} from the same lat/long the client posted
+// (requireGeolocation), so the formatting stays identical. Renders as a
+// Google Maps link (opens in a new tab) rather than bare coordinates --
+// {{location}} is in templateMailer.js's RAW_HTML_VARS so this markup
+// survives HTML-escaping instead of showing up as literal tags.
+const formatLocation = (latitude, longitude) => {
+  if (typeof latitude !== "number" || typeof longitude !== "number") return "Unknown";
+  const lat = latitude.toFixed(4);
+  const lng = longitude.toFixed(4);
+  const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+  return `<a href="${mapsUrl}" target="_blank" rel="noopener noreferrer">${lat}, ${lng}</a>`;
+};
+
+// Flat {{device}}/{{browser}} strings for a template, parsed out of the
+// same deviceInfo(request) JSON already computed for the activity log --
+// avoids re-running ua-parser-js a second time per request.
+const describeDevice = (deviceInfoJson) => {
+  const { browser, device } = JSON.parse(deviceInfoJson).browserInfo;
+  return {
+    browser: browser.name ? `${browser.name}${browser.version ? " " + browser.version : ""}` : "Unknown",
+    device: (device.vendor || device.model)
+      ? `${device.vendor || ""} ${device.model || ""}`.trim()
+      : device.type || "Desktop",
+  };
+};
+
+// Best-effort "new sign-in" alert (Template screen's Email > Sign In type)
+// -- called everywhere CLIENT_LOGGED_IN is actually logged (loginService,
+// googleSignInService's returning-client branch, verifyOtpService's
+// non-enrollment branch). Wrapped in try/catch: unlike registerService's
+// verification email, a broken mail setting or missing template here must
+// never block a real login.
+const sendSignInAlertEmail = async (client, request, latitude, longitude, fastify) => {
+  try {
+    const location = formatLocation(latitude, longitude);
+    const { device, browser } = describeDevice(deviceInfo(request));
+    await sendTemplateMail({
+      type: templateType.SignIn,
+      to: client.email,
+      mailSettingId: getWhitelabelMailSettingId(client.whitelabelId),
+      vars: {
+        name: client.name || "there",
+        ip: request.ip,
+        location,
+        device,
+        browser,
+        date: new Date().toUTCString(),
+        logoHtml: buildLogoHtml(client.whitelabelId),
+      },
+    });
+  } catch (err) {
+    errorLogger(fastify, err.message, "sendSignInAlertEmail -> services/vaultAuth.js", request);
+  }
 };
 
 // Builds the "otpRequired" response for a client whose WrOTPEnable is true
@@ -407,6 +467,9 @@ const verifyOtpService = async (request, fastify) => {
     },
     fastify
   );
+  if (!justEnrolled) {
+    await sendSignInAlertEmail(client, request, decoded.latitude, decoded.longitude, fastify);
+  }
 
   const token = generateClientToken(client);
   return { token, client: { ...client, hasOtpSecret: true } };
@@ -458,7 +521,7 @@ const verifyOwnTotpCode = async (client, code, fastify) => {
 // whenever this same entry was last viewed *before* now, so the client can
 // show it without a separate lookup.
 const verifyStepUpOtpService = async (request, fastify) => {
-  const { code, entryId, latitude, longitude } = request.body || {};
+  const { code, entryId, latitude, longitude, entryName } = request.body || {};
 
   const { WrClientId } = request.clientTokenInfo;
   const client = await findClientByIdQuery(WrClientId, fastify);
@@ -483,6 +546,9 @@ const verifyStepUpOtpService = async (request, fastify) => {
         clientId: WrClientId,
         latitude: latitude ?? null,
         longitude: longitude ?? null,
+        // See sql/vault/012_activity_log_entry_name.sql -- same plaintext-
+        // title-only trust level as putVaultDataService's entryName.
+        entryName: entryName || null,
       },
       fastify
     );
@@ -527,6 +593,29 @@ const resetTwoFactorService = async (request, fastify) => {
     },
     fastify
   );
+
+  // Best-effort notification (Template screen, Email > Reset 2FA) -- a
+  // missing/broken template or mail setting must never fail the reset
+  // itself, which has already been applied above.
+  try {
+    const client = await findClientByIdQuery(WrClientId, fastify);
+    if (client?.email) {
+      await sendTemplateMail({
+        type: templateType.Reset2FA,
+        to: client.email,
+        mailSettingId: getWhitelabelMailSettingId(client.whitelabelId),
+        vars: {
+          name: client.name || "there",
+          ip: request.ip,
+          date: new Date().toUTCString(),
+          logoHtml: buildLogoHtml(client.whitelabelId),
+        },
+      });
+    }
+  } catch (err) {
+    errorLogger(fastify, err.message, "resetTwoFactorService -> services/vaultAuth.js", request);
+  }
+
   return { reset: true };
 };
 
@@ -562,13 +651,14 @@ const registerService = async (request, fastify) => {
     fastify
   );
 
+  const deviceInfoJson = deviceInfo(request);
   await insertClientActivityLogQuery(
     {
       activityType: VaultActivityCodes.CLIENT_REGISTERED,
       refId: String(client.clientId),
       ipAddress: request.ip,
       clientId: client.clientId,
-      deviceInfo: deviceInfo(request),
+      deviceInfo: deviceInfoJson,
       latitude,
       longitude,
     },
@@ -577,13 +667,42 @@ const registerService = async (request, fastify) => {
 
   const verifyToken = generatePurposeToken(client.clientId, "verify-email", "1d");
   const verifyUrl = `${clientAppUrl()}/verify-email?token=${verifyToken}`;
+  const { browser, device } = describeDevice(deviceInfoJson);
 
-  await sendMail({
+  // Prefers the admin-configured Welcome template (Template screen, Email >
+  // Welcome) so its subject/body -- with {{name}}/{{email}}/{{verifyUrl}}/
+  // {{ip}}/{{location}}/{{device}}/{{browser}}/{{date}}/{{securityUrl}}
+  // filled in -- goes out instead. Falls back to this hardcoded copy when no
+  // active Welcome template exists yet, since the verify-email link is
+  // required to finish signup and must go out either way. securityUrl is
+  // this whitelabel's own site (falling back to the generic client app URL
+  // for a request that didn't resolve one), not a specific settings page --
+  // there's no dedicated "security" route in passvault-client today.
+  const templateSent = await sendTemplateMail({
+    type: templateType.Welcome,
     to: email,
-    subject: "Welcome to PassVault -- verify your email",
-    text: `Hi ${name || "there"},\n\nWelcome to PassVault! Verify your email to finish creating your account:\n${verifyUrl}\n\nThis link expires in 24 hours. If you didn't create this account, you can ignore this email.`,
     mailSettingId: whitelabel?.mailSettingId,
+    vars: {
+      name: name || "there",
+      email,
+      verifyUrl,
+      logoHtml: buildLogoHtml(whitelabel?.id),
+      ip: request.ip,
+      location: formatLocation(latitude, longitude),
+      device,
+      browser,
+      date: new Date().toUTCString(),
+      securityUrl: whitelabel?.domain || clientAppUrl(),
+    },
   });
+  if (!templateSent) {
+    await sendMail({
+      to: email,
+      subject: "Welcome to PassVault -- verify your email",
+      text: `Hi ${name || "there"},\n\nWelcome to PassVault! Verify your email to finish creating your account:\n${verifyUrl}\n\nThis link expires in 24 hours. If you didn't create this account, you can ignore this email.`,
+      mailSettingId: whitelabel?.mailSettingId,
+    });
+  }
 
   await insertClientActivityLogQuery(
     {
@@ -767,6 +886,7 @@ const loginService = async (request, fastify) => {
     },
     fastify
   );
+  await sendSignInAlertEmail(clientWithoutHash, request, latitude, longitude, fastify);
 
   const token = generateClientToken(clientWithoutHash);
   return { token, client: clientWithoutHash };
@@ -901,6 +1021,17 @@ const getFullProfileService = async (request, fastify) => {
     throw new Error("Account not found");
   }
   return { client: { ...pickFields(client, FULL_PROFILE_FIELDS), popupIntervalSeconds: getPopupIntervalSeconds() } };
+};
+
+// GET /vault/auth/profile/package -- the client's subscribed package, for
+// the /profile page's "Subscription" card. Returns { package: null } rather
+// than throwing when wrPackageId isn't set (e.g. an older client created
+// before packages existed), so the frontend can render a
+// "no active plan" state instead of an error.
+const getClientPackageService = async (request, fastify) => {
+  const { WrClientId } = request.clientTokenInfo;
+  const pkg = await getClientPackageQuery(WrClientId, fastify);
+  return { package: pkg };
 };
 
 // PUT /vault/auth/profile -- update name, username, mobile number and/or
@@ -1086,6 +1217,7 @@ module.exports = {
   resetPasswordService,
   getProfileService,
   getFullProfileService,
+  getClientPackageService,
   updateProfileService,
   changePasswordService,
   resolveWhitelabelFromRequest,

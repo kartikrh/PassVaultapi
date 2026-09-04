@@ -298,6 +298,31 @@ const getClientPlanLimitsQuery = async (clientId, fastify) => {
   }
 };
 
+// Returns the client's subscribed package details (name/price/limits), or
+// null if the client has no wrPackageId set yet. Distinct from
+// getClientPlanLimitsQuery above, which only returns the bare numeric
+// limits for the entry-count gate in services/vaultData.js -- this one is
+// for display (passvault-client's /profile "Subscription" card).
+const getClientPackageQuery = async (clientId, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT p."wrId" as "packageId", p."wrName" as "name", p."wrDescription" as "description",
+              p."wrPrice" as "price", p."wrCurrency" as "currency",
+              p."wrIntervalType" as "intervalType", p."wrIntervalCount" as "intervalCount",
+              p."wrTrialDays" as "trialDays",
+              p."wrMaxAccounts" as "maxAccounts", p."wrMaxGroups" as "maxGroups", p."wrMaxNotes" as "maxNotes"
+       FROM "tblClient" c
+       JOIN "tblPackages" p ON p."wrId" = c."wrPackageId"
+       WHERE c."wrClientId" = $1`,
+      { type: fastify.db.QueryTypes.SELECT, bind: [clientId] }
+    );
+    return result[0] || null;
+  } catch (err) {
+    errorLogger(fastify, err.message, "DB ERROR --> repository/TableClient/getClientPackageQuery");
+    throw new Error(err.message);
+  }
+};
+
 // Only used for an already-enrolled client (hasOtpSecret true) -- a
 // brand-new, not-yet-confirmed secret instead travels inside the pending
 // 2FA JWT itself (see services/vaultAuth.js beginTwoFactorChallenge) so an
@@ -408,6 +433,7 @@ module.exports = {
   setClientDriveRefreshTokenQuery,
   getClientDriveRefreshTokenQuery,
   getClientPlanLimitsQuery,
+  getClientPackageQuery,
   getClientOtpSecretQuery,
   updateClientOtpSecretQuery,
   resetClientOtpQuery,
