@@ -1,6 +1,7 @@
 const { OAuth2Client } = require("google-auth-library");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const axios = require("axios");
 const {
   findClientByGoogleIdQuery,
   findClientByEmailQuery,
@@ -65,6 +66,39 @@ const requireNoVpn = async (request) => {
   const { isVpn } = await checkVpn(request.ip);
   if (isVpn) {
     throw new Error("A VPN or proxy was detected. Please disable it and try again.");
+  }
+};
+
+// Server-side half of the login form's reCAPTCHA (LoginForm.js only renders
+// the widget -- and only requires a token -- once White Label's
+// isRecatchEnable + recatchKey are both set for this domain; see its
+// recaptchaRequired). Mirrors that same gate here so a caller can't just
+// skip the widget and hit /vault/auth/login directly. Verified against
+// Google's siteverify with the *secret* key (recatchSecret, encrypted at
+// rest, never sent to the browser) -- not recatchKey, which is public.
+// Unlike requireNoVpn, this fails CLOSED on a verification error: the
+// operator explicitly turned reCAPTCHA on for this domain, so a
+// Google-side outage should block login, not silently bypass the check.
+const requireRecaptcha = async (request, whitelabel) => {
+  if (!whitelabel?.isRecatchEnable || !whitelabel?.recatchSecret) return;
+
+  const { recaptchaToken } = request.body || {};
+  if (!recaptchaToken) {
+    throw new Error("Please complete the reCAPTCHA challenge");
+  }
+
+  try {
+    const secret = await decrypt(whitelabel.recatchSecret);
+    const { data } = await axios.post(
+      "https://www.google.com/recaptcha/api/siteverify",
+      null,
+      { params: { secret, response: recaptchaToken, remoteip: request.ip }, timeout: 5000 }
+    );
+    if (!data?.success) {
+      throw new Error("reCAPTCHA verification failed, please try again");
+    }
+  } catch (err) {
+    throw new Error("reCAPTCHA verification failed, please try again");
   }
 };
 
@@ -806,6 +840,7 @@ const loginService = async (request, fastify) => {
   }
   const { latitude, longitude } = requireGeolocation(request.body);
   await requireNoVpn(request);
+  await requireRecaptcha(request, resolveWhitelabelFromRequest(request));
 
   const fingerprint = deviceInfo(request);
 

@@ -19,6 +19,7 @@ const getAllWhitelabelsQuery = async (fastify) => {
                 tw."wrIsDemoClientEnableInIOS" as "isDemoClientEnableInIOS",
                 tw."wrIsRecatchaEnable" as "isRecatchEnable",
                 tw."wrRecatchKey" as "recatchKey",
+                tw."wrRecatchSecret" as "recatchSecret",
                 tw."wrIsGoogleLogin" as "isGoogleLogin",
                 tw."wrGoogle_Key" as "googleKey",
                 tw."wrGoogle_Secret" as "googleSecret",
@@ -49,10 +50,10 @@ const insertWhitelabelQuery = async (data, fastify, request) => {
             `WITH insert_data AS (
             INSERT INTO "tblWhitelabel" (
             "wrDomain", "wrImagepath", "wrLogo", "wrFavicon", "wrIsActive", "wrCreatedAt", "wrCreatedBy", "wrIsDemoClientEnableInIOS", "wrIsDemoClientLogin",
-            "wrIsRecatchaEnable", "wrRecatchKey", "wrIsGoogleLogin", "wrGoogle_Key", "wrGoogle_Secret", "wrClientOTP", "wrIsDefault", "wrMailSettingId"
+            "wrIsRecatchaEnable", "wrRecatchKey", "wrRecatchSecret", "wrIsGoogleLogin", "wrGoogle_Key", "wrGoogle_Secret", "wrClientOTP", "wrIsDefault", "wrMailSettingId"
             )
             VALUES (
-                $1, $2, $3, $4, $5, NOW(), $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
+                $1, $2, $3, $4, $5, NOW(), $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
             )
             RETURNING *
             )
@@ -72,6 +73,7 @@ const insertWhitelabelQuery = async (data, fastify, request) => {
                 "wrIsDemoClientEnableInIOS" as "isDemoClientEnableInIOS",
                 "wrIsRecatchaEnable" as "isRecatchEnable",
                 "wrRecatchKey" as "recatchKey",
+                "wrRecatchSecret" as "recatchSecret",
                 "wrIsGoogleLogin" as "isGoogleLogin",
                 "wrGoogle_Key" as "googleKey",
                 "wrGoogle_Secret" as "googleSecret",
@@ -95,6 +97,7 @@ const insertWhitelabelQuery = async (data, fastify, request) => {
                     data.isDemoClientLogin || false,
                     data.isRecatchEnable || false,
                     data.recatchKey || null,
+                    data.recatchSecret || null,
                     data.isGoogleLogin || false,
                     data.googleKey || null,
                     data.googleSecret || null,
@@ -137,7 +140,8 @@ const updateWhitelabelQuery = async (data, fastify, request) => {
                 "wrGoogle_Secret" = $12,
                 "wrClientOTP" = $13,
                 "wrIsDefault" = $14,
-                "wrMailSettingId" = $15
+                "wrMailSettingId" = $15,
+                "wrRecatchSecret" = $18
             WHERE "wrId" = $5
             RETURNING
                 "wrId" as "id",
@@ -154,6 +158,7 @@ const updateWhitelabelQuery = async (data, fastify, request) => {
                 "wrIsDemoClientEnableInIOS" as "isDemoClientEnableInIOS",
                 "wrIsRecatchaEnable" as "isRecatchEnable",
                 "wrRecatchKey" as "recatchKey",
+                "wrRecatchSecret" as "recatchSecret",
                 "wrIsGoogleLogin" as "isGoogleLogin",
                 "wrGoogle_Key" as "googleKey",
                 "wrGoogle_Secret" as "googleSecret",
@@ -180,6 +185,7 @@ const updateWhitelabelQuery = async (data, fastify, request) => {
                     data.mailSettingId || null,
                     data.logo || null,
                     data.favicon || null,
+                    data.recatchSecret || null,
                 ],
             }
         );
@@ -305,6 +311,7 @@ const getAllEncryptWhitelabelsQuery = async (fastify, whereCondition = null) => 
                 "wrIsDemoClientEnableInIOS" as "isDemoClientEnableInIOS",
                 "wrIsRecatchaEnable" as "isRecatchEnable",
                 "wrRecatchKey" as "recatchKey",
+                "wrRecatchSecret" as "recatchSecret",
                 "wrIsGoogleLogin" as "isGoogleLogin",
                 "wrGoogle_Key" as "googleKey",
                 "wrGoogle_Secret" as "googleSecret",

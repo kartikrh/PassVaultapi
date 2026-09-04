@@ -92,6 +92,7 @@ const editWhitelabelService = async (request, fastify) => {
     isDemoClientLogin: request.body.isDemoClientLogin ?? validateId.isDemoClientLogin,
     isRecatchEnable: request.body.isRecatchEnable ?? validateId.isRecatchEnable,
     recatchKey: request.body.recatchKey ?? validateId.recatchKey,
+    recatchSecret: request.body.recatchSecret ?? validateId.recatchSecret,
     isGoogleLogin: request.body.isGoogleLogin ?? validateId.isGoogleLogin,
     googleKey: request.body.googleKey ?? validateId.googleKey,
     googleSecret: request.body.googleSecret ?? validateId.googleSecret,
@@ -165,21 +166,27 @@ const publicWhitelabelsService = async () => {
     });
 };
 
-// Decrypts googleSecret for the Add/Edit White Label form, same convention
-// as mailSettingsById decrypting Mail Settings' password field. The list
-// endpoints (allWhitelabelsService, publicWhitelabelsService) never do this
-// -- googleSecret stays encrypted everywhere except this one lookup.
+// Decrypts googleSecret/recatchSecret for the Add/Edit White Label form,
+// same convention as mailSettingsById decrypting Mail Settings' password
+// field. The list endpoints (allWhitelabelsService, publicWhitelabelsService)
+// never do this -- both secrets stay encrypted everywhere except this one
+// lookup, and recatchSecret is never added to PUBLIC_WHITELABEL_FIELDS at
+// all, so it never reaches the unauthenticated public endpoint.
 const whitelabelByIdService = async (request) => {
   const { id } = request.body;
   const result = global.tblWhitelabels.find((item) => item.id === id);
   if (!result) return null;
   const decryptedGoogleSecret = result.googleSecret ? await decrypt(result.googleSecret) : result.googleSecret;
-  return { ...result, googleSecret: decryptedGoogleSecret };
+  const decryptedRecatchSecret = result.recatchSecret ? await decrypt(result.recatchSecret) : result.recatchSecret;
+  return { ...result, googleSecret: decryptedGoogleSecret, recatchSecret: decryptedRecatchSecret };
 };
 
 const createWhitelabelService = async (request, fastify) => {
   if (request.body.googleSecret) {
     request.body.googleSecret = encrypt(request.body.googleSecret);
+  }
+  if (request.body.recatchSecret) {
+    request.body.recatchSecret = encrypt(request.body.recatchSecret);
   }
   if (request.body.id == 0) {
     return await saveWhitelabelService(request, fastify, request);
