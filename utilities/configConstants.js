@@ -112,6 +112,12 @@ const configConstants = {
     // Gates the /documentation (swagger) routes at request time -- see the
     // onRequest hook in app.js. "true" shows the docs, anything else (or
     // missing) hides them with a 404.
-    IS_ENABLE_SWAGGER: "ISENABLESWAGGER"
+    IS_ENABLE_SWAGGER: "ISENABLESWAGGER",
+    // Staff/panel session env vars moved to tblConfigs so they're editable
+    // at runtime without a redeploy -- see sql/vault/017_staff_session_config.sql.
+    SECRET_KEY_TOKEN: "SECRETKEYTOKEN",
+    TOKEN_EXPIRY_TIME: "TOKENEXPIRYTIME",
+    SOCKET_ADMIN_USERNAME: "SOCKETADMINUSERNAME",
+    SOCKET_ADMIN_PASSWORD: "SOCKETADMINPASSWORD"
 }
 module.exports = configConstants;

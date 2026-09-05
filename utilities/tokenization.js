@@ -1,10 +1,12 @@
 const jwt = require("jsonwebtoken");
+const { getConfigValue } = require("./index");
+const configConstants = require("./configConstants");
 
 const generateToken = (payload) => {
     const options = {
-        expiresIn: process.env.TOKEN_EXPIRY_TIME,
+        expiresIn: getConfigValue(configConstants.TOKEN_EXPIRY_TIME),
     };
-    const token = jwt.sign(payload, process.env.SECRET_KEY_TOKEN, options);
+    const token = jwt.sign(payload, getConfigValue(configConstants.SECRET_KEY_TOKEN), options);
     return token;
 };
 
@@ -15,13 +17,13 @@ const generateToken = (payload) => {
 // generatePurposeToken/verifyPurposeToken), generalized here so the panel
 // can reuse it instead of duplicating the jwt.sign/verify boilerplate.
 const generatePurposeToken = (payload, purpose, expiresIn) => {
-    return jwt.sign({ ...payload, purpose }, process.env.SECRET_KEY_TOKEN, { expiresIn });
+    return jwt.sign({ ...payload, purpose }, getConfigValue(configConstants.SECRET_KEY_TOKEN), { expiresIn });
 };
 
 const verifyPurposeToken = (token, purpose) => {
     let decoded;
     try {
-        decoded = jwt.verify(token, process.env.SECRET_KEY_TOKEN);
+        decoded = jwt.verify(token, getConfigValue(configConstants.SECRET_KEY_TOKEN));
     } catch (err) {
         throw new Error("This code has expired, please sign in again");
     }

@@ -24,7 +24,9 @@ const {
   encrypt,
   decrypt,
   getUserChildIds,
+  getConfigValue,
 } = require("../utilities/index");
+const configConstants = require("../utilities/configConstants");
 const { generateToken, generatePurposeToken, verifyPurposeToken } = require("../utilities/tokenization");
 const { OTPType } = require("../utilities/otpConstants");
 const { generateTotpSecret, buildTotpKeyUri, generateQrCodeDataUrl, verifyTotpCode } = require("../utilities/totp");
@@ -349,7 +351,7 @@ async function generateEncryptionService(request, fastify) {
 async function validateUserServices(request, fastify) {
   let token = request.headers.authorization;
   token = token.split(" ")[1];
-  const secretKey = process.env.SECRET_KEY_TOKEN;
+  const secretKey = getConfigValue(configConstants.SECRET_KEY_TOKEN);
   try {
     if (!token || !secretKey) return false;
 

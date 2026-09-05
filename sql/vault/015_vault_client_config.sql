@@ -29,7 +29,8 @@ INSERT INTO public."tblConfigs" (
   "wrKey", "wrValue", "wrDesc", "wrIsActive", "wrIsForAdmin",
   "wrCreatedDate", "wrIsDeleted"
 )
-SELECT * FROM (VALUES
+SELECT v."wrKey", v."wrValue", v."wrDesc", v."wrIsActive", v."wrIsForAdmin", now(), false
+FROM (VALUES
   ('VAULTMASTERKEY', '<32_CHARACTER_VAULT_MASTER_KEY>', 'AES-256-GCM key that wraps every escrowed vault key (utilities/vaultCrypto.js). Sensitive -- do not expose in the admin Config screen. Must be exactly 32 characters.', true, true),
   ('VAULTCLIENTSECRETKEYTOKEN', '<VAULT_CLIENT_JWT_SECRET>', 'Signs/verifies vault client session + purpose JWTs (services/vaultAuth.js, controller/middleware/vaultAuth.js). Sensitive -- do not expose in the admin Config screen.', true, true),
   ('VAULTCLIENTTOKENEXPIRYTIME', '7d', 'Vault client session JWT expiry (e.g. 7d, 4h).', true, false),

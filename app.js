@@ -143,6 +143,17 @@ module.exports = async function (fastify, opts) {
           await disconnectAllClientSocketService(null, fastify);
           await newConnectClients(fastify);
 
+          // Deferred until tblConfigs is loaded -- SOCKET_ADMIN_USERNAME/
+          // PASSWORD now come from getConfigValue(), which is empty until
+          // fetchAllDataFromDb() above finishes.
+          instrument(io, {
+            auth: {
+              type: "basic",
+              username: getConfigValue(configConstants.SOCKET_ADMIN_USERNAME),
+              password: bcrypt.hashSync(getConfigValue(configConstants.SOCKET_ADMIN_PASSWORD) || "", 10),
+            },
+          });
+
         } catch (error) {
           console.error(new Date(), "Error during post-sync operations:", error);
         }
@@ -403,14 +414,6 @@ module.exports = async function (fastify, opts) {
     // Additional stability settings
     maxHttpBufferSize: 1e8, // 100MB max buffer size
     httpCompression: true,   // Enable compression
-  });
-
-  instrument(io, {
-    auth: {
-      type: "basic",
-      username: process.env.SOCKET_ADMIN_USERNAME,
-      password: bcrypt.hashSync(process.env.SOCKET_ADMIN_PASSWORD, 10),
-    },
   });
 
   // //Assign socketIo to global variable

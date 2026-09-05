@@ -1,4 +1,6 @@
 const jwt = require("jsonwebtoken");
+const { getConfigValue } = require("./utilities/index");
+const configConstants = require("./utilities/configConstants");
 
 global.sessionData = []
 
@@ -33,7 +35,7 @@ const socketMiddleware = async (socket, next) => {
 
     const verifyToken = jwt.verify(
       token,
-      process.env.SECRET_KEY_TOKEN,
+      getConfigValue(configConstants.SECRET_KEY_TOKEN),
       (err, decoded) => {
         if (err) {
           return next(new Error(err.message));

@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const { deviceInfo } = require("../utilities/index");
+const { deviceInfo, getConfigValue } = require("../utilities/index");
 const configConstants = require("../utilities/configConstants");
 
 const {
@@ -13,7 +13,7 @@ async function authorization(request, fastify) {
   try {
     let token = request.headers.authorization;
     token = token?.split(" ")[1];
-    const secretKey = process.env.SECRET_KEY_TOKEN;
+    const secretKey = getConfigValue(configConstants.SECRET_KEY_TOKEN);
 
     if (!token || !secretKey) {
       throw new Error("Token Not Found");
