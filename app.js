@@ -27,8 +27,6 @@ const {
 const configConstants = require("./utilities/configConstants");
 const { instrument } = require("@socket.io/admin-ui");
 const bcrypt = require("bcrypt");
-const webPush = require("web-push");
-const { webPushset } = require("./WebPushHandler/index.js");
 const cron = require('node-cron');
 const { resetAllClientSocketReconnectCountService, disconnectAllClientSocketService } = require("./services/clientSocket.js");
 const { connectClients: newConnectClients } = require("./sockets/client.js");
@@ -144,8 +142,6 @@ module.exports = async function (fastify, opts) {
           await resetAllClientSocketReconnectCountService(null, fastify);
           await disconnectAllClientSocketService(null, fastify);
           await newConnectClients(fastify);
-
-          webPushset(webPush);
 
         } catch (error) {
           console.error(new Date(), "Error during post-sync operations:", error);

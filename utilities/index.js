@@ -834,7 +834,9 @@ const sendNotificationByType = async (data, request, fastify) => {
       case NotificationSendType.pushNotification:
         // eventName = "onSendPushNotification";
         // Mobile/FCM push notifications (news, video, and generic) removed
-        // along with GOOGLE_SERVICE_ACCOUNT_JSON -- see WebPushHandler/index.js.
+        // along with GOOGLE_SERVICE_ACCOUNT_JSON. Browser Web Push (the other
+        // half of what used to be WebPushHandler/) was removed too -- neither
+        // had a live caller.
         return true;
     }
     // saveNotificationLogsQuery(data,request, fastify);
