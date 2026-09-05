@@ -9,7 +9,6 @@ const {
   tblPredictorAPILogger,
   tblThirdPartyAPILogger,
 } = require("./logger");
-const { sendNotification, sendNewsNotification, sendVideoNotification } = require("../WebPushHandler");
 const { entityConstant, nullTeamtpIds } = require("./entityConst");
 const ERROR_CODES = {
   INVALID_INPUT: "INVALID_INPUT",
@@ -84,12 +83,6 @@ const deviceInfo = (request) => {
   });
 };
 
-const hashFunction = (value) => {
-  const hash = crypto.createHash("sha256");
-  hash.update(value.toString() + process.env.SECRET_HASH_KEY_TABID.toString()); // Convert to string before hashing
-  return hash.digest("hex");
-};
-
 const encryptedObject = (value, enVal) => {
   return {
     wrTabId: value,
@@ -103,18 +96,35 @@ const convertStringToBuffer = (str) => {
   return buf;
 };
 
-const key = convertStringToBuffer(process.env.ENCRYPTION_KEY); // 256-bit key for AES-256
 const algorithm = "aes-256-ecb"; // ECB mode (not recommended for most cases)
 
+// Looked up lazily (not at module load) because global.tblConfigs is only
+// populated after fetchAllDataFromDb() runs at startup -- reading it eagerly
+// would run before that data exists. Also picks up admin edits to the
+// Config screen without a restart.
+const getConfigValue = (key) => {
+  return global.tblConfigs?.find((item) => item.key === key)?.value;
+};
+
+const getEncryptionKey = () => {
+  const value = getConfigValue(configConstants.ENCRYPTION_KEY);
+  if (!value) {
+    throw new Error(
+      `Encryption key config "${configConstants.ENCRYPTION_KEY}" not found in tblConfigs`
+    );
+  }
+  return convertStringToBuffer(value);
+};
+
 function encrypt(input) {
-  const cipher = crypto.createCipheriv(algorithm, key, Buffer.alloc(0)); // Using ECB mode, so IV is empty
+  const cipher = crypto.createCipheriv(algorithm, getEncryptionKey(), Buffer.alloc(0)); // Using ECB mode, so IV is empty
   let encrypted = cipher.update(input, "utf-8", "hex");
   encrypted += cipher.final("hex");
   return encrypted;
 }
 
 function decrypt(encrypted) {
-  const decipher = crypto.createDecipheriv(algorithm, key, Buffer.alloc(0)); // Using ECB mode, so IV is empty
+  const decipher = crypto.createDecipheriv(algorithm, getEncryptionKey(), Buffer.alloc(0)); // Using ECB mode, so IV is empty
   let decrypted = decipher.update(encrypted, "hex", "utf-8");
   decrypted += decipher.final("utf-8");
   return decrypted;
@@ -805,14 +815,6 @@ const sendNotificationByType = async (data, request, fastify) => {
     switch (data.sendType) {
       case NotificationSendType.all:
         eventName = SOCKET_EVENTS.ALL;
-        sendNotification(
-          data.title,
-          data.description,
-          data.url,
-          data.image,
-          data.icon,
-          data.commentaryId
-        );
         break;
       case NotificationSendType.onlyLoggedInUser:
         eventName = SOCKET_EVENTS.LOGGED_IN;
@@ -825,59 +827,15 @@ const sendNotificationByType = async (data, request, fastify) => {
         break;
       case NotificationSendType.pushNotificationAndOnlyLoggedInUser:
         eventName = SOCKET_EVENTS.LOGGED_IN;
-        sendNotification(
-          data.title,
-          data.description,
-          data.url,
-          data.image,
-          data.icon,
-          data.commentaryId
-        );
         break;
       case NotificationSendType.pushNotificationAndOnlyLoggedOutUser:
         eventName = SOCKET_EVENTS.LOGGED_OUT;
-        sendNotification(
-          data.title,
-          data.description,
-          data.url,
-          data.image,
-          data.icon,
-          data.commentaryId
-        );
         break;
       case NotificationSendType.pushNotification:
         // eventName = "onSendPushNotification";
-        if (data.type == "news") {
-          sendNewsNotification(
-            {
-              newsId: data.newsId,
-              title: data.title,
-              SEODescription: data.SEODescription,
-              image: data.image,
-            }
-          );
-          return true;
-        }
-        if (data.type == "video") {
-          sendVideoNotification(
-            {
-              id: data.id,
-              title: data.title,
-              description: data.description,
-            }
-          );
-          return true;
-        }
-        sendNotification(
-          data.title,
-          data.description,
-          data.url,
-          data.image,
-          data.icon,
-          data.commentaryId
-        );
+        // Mobile/FCM push notifications (news, video, and generic) removed
+        // along with GOOGLE_SERVICE_ACCOUNT_JSON -- see WebPushHandler/index.js.
         return true;
-        break;
     }
     // saveNotificationLogsQuery(data,request, fastify);
     if (
@@ -987,50 +945,6 @@ const VideoLibraryType = {
   OUR: 1,
   YOUTUBE: 2,
 };
-const MarketTypeId = {
-  Market: 1,
-  Bookmarkers: 3,
-  ManualOdds: 5,
-  Fancy: 2,
-  LineMarket: 4,
-  MeterPari: 6,
-  Sportbook: 7,
-};
-const MarketTypeCategories = {
-  MARKET: 5,
-  WINTOSS: 6,
-  BOOKMAKERS: 7,
-  MANUALODDS: 8,
-  ADVFANCY: 9,
-  OVERSESSION: 10,
-  ONLYOVER: 11,
-  PLAYER: 12,
-  WICKET: 13,
-  BOWLERSESSION: 14,
-  PREMIUMODDS: 15,
-  TIE: 16,
-  LINEMARKET: 17,
-  OVERUNDER: 18,
-  PLAYERODDS: 20,
-  BOUNDARYODDS: 21,
-  OTHERODDS: 22,
-  SESSION: 23,
-  EXTRAODDS: 24,
-  SPECIALODDS: 25,
-  FANCYLDO: 26,
-  ONLYOVERLDO: 27,
-  LASTDIGITNUMBER: 28,
-  PLAYERBOUNDARIES: 29,
-  PLAYERBALLSFACED: 30,
-  FALLOFWICKET: 31,
-  PARTNERSHIPBOUNDARIES: 32,
-  WICKETLOSTBALLS: 33,
-  ODDEVEN: 35,
-  TOTALEVENTRUN: 36,
-  TOPBOWLER: 37,
-  TOPBATSMAN: 38,
-  MIDSESSION: 39,
-};
 
 const EntityInningsStatus = {
   Scheduled: 1,
@@ -1050,7 +964,6 @@ const ModuleTypes = {
   News: 8,
   Banners: 9,
   Awards: 10,
-  MarketTypes: 11,
   PhotoLibrary: 12,
   VideoLibrary: 13,
   ShotTypes: 14,
@@ -2536,10 +2449,10 @@ module.exports = {
   success,
   deviceInfo,
 
-  hashFunction,
   encryptedObject,
   encrypt,
   decrypt,
+  getConfigValue,
   // generateFileName,
   isJson,
   getTitle,
@@ -2577,12 +2490,10 @@ module.exports = {
   thirdPartyApiType,
   commentaryStatus,
   LineType,
-  MarketTypeId,
   newsType,
   VideoLibraryType,
   ModuleTypes,
   callTPAPI,
-  MarketTypeCategories,
   clientProcessStatus,
   sendOtpToMobile,
   verifyOTP,

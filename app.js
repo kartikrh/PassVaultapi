@@ -22,19 +22,16 @@ const {
   getTitle,
   ERROR_CODES,
   error,
+  getConfigValue,
 } = require("./utilities");
-const Sentry = require("@sentry/node");
+const configConstants = require("./utilities/configConstants");
 const { instrument } = require("@socket.io/admin-ui");
-const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 const bcrypt = require("bcrypt");
-const Tracing = require("@sentry/tracing");
 const webPush = require("web-push");
 const { webPushset } = require("./WebPushHandler/index.js");
 const cron = require('node-cron');
 const { resetAllClientSocketReconnectCountService, disconnectAllClientSocketService } = require("./services/clientSocket.js");
 const { connectClients: newConnectClients } = require("./sockets/client.js");
-// const { nodeProfilingIntegration } = require('@sentry/profiling-node');
-// const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 // Pass --options via CLI arguments in command to enable these options.
 module.exports.options = {};
 global.tblData = {};
@@ -47,21 +44,6 @@ global.pendingNewsToClient = [];
 global.pendingPhotoLibraryToClient = [];
 global.pendingVideoLibraryToClient = [];
 
-if (process.env.ENABLE_SENTRY === "TRUE") {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    tracesSampleRate: 0.1,
-    integrations: [
-      nodeProfilingIntegration(),
-      Sentry.postgresIntegration(),
-      Sentry.childProcessIntegration()
-      // ...Sentry.autoDiscoverNodePerformanceMonitoringIntegrations(),
-    ],
-    profileSessionSampleRate: 1.0,
-    profileLifecycle: 'trace',
-    includeLocalVariables: true,
-  });
-}
 const { getMemoryStatus } = require("./utilities/logger");
 
 const MEMORY_WARNING_THRESHOLD = 85;
@@ -127,19 +109,6 @@ const setupMemoryMonitor = (fastify) => {
   });
 
 }
-// process.on("uncaughtException", (err) => {
-//   console.error("Uncaught Exception occurred:", err);
-//   // Log additional diagnostic information
-//   console.log("Stack Trace:", err.stack);
-//   console.log("Resource usage metrics:", process.resourceUsage());
-//   console.log("Memory usage:", process.memoryUsage());
-//   // get cpu usage
-//   console.log("CPU usage:", process.cpuUsage());
-//   if (process.env.ENABLE_SENTRY === "TRUE") {
-//     Sentry.captureException(err);
-//   } 
-//   // process.exit(1);
-// });
 
 module.exports = async function (fastify, opts) {
   // process.stdin.resume(); // so the program will not close instantly
@@ -268,6 +237,14 @@ module.exports = async function (fastify, opts) {
     if (!global.isAllDataLoadedInGlobal) {
       throw new Error("Please wait data is loading!");
     }
+
+    if (request.originalUrl.startsWith("/documentation")) {
+      const isSwaggerEnabled = getConfigValue(configConstants.IS_ENABLE_SWAGGER);
+      if (isSwaggerEnabled !== true && isSwaggerEnabled !== "true") {
+        return reply.code(404).send({ statusCode: 404, error: "Not Found", message: "Not Found" });
+      }
+    }
+
     // Record the request start time in nanoseconds
     // request.startTime = process.hrtime.bigint();
     // request.startTimeTimeStemp = new Date();
@@ -281,19 +258,6 @@ module.exports = async function (fastify, opts) {
     //   // });
     //   let result = await responseLogInDB(request, fastify);
     //   request.errId = result[0]?.errId;
-    // }
-
-    // if (process.env.ENABLE_SENTRY === "TRUE") {
-    //   Sentry.startSpan(
-    //     {
-    //       name: `${request.method} ${request.url}`,
-    //       op: "http.server",
-    //       description: "Incoming HTTP request",
-    //     },
-    //     (span) => {
-    //       request.sentrySpan = span;
-    //     }
-    //   );
     // }
 
     // done();
@@ -342,32 +306,6 @@ module.exports = async function (fastify, opts) {
       newPayload = JSON.stringify(newPayload);
     }
 
-    // if (process.env.ENABLE_SENTRY === "TRUE") {
-    //   // const transaction = Sentry.startTransaction({
-    //   //   name: `${request.method} ${request.url}`,
-    //   //   op: "http.server",
-    //   //   description: "HTTP request",
-    //   // });
-    //   // request.sentryTx = transaction;
-    //   Sentry.startSpan(
-    //     {
-    //       name: `${request.method} ${request.url}`,
-    //       op: "http.server",
-    //       description: "Incoming HTTP request",
-    //     },
-    //     (span) => {
-    //       request.sentrySpan = span;
-    //     }
-    //   );
-    //   // const span = Sentry.startSpan({
-    //   //   name: `${request.method} ${request.url}`,
-    //   //   op: "http.server",
-    //   //   description: "HTTP request",
-    //   // });
-
-    //   // request.sentrySpan = span;
-    // }
-
     done(null, newPayload);
   });
 
@@ -387,11 +325,6 @@ module.exports = async function (fastify, opts) {
     if (request.startTime && logger) {
       responseLogger(request);
     }
-
-    // if (process.env.ENABLE_SENTRY === "TRUE") {
-    //   request.sentryTx.setHttpStatus(reply.statusCode);
-    //   request.sentryTx.finish();
-    // }
 
     done();
   });
@@ -518,9 +451,6 @@ module.exports = async function (fastify, opts) {
   });
 
   fastify.setErrorHandler(function (err, request, reply) {
-    if (process.env.ENABLE_SENTRY === "TRUE") {
-      Sentry.captureException(err);
-    }
     // Was `if ((err.statusCode = 400))` -- an assignment, not a comparison,
     // so it was always truthy and forced every single error (including a
     // rate-limit 429) to report back as 400 INVALID_INPUT, with the

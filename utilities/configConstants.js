@@ -31,7 +31,6 @@ const configConstants = {
     LDOMARKET: "LDOMARKET",
     GETMARKETINTERVALMIN: "GETMARKETINTERVALMIN",
     MARKETUPDATEINTERVALMIN: "MARKETUPDATEINTERVALMIN",
-    DONTSUSPENTMARKETTYPECATEGORY: "DONTSUSPENTMARKETTYPECATEGORY",
     VIDEOUPLOADMAXSIZE: "VIDEOUPLOADMAXSIZE",
     DEFAULTBALLFACED: "PYTHON_DEFAULT_BALLFACED",
     DEFAULTPLAYERBOUNDARIES: "PYTHON_DEFAULT_PLAYERBOUNDARIES",
@@ -101,6 +100,20 @@ const configConstants = {
     // existing FRAUDDET_DECTIONAPI trio above.
     VPN_CHECK_API_URL: "VPNCHECKAPIURL",
     VPN_CHECK_API_KEY: "VPNCHECKAPIKEY",
-    IS_VPN_CHECK_ENABLED: "ISVPNCHECKENABLED"
+    IS_VPN_CHECK_ENABLED: "ISVPNCHECKENABLED",
+    // AES-256 key used by utilities/index.js encrypt()/decrypt() (whitelabel
+    // Google/reCAPTCHA secrets, TOTP secrets). Sourced from tblConfigs instead
+    // of process.env.ENCRYPTION_KEY -- see sql/vault/014_encryption_key_config.sql.
+    ENCRYPTION_KEY: "APPENCRYPTIONKEY",
+    // Vault client env vars moved to tblConfigs so they're editable at runtime
+    // without a redeploy -- see sql/vault/015_vault_client_config.sql.
+    VAULT_MASTER_KEY: "VAULTMASTERKEY",
+    VAULT_CLIENT_SECRET_KEY_TOKEN: "VAULTCLIENTSECRETKEYTOKEN",
+    VAULT_CLIENT_TOKEN_EXPIRY_TIME: "VAULTCLIENTTOKENEXPIRYTIME",
+    VAULT_CLIENT_APP_URL: "VAULTCLIENTAPPURL",
+    // Gates the /documentation (swagger) routes at request time -- see the
+    // onRequest hook in app.js. "true" shows the docs, anything else (or
+    // missing) hides them with a 404.
+    IS_ENABLE_SWAGGER: "ISENABLESWAGGER"
 }
 module.exports = configConstants;

@@ -1,7 +1,6 @@
 "use strict";
 
 const cron = require("node-cron");
-const { withSentryCronProfiling } = require("./sentryCron.js");
 const { sendActiveAdvertiseToClientAPIService } = require("../services/advertise.js");
 const { sendActiveBannerToClientAPIService } = require("../services/banner.js");
 const { sendActiveNewsToClientAPIService } = require("../services/news.js");
@@ -11,7 +10,7 @@ const { sendActiveVideoLibraryToClientAPIService } = require("../services/videoL
 const registerCronJobs = (fastify) => {
   cron.schedule(
     "* * * * *",
-    withSentryCronProfiling("send-data-to-client", "* * * * *", async () => {
+    async () => {
       try {
         if (global.isAllDataLoadedInGlobal) {
           await sendActiveAdvertiseToClientAPIService(fastify);
@@ -23,12 +22,12 @@ const registerCronJobs = (fastify) => {
       } catch (error) {
         console.error("Error during scheduled task send-data-to-client:", error);
       }
-    })
+    }
   );
 
   cron.schedule(
     "0 * * * *",
-    withSentryCronProfiling("log-memory-usage", "0 * * * *", async () => {
+    async () => {
       const memoryUsage = process.memoryUsage();
       console.log(new Date(), "Memory Usage Log:", {
         rss: `${(memoryUsage.rss / 1024 / 1024).toFixed(2)} MB`,
@@ -36,7 +35,7 @@ const registerCronJobs = (fastify) => {
         heapUsed: `${(memoryUsage.heapUsed / 1024 / 1024).toFixed(2)} MB`,
         external: `${(memoryUsage.external / 1024 / 1024).toFixed(2)} MB`,
       });
-    })
+    }
   );
 }
 

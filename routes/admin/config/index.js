@@ -5,6 +5,7 @@ const {
 const {
   getAllCongig,
   getConfigById,
+  revealConfigValue,
   saveConfig,
   deleteConfig,
 } = require("../../../controller/users/admin/Page/config");
@@ -35,6 +36,18 @@ module.exports = async (fastify, opts) => {
           }),
     ],
     handler: (request, reply) => getConfigById(request, reply, fastify),
+  });
+  fastify.post("/reveal", {
+    schema: Config.reveal.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+        (request, reply, done) =>
+          checkPermission(request, reply, fastify, {
+            tabName: "config",
+            mode: "view",
+          }),
+    ],
+    handler: (request, reply) => revealConfigValue(request, reply, fastify),
   });
   fastify.post("/save", {
     schema: Config.save.schema,

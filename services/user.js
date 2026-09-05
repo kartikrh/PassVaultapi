@@ -2,7 +2,6 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const { v4: uuidv4 } = require("uuid");
 const requestIp = require("request-ip");
-const {sendNotification,sendMobileNotifications} = require("../WebPushHandler/index");
 const {
   signUpUser,
   signInUser,
@@ -726,29 +725,6 @@ const changeUserPasswordByUSerIDService = async (request, fastify) => {
 //   }
 // }
 
-async function sendNotificationWebService({ body }, fastify) {
-  try {
-    const { title, message, url, image, icon } = body;
-    const results = await sendNotification(title, message, url, image, icon);
-    return results;
-
-  } catch (error) {
-    return null;
-  }
-}
-
-async function sendNotificationMobileService({ body }, fastify) {
-  try {
-    const { title, message, url, image, icon } = body;
-    const results = await sendMobileNotifications(title, message, url, image, icon);
-    return results;
-
-  } catch (error) {  
-    return null;
-  }
-}
-
-
 module.exports = {
   signUpUserService,
   signInUserServices,
@@ -764,8 +740,6 @@ module.exports = {
   deleteUserService,
   changeUserPasswordService,
   changeUserPasswordByUSerIDService,
-  sendNotificationWebService,
-  sendNotificationMobileService,
   verifyOtpUserServices,
   resetUserOtpService,
 };

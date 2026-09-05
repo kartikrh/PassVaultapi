@@ -3,14 +3,15 @@
 // intentionally separate token spaces (different secrets, different tables)
 // so a staff JWT can never be replayed against client-only vault routes.
 const jwt = require("jsonwebtoken");
-const { ERROR_CODES, error } = require("../../utilities/index");
+const { ERROR_CODES, error, getConfigValue } = require("../../utilities/index");
 const { findClientByIdQuery } = require("../../repository/TableClient");
+const configConstants = require("../../utilities/configConstants");
 
 async function authorizeClient(request, reply, fastify) {
   try {
     let token = request.headers.authorization;
     token = token?.split(" ")[1];
-    const secretKey = process.env.VAULT_CLIENT_SECRET_KEY_TOKEN;
+    const secretKey = getConfigValue(configConstants.VAULT_CLIENT_SECRET_KEY_TOKEN);
 
     if (!token || !secretKey) {
       throw new Error("Token Not Found");

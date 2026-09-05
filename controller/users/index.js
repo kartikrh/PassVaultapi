@@ -14,8 +14,6 @@ const {
   getUserDecryptedPassword,
   changeUserPasswordByUSerIDService,
   getAllUsersWithCurrentService,
-  sendNotificationWebService,
-  sendNotificationMobileService,
   verifyOtpUserServices,
   resetUserOtpService,
 } = require("../../services/user");
@@ -252,27 +250,6 @@ const changeUserPassword = async (request, reply, fastify) => {
 // }
 
 
-async function sendNotificationWeb(request, reply, fastify) {
-  try {
-    const result = await sendNotificationWebService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/sendNotificationWeb", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-}
-
-async function sendNotificationMobile(request, reply, fastify) {
-  try {
-    const result = await sendNotificationMobileService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/sendNotificationMobile", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-}
-
-
 const loadEnityData = async (request, fastify, reply) => {
   try {
     const result = await loadEnityDataOnGlobal(request, fastify, reply);
@@ -340,8 +317,6 @@ module.exports = {
   updateUserPassword,
   changeUserPassword,
   generalImageUpload,
-  sendNotificationWeb,
-  sendNotificationMobile,
   loadPanelDataInGlobal,
   loadEnityData,
   globalMemoryData,

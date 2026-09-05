@@ -30,7 +30,7 @@ const { sendMail } = require("../utilities/mailer");
 const { sendTemplateMail, buildLogoHtml } = require("../utilities/templateMailer");
 const { OTPType } = require("../utilities/otpConstants");
 const { generateTotpSecret, buildTotpKeyUri, generateQrCodeDataUrl, verifyTotpCode } = require("../utilities/totp");
-const { encrypt, decrypt, deviceInfo, templateType } = require("../utilities/index");
+const { encrypt, decrypt, deviceInfo, templateType, getConfigValue } = require("../utilities/index");
 const configConstants = require("../utilities/configConstants");
 const { checkVpn } = require("../utilities/vpnCheck");
 const { errorLogger } = require("../utilities/logger");
@@ -155,14 +155,14 @@ const validateUsername = (username) => {
 const googleClient = new OAuth2Client();
 
 const generateClientToken = (client) => {
-  const secretKey = process.env.VAULT_CLIENT_SECRET_KEY_TOKEN;
+  const secretKey = getConfigValue(configConstants.VAULT_CLIENT_SECRET_KEY_TOKEN);
   if (!secretKey) {
-    throw new Error("VAULT_CLIENT_SECRET_KEY_TOKEN is not configured");
+    throw new Error("VAULT_CLIENT_SECRET_KEY_TOKEN config is not configured");
   }
   return jwt.sign(
     { WrClientId: client.clientId, WrEmail: client.email },
     secretKey,
-    { expiresIn: process.env.VAULT_CLIENT_TOKEN_EXPIRY_TIME || "7d" }
+    { expiresIn: getConfigValue(configConstants.VAULT_CLIENT_TOKEN_EXPIRY_TIME) || "7d" }
   );
 };
 
@@ -273,15 +273,15 @@ const googleSignInService = async (request, fastify) => {
 // (see refreshTokenService/logoutService below), and a `purpose` claim keeps
 // this kind of token from being replayed as a session token or vice versa.
 const generatePurposeToken = (clientId, purpose, expiresIn, extra = {}) => {
-  const secretKey = process.env.VAULT_CLIENT_SECRET_KEY_TOKEN;
+  const secretKey = getConfigValue(configConstants.VAULT_CLIENT_SECRET_KEY_TOKEN);
   if (!secretKey) {
-    throw new Error("VAULT_CLIENT_SECRET_KEY_TOKEN is not configured");
+    throw new Error("VAULT_CLIENT_SECRET_KEY_TOKEN config is not configured");
   }
   return jwt.sign({ WrClientId: clientId, purpose, ...extra }, secretKey, { expiresIn });
 };
 
 const verifyPurposeToken = (token, purpose) => {
-  const secretKey = process.env.VAULT_CLIENT_SECRET_KEY_TOKEN;
+  const secretKey = getConfigValue(configConstants.VAULT_CLIENT_SECRET_KEY_TOKEN);
   let decoded;
   try {
     decoded = jwt.verify(token, secretKey);
@@ -294,7 +294,7 @@ const verifyPurposeToken = (token, purpose) => {
   return decoded;
 };
 
-const clientAppUrl = () => process.env.VAULT_CLIENT_APP_URL || "";
+const clientAppUrl = () => getConfigValue(configConstants.VAULT_CLIENT_APP_URL) || "";
 
 // Matches the client's own domain-matching logic (see passvault-client's
 // pickWhitelabel) so a client is tagged with the same White Label their

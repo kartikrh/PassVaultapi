@@ -9,22 +9,42 @@ const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { generateImageName, storeImageOnServer } = require("../utilities/Images");
 const { errorLogger } = require("../utilities/logger");
 
+// Values are never sent to the panel directly -- masked here (returning a
+// copy, never global.tblConfigs itself, since other server-side code reads
+// the real values off that array) so the browser only ever sees them via
+// revealConfigValueService, gated on the LOADDATAPASSWORD config.
+const maskConfigValue = (config) => ({ ...config, value: undefined, hasValue: !!config.value });
+
 const allCongifService = async (request,fastify) => {
-  // return global.tblConfigs;
   const {isActive} = request.body;
-  if(isActive === undefined){
-    return global.tblConfigs;
-  }
-  else{
-    const result = global.tblConfigs.filter((config) => config.isActive === isActive);
-    return result;
-  }
+  const result = isActive === undefined
+    ? global.tblConfigs
+    : global.tblConfigs.filter((config) => config.isActive === isActive);
+  return result.map(maskConfigValue);
 };
 
 const configByIdService = async (request) => {
   const { configId } = request.body;
   const result = global.tblConfigs.find((item) => item.configId === configId);
-  return result || null;
+  return result ? maskConfigValue(result) : null;
+};
+
+// Gated on the same LOADDATAPASSWORD config the "reload data" action uses
+// (see utilities/fetchAllData.js panelLoadDataByEnum) -- this is the only
+// path that returns a config's real value to the panel.
+const revealConfigValueService = async (request) => {
+  const { configId, password } = request.body;
+  const loadDataPassword = global.tblConfigs.find(
+    (item) => item.key === configConstants.LOADDATAPASSWORD
+  )?.value;
+  if (!loadDataPassword || password !== loadDataPassword) {
+    throw new Error("Invalid password");
+  }
+  const result = global.tblConfigs.find((item) => item.configId === configId);
+  if (!result) {
+    throw new Error("Config not found");
+  }
+  return { value: result.value };
 };
 
 const createConfigService = async (request, fastify) => {
@@ -62,8 +82,8 @@ const createConfigService = async (request, fastify) => {
       fastify,
       "services/config.js/createConfigService"
     );
-  
-  return data;
+
+  return maskConfigValue(data);
 };
 
 const updateConfigService = async (request, fastify) => {
@@ -123,7 +143,7 @@ const updateConfigService = async (request, fastify) => {
       "services/config.js/updateConfigService"
     );
 
-  return data;
+  return maskConfigValue(data);
 };
 
 const saveConfigService = async (request, fastify) => {
@@ -184,6 +204,7 @@ const getAllConfigService = async (request, fastify) => {
 module.exports = {
   allCongifService,
   configByIdService,
+  revealConfigValueService,
   saveConfigService,
   deleteConfigService,
   allConfigDetails,

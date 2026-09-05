@@ -1,6 +1,7 @@
 const {
   allCongifService,
   configByIdService,
+  revealConfigValueService,
   saveConfigService,
   deleteConfigService,
   allConfigDetails,
@@ -29,6 +30,16 @@ const getConfigById = async (request, reply, fastify) => {
     reply.status(200).send(success(result, 200));
   } catch (err) {
     errorLogger(fastify, err.message, commonPath + "/getConfigById", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
+  }
+};
+
+const revealConfigValue = async (request, reply, fastify) => {
+  try {
+    const result = await revealConfigValueService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/revealConfigValue", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 };
@@ -88,6 +99,7 @@ const getAllConfig = async (request, reply, fastify) => {
 module.exports = {
   getAllCongig,
   getConfigById,
+  revealConfigValue,
   saveConfig,
   deleteConfig,
   getAllConfigData,

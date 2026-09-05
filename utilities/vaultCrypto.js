@@ -1,18 +1,22 @@
 // Wraps/unwraps a client's escrowed vault key with the server master key.
 //
 // This is the single most sensitive secret in the vault feature (see the
-// technical spec's "Open items" section): VAULT_MASTER_KEY here is an env
-// var only as an interim/dev measure. Before production launch it must move
-// to real KMS/HSM custody (AWS KMS / GCP KMS) with this module swapped to
-// call out to it instead of holding the key material in process memory.
+// technical spec's "Open items" section): VAULT_MASTER_KEY here is sourced
+// from tblConfigs (configConstants.VAULT_MASTER_KEY) as an interim/dev
+// measure. Before production launch it must move to real KMS/HSM custody
+// (AWS KMS / GCP KMS) with this module swapped to call out to it instead of
+// holding the key material in process memory -- storing it in the same
+// database as the ciphertext it protects is weaker than an env var was.
 const crypto = require("crypto");
+const configConstants = require("./configConstants");
+const { getConfigValue } = require("./index");
 
 const ALGORITHM = "aes-256-gcm";
 
 const getMasterKey = () => {
-  const raw = process.env.VAULT_MASTER_KEY;
+  const raw = getConfigValue(configConstants.VAULT_MASTER_KEY);
   if (!raw) {
-    throw new Error("VAULT_MASTER_KEY is not configured");
+    throw new Error("VAULT_MASTER_KEY config is not configured");
   }
   const key = Buffer.from(raw, "utf-8");
   if (key.length !== 32) {

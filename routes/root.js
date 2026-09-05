@@ -10,14 +10,13 @@ const {
   verifyTokenUser,
   ckImageUpload,
   generalImageUpload,
-  sendNotificationWeb,
   loadPanelDataInGlobal,
   globalMemoryData,
   getGlobalMemoryData,
   verifyOtpUser,
   resetUserOtp,
 } = require("../controller/users/index");
-const { Auth, sendPushNotification, Config } = require("../swaggerSchema/groupTags/schema");
+const { Auth, Config } = require("../swaggerSchema/groupTags/schema");
 const { authorize } = require("../controller/middleware/index");
 const { errorLogger, getMemoryStatus } = require("../utilities/logger");
 const { getAllConfigData, getInitConfig, getAllConfig } = require("../controller/users/admin/Page/config");
@@ -84,10 +83,6 @@ module.exports = async function (fastify, opts) {
     schema: Auth.imgUpload.schema,
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => generalImageUpload(request, reply, fastify),
-  });
-  fastify.post("/sendNotificationWeb", {
-    schema: sendPushNotification.send.schema,
-    handler: (request, reply) => sendNotificationWeb(request, reply, fastify),
   });
   fastify.post("/config", {
     schema: Config.allConfig.schema,
