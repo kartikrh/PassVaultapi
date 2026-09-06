@@ -90,11 +90,13 @@ async function getTabsByParentIdService(request, fastify) {
 
   let tabData = await getTabsByPerentIdQuery(fastify, body);
   if (tabData.length) {
-    const ids = tabData.map((item) => item.encryptedTabId);
+    // wrParentId is keyed on the plain wrTabId, not encryptedTabId -- see
+    // createTabsQuery/AddTabs.jsx's parent dropdown.
+    const ids = tabData.map((item) => item.tabId);
     const getChildCount = await getChildCountQuery({ ids }, fastify);
 
     tabData.forEach((item) => {
-        const childCount = getChildCount.find((child) => child.wrParentId === item.encryptedTabId) || { childcount: 0 };
+        const childCount = getChildCount.find((child) => child.wrParentId === item.tabId) || { childcount: 0 };
         item.childCount = childCount.childcount;
     });
   }

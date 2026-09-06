@@ -2337,6 +2337,16 @@ const User = {
   },
 };
 
+const Dashboard = {
+  counts: {
+    schema: {
+      tags: ["Dashboard"],
+      description: "Record counts for the panel's Dashboard tiles (News, Banners, Users, Pages, Photo Library, Video Library) in one call",
+      security: [{ bearerAuth: [] }],
+    },
+  },
+};
+
 const Config = {
   getAll: {
     schema: {
@@ -2377,6 +2387,21 @@ const Config = {
           password: { type: "string" },
         },
         required: ["configId", "password"],
+      },
+    },
+  },
+  rotateEncryptionKey: {
+    schema: {
+      tags: ["Config"],
+      description: "Rotate APPENCRYPTIONKEY: decrypts every affected column with the old key and re-encrypts with the new one in one transaction, gated on the LOADDATAPASSWORD config",
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: "object",
+        properties: {
+          newKey: { type: "string" },
+          password: { type: "string" },
+        },
+        required: ["newKey", "password"],
       },
     },
   },
@@ -9801,6 +9826,7 @@ const APNSLiveActivityLogs = {
 }
 
 module.exports = {
+  Dashboard,
   Auth,
   Tabs,
   Role,

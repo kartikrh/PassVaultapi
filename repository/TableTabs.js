@@ -11,6 +11,7 @@ async function createTabsQuery(body, fastify) {
 
       select
       et."wrValue" as "encryptedTabId",
+      a."wrTabId"::text as "tabId",
       "wrTabName" as "tabName",
       "WrDisplayName" as  "displayName",
       "wrDisplayType" as "displayType",
@@ -71,7 +72,8 @@ async function getTabsQuery(fastify, body) {
            t."wrIsMenu" as "isMenu",
            t."wrIconName" as "iconName",
            t."wrDisplayOrder" as "displayOrder",
-           et."wrValue" as "encryptedTabId"
+           et."wrValue" as "encryptedTabId",
+           t."wrTabId"::text as "tabId"
            from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey" 
            left join (select * from "tblPermissions" where "wrRoleId" = $2) p on p."wrTabId" = t."wrTabId"
          where t."wrIsActive" = true 
@@ -108,7 +110,8 @@ async function getTabsByRoleIDQuery(fastify, body) {
            t."wrIsMenu" as "isMenu",
            t."wrIconName" as "iconName",
            t."wrDisplayOrder" as "displayOrder",
-           et."wrValue" as "encryptedTabId"
+           et."wrValue" as "encryptedTabId",
+           t."wrTabId"::text as "tabId"
            from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey" 
            left join (select * from "tblPermissions" where "wrRoleId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $2)) p on p."wrTabId" = t."wrTabId"
          where t."wrIsActive" = $3 AND t."wrParentId" not in ( select * from disable_tab) 
@@ -137,8 +140,9 @@ async function getTabsByPerentIdQuery(fastify, body) {
      t."wrIsMenu" as "isMenu",
      t."wrIconName" as "iconName",
      t."wrDisplayOrder" as "displayOrder",
-     et."wrValue" as "encryptedTabId"
-     from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey" 
+     et."wrValue" as "encryptedTabId",
+     t."wrTabId"::text as "tabId"
+     from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey"
      left join (select * from "tblPermissions" where "wrRoleId" = $4) p on p."wrTabId" = t."wrTabId"
      where t."wrIsActive" = $3 AND t."wrParentId" = $2
      and t."wrDisplayType" = ANY($1) and t."wrIsDeleted" = false`,
@@ -165,7 +169,8 @@ async function getAllActiveInactiveTabsQuery(fastify) {
            t."wrIsMenu" as "isMenu",
            t."wrIconName" as "iconName",
            t."wrDisplayOrder" as "displayOrder",
-           et."wrValue" as "encryptedTabId"
+           et."wrValue" as "encryptedTabId",
+           t."wrTabId"::text as "tabId"
            from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey"
            where t."wrIsDeleted" = false`,
     {
@@ -191,7 +196,8 @@ async function getDisplayTabsQuery(type, fastify) {
            t."wrIsMenu" as "isMenu",
            t."wrIconName" as "iconName",
            t."wrDisplayOrder" as "displayOrder",
-           et."wrValue" as "encryptedTabId"
+           et."wrValue" as "encryptedTabId",
+           t."wrTabId"::text as "tabId"
            from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey"  where t."wrDisplayType" = $1
            and t."wrIsDeleted" = false
          `,
@@ -253,7 +259,8 @@ async function getSpecificTabsQuery(Id, fastify) {
     t."wrIsMenu" as "isMenu",
     t."wrIconName" as "iconName",
     t."wrDisplayOrder" as "displayOrder",
-    et."wrValue" as "encryptedTabId"
+    et."wrValue" as "encryptedTabId",
+    t."wrTabId"::text as "tabId"
     from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey"  where et."wrValue" = $1 and t."wrIsDeleted" = false`,
     {
       type: fastify.db.Sequelize.QueryTypes.SELECT,
@@ -313,6 +320,7 @@ async function updateTabQuery(tabId, req, fastify) {
       updateValues.length
     } RETURNING 
     "wrTabId" as "encryptedTabId",
+    "wrTabId"::text as "tabId",
     "wrTabName" as "tabName",
     "WrDisplayName" as  "displayName",
     "wrDisplayType" as "displayType",
@@ -395,6 +403,7 @@ async function getUserWisePermisionQuery(fastify, body) {
   return await fastify.db.query(
     `SELECT
     et."wrValue" as "encryptedPermissionId",
+    T."wrTabId"::text as "tabId",
     T."wrTabName" AS "tabName",
     T."WrDisplayName" AS   "displayName",
     T."wrDisplayType" as "displayType",

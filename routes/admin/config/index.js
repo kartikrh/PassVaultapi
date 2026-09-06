@@ -6,6 +6,7 @@ const {
   getAllCongig,
   getConfigById,
   revealConfigValue,
+  rotateEncryptionKey,
   saveConfig,
   deleteConfig,
 } = require("../../../controller/users/admin/Page/config");
@@ -48,6 +49,18 @@ module.exports = async (fastify, opts) => {
           }),
     ],
     handler: (request, reply) => revealConfigValue(request, reply, fastify),
+  });
+  fastify.post("/rotateEncryptionKey", {
+    schema: Config.rotateEncryptionKey.schema,
+    preHandler: [
+      (request, reply) => authorize(request, reply, fastify),
+        (request, reply, done) =>
+          checkPermission(request, reply, fastify, {
+            tabName: "config",
+            mode: "edit",
+          }),
+    ],
+    handler: (request, reply) => rotateEncryptionKey(request, reply, fastify),
   });
   fastify.post("/save", {
     schema: Config.save.schema,
