@@ -30,7 +30,7 @@ const { sendMail } = require("../utilities/mailer");
 const { sendTemplateMail, buildLogoHtml } = require("../utilities/templateMailer");
 const { OTPType } = require("../utilities/otpConstants");
 const { generateTotpSecret, buildTotpKeyUri, generateQrCodeDataUrl, verifyTotpCode } = require("../utilities/totp");
-const { encrypt, decrypt, deviceInfo, templateType, getConfigValue } = require("../utilities/index");
+const { encrypt, decrypt, deviceInfo, templateType, getConfigValue, computePackageExpiryDate } = require("../utilities/index");
 const configConstants = require("../utilities/configConstants");
 const { checkVpn } = require("../utilities/vpnCheck");
 const { errorLogger } = require("../utilities/logger");
@@ -202,6 +202,7 @@ const googleSignInService = async (request, fastify) => {
 
   if (!client) {
     const defaultPackageId = await getDefaultPackageIdQuery(fastify);
+    const defaultPackage = global.tblPackages.find((item) => item.id === defaultPackageId);
     client = await insertClientQuery(
       {
         name: payload.name || null,
@@ -211,6 +212,9 @@ const googleSignInService = async (request, fastify) => {
         isEmailVerified: !!payload.email_verified,
         packageId: defaultPackageId,
         whitelabelId: whitelabel?.id || null,
+        packageExpiryDate: defaultPackage
+          ? computePackageExpiryDate(defaultPackage.intervalType, defaultPackage.intervalCount)
+          : null,
       },
       fastify
     );
@@ -676,6 +680,7 @@ const registerService = async (request, fastify) => {
 
   const whitelabel = resolveWhitelabelFromRequest(request);
   const defaultPackageId = await getDefaultPackageIdQuery(fastify);
+  const defaultPackage = global.tblPackages.find((item) => item.id === defaultPackageId);
   const client = await insertClientQuery(
     {
       name: name || null,
@@ -685,6 +690,9 @@ const registerService = async (request, fastify) => {
       isEmailVerified: false,
       packageId: defaultPackageId,
       whitelabelId: whitelabel?.id || null,
+      packageExpiryDate: defaultPackage
+        ? computePackageExpiryDate(defaultPackage.intervalType, defaultPackage.intervalCount)
+        : null,
     },
     fastify
   );
@@ -1071,6 +1079,11 @@ const getFullProfileService = async (request, fastify) => {
 const getClientPackageService = async (request, fastify) => {
   const { WrClientId } = request.clientTokenInfo;
   const pkg = await getClientPackageQuery(WrClientId, fastify);
+  if (pkg && pkg.expiryDate) {
+    const msRemaining = new Date(pkg.expiryDate).getTime() - Date.now();
+    pkg.daysRemaining = Math.max(0, Math.ceil(msRemaining / (24 * 60 * 60 * 1000)));
+    pkg.isExpired = msRemaining <= 0;
+  }
   return { package: pkg };
 };
 

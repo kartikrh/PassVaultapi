@@ -1200,6 +1200,16 @@ const IntervalType = {
   MONTHLY: 2,
   YEARLY: 3,
 };
+
+// A package's wrIntervalType/wrIntervalCount (e.g. MONTHLY x 3) doubles as
+// its validity length -- this is how long a client's assignment to that
+// package lasts, computed from the moment it's assigned. See
+// repository/TableClient.js's insertClientQuery/updateClientPackageQuery.
+const computePackageExpiryDate = (intervalType, intervalCount, fromDate = new Date()) => {
+  const unit =
+    intervalType === IntervalType.DAY ? "days" : intervalType === IntervalType.YEARLY ? "years" : "months";
+  return moment(fromDate).add(Number(intervalCount) || 0, unit).toDate();
+};
 const EventName = {
   COMMINGSOON: 1,
   WINTOSS: 2,
@@ -2503,6 +2513,7 @@ module.exports = {
   forgotPasswordOTP,
   resendOTP,
   IntervalType,
+  computePackageExpiryDate,
   EventName,
   generateEventId,
   ClientInfoLoginType,

@@ -16,6 +16,7 @@ const {
 const { findClientByIdQuery, updateClientPackageQuery } = require("../repository/TableClient");
 const { insertClientActivityLogQuery } = require("../repository/TableClientActivityLog");
 const { VaultActivityCodes } = require("../utilities/vaultConstants");
+const { computePackageExpiryDate } = require("../utilities/index");
 
 // GET /vault/plan/packages -- the plan picker for the Upgrade Plan screen.
 // Same isActive+isDisplay filter as the public-facing package list
@@ -151,7 +152,11 @@ const approvePlanUpgradeRequestService = async (request, fastify) => {
     throw new Error("This request was already reviewed by someone else");
   }
 
-  await updateClientPackageQuery(planRequest.clientId, planRequest.requestedPackageId, fastify);
+  const requestedPackage = global.tblPackages.find((item) => item.id === planRequest.requestedPackageId);
+  const expiryDate = requestedPackage
+    ? computePackageExpiryDate(requestedPackage.intervalType, requestedPackage.intervalCount)
+    : null;
+  await updateClientPackageQuery(planRequest.clientId, planRequest.requestedPackageId, expiryDate, fastify);
 
   await insertClientActivityLogQuery(
     {

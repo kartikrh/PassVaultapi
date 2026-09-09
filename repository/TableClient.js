@@ -99,8 +99,8 @@ const insertClientQuery = async (data, fastify) => {
   try {
     const result = await fastify.db.query(
       `INSERT INTO "tblClient" (
-        "wrName", "wrEmail", "wrGoogleId", "wrProvider", "wrIsEmailVerified", "wrPackageId", "wrWhitelabelId"
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+        "wrName", "wrEmail", "wrGoogleId", "wrProvider", "wrIsEmailVerified", "wrPackageId", "wrWhitelabelId", "wrPackageExpiryDate"
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING ${CLIENT_SELECT_COLUMNS}`,
       {
         type: fastify.db.QueryTypes.INSERT,
@@ -112,6 +112,7 @@ const insertClientQuery = async (data, fastify) => {
           data.isEmailVerified || false,
           data.packageId || null,
           data.whitelabelId || null,
+          data.packageExpiryDate || null,
         ],
       }
     );
@@ -258,12 +259,14 @@ const touchClientUpdatedAtQuery = async (clientId, fastify) => {
 
 // Called only from approvePlanUpgradeRequestService once a
 // tblPlanUpgradeRequests row is approved -- this is what actually moves the
-// client onto the new plan.
-const updateClientPackageQuery = async (clientId, packageId, fastify) => {
+// client onto the new plan. expiryDate is computed by the caller from the
+// new package's wrIntervalType/wrIntervalCount (see utilities/index.js's
+// computePackageExpiryDate).
+const updateClientPackageQuery = async (clientId, packageId, expiryDate, fastify) => {
   try {
     return await fastify.db.query(
-      `UPDATE "tblClient" SET "wrPackageId" = $1, "wrUpdatedAt" = now() WHERE "wrClientId" = $2`,
-      { type: fastify.db.QueryTypes.UPDATE, bind: [packageId, clientId] }
+      `UPDATE "tblClient" SET "wrPackageId" = $1, "wrPackageExpiryDate" = $2, "wrUpdatedAt" = now() WHERE "wrClientId" = $3`,
+      { type: fastify.db.QueryTypes.UPDATE, bind: [packageId, expiryDate || null, clientId] }
     );
   } catch (err) {
     errorLogger(fastify, err.message, "DB ERROR --> repository/TableClient/updateClientPackageQuery");
@@ -325,7 +328,8 @@ const getClientPackageQuery = async (clientId, fastify) => {
               p."wrPrice" as "price", p."wrCurrency" as "currency",
               p."wrIntervalType" as "intervalType", p."wrIntervalCount" as "intervalCount",
               p."wrTrialDays" as "trialDays",
-              p."wrMaxAccounts" as "maxAccounts", p."wrMaxGroups" as "maxGroups", p."wrMaxNotes" as "maxNotes"
+              p."wrMaxAccounts" as "maxAccounts", p."wrMaxGroups" as "maxGroups", p."wrMaxNotes" as "maxNotes",
+              c."wrPackageExpiryDate" as "expiryDate"
        FROM "tblClient" c
        JOIN "tblPackages" p ON p."wrId" = c."wrPackageId"
        WHERE c."wrClientId" = $1`,
