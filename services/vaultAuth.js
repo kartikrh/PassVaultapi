@@ -260,7 +260,10 @@ const googleSignInService = async (request, fastify) => {
       },
       fastify
     );
-    await sendSignInAlertEmail(client, request, latitude, longitude, fastify);
+    // Fire-and-forget: a slow/unreachable SMTP server must not hold up the
+    // login response for a best-effort notification email whose own
+    // failures are already swallowed internally (see its try/catch above).
+    sendSignInAlertEmail(client, request, latitude, longitude, fastify);
   }
 
   const token = generateClientToken(client);
@@ -502,7 +505,8 @@ const verifyOtpService = async (request, fastify) => {
     fastify
   );
   if (!justEnrolled) {
-    await sendSignInAlertEmail(client, request, decoded.latitude, decoded.longitude, fastify);
+    // Fire-and-forget -- see loginService's identical call for why.
+    sendSignInAlertEmail(client, request, decoded.latitude, decoded.longitude, fastify);
   }
 
   const token = generateClientToken(client);
@@ -921,7 +925,8 @@ const loginService = async (request, fastify) => {
     },
     fastify
   );
-  await sendSignInAlertEmail(clientWithoutHash, request, latitude, longitude, fastify);
+  // Fire-and-forget -- see loginService's identical call for why.
+  sendSignInAlertEmail(clientWithoutHash, request, latitude, longitude, fastify);
 
   const token = generateClientToken(clientWithoutHash);
   return { token, client: clientWithoutHash };
