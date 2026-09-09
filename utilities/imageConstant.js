@@ -167,6 +167,13 @@ const ImgModuleConfig = {
     height: 0,
     width: 0,
   },
+  PaymentMethod: {
+    type: "paymentMethod",
+    formate: ".jpg,.png,.jpeg,.avif,.webp",
+    size: 0,
+    height: 0,
+    width: 0,
+  },
    Default: {
     type: "Default",
     formate: ".jpg,.png,.jpeg,.avif,.webp",

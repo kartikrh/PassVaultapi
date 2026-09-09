@@ -10,6 +10,9 @@ const {
   isDefaultChangeQuery,
   isDefaultFalseQuery,
 } = require("../repository/TablePaymentMethods");
+const { generateImageName, storeImageOnServer } = require("../utilities/Images");
+const { PROJECT_NAME } = require("../utilities/configConstants");
+const { ImgModuleConfig } = require("../utilities/imageConstant");
 
 const PAYMENT_METHOD_TYPES = ["QR", "BANK"];
 
@@ -21,14 +24,36 @@ const validatePaymentMethodBody = (body) => {
     throw new Error("label is required");
   }
   if (body.type === "QR" && !body.qrImageUrl) {
-    throw new Error("qrImageUrl is required for a QR payment method");
+    throw new Error("QR image is required for a QR payment method");
   }
   if (body.type === "BANK" && (!body.bankName || !body.accountNumber)) {
     throw new Error("bankName and accountNumber are required for a bank payment method");
   }
 };
 
+// The panel sends the QR image as a multipart file (same shape as Banner's
+// `image` field -- see services/banner.js/createBannerService), an array
+// with the file at index 0. Uploads it and swaps request.body.qrImageUrl for
+// the stored path. No-op when the admin didn't pick a new file (e.g. editing
+// without touching the image).
+const uploadQrImageIfProvided = async (request) => {
+  if (request.body.qrImageUrl && request.body.qrImageUrl.length) {
+    const imgName = generateImageName({ name: request.body.label });
+    const projectName = global.tblConfigs.find(
+      (item) => item.key.toLowerCase() === PROJECT_NAME.toLowerCase()
+    )?.value;
+    const { fullPath } = await storeImageOnServer({
+      image: request.body.qrImageUrl[0],
+      project: projectName,
+      name: imgName,
+      ...ImgModuleConfig.PaymentMethod,
+    });
+    request.body.qrImageUrl = fullPath;
+  }
+};
+
 const savePaymentMethodService = async (request, fastify) => {
+  await uploadQrImageIfProvided(request);
   validatePaymentMethodBody(request.body);
   // Always insert as non-default first -- idxPaymentMethodOneDefault allows
   // at most one active+non-deleted row with isDefault = true, so inserting
@@ -53,6 +78,11 @@ const editPaymentMethodService = async (request, fastify) => {
   if (!validateId) {
     throw new Error("Payment method with this Id not found");
   }
+  await uploadQrImageIfProvided(request);
+  // FormBuilder only sends qrImageUrl when the admin picked a new file --
+  // fall back to the already-stored path so an edit that doesn't touch the
+  // image doesn't wipe it.
+  request.body.qrImageUrl = request.body.qrImageUrl ?? validateId.qrImageUrl;
   validatePaymentMethodBody(request.body);
 
   const wantsDefault = request.body.isDefault ?? validateId.isDefault;

@@ -8461,7 +8461,10 @@ const PaymentMethods = {
           id: { type: "integer" },
           type: { type: "string", enum: ["QR", "BANK"] },
           label: { type: "string" },
-          qrImageUrl: { type: "string" },
+          // qrImageUrl is intentionally left undeclared -- it now arrives as
+          // an uploaded file (multipart array), same as Banner's `image`
+          // field in Banner.save.schema above. Declaring it `type: "string"`
+          // would make ajv reject the upload.
           upiId: { type: "string" },
           bankName: { type: "string" },
           accountHolderName: { type: "string" },

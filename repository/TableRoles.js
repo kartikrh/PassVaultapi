@@ -185,10 +185,10 @@ $$;
 const roleByIdQuery = async (data, parentRoleId, isSuperAdmin, fastify) => {
   if (isSuperAdmin) {
     return await fastify.db.query(
-      `select 
-    te."wrValue" as "tabId", 
-    tt."WrDisplayName" as "displayName", 
-    "wrParentId" as "parentId",
+      `select
+    te."wrValue" as "tabId",
+    tt."WrDisplayName" as "displayName",
+    CASE WHEN tt."wrParentId" = '0' THEN '0' ELSE tep."wrValue" END as "parentId",
     COALESCE(tt."wrIsAdd",false) as "isAdd",
     COALESCE(tt."wrIsEdit",false) as "isEdit",
     COALESCE(tt."wrIsDelete",false) as "isDelete",
@@ -197,11 +197,12 @@ const roleByIdQuery = async (data, parentRoleId, isSuperAdmin, fastify) => {
     COALESCE(tp."wrIsDelete",false) as "isDeletePermission",
     COALESCE(tp."wrIsView",false) as "isViewPermission",
     tt."wrDisplayOrder" as "displayOrder"
-    from "tblTabs" tt 
+    from "tblTabs" tt
     left join (
       select * from "tblPermissions" where "wrRoleId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
     ) as tp on tt."wrTabId" = tp."wrTabId"
     left join "tblEncryptedData" te on te."wrKey" = tt."wrTabId"
+    left join "tblEncryptedData" tep on tep."wrKey" = tt."wrParentId"::integer
     where tt."wrIsActive" = true and tt."wrDisplayType" = $2 and tt."wrIsDeleted" = false
     `,
       {
@@ -211,10 +212,10 @@ const roleByIdQuery = async (data, parentRoleId, isSuperAdmin, fastify) => {
     );
   } else {
     return await fastify.db.query(
-      `select 
-    te."wrValue" as "tabId", 
-    tt."WrDisplayName" as "displayName", 
-    "wrParentId" as "parentId",
+      `select
+    te."wrValue" as "tabId",
+    tt."WrDisplayName" as "displayName",
+    CASE WHEN tt."wrParentId" = '0' THEN '0' ELSE tep."wrValue" END as "parentId",
     COALESCE(tpp."wrIsAdd",false) as "isAdd",
     COALESCE(tpp."wrIsEdit",false) as "isEdit",
     COALESCE(tpp."wrIsDelete",false) as "isDelete",
@@ -222,7 +223,7 @@ const roleByIdQuery = async (data, parentRoleId, isSuperAdmin, fastify) => {
     COALESCE(tp."wrIsEdit",false) as "isEditPermission",
     COALESCE(tp."wrIsDelete",false) as "isDeletePermission",
     COALESCE(tp."wrIsView",false) as "isViewPermission"
-    from "tblTabs" tt 
+    from "tblTabs" tt
     INNER join (
       select * from "tblPermissions" where "wrRoleId" = $3
     ) as tpp on tt."wrTabId" = tpp."wrTabId"
@@ -230,6 +231,7 @@ const roleByIdQuery = async (data, parentRoleId, isSuperAdmin, fastify) => {
       select * from "tblPermissions" where "wrRoleId" = (select "wrKey" from "tblEncryptedData" where "wrValue" = $1)
     ) as tp on tt."wrTabId" = tp."wrTabId"
     left join "tblEncryptedData" te on te."wrKey" = tt."wrTabId"
+    left join "tblEncryptedData" tep on tep."wrKey" = tt."wrParentId"::integer
     where tt."wrIsActive" = true and tt."wrDisplayType" = $2 AND tpp."wrIsView" = true AND tt."wrIsDeleted" = false
     `,
       {
