@@ -8421,6 +8421,201 @@ const Packages = {
     },
   },
 };
+
+const PaymentMethods = {
+  getAll: {
+    schema: {
+      tags: ["PaymentMethods"],
+      description: "get all payment methods",
+      body: {
+        type: "object",
+        properties: {
+          isActive: { type: "boolean" },
+        },
+      },
+    },
+  },
+
+  getById: {
+    schema: {
+      tags: ["PaymentMethods"],
+      description: "get a payment method by id",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  save: {
+    schema: {
+      tags: ["PaymentMethods"],
+      security: [{ bearerAuth: [] }],
+      description: "create/update a payment method",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          type: { type: "string", enum: ["QR", "BANK"] },
+          label: { type: "string" },
+          qrImageUrl: { type: "string" },
+          upiId: { type: "string" },
+          bankName: { type: "string" },
+          accountHolderName: { type: "string" },
+          accountNumber: { type: "string" },
+          ifscCode: { type: "string" },
+          branch: { type: "string" },
+          instructions: { type: "string" },
+          isActive: { type: "boolean" },
+          isDefault: { type: "boolean" },
+        },
+        required: ["type", "label"],
+      },
+    },
+  },
+
+  delete: {
+    schema: {
+      tags: ["PaymentMethods"],
+      description: "soft-delete payment method(s)",
+      body: {
+        type: "object",
+        properties: {
+          id: {
+            type: "array",
+            items: { type: "integer" },
+            minItems: 1,
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  activeInactiveApi: {
+    schema: {
+      tags: ["PaymentMethods"],
+      description: "active/inactive a payment method",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isActive: { type: "boolean" },
+        },
+        required: ["id", "isActive"],
+      },
+    },
+  },
+
+  isDefaultChange: {
+    schema: {
+      tags: ["PaymentMethods"],
+      description: "flip which payment method is the default shown to clients",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          isDefault: { type: "boolean" },
+        },
+        required: ["id", "isDefault"],
+      },
+    },
+  },
+};
+
+const VaultPlan = {
+  availablePlans: {
+    schema: {
+      tags: ["VaultPlan"],
+      security: [{ bearerAuth: [] }],
+      description: "get the plans a client can upgrade to",
+    },
+  },
+
+  getDefaultPaymentMethod: {
+    schema: {
+      tags: ["VaultPlan"],
+      security: [{ bearerAuth: [] }],
+      description: "get the default payment method to show a client upgrading their plan",
+    },
+  },
+
+  upgradeRequest: {
+    schema: {
+      tags: ["VaultPlan"],
+      security: [{ bearerAuth: [] }],
+      description: "submit a plan upgrade request with a transfer/reference code",
+      body: {
+        type: "object",
+        properties: {
+          packageId: { type: "integer" },
+          transferCode: { type: "string" },
+        },
+        required: ["packageId", "transferCode"],
+      },
+    },
+  },
+
+  myUpgradeRequest: {
+    schema: {
+      tags: ["VaultPlan"],
+      security: [{ bearerAuth: [] }],
+      description: "get the client's own latest plan upgrade request",
+    },
+  },
+
+  adminGetAll: {
+    schema: {
+      tags: ["VaultPlan"],
+      security: [{ bearerAuth: [] }],
+      description: "admin: list plan upgrade requests",
+      body: {
+        type: "object",
+        properties: {
+          status: { type: "string", enum: ["PENDING", "APPROVED", "REJECTED"] },
+          clientId: { type: "integer" },
+          limit: { type: "integer" },
+          offset: { type: "integer" },
+        },
+      },
+    },
+  },
+
+  adminApprove: {
+    schema: {
+      tags: ["VaultPlan"],
+      security: [{ bearerAuth: [] }],
+      description: "admin: approve a plan upgrade request",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+
+  adminReject: {
+    schema: {
+      tags: ["VaultPlan"],
+      security: [{ bearerAuth: [] }],
+      description: "admin: reject a plan upgrade request",
+      body: {
+        type: "object",
+        properties: {
+          id: { type: "integer" },
+          reason: { type: "string" },
+        },
+        required: ["id", "reason"],
+      },
+    },
+  },
+};
+
 const Whitelabel = {
   getAll: {
     schema: {
@@ -9886,6 +10081,8 @@ module.exports = {
   CountryCode,
   CardType,
   Packages,
+  PaymentMethods,
+  VaultPlan,
   Whitelabel,
   NotificationConfig,
   VirtualEvent,

@@ -256,6 +256,21 @@ const touchClientUpdatedAtQuery = async (clientId, fastify) => {
   }
 };
 
+// Called only from approvePlanUpgradeRequestService once a
+// tblPlanUpgradeRequests row is approved -- this is what actually moves the
+// client onto the new plan.
+const updateClientPackageQuery = async (clientId, packageId, fastify) => {
+  try {
+    return await fastify.db.query(
+      `UPDATE "tblClient" SET "wrPackageId" = $1, "wrUpdatedAt" = now() WHERE "wrClientId" = $2`,
+      { type: fastify.db.QueryTypes.UPDATE, bind: [packageId, clientId] }
+    );
+  } catch (err) {
+    errorLogger(fastify, err.message, "DB ERROR --> repository/TableClient/updateClientPackageQuery");
+    throw new Error(err.message);
+  }
+};
+
 const setClientDriveRefreshTokenQuery = async (clientId, encryptedRefreshToken, fastify) => {
   try {
     return await fastify.db.query(
@@ -427,6 +442,7 @@ module.exports = {
   getDefaultPackageIdQuery,
   insertClientQuery,
   touchClientUpdatedAtQuery,
+  updateClientPackageQuery,
   updateClientPasswordHashQuery,
   updateClientProfileQuery,
   updateClientEmailVerifiedQuery,

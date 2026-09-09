@@ -28,6 +28,9 @@ const VaultActivityCodes = {
   CLIENT_SUSPENDED: 190,
   CLIENT_REACTIVATED: 191,
   CLIENT_SELF_DELETED: 192,
+  PLAN_UPGRADE_REQUESTED: 200,
+  PLAN_UPGRADE_APPROVED: 201,
+  PLAN_UPGRADE_REJECTED: 202,
 };
 
 // Shared between the client-facing "Recent activity" list
@@ -64,6 +67,9 @@ const ACTIVITY_LABELS = {
   [VaultActivityCodes.CLIENT_SUSPENDED]: "Account suspended",
   [VaultActivityCodes.CLIENT_REACTIVATED]: "Account reactivated",
   [VaultActivityCodes.CLIENT_SELF_DELETED]: "Account deleted",
+  [VaultActivityCodes.PLAN_UPGRADE_REQUESTED]: "Plan upgrade requested",
+  [VaultActivityCodes.PLAN_UPGRADE_APPROVED]: "Plan upgrade approved",
+  [VaultActivityCodes.PLAN_UPGRADE_REJECTED]: "Plan upgrade rejected",
 };
 
 const VaultEntryType = {

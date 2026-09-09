@@ -1002,7 +1002,8 @@ const ModuleTypes = {
   CompetitionStatisticsType: 45,
   CompetitionStatistics: 46,
   Advertise: 47,
-  Viewers: 48
+  Viewers: 48,
+  PaymentMethods: 49
 };
 const callTPAPI = async (data, fastify) => {
   try {
