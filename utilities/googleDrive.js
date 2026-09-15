@@ -55,7 +55,27 @@ const exchangeAuthCodeForTokens = async (code, clientId, clientSecret) => {
 const getAccessTokenFromRefreshToken = async (refreshToken, clientId, clientSecret) => {
   const oauth2Client = getOAuthClient(clientId, clientSecret);
   oauth2Client.setCredentials({ refresh_token: refreshToken });
-  const accessTokenResponse = await oauth2Client.getAccessToken();
+  let accessTokenResponse;
+  try {
+    accessTokenResponse = await oauth2Client.getAccessToken();
+  } catch (err) {
+    // Google rejects the stored refresh token itself (revoked by the user,
+    // expired test-mode grant, or the whitelabel's OAuth client
+    // secret/id no longer matches the one that issued it) -- distinct from a
+    // network/5xx hiccup, and the caller needs to know so it can drop the
+    // now-useless token and ask the client to reconnect, instead of retrying
+    // forever with the same dead token.
+    const isInvalidGrant =
+      err?.response?.data?.error === "invalid_grant" || /invalid_grant/i.test(err?.message || "");
+    if (isInvalidGrant) {
+      const reauthError = new Error(
+        "Your Google Drive connection has expired or was revoked -- please reconnect Google Drive."
+      );
+      reauthError.code = "DRIVE_REAUTH_REQUIRED";
+      throw reauthError;
+    }
+    throw err;
+  }
   const accessToken = accessTokenResponse?.token;
   if (!accessToken) {
     throw new Error("Failed to obtain a Google Drive access token");

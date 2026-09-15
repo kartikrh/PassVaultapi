@@ -23,6 +23,12 @@ const getAllWhitelabelsQuery = async (fastify) => {
                 tw."wrIsGoogleLogin" as "isGoogleLogin",
                 tw."wrGoogle_Key" as "googleKey",
                 tw."wrGoogle_Secret" as "googleSecret",
+                tw."wrIsGoogleLoginMobile" as "isGoogleLoginMobile",
+                tw."wrGoogleKeyMobile" as "googleKeyMobile",
+                tw."wrGoogleSecretMobile" as "googleSecretMobile",
+                tw."wrIsRecatchaEnableMobile" as "isRecatchEnableMobile",
+                tw."wrRecatchKeyMobile" as "recatchKeyMobile",
+                tw."wrRecatchSecretMobile" as "recatchSecretMobile",
                 tw."wrClientOTP" as "clientOTP",
                 tw."wrIsDefault" as "isDefault",
                 tw."wrMailSettingId" as "mailSettingId",
@@ -50,10 +56,11 @@ const insertWhitelabelQuery = async (data, fastify, request) => {
             `WITH insert_data AS (
             INSERT INTO "tblWhitelabel" (
             "wrDomain", "wrImagepath", "wrLogo", "wrFavicon", "wrIsActive", "wrCreatedAt", "wrCreatedBy", "wrIsDemoClientEnableInIOS", "wrIsDemoClientLogin",
-            "wrIsRecatchaEnable", "wrRecatchKey", "wrRecatchSecret", "wrIsGoogleLogin", "wrGoogle_Key", "wrGoogle_Secret", "wrClientOTP", "wrIsDefault", "wrMailSettingId"
+            "wrIsRecatchaEnable", "wrRecatchKey", "wrRecatchSecret", "wrIsGoogleLogin", "wrGoogle_Key", "wrGoogle_Secret", "wrClientOTP", "wrIsDefault", "wrMailSettingId",
+            "wrIsGoogleLoginMobile", "wrGoogleKeyMobile", "wrGoogleSecretMobile", "wrIsRecatchaEnableMobile", "wrRecatchKeyMobile", "wrRecatchSecretMobile"
             )
             VALUES (
-                $1, $2, $3, $4, $5, NOW(), $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+                $1, $2, $3, $4, $5, NOW(), $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23
             )
             RETURNING *
             )
@@ -77,6 +84,12 @@ const insertWhitelabelQuery = async (data, fastify, request) => {
                 "wrIsGoogleLogin" as "isGoogleLogin",
                 "wrGoogle_Key" as "googleKey",
                 "wrGoogle_Secret" as "googleSecret",
+                "wrIsGoogleLoginMobile" as "isGoogleLoginMobile",
+                "wrGoogleKeyMobile" as "googleKeyMobile",
+                "wrGoogleSecretMobile" as "googleSecretMobile",
+                "wrIsRecatchaEnableMobile" as "isRecatchEnableMobile",
+                "wrRecatchKeyMobile" as "recatchKeyMobile",
+                "wrRecatchSecretMobile" as "recatchSecretMobile",
                 "wrClientOTP" as "clientOTP",
                 "wrIsDefault" as "isDefault",
                 "wrMailSettingId" as "mailSettingId",
@@ -104,6 +117,12 @@ const insertWhitelabelQuery = async (data, fastify, request) => {
                     data.clientOTP || null,
                     data.isDefault || false,
                     data.mailSettingId || null,
+                    data.isGoogleLoginMobile || false,
+                    data.googleKeyMobile || null,
+                    data.googleSecretMobile || null,
+                    data.isRecatchEnableMobile || false,
+                    data.recatchKeyMobile || null,
+                    data.recatchSecretMobile || null,
                 ],
             }
         );
@@ -141,7 +160,13 @@ const updateWhitelabelQuery = async (data, fastify, request) => {
                 "wrClientOTP" = $13,
                 "wrIsDefault" = $14,
                 "wrMailSettingId" = $15,
-                "wrRecatchSecret" = $18
+                "wrRecatchSecret" = $18,
+                "wrIsGoogleLoginMobile" = $19,
+                "wrGoogleKeyMobile" = $20,
+                "wrGoogleSecretMobile" = $21,
+                "wrIsRecatchaEnableMobile" = $22,
+                "wrRecatchKeyMobile" = $23,
+                "wrRecatchSecretMobile" = $24
             WHERE "wrId" = $5
             RETURNING
                 "wrId" as "id",
@@ -162,6 +187,12 @@ const updateWhitelabelQuery = async (data, fastify, request) => {
                 "wrIsGoogleLogin" as "isGoogleLogin",
                 "wrGoogle_Key" as "googleKey",
                 "wrGoogle_Secret" as "googleSecret",
+                "wrIsGoogleLoginMobile" as "isGoogleLoginMobile",
+                "wrGoogleKeyMobile" as "googleKeyMobile",
+                "wrGoogleSecretMobile" as "googleSecretMobile",
+                "wrIsRecatchaEnableMobile" as "isRecatchEnableMobile",
+                "wrRecatchKeyMobile" as "recatchKeyMobile",
+                "wrRecatchSecretMobile" as "recatchSecretMobile",
                 "wrClientOTP" as "clientOTP",
                 "wrIsDefault" as "isDefault",
                 "wrMailSettingId" as "mailSettingId";`,
@@ -186,6 +217,12 @@ const updateWhitelabelQuery = async (data, fastify, request) => {
                     data.logo || null,
                     data.favicon || null,
                     data.recatchSecret || null,
+                    data.isGoogleLoginMobile || false,
+                    data.googleKeyMobile || null,
+                    data.googleSecretMobile || null,
+                    data.isRecatchEnableMobile || false,
+                    data.recatchKeyMobile || null,
+                    data.recatchSecretMobile || null,
                 ],
             }
         );
@@ -315,6 +352,12 @@ const getAllEncryptWhitelabelsQuery = async (fastify, whereCondition = null) => 
                 "wrIsGoogleLogin" as "isGoogleLogin",
                 "wrGoogle_Key" as "googleKey",
                 "wrGoogle_Secret" as "googleSecret",
+                "wrIsGoogleLoginMobile" as "isGoogleLoginMobile",
+                "wrGoogleKeyMobile" as "googleKeyMobile",
+                "wrGoogleSecretMobile" as "googleSecretMobile",
+                "wrIsRecatchaEnableMobile" as "isRecatchEnableMobile",
+                "wrRecatchKeyMobile" as "recatchKeyMobile",
+                "wrRecatchSecretMobile" as "recatchSecretMobile",
                 "wrClientOTP" as "clientOTP",
                 tw."wrIsDefault" as "isDefault",
                 tw."wrMailSettingId" as "mailSettingId",

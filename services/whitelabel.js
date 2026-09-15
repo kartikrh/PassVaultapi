@@ -96,6 +96,12 @@ const editWhitelabelService = async (request, fastify) => {
     isGoogleLogin: request.body.isGoogleLogin ?? validateId.isGoogleLogin,
     googleKey: request.body.googleKey ?? validateId.googleKey,
     googleSecret: request.body.googleSecret ?? validateId.googleSecret,
+    isGoogleLoginMobile: request.body.isGoogleLoginMobile ?? validateId.isGoogleLoginMobile,
+    googleKeyMobile: request.body.googleKeyMobile ?? validateId.googleKeyMobile,
+    googleSecretMobile: request.body.googleSecretMobile ?? validateId.googleSecretMobile,
+    isRecatchEnableMobile: request.body.isRecatchEnableMobile ?? validateId.isRecatchEnableMobile,
+    recatchKeyMobile: request.body.recatchKeyMobile ?? validateId.recatchKeyMobile,
+    recatchSecretMobile: request.body.recatchSecretMobile ?? validateId.recatchSecretMobile,
     clientOTP: request.body.clientOTP ?? validateId.clientOTP,
     whitelabelId : request.body.whitelabelId ?? validateId.whitelabelId,
     isDefault: request.body.isDefault ?? validateId.isDefault,
@@ -152,7 +158,11 @@ const allWhitelabelsService = async (request) => {
 // login / reCAPTCHA. Everything else on tblWhitelabel (clientOTP,
 // mobile*AuthKey/SemlessOTPKey, encryptedWhitelabelId, createdBy, ...) stays
 // server-side.
-const PUBLIC_WHITELABEL_FIELDS = ["domain", "isGoogleLogin", "googleKey", "isRecatchEnable", "recatchKey", "isDefault", "logo", "favicon"];
+const PUBLIC_WHITELABEL_FIELDS = [
+  "domain", "isGoogleLogin", "googleKey", "isRecatchEnable", "recatchKey",
+  "isGoogleLoginMobile", "googleKeyMobile", "isRecatchEnableMobile", "recatchKeyMobile",
+  "isDefault", "logo", "favicon",
+];
 
 const publicWhitelabelsService = async () => {
   return global.tblWhitelabels
@@ -178,7 +188,15 @@ const whitelabelByIdService = async (request) => {
   if (!result) return null;
   const decryptedGoogleSecret = result.googleSecret ? await decrypt(result.googleSecret) : result.googleSecret;
   const decryptedRecatchSecret = result.recatchSecret ? await decrypt(result.recatchSecret) : result.recatchSecret;
-  return { ...result, googleSecret: decryptedGoogleSecret, recatchSecret: decryptedRecatchSecret };
+  const decryptedGoogleSecretMobile = result.googleSecretMobile ? await decrypt(result.googleSecretMobile) : result.googleSecretMobile;
+  const decryptedRecatchSecretMobile = result.recatchSecretMobile ? await decrypt(result.recatchSecretMobile) : result.recatchSecretMobile;
+  return {
+    ...result,
+    googleSecret: decryptedGoogleSecret,
+    recatchSecret: decryptedRecatchSecret,
+    googleSecretMobile: decryptedGoogleSecretMobile,
+    recatchSecretMobile: decryptedRecatchSecretMobile,
+  };
 };
 
 const createWhitelabelService = async (request, fastify) => {
@@ -187,6 +205,12 @@ const createWhitelabelService = async (request, fastify) => {
   }
   if (request.body.recatchSecret) {
     request.body.recatchSecret = encrypt(request.body.recatchSecret);
+  }
+  if (request.body.googleSecretMobile) {
+    request.body.googleSecretMobile = encrypt(request.body.googleSecretMobile);
+  }
+  if (request.body.recatchSecretMobile) {
+    request.body.recatchSecretMobile = encrypt(request.body.recatchSecretMobile);
   }
   if (request.body.id == 0) {
     return await saveWhitelabelService(request, fastify, request);
