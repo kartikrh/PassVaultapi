@@ -29,6 +29,7 @@ const { getAllVideoLibraryQuery } = require("../repository/TableVideoLibrary");
 const configConstants = require("./configConstants");
 const { getAllCountryCodesQuery } = require("../repository/TableCountryCodes");
 const { getAllPackagesQuery } = require("../repository/TablePackages");
+const { getAllPaymentMethodsQuery } = require("../repository/TablePaymentMethods");
 const { getAllWhitelabelsQuery } = require("../repository/TableWhitelabel");
 const { getAllNotificationConfigsQuery } = require("../repository/TableNotificationConfig");
 const { getAllTemplateQuery } = require("../repository/TableTemplate");
@@ -58,6 +59,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     const getAllArticlesData = await getAllArticlesQuery(fastify);
     const getAllCountryCodes = await getAllCountryCodesQuery(fastify);
     const getAllPackages = await getAllPackagesQuery(fastify);
+    const getAllPaymentMethods = await getAllPaymentMethodsQuery(fastify);
     const getAllWhitelabels = await getAllWhitelabelsQuery(fastify);
     const whitelabelMap = new Map(
       getAllWhitelabels.map(wl => [
@@ -168,6 +170,7 @@ const fetchAllDataFromDb = async (fastify, reply) => {
     global.tblVideoLibrary = getAllVideoLibrary;
     global.tblCountryCodes = getAllCountryCodes;
     global.tblPackages = getAllPackages;
+    global.tblPaymentMethods = getAllPaymentMethods;
     global.tblWhitelabels = getAllWhitelabels;
     global.tblNotificationConfig = getAllNotificationConfigs;
     global.tblClientSocket = getAllClientSocket;
@@ -403,6 +406,11 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
         case ModuleTypes.Packages: {
           const packages =  await getAllPackagesQuery(fastify);
           global.tblPackages = packages;
+          break;
+        }
+        case ModuleTypes.PaymentMethods: {
+          const paymentMethods = await getAllPaymentMethodsQuery(fastify);
+          global.tblPaymentMethods = paymentMethods;
           break;
         }
         case ModuleTypes.Whitelabel: {

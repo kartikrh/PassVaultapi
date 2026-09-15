@@ -6,6 +6,7 @@ const commonPath = "controller/vault/data";
 
 const ERROR_CODE_TO_STATUS = {
   DRIVE_NOT_CONNECTED: { code: ERROR_CODES.INVALID_INPUT, status: 409 },
+  DRIVE_REAUTH_REQUIRED: { code: ERROR_CODES.AUTH_ERROR, status: 409 },
   QUOTA_EXCEEDED: { code: ERROR_CODES.QUOTA_EXCEEDED, status: 403 },
   REVISION_CONFLICT: { code: ERROR_CODES.REVISION_CONFLICT, status: 409 },
   INVALID_INPUT: { code: ERROR_CODES.INVALID_INPUT, status: 200 },
@@ -13,7 +14,12 @@ const ERROR_CODE_TO_STATUS = {
 
 const sendVaultDataError = (reply, err) => {
   const mapped = ERROR_CODE_TO_STATUS[err.code] || { code: ERROR_CODES.SERVER_ERROR, status: 200 };
-  reply.status(200).send(error(err.message, mapped.code, mapped.status));
+  // DRIVE_REAUTH_REQUIRED has to survive to the client as-is rather than
+  // folding into the generic AUTH_ERROR bucket every other auth failure here
+  // uses -- the UI needs to tell "your Drive grant died, reconnect" apart
+  // from "your session died, log back in" to show the right recovery action.
+  const responseCode = err.code === "DRIVE_REAUTH_REQUIRED" ? err.code : mapped.code;
+  reply.status(200).send(error(err.message, responseCode, mapped.status));
 };
 
 const getVaultData = async (request, reply, fastify) => {

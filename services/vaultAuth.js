@@ -30,7 +30,7 @@ const { sendMail } = require("../utilities/mailer");
 const { sendTemplateMail, buildLogoHtml } = require("../utilities/templateMailer");
 const { OTPType } = require("../utilities/otpConstants");
 const { generateTotpSecret, buildTotpKeyUri, generateQrCodeDataUrl, verifyTotpCode } = require("../utilities/totp");
-const { encrypt, decrypt, deviceInfo, templateType, getConfigValue } = require("../utilities/index");
+const { encrypt, decrypt, deviceInfo, templateType, getConfigValue, computePackageExpiryDate } = require("../utilities/index");
 const configConstants = require("../utilities/configConstants");
 const { checkVpn } = require("../utilities/vpnCheck");
 const { errorLogger } = require("../utilities/logger");
@@ -69,6 +69,13 @@ const requireNoVpn = async (request) => {
   }
 };
 
+// The mobile app has no Origin/Referer header (resolveWhitelabelFromRequest
+// still picks the right White Label row via its isDefault fallback), so it
+// identifies itself with this header instead -- used only to pick between a
+// row's web vs mobile Google/reCAPTCHA columns, never for whitelabel lookup.
+const isMobilePlatform = (request) =>
+  (request.headers?.["x-client-platform"] || "").toLowerCase() === "mobile";
+
 // Server-side half of the login form's reCAPTCHA (LoginForm.js only renders
 // the widget -- and only requires a token -- once White Label's
 // isRecatchEnable + recatchKey are both set for this domain; see its
@@ -76,11 +83,16 @@ const requireNoVpn = async (request) => {
 // skip the widget and hit /vault/auth/login directly. Verified against
 // Google's siteverify with the *secret* key (recatchSecret, encrypted at
 // rest, never sent to the browser) -- not recatchKey, which is public.
+// Mobile requests check the *Mobile-suffixed columns instead, since a
+// mobile reCAPTCHA site key is registered separately from the web one.
 // Unlike requireNoVpn, this fails CLOSED on a verification error: the
 // operator explicitly turned reCAPTCHA on for this domain, so a
 // Google-side outage should block login, not silently bypass the check.
 const requireRecaptcha = async (request, whitelabel) => {
-  if (!whitelabel?.isRecatchEnable || !whitelabel?.recatchSecret) return;
+  const mobile = isMobilePlatform(request);
+  const isEnabled = mobile ? whitelabel?.isRecatchEnableMobile : whitelabel?.isRecatchEnable;
+  const secretEncrypted = mobile ? whitelabel?.recatchSecretMobile : whitelabel?.recatchSecret;
+  if (!isEnabled || !secretEncrypted) return;
 
   const { recaptchaToken } = request.body || {};
   if (!recaptchaToken) {
@@ -88,7 +100,7 @@ const requireRecaptcha = async (request, whitelabel) => {
   }
 
   try {
-    const secret = await decrypt(whitelabel.recatchSecret);
+    const secret = await decrypt(secretEncrypted);
     const { data } = await axios.post(
       "https://www.google.com/recaptcha/api/siteverify",
       null,
@@ -186,9 +198,13 @@ const googleSignInService = async (request, fastify) => {
 
   // Verified against this domain's own configured Google Client ID (White
   // Label > Google Client ID), not a single global env var -- each domain
-  // can use a different Google OAuth client.
+  // can use a different Google OAuth client. The mobile app registers its
+  // own Google OAuth client (Android/iOS need a different client ID than
+  // the web app), so a mobile-tagged request (see isMobilePlatform) is
+  // verified against googleKeyMobile instead of the web googleKey.
   const whitelabel = resolveWhitelabelFromRequest(request);
-  const payload = await verifyGoogleIdToken(idToken, whitelabel?.googleKey);
+  const googleKey = isMobilePlatform(request) ? whitelabel?.googleKeyMobile : whitelabel?.googleKey;
+  const payload = await verifyGoogleIdToken(idToken, googleKey);
   if (!payload?.sub || !payload?.email) {
     throw new Error("Invalid Google token");
   }
@@ -202,6 +218,7 @@ const googleSignInService = async (request, fastify) => {
 
   if (!client) {
     const defaultPackageId = await getDefaultPackageIdQuery(fastify);
+    const defaultPackage = global.tblPackages.find((item) => item.id === defaultPackageId);
     client = await insertClientQuery(
       {
         name: payload.name || null,
@@ -211,6 +228,9 @@ const googleSignInService = async (request, fastify) => {
         isEmailVerified: !!payload.email_verified,
         packageId: defaultPackageId,
         whitelabelId: whitelabel?.id || null,
+        packageExpiryDate: defaultPackage
+          ? computePackageExpiryDate(defaultPackage.intervalType, defaultPackage.intervalCount)
+          : null,
       },
       fastify
     );
@@ -260,7 +280,10 @@ const googleSignInService = async (request, fastify) => {
       },
       fastify
     );
-    await sendSignInAlertEmail(client, request, latitude, longitude, fastify);
+    // Fire-and-forget: a slow/unreachable SMTP server must not hold up the
+    // login response for a best-effort notification email whose own
+    // failures are already swallowed internally (see its try/catch above).
+    sendSignInAlertEmail(client, request, latitude, longitude, fastify);
   }
 
   const token = generateClientToken(client);
@@ -502,7 +525,8 @@ const verifyOtpService = async (request, fastify) => {
     fastify
   );
   if (!justEnrolled) {
-    await sendSignInAlertEmail(client, request, decoded.latitude, decoded.longitude, fastify);
+    // Fire-and-forget -- see loginService's identical call for why.
+    sendSignInAlertEmail(client, request, decoded.latitude, decoded.longitude, fastify);
   }
 
   const token = generateClientToken(client);
@@ -672,6 +696,7 @@ const registerService = async (request, fastify) => {
 
   const whitelabel = resolveWhitelabelFromRequest(request);
   const defaultPackageId = await getDefaultPackageIdQuery(fastify);
+  const defaultPackage = global.tblPackages.find((item) => item.id === defaultPackageId);
   const client = await insertClientQuery(
     {
       name: name || null,
@@ -681,6 +706,9 @@ const registerService = async (request, fastify) => {
       isEmailVerified: false,
       packageId: defaultPackageId,
       whitelabelId: whitelabel?.id || null,
+      packageExpiryDate: defaultPackage
+        ? computePackageExpiryDate(defaultPackage.intervalType, defaultPackage.intervalCount)
+        : null,
     },
     fastify
   );
@@ -921,7 +949,8 @@ const loginService = async (request, fastify) => {
     },
     fastify
   );
-  await sendSignInAlertEmail(clientWithoutHash, request, latitude, longitude, fastify);
+  // Fire-and-forget -- see loginService's identical call for why.
+  sendSignInAlertEmail(clientWithoutHash, request, latitude, longitude, fastify);
 
   const token = generateClientToken(clientWithoutHash);
   return { token, client: clientWithoutHash };
@@ -1066,6 +1095,11 @@ const getFullProfileService = async (request, fastify) => {
 const getClientPackageService = async (request, fastify) => {
   const { WrClientId } = request.clientTokenInfo;
   const pkg = await getClientPackageQuery(WrClientId, fastify);
+  if (pkg && pkg.expiryDate) {
+    const msRemaining = new Date(pkg.expiryDate).getTime() - Date.now();
+    pkg.daysRemaining = Math.max(0, Math.ceil(msRemaining / (24 * 60 * 60 * 1000)));
+    pkg.isExpired = msRemaining <= 0;
+  }
   return { package: pkg };
 };
 

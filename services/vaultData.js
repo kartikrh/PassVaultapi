@@ -7,7 +7,11 @@ const {
   updateVaultFile,
 } = require("../utilities/googleDrive");
 const { resolveWhitelabelFromRequest } = require("./vaultAuth");
-const { getClientDriveRefreshTokenQuery, getClientPlanLimitsQuery } = require("../repository/TableClient");
+const {
+  getClientDriveRefreshTokenQuery,
+  setClientDriveRefreshTokenQuery,
+  getClientPlanLimitsQuery,
+} = require("../repository/TableClient");
 const {
   countActiveEntriesByTypeQuery,
   upsertEntryQuery,
@@ -43,7 +47,19 @@ const getDriveAccessTokenForClient = async (request, fastify) => {
     throw makeError("Google Drive is not configured for this domain", "DRIVE_NOT_CONFIGURED");
   }
   const refreshToken = decrypt(encryptedRefreshToken);
-  return getAccessTokenFromRefreshToken(refreshToken, whitelabel.googleKey, decrypt(whitelabel.googleSecret));
+  try {
+    return await getAccessTokenFromRefreshToken(refreshToken, whitelabel.googleKey, decrypt(whitelabel.googleSecret));
+  } catch (err) {
+    if (err.code === "DRIVE_REAUTH_REQUIRED") {
+      // Drop the now-dead token so driveConnected (tblClient."wrDriveRefreshToken"
+      // IS NOT NULL) flips back to false on the client's next profile fetch --
+      // otherwise the UI keeps showing "Connected" forever while every actual
+      // Drive call fails, with no way to trigger a fresh consent screen.
+      await setClientDriveRefreshTokenQuery(WrClientId, null, fastify);
+      throw makeError(err.message, "DRIVE_REAUTH_REQUIRED");
+    }
+    throw err;
+  }
 };
 
 // Fetches the current encrypted blob and its Drive revision id (GET
