@@ -69,6 +69,13 @@ const requireNoVpn = async (request) => {
   }
 };
 
+// The mobile app has no Origin/Referer header (resolveWhitelabelFromRequest
+// still picks the right White Label row via its isDefault fallback), so it
+// identifies itself with this header instead -- used only to pick between a
+// row's web vs mobile Google/reCAPTCHA columns, never for whitelabel lookup.
+const isMobilePlatform = (request) =>
+  (request.headers?.["x-client-platform"] || "").toLowerCase() === "mobile";
+
 // Server-side half of the login form's reCAPTCHA (LoginForm.js only renders
 // the widget -- and only requires a token -- once White Label's
 // isRecatchEnable + recatchKey are both set for this domain; see its
@@ -76,11 +83,16 @@ const requireNoVpn = async (request) => {
 // skip the widget and hit /vault/auth/login directly. Verified against
 // Google's siteverify with the *secret* key (recatchSecret, encrypted at
 // rest, never sent to the browser) -- not recatchKey, which is public.
+// Mobile requests check the *Mobile-suffixed columns instead, since a
+// mobile reCAPTCHA site key is registered separately from the web one.
 // Unlike requireNoVpn, this fails CLOSED on a verification error: the
 // operator explicitly turned reCAPTCHA on for this domain, so a
 // Google-side outage should block login, not silently bypass the check.
 const requireRecaptcha = async (request, whitelabel) => {
-  if (!whitelabel?.isRecatchEnable || !whitelabel?.recatchSecret) return;
+  const mobile = isMobilePlatform(request);
+  const isEnabled = mobile ? whitelabel?.isRecatchEnableMobile : whitelabel?.isRecatchEnable;
+  const secretEncrypted = mobile ? whitelabel?.recatchSecretMobile : whitelabel?.recatchSecret;
+  if (!isEnabled || !secretEncrypted) return;
 
   const { recaptchaToken } = request.body || {};
   if (!recaptchaToken) {
@@ -88,7 +100,7 @@ const requireRecaptcha = async (request, whitelabel) => {
   }
 
   try {
-    const secret = await decrypt(whitelabel.recatchSecret);
+    const secret = await decrypt(secretEncrypted);
     const { data } = await axios.post(
       "https://www.google.com/recaptcha/api/siteverify",
       null,
@@ -186,9 +198,13 @@ const googleSignInService = async (request, fastify) => {
 
   // Verified against this domain's own configured Google Client ID (White
   // Label > Google Client ID), not a single global env var -- each domain
-  // can use a different Google OAuth client.
+  // can use a different Google OAuth client. The mobile app registers its
+  // own Google OAuth client (Android/iOS need a different client ID than
+  // the web app), so a mobile-tagged request (see isMobilePlatform) is
+  // verified against googleKeyMobile instead of the web googleKey.
   const whitelabel = resolveWhitelabelFromRequest(request);
-  const payload = await verifyGoogleIdToken(idToken, whitelabel?.googleKey);
+  const googleKey = isMobilePlatform(request) ? whitelabel?.googleKeyMobile : whitelabel?.googleKey;
+  const payload = await verifyGoogleIdToken(idToken, googleKey);
   if (!payload?.sub || !payload?.email) {
     throw new Error("Invalid Google token");
   }
