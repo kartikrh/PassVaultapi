@@ -11,8 +11,6 @@ const {
   ckImageUpload,
   generalImageUpload,
   loadPanelDataInGlobal,
-  globalMemoryData,
-  getGlobalMemoryData,
   verifyOtpUser,
   resetUserOtp,
 } = require("../controller/users/index");
@@ -24,17 +22,22 @@ const { error, ERROR_CODES, success } = require('../utilities/index');
 
 module.exports = async function (fastify, opts) {
   //! API DEFINITION
+  // Staff accounts are created by signed-in staff only (admin/user screen
+  // also exists) -- this used to be public, letting anyone mint a staff user.
   fastify.post("/signup", {
     schema: Auth.signUp.schema,
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => signUpUser(request, reply, fastify),
   });
   fastify.post("/signin", {
+    config: { rateLimit: { max: 8, timeWindow: "5 minutes" } },
     schema: Auth.signIn.schema,
     handler: (request, reply) => signInUser(request, reply, fastify),
   });
   // No preHandler -- the pendingToken issued by /signin proves the
   // credentials already checked out (see services/user.js verifyOtpUserServices).
   fastify.post("/signin/verifyOtp", {
+    config: { rateLimit: { max: 8, timeWindow: "5 minutes" } },
     handler: (request, reply) => verifyOtpUser(request, reply, fastify),
   });
   fastify.post("/2fa/reset", {
@@ -52,6 +55,7 @@ module.exports = async function (fastify, opts) {
     handler: (request, reply) => verifyTokenUser(request, reply, fastify),
   });
   fastify.post("/changePassword", {
+    config: { rateLimit: { max: 8, timeWindow: "5 minutes" } },
     schema: Auth.updatePassword.schema,
     preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => updateUserPassword(request, reply, fastify),
@@ -62,6 +66,7 @@ module.exports = async function (fastify, opts) {
   });
   fastify.post("/generateEncryption", {
     schema: Auth.encryption.schema,
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => generateEncryption(request, reply, fastify),
   });
   fastify.post("/loadData", {
@@ -86,6 +91,7 @@ module.exports = async function (fastify, opts) {
   });
   fastify.post("/config", {
     schema: Config.allConfig.schema,
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => getAllConfigData(request, reply, fastify),
   });
   fastify.post("/loadInitData", {
@@ -94,6 +100,7 @@ module.exports = async function (fastify, opts) {
     handler: (request, reply) => getInitConfig(request, reply, fastify),
   });
   fastify.post("/configs", {
+    preHandler: [(request, reply) => authorize(request, reply, fastify)],
     handler: (request, reply) => getAllConfig(request, reply, fastify),
   });
   fastify.get("/server/checkStatus", {
@@ -107,11 +114,7 @@ module.exports = async function (fastify, opts) {
       }
     }
   });
-  fastify.post("/globalMemory", {
-    handler: (request, reply) => globalMemoryData(request, reply, fastify),
-  })
-  fastify.post("/getGlobalMemoryData", {
-    handler: (request, reply) => getGlobalMemoryData(request, reply, fastify),
-  })
+  // /globalMemory and /getGlobalMemoryData (debug dumps of any global, incl.
+  // tblConfigs secrets and tblUsers) were public and are no longer exposed.
 
 };

@@ -179,35 +179,6 @@ async function getAllActiveInactiveTabsQuery(fastify) {
   );
 }
 
-async function getDisplayTabsQuery(type, fastify) {
-  return await fastify.db.query(
-    `SELECT 
-           t."wrTabName" as "tabName",
-           t."WrDisplayName" as  "displayName",
-           t."wrDisplayType" as "displayType",
-           t."wrWebPage" as "webPage",
-           t."wrParentId" as "parentId",
-           t."wrIsActive" as "isActive",
-           t."wrIsAdd" as "isAdd",
-           t."wrIsEdit" as "isEdit",
-           t."wrIsDelete" as "isDelete",
-           t."wrIsView" as "isView",
-           t."wrAddWebpage" as "addWebpage",
-           t."wrIsMenu" as "isMenu",
-           t."wrIconName" as "iconName",
-           t."wrDisplayOrder" as "displayOrder",
-           et."wrValue" as "encryptedTabId",
-           t."wrTabId"::text as "tabId"
-           from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey"  where t."wrDisplayType" = $1
-           and t."wrIsDeleted" = false
-         `,
-    {
-      type: fastify.db.Sequelize.QueryTypes.SELECT,
-      bind: [type],
-    }
-  );
-}
-
 async function hasAssociatedChildern(Id, fastify) {
   const data = await fastify.db.query(
     `with table_data as (
@@ -240,35 +211,6 @@ async function deleteTabsQuery(Id, fastify, request) {
       bind: [true, request.userTokenInfo.WrUserId, Id],
     }
   );
-}
-
-async function getSpecificTabsQuery(Id, fastify) {
-  const data = await fastify.db.query(
-    `SELECT 
-    t."wrTabName" as "tabName",
-    t."WrDisplayName" as  "displayName",
-    t."wrDisplayType" as "displayType",
-    t."wrWebPage" as "webPage",
-    t."wrParentId" as "parentId",
-    t."wrIsActive" as "isActive",
-    t."wrIsAdd" as "isAdd",
-    t."wrIsEdit" as "isEdit",
-    t."wrIsDelete" as "isDelete",
-    t."wrIsView" as "isView",
-    t."wrAddWebpage" as "addWebpage",
-    t."wrIsMenu" as "isMenu",
-    t."wrIconName" as "iconName",
-    t."wrDisplayOrder" as "displayOrder",
-    et."wrValue" as "encryptedTabId",
-    t."wrTabId"::text as "tabId"
-    from "tblTabs" t inner join "tblEncryptedData" et on t."wrTabId"=et."wrKey"  where et."wrValue" = $1 and t."wrIsDeleted" = false`,
-    {
-      type: fastify.db.Sequelize.QueryTypes.SELECT,
-      bind: [Id],
-    }
-  );
-
-  return data[0];
 }
 
 async function getTabInfoQuery(Id, fastify) {
@@ -342,30 +284,6 @@ async function updateTabQuery(tabId, req, fastify) {
   );
 
   return data[0];
-}
-
-async function changeDisplayOrderOfMovingTabQuery(body, fastify) {
-  return await fastify.db.query(
-    `update "tblTabs" set "wrDisplayOrder" = $1 where "wrTabId" = $2 `,
-    {
-      bind: [body.order, body.tabId],
-    }
-  );
-}
-
-async function validateTabByNameQuery(body, fastify, option) {
-  let query = `select * from "tblTabs" where "wrParentId" = $1 and "wrTabName" ilike $2 and "wrIsDeleted" = false`;
-  let params = [body.wrParentId, body.wrTabName];
-
-  if (option === "update") {
-    query += ` and not "wrTabId" = $3`;
-    params.push(body.wrTabId);
-  }
-
-  return await fastify.db.query(query, {
-    type: fastify.db.Sequelize.QueryTypes.SELECT,
-    bind: params,
-  });
 }
 
 async function getMaxDispalyOrderByParent(parentId, fastify) {
@@ -453,13 +371,9 @@ module.exports = {
   getTabsQuery,
   createTabsQuery,
   deleteTabsQuery,
-  getSpecificTabsQuery,
   getTabInfoQuery,
   updateTabQuery,
-  getDisplayTabsQuery,
   hasAssociatedChildern,
-  changeDisplayOrderOfMovingTabQuery,
-  validateTabByNameQuery,
   getMaxDispalyOrderByParent,
   getAllActiveInactiveTabsQuery,
   validateAllTabIdsQuery,
@@ -467,5 +381,5 @@ module.exports = {
   getTabsByRoleIDQuery,
   getTabsByPerentIdQuery,
   getUserWisePermisionQuery,
-  getChildCountQuery
+  getChildCountQuery,
 };

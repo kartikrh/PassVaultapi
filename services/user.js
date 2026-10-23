@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const { v4: uuidv4 } = require("uuid");
-const requestIp = require("request-ip");
 const {
   signUpUser,
   signInUser,
@@ -38,7 +38,7 @@ const MAIL_OTP_LENGTH = 6;
 
 const generateNumericCode = (length = MAIL_OTP_LENGTH) => {
   let code = "";
-  for (let i = 0; i < length; i++) code += Math.floor(Math.random() * 10);
+  for (let i = 0; i < length; i++) code += crypto.randomInt(10);
   return code;
 };
 
@@ -101,7 +101,9 @@ const beginPanelTwoFactorChallenge = async (user, tokenPayload, fastify, request
       throw new Error("Mail OTP requires this user's username to be an email address -- use Google Authenticator instead");
     }
     const code = generateNumericCode();
-    const codeHash = await bcrypt.hash(code, 10);
+    // Encrypted, not just hashed: the pending token is readable by the
+    // client, and a bare bcrypt hash of a 6-digit code cracks offline.
+    const codeHash = encrypt(await bcrypt.hash(code, 10));
     await sendMail({
       to: user.WrUserName,
       subject: "Your PassVault sign-in code",
@@ -156,7 +158,7 @@ async function signInUserServices(request, fastify) {
   if(user?.WrUserType != 1) {
     throw new Error("Incorrect userType");
   }
-  const ipAdress = requestIp.getClientIp(request);
+  const ipAdress = request.ip;
 
   if (user.WrUserIp !== "0" && user.WrUserIp !== ipAdress) {
     throw new Error("Invalid IP Address");
@@ -211,7 +213,7 @@ async function verifyOtpUserServices(request, fastify) {
   let justEnrolled = false;
 
   if (decoded.otpType === OTPType.MAIL) {
-    verified = await bcrypt.compare(String(code), decoded.codeHash);
+    verified = await bcrypt.compare(String(code), decrypt(decoded.codeHash));
   } else {
     const encryptedSecret = decoded.isNewSecret
       ? decoded.secret
@@ -331,7 +333,11 @@ async function verifyTokenUserServices(request, fastify) {
 }
 
 async function generateEncryptionService(request, fastify) {
-  const { length } = request.body;
+  const length = Number(request.body.length);
+  // Bounded: each iteration is a DB insert, so an unbounded length is a DoS.
+  if (!Number.isInteger(length) || length < 1 || length > 1000) {
+    throw new Error("length must be an integer between 1 and 1000");
+  }
 
   const findMaxKey = await getMaxKey(fastify);
 

@@ -5,6 +5,8 @@ const FormData = require('form-data');
 const { FILE_UPLOAD_URL, VIDEOUPLOADMAXSIZE, PROJECT_NAME } = require("./configConstants");
 const { generateFileName } = require("./generateFileName");
 
+const ALLOWED_IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico"];
+
 const storeImage = async (imageBuffer) => {
   try {
     const folderPath = path.join(__dirname, "../images");
@@ -19,6 +21,9 @@ const storeImage = async (imageBuffer) => {
     }
 
     const { ext } = path.parse(filename);
+    if (!ALLOWED_IMAGE_EXTENSIONS.includes(ext.toLowerCase())) {
+      throw new Error("Only image files can be uploaded");
+    }
     const filenameNew = generateFileName() + ext;
     const imagePath = path.join(folderPath, filenameNew);
 

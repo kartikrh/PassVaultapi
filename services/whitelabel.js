@@ -444,8 +444,9 @@ const isDemoClientLoginService = async (request, fastify) => {
 
 const clientApiWhitelabelsService = async (request, fastify) => {
   const { isActive } = request.body || {};
-  let activeValue = isActive !== undefined ? isActive : true
-  
+  // Coerced to a real boolean -- it's spliced into the SQL below.
+  const activeValue = isActive === undefined ? true : isActive === true || isActive === "true";
+
   let whereCondition = `tw."wrIsDeleted" = false AND tw."wrIsActive" = ${activeValue}`
   const result = await getAllEncryptWhitelabelsQuery(fastify, whereCondition);
   return result;

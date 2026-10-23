@@ -1,4 +1,4 @@
-const { ModuleTypes, GlobalModuleType, StoreTypes } = require("../utilities/index");
+const { ModuleTypes } = require("../utilities/index");
 const { errorLogger } = require("./logger");
 const { getAllActiveInactiveTabsQuery } = require("../repository/TableTabs");
 const { getAllBlocksQuery } = require("../repository/TableBlock");
@@ -446,35 +446,6 @@ const panelLoadDataByEnum = async (request, fastify, reply) => {
 }
 
 
-const loadEnityDataOnGlobal = async (request, fastify, reply) => {
-  const { data, storeType, moduleType: mod } = request.body;
-  try {
-    switch (storeType) {
-      case StoreTypes.Insert: {
-        switch (mod) {
-          case GlobalModuleType.CountryCode:
-            global.tblCountryCodes.push(data);
-            break;
-
-          default:
-        }
-        break;
-      }
-
-      default:
-    }
-
-    // console.log("Data updated in global memory.");
-  } catch (error) {
-    console.error("Error in loadEnityDataOnGlobal:", error.message, error);
-    if (reply) {
-      reply.status(500).send({
-        status: 500,
-        error: error.message,
-      });
-    }
-  }
-};
 const v8 = require('v8');
 
 function getHeapSize(obj) {
@@ -503,4 +474,8 @@ const globalMemoryDatas = async(request = null , fastify = null) =>{
   return result;
 }
 
-module.exports = { fetchAllDataFromDb, panelLoadDataByEnum, loadEnityDataOnGlobal, globalMemoryDatas };
+module.exports = {
+  fetchAllDataFromDb,
+  panelLoadDataByEnum,
+  globalMemoryDatas,
+};

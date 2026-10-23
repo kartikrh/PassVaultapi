@@ -7,7 +7,6 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
   const { PROJECT_NAME } = require("../utilities/configConstants");
   const { ImgModuleConfig } = require("../utilities/imageConstant");
   const { APIEndpointModuleType, callClientAPI, getDataFromTime, checkDataSendToClient } = require("../utilities");
-  // const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
   
   const getAllBannerService = async (request, fastify) => {
     const { isActive, dateTime ,isPermanent , startDate, endDate} = request.body;
@@ -115,7 +114,6 @@ const { insertBannerQuery, updateBannerQuery, deleteBannerQuery, activeInactiveB
     // const urlId = data[0].bannerId;
     // const urlEndPoint = data[0].title.replace(/ /g, "-");
   
-    // await handleSitemapUpdate(`banners/${urlId}/${urlEndPoint}`)
   
     return data;
   };

@@ -1,4 +1,5 @@
 const { OAuth2Client } = require("google-auth-library");
+const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const axios = require("axios");
@@ -37,8 +38,14 @@ const { errorLogger } = require("../utilities/logger");
 
 // Wrong-password lockout (loginService): after this many consecutive failed
 // attempts, the account can't try again until the lockout window passes.
-const MAX_FAILED_LOGIN_ATTEMPTS = 3;
-const LOGIN_LOCKOUT_HOURS = 24;
+// Short and escalating (15, 30, then 60 min max per further miss) rather
+// than one long lock: anyone who knows a username can trigger a lockout, so
+// a 24-hour lock was an easy way to keep the real owner out. Per-IP rate
+// limits on /login slow guessing on top of this, and a completed password
+// reset clears the lock.
+const MAX_FAILED_LOGIN_ATTEMPTS = 5;
+const LOGIN_LOCKOUT_BASE_MINUTES = 15;
+const LOGIN_LOCKOUT_MAX_MINUTES = 60;
 
 // Every login-completing request (login, google, register) must carry the
 // browser's GPS coordinates -- passvault-client's useGeolocation hook
@@ -140,7 +147,7 @@ const MAIL_OTP_LENGTH = 6;
 
 const generateNumericCode = (length = MAIL_OTP_LENGTH) => {
   let code = "";
-  for (let i = 0; i < length; i++) code += Math.floor(Math.random() * 10);
+  for (let i = 0; i < length; i++) code += crypto.randomInt(10);
   return code;
 };
 
@@ -214,6 +221,11 @@ const googleSignInService = async (request, fastify) => {
 
   if (!client) {
     client = await findClientByEmailQuery(payload.email, fastify);
+    // Linking by email lets this Google identity sign in to an existing
+    // PassVault account -- only safe when Google vouches for the address.
+    if (client && !payload.email_verified) {
+      throw new Error("Your Google email address is not verified -- verify it with Google, or sign in with your password");
+    }
   }
 
   if (!client) {
@@ -422,7 +434,9 @@ const beginTwoFactorChallenge = async (client, fastify, request, geo = {}) => {
   const { latitude, longitude } = geo;
   if (client.otpType === OTPType.MAIL) {
     const code = generateNumericCode();
-    const codeHash = await bcrypt.hash(code, 10);
+    // Encrypted, not just hashed: the pending token is readable by the
+    // client, and a bare bcrypt hash of a 6-digit code cracks offline.
+    const codeHash = encrypt(await bcrypt.hash(code, 10));
     await sendMail({
       to: client.email,
       subject: "Your PassVault sign-in code",
@@ -487,7 +501,7 @@ const verifyOtpService = async (request, fastify) => {
   let justEnrolled = false;
 
   if (decoded.otpType === OTPType.MAIL) {
-    verified = await bcrypt.compare(String(code), decoded.codeHash);
+    verified = await bcrypt.compare(String(code), decrypt(decoded.codeHash));
   } else {
     const encryptedSecret = decoded.isNewSecret
       ? decoded.secret
@@ -588,31 +602,52 @@ const verifyStepUpOtpService = async (request, fastify) => {
   }
   await verifyOwnTotpCode(client, code, fastify);
 
-  let lastViewedAt = null;
-  if (entryId) {
-    const [previousView] = await listClientActivityLogsQuery(
-      { clientId: WrClientId, activityType: VaultActivityCodes.ACCOUNT_PASSWORD_VIEWED, refId: entryId, limit: 1 },
-      fastify
-    );
-    lastViewedAt = previousView?.createdDate || null;
-
-    await insertClientActivityLogQuery(
-      {
-        activityType: VaultActivityCodes.ACCOUNT_PASSWORD_VIEWED,
-        refId: entryId,
-        ipAddress: request.ip,
-        clientId: WrClientId,
-        latitude: latitude ?? null,
-        longitude: longitude ?? null,
-        // See sql/vault/012_activity_log_entry_name.sql -- same plaintext-
-        // title-only trust level as putVaultDataService's entryName.
-        entryName: entryName || null,
-      },
-      fastify
-    );
-  }
+  const lastViewedAt = entryId
+    ? await logPasswordViewed(request, fastify, { entryId, latitude, longitude, entryName })
+    : null;
 
   return { verified: true, lastViewedAt };
+};
+
+// Records ACCOUNT_PASSWORD_VIEWED and returns when this entry was last viewed
+// before now. Shared by the TOTP step-up above and the mobile app's
+// biometric reveal (logPasswordViewedService below).
+const logPasswordViewed = async (request, fastify, { entryId, latitude, longitude, entryName }) => {
+  const { WrClientId } = request.clientTokenInfo;
+  const [previousView] = await listClientActivityLogsQuery(
+    { clientId: WrClientId, activityType: VaultActivityCodes.ACCOUNT_PASSWORD_VIEWED, refId: entryId, limit: 1 },
+    fastify
+  );
+
+  await insertClientActivityLogQuery(
+    {
+      activityType: VaultActivityCodes.ACCOUNT_PASSWORD_VIEWED,
+      refId: entryId,
+      ipAddress: request.ip,
+      clientId: WrClientId,
+      latitude: latitude ?? null,
+      longitude: longitude ?? null,
+      // See sql/vault/012_activity_log_entry_name.sql -- same plaintext-
+      // title-only trust level as putVaultDataService's entryName.
+      entryName: entryName || null,
+    },
+    fastify
+  );
+
+  return previousView?.createdDate || null;
+};
+
+// POST /vault/auth/activity/passwordViewed -- the mobile app's biometric
+// reveal. The fingerprint/face check happens on the device (the server
+// cannot verify it), and decryption is local either way, so this only keeps
+// the audit trail identical to a TOTP-gated reveal.
+const logPasswordViewedService = async (request, fastify) => {
+  const { entryId, latitude, longitude, entryName } = request.body || {};
+  if (!entryId) {
+    throw new Error("entryId is required");
+  }
+  const lastViewedAt = await logPasswordViewed(request, fastify, { entryId, latitude, longitude, entryName });
+  return { logged: true, lastViewedAt };
 };
 
 // POST /vault/auth/2fa/setup -- authenticated. Used right after
@@ -902,7 +937,8 @@ const loginService = async (request, fastify) => {
     const { failedLoginAttempts } = await incrementFailedLoginAttemptsQuery(
       client.clientId,
       MAX_FAILED_LOGIN_ATTEMPTS,
-      LOGIN_LOCKOUT_HOURS,
+      LOGIN_LOCKOUT_BASE_MINUTES,
+      LOGIN_LOCKOUT_MAX_MINUTES,
       fastify
     );
     const justLocked = failedLoginAttempts >= MAX_FAILED_LOGIN_ATTEMPTS;
@@ -919,7 +955,7 @@ const loginService = async (request, fastify) => {
       fastify
     );
     if (justLocked) {
-      throw new Error(`Too many failed login attempts. Your account is locked for ${LOGIN_LOCKOUT_HOURS} hours.`);
+      throw new Error("Too many failed login attempts. Try again later, or reset your password.");
     }
     throw new Error("Invalid email/username or password");
   }
@@ -1004,6 +1040,8 @@ const resetPasswordService = async (request, fastify) => {
   const decoded = verifyPurposeToken(token, "reset-password");
   const passwordHash = await bcrypt.hash(newPassword, 10);
   await updateClientPasswordHashQuery(decoded.WrClientId, passwordHash, fastify);
+  // Proving control of the inbox is enough to lift a lockout.
+  await resetFailedLoginAttemptsQuery(decoded.WrClientId, fastify);
 
   await insertClientActivityLogQuery(
     {
@@ -1293,6 +1331,7 @@ module.exports = {
   verifyOwnTotpCode,
   verifyOtpService,
   verifyStepUpOtpService,
+  logPasswordViewedService,
   logPageViewService,
   beginTwoFactorSetupService,
   resetTwoFactorService,

@@ -379,30 +379,6 @@ const getAllEncryptWhitelabelsQuery = async (fastify, whereCondition = null) => 
         throw new Error(err.message);
     }
 };
-const getEncryptWhitelabelQuery = async (id, request, fastify)=>{
-    try {
-      const res = await fastify.db.query(
-            `
-              SELECT "wrKey" as "id"
-              FROM "tblEncryptedData"
-              WHERE "wrValue" = $1
-            `,
-            {
-              type: fastify.db.QueryTypes.SELECT,
-              bind: [id],
-            }
-          );
-          return res[0];
-    } catch (error) {
-      errorLogger(
-        fastify,
-        error.message,
-        "DB ERROR --> repository/TableWhitelabel.js/getEncryptWhitelabelQuery",
-        request
-      );
-      throw new Error(error.message);
-    }
-}
 const isDefaultUpQuery = async (data, request, fastify) => {
     try {
       if (data.isDefault) {
@@ -454,14 +430,13 @@ const isDefaultUpQuery = async (data, request, fastify) => {
     }
 };
 module.exports = {
-    getAllWhitelabelsQuery,
-    insertWhitelabelQuery,
-    updateWhitelabelQuery,
-    deleteWhitelabelQuery,
-    activeInactiveWhitelabelQuery,
-    demoClientEnableInIOSWhitelabelQuery,
-    isDemoClientLoginQuery,
-    getAllEncryptWhitelabelsQuery,
-    getEncryptWhitelabelQuery,
-    isDefaultUpQuery
+  getAllWhitelabelsQuery,
+  insertWhitelabelQuery,
+  updateWhitelabelQuery,
+  deleteWhitelabelQuery,
+  activeInactiveWhitelabelQuery,
+  demoClientEnableInIOSWhitelabelQuery,
+  isDemoClientLoginQuery,
+  getAllEncryptWhitelabelsQuery,
+  isDefaultUpQuery,
 };

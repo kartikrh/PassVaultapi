@@ -18,6 +18,7 @@ const {
   changePasswordService,
   verifyOtpService,
   verifyStepUpOtpService,
+  logPasswordViewedService,
   logPageViewService,
   beginTwoFactorSetupService,
   resetTwoFactorService,
@@ -236,6 +237,16 @@ const verifyStepUpOtp = async (request, reply, fastify) => {
   }
 };
 
+const logPasswordViewed = async (request, reply, fastify) => {
+  try {
+    const result = await logPasswordViewedService(request, fastify);
+    reply.status(200).send(success(result, 200));
+  } catch (err) {
+    errorLogger(fastify, err.message, commonPath + "/logPasswordViewed", request);
+    reply.status(200).send(error(err.message, ERROR_CODES.INVALID_INPUT, 200));
+  }
+};
+
 const logPageView = async (request, reply, fastify) => {
   try {
     const result = await logPageViewService(request, fastify);
@@ -265,6 +276,7 @@ module.exports = {
   verifyOtp,
   verifyStepUpOtp,
   logPageView,
+  logPasswordViewed,
   beginTwoFactorSetup,
   resetTwoFactor,
   suspendAccount,

@@ -18,6 +18,7 @@ const {
   verifyOtp,
   verifyStepUpOtp,
   logPageView,
+  logPasswordViewed,
   beginTwoFactorSetup,
   resetTwoFactor,
   suspendAccount,
@@ -48,10 +49,12 @@ module.exports = async (fastify, opts) => {
   });
 
   fastify.post("/verifyEmail", {
+    config: { rateLimit: AUTH_ATTEMPT_RATE_LIMIT },
     handler: (request, reply) => verifyEmail(request, reply, fastify),
   });
 
   fastify.post("/setPassword", {
+    config: { rateLimit: AUTH_ATTEMPT_RATE_LIMIT },
     preHandler: [(request, reply) => authorizeClient(request, reply, fastify)],
     handler: (request, reply) => setPassword(request, reply, fastify),
   });
@@ -87,12 +90,18 @@ module.exports = async (fastify, opts) => {
   // (e.g. revealing a saved account's password) -- distinct from
   // /verifyOtp, which only ever consumes a login/enrollment pendingToken.
   fastify.post("/2fa/verify", {
+    config: { rateLimit: AUTH_ATTEMPT_RATE_LIMIT },
     preHandler: [(request, reply) => authorizeClient(request, reply, fastify)],
     handler: (request, reply) => verifyStepUpOtp(request, reply, fastify),
   });
 
   // popupIntervalSeconds now rides along on GET /profile (and /profile/full)
   // instead of its own endpoint -- see getProfileService.
+
+  fastify.post("/activity/passwordViewed", {
+    preHandler: [(request, reply) => authorizeClient(request, reply, fastify)],
+    handler: (request, reply) => logPasswordViewed(request, reply, fastify),
+  });
 
   fastify.post("/activity/pageView", {
     preHandler: [(request, reply) => authorizeClient(request, reply, fastify)],
@@ -162,6 +171,7 @@ module.exports = async (fastify, opts) => {
   });
 
   fastify.post("/changePassword", {
+    config: { rateLimit: AUTH_ATTEMPT_RATE_LIMIT },
     preHandler: [(request, reply) => authorizeClient(request, reply, fastify)],
     handler: (request, reply) => changePassword(request, reply, fastify),
   });

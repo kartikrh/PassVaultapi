@@ -162,43 +162,10 @@ const activeInactiveNotificationConfigQuery = async (data, request, fastify) => 
     }
 };
 
-const getNotificationConfigsByEventNameQuery = async (eventName, fastify) => {
-    try {
-        const result = await fastify.db.query(
-            `SELECT 
-                "wrId" as "id",
-                "wrEventName" as "eventName",
-                "wrContent" as "content",
-                "wrTitle" as "title",
-                "wrIsActive" as "isActive",
-                "wrCreatedAt" as "createdAt",
-                "wrCreatedBy" as "createdBy",
-                "wrUpdatedBy" as "updatedBy",
-                "wrUpdatedAt" as "updatedAt"
-            FROM "tblNotificationConfig"
-            WHERE "wrEventName" = $1;`,
-            { 
-                type: fastify.db.QueryTypes.SELECT,
-                bind: [eventName]
-            }
-        );
-        return result[0];
-    } catch (err) {
-        errorLogger(
-            fastify,
-            err.message,
-            "DB ERROR --> repository/TableNotificationConfig.js/getAllNotificationConfigsQuery",
-            null
-        );
-        throw new Error(err.message);
-    }
-};
-
 module.exports = {
-    getAllNotificationConfigsQuery,
-    insertNotificationConfigQuery,
-    updateNotificationConfigQuery,
-    deleteNotificationConfigQuery,
-    activeInactiveNotificationConfigQuery,
-    getNotificationConfigsByEventNameQuery,
+  getAllNotificationConfigsQuery,
+  insertNotificationConfigQuery,
+  updateNotificationConfigQuery,
+  deleteNotificationConfigQuery,
+  activeInactiveNotificationConfigQuery,
 };

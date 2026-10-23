@@ -19,6 +19,12 @@ env.txt
 jwt.keys.json
 *.pem
 *.key
+google_secret.txt
+refresh_token.txt
+
+# Database dumps (cmspanel.sql etc.) -- only the vault migrations are needed
+*.sql
+!sql/vault/*.sql
 
 # Local dev / IDE
 .vscode
