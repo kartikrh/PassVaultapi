@@ -12,7 +12,7 @@ const { registerCronJobs } = require("./utilities/cronJobs");
 const { Server } = require("socket.io"); // Import Socket.IO
 const { connection, socketMiddleware } = require("./socketIo");
 const { fastifyRateLimit } = require("@fastify/rate-limit");
-const { responseLogger, responseLogInDB, oomLogger } = require("./utilities/logger");
+const { oomLogger } = require("./utilities/logger");
 const fastifyMultipart = require("@fastify/multipart");
 const fastifyStatic = require("@fastify/static");
 const { generateToken } = require("./utilities/tokenization");
@@ -31,7 +31,23 @@ const cron = require('node-cron');
 const { resetAllClientSocketReconnectCountService, disconnectAllClientSocketService } = require("./services/clientSocket.js");
 const { connectClients: newConnectClients } = require("./sockets/client.js");
 // Pass --options via CLI arguments in command to enable these options.
-module.exports.options = {};
+// trustProxy makes request.ip the real visitor IP (from X-Forwarded-For)
+// instead of the reverse proxy's (Railway edge / nginx) -- every activity
+// log, rate limit, VPN check and IP whitelist reads request.ip.
+// TRUST_PROXY = number of proxy hops in front of the app (default 1, e.g.
+// Railway; use 2 for Cloudflare -> Railway), "true", or a comma-separated
+// list of trusted proxy IPs/CIDRs. A hop count only trusts the entries our
+// own proxies appended, so a client-sent X-Forwarded-For can't spoof it.
+const parseTrustProxy = (value) => {
+  if (value === undefined || value === "") return 1;
+  if (value === "true") return true;
+  if (value === "false") return false;
+  if (/^\d+$/.test(value)) return Number(value);
+  return value.split(",").map((s) => s.trim()).filter(Boolean);
+};
+module.exports.options = {
+  trustProxy: parseTrustProxy(process.env.TRUST_PROXY),
+};
 global.tblData = {};
 global.marketData = {};
 global.isAllDataLoadedInGlobal = false;
@@ -199,6 +215,12 @@ module.exports = async function (fastify, opts) {
   fastify.register(fastifyStatic, {
     root: path.join(__dirname, "images"),
     prefix: "/images/",
+    // Uploads are served from the API origin -- stop an uploaded .html/.svg
+    // from being sniffed or run as a page there (stored XSS).
+    setHeaders: (res) => {
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      res.setHeader("Content-Security-Policy", "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; sandbox");
+    },
   });
 
   // fastify.register(fastifyStatic, {
@@ -215,9 +237,12 @@ module.exports = async function (fastify, opts) {
   //   serve: true,
   // });
 
+  // App-wide per-IP ceiling (request.ip is the real client thanks to
+  // trustProxy above). Credential endpoints set their own, much tighter
+  // config.rateLimit. Override with RATE_LIMIT_MAX / RATE_LIMIT_WINDOW.
   fastify.register(fastifyRateLimit, {
-    max: 100000000,
-    timeWindow: "1 hour",
+    max: Number(process.env.RATE_LIMIT_MAX) || 1000,
+    timeWindow: process.env.RATE_LIMIT_WINDOW || "1 minute",
     errorResponseBuilder: function (request, context) {
       // @fastify/rate-limit `throw`s whatever this returns directly (see
       // node_modules/@fastify/rate-limit/index.js) and reads `.statusCode`
@@ -316,26 +341,6 @@ module.exports = async function (fastify, opts) {
     done(null, newPayload);
   });
 
-  fastify.addHook("onResponse", (request, reply, done) => {
-    const logger = false;
-    // const responseTimeInNanoseconds =
-    //   process.hrtime.bigint() - request.startTime;
-    // const responseTimeInMilliseconds = Number(responseTimeInNanoseconds) / 1e6;
-    // request.responseTime = responseTimeInMilliseconds;
-
-    // // if path include /commentary then do log in db
-    // if (request.originalUrl.includes("/commentary/saveDetails")) {
-    //   request.endTimeTimeStemp = new Date();
-    //   responseLogInDB(request, fastify);
-    // }
-
-    if (request.startTime && logger) {
-      responseLogger(request);
-    }
-
-    done();
-  });
-
   fastify.register(swagger, {
     routePrefix: "/documentation",
     swagger: {
@@ -360,12 +365,25 @@ module.exports = async function (fastify, opts) {
     swagger: "/documentation/json", // Route to your Swagger JSON
   });
 
+  // CORS_ORIGINS (comma-separated, e.g. the panel + client URLs) switches
+  // CORS from "reflect any origin" to an allowlist; active White Label
+  // domains are always allowed on top of it. Requests with no Origin
+  // (mobile app, server-to-server) aren't affected by CORS at all.
+  const isAllowedOrigin = (origin) => {
+    const allowList = (process.env.CORS_ORIGINS || "")
+      .split(",")
+      .map((s) => s.trim().replace(/\/$/, ""))
+      .filter(Boolean);
+    if (allowList.length === 0) return true; // not configured: legacy reflect-all
+    if (!origin) return true;
+    if (allowList.includes(origin)) return true;
+    return (global.tblWhitelabels || []).some((w) => w.isActive && w.domain === origin);
+  };
+
   fastify.register(require("@fastify/cors"), (instance) => {
     return (req, callback) => {
       const corsOptions = {
-        // This is NOT recommended for production as it enables reflection exploits
-        // origin: true,
-        origin: true,
+        origin: isAllowedOrigin(req.headers.origin),
         methods: ["GET", "POST", "PUT", "OPTIONS"], // Allow necessary methods -- PUT is used by /vault/data and /vault/auth/profile
         preflightContinue: false, // Automatically handle preflight requests,
         maxAge: 300,
@@ -373,28 +391,25 @@ module.exports = async function (fastify, opts) {
         optionsSuccessStatus: 204, // Ensures proper handling of preflight requests
 
       };
-      //TODO: for production set to false
-      if (/^localhost$/m.test(req.headers.origin)) {
-        corsOptions.origin = true;
-      }
-
       // callback expects two parameters: error and options
       callback(null, corsOptions);
     };
   });
 
   //  socket.io
+  const legacySocketOrigins = [
+    "https://admin.socket.io",
+    "https://panel.deployed.live",
+    "https://panel.scorre.info",
+    "http://localhost:3001",
+    "https://uatpanel.deployed.live",
+    "https://uatpanel.scorre.info",
+    "http://localhost:8080"
+  ];
   const io = new Server(fastify.server, {
     cors: {
-      origin: [
-        "https://admin.socket.io",
-        "https://panel.deployed.live",
-        "https://panel.scorre.info",
-        "http://localhost:3001",
-        "https://uatpanel.deployed.live",
-        "https://uatpanel.scorre.info",
-        "http://localhost:8080"
-      ],
+      origin: (origin, cb) =>
+        cb(null, process.env.CORS_ORIGINS ? isAllowedOrigin(origin) : !origin || legacySocketOrigins.includes(origin)),
       credentials: true,
     },
     // Improved timeout settings for better connection stability

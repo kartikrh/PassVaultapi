@@ -1,10 +1,10 @@
 "use strict";
 
 module.exports = () => {
-  let posrgreSqlDatabase;
-  if (process.env.DB == "production") {
-  } else {
-    posrgreSqlDatabase = {
+  // DB=production used to hit an empty branch and return undefined
+  // (startup crash) -- every environment reads the same POSTGRES_* vars.
+  {
+    const posrgreSqlDatabase = {
       username: process.env.POSTGRES_USERNAME,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DATABASE,
@@ -20,7 +20,6 @@ module.exports = () => {
         evict: 5000       // Run cleanup every 1 second
       }
     };
+    return posrgreSqlDatabase;
   }
-  
-  return posrgreSqlDatabase;
 };

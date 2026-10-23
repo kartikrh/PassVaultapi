@@ -163,18 +163,21 @@ const getClientAuthByUsernameQuery = async (username, fastify) => {
 // decision (reaching maxAttempts) is made in the same UPDATE that increments
 // the counter, so two concurrent wrong-password requests can't each see a
 // stale pre-increment count and both fail to trip the lockout.
-const incrementFailedLoginAttemptsQuery = async (clientId, maxAttempts, lockoutHours, fastify) => {
+// Lock length doubles for each miss past maxAttempts, capped at maxMinutes.
+const incrementFailedLoginAttemptsQuery = async (clientId, maxAttempts, baseMinutes, maxMinutes, fastify) => {
   try {
     const result = await fastify.db.query(
       `UPDATE "tblClient" SET
          "wrFailedLoginAttempts" = "wrFailedLoginAttempts" + 1,
          "wrLockedUntil" = CASE
-           WHEN "wrFailedLoginAttempts" + 1 >= $2 THEN now() + ($3 || ' hours')::interval
+           WHEN "wrFailedLoginAttempts" + 1 >= $2 THEN now() + make_interval(
+             mins => LEAST($4::int, $3::int * power(2, LEAST("wrFailedLoginAttempts" + 1 - $2, 10))::int)
+           )
            ELSE "wrLockedUntil"
          END
        WHERE "wrClientId" = $1
        RETURNING "wrFailedLoginAttempts" as "failedLoginAttempts", "wrLockedUntil" as "lockedUntil"`,
-      { type: fastify.db.QueryTypes.UPDATE, bind: [clientId, maxAttempts, lockoutHours] }
+      { type: fastify.db.QueryTypes.UPDATE, bind: [clientId, maxAttempts, baseMinutes, maxMinutes] }
     );
     return result[0][0];
   } catch (err) {

@@ -1,13 +1,5 @@
-const { ERROR_CODES, error, success } = require("../../utilities/index");
-const {
-  authorization,
-  permissionCheckService,
-  XKeyConfigForExtrnal,
-  XKeyVirtual,
-  multiTabPermissionCheckService,
-} = require("../../services/middleware");
-const jwt = require("jsonwebtoken");
-
+const { ERROR_CODES, error } = require("../../utilities/index");
+const { authorization, permissionCheckService } = require("../../services/middleware");
 async function authorize(request, reply, fastify) {
   try {
     await authorization(request, fastify);
@@ -24,32 +16,7 @@ const checkPermission = async (request, reply, fastify, data) => {
   }
 };
 
-const multiTabPermissionCheck = async (request, reply, fastify, data) => {
-  try {
-    await multiTabPermissionCheckService(request, fastify, data);
-  } catch (err) {
-    reply.status(200).send(error(err.message, ERROR_CODES.INVALID_TOKEN, 200));
-  }
-};
-
-const xKeyPermission = async (request, reply, fastify) => {
-  try {
-    await XKeyConfigForExtrnal(request, fastify);
-  } catch (err) {
-    reply.status(200).send(error(err.message, ERROR_CODES.INVALID_TOKEN, 200));
-  }
-};
-const xKeyPermissionVirtual = async (request, reply, fastify) => {
-  try {
-    await XKeyVirtual(request, fastify);
-  } catch (err) {
-    reply.status(200).send(error(err.message, ERROR_CODES.INVALID_TOKEN, 200));
-  }
-}
 module.exports = {
   authorize,
   checkPermission,
-  xKeyPermission,
-  xKeyPermissionVirtual,
-  multiTabPermissionCheck,
 };

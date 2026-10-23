@@ -21,6 +21,10 @@ async function authorization(request, fastify) {
 
     const valid = jwt.verify(token, secretKey);
     const decode = jwt.decode(token, secretKey);
+    // Purpose tokens (pending-2FA) share this secret; never accept them as a session.
+    if (decode.purpose) {
+      throw new Error("Invalid Token");
+    }
 
     //check: same network and not deleted account and //*currently loggedIn
     const user = await checkValidQuery(decode, fastify);

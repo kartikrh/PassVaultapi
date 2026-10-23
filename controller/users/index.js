@@ -1,26 +1,7 @@
 const { ERROR_CODES, error, success, getGlobalMemoryDataService } = require("../../utilities/index");
-const {
-  signUpUserService,
-  signInUserServices,
-  generateEncryptionService,
-  validateUserServices,
-  getAllUsersService,
-  getUserByIdService,
-  saveUserService,
-  deleteUserService,
-  changeUserPasswordService,
-  signOutUserServices,
-  verifyTokenUserServices,
-  getUserDecryptedPassword,
-  changeUserPasswordByUSerIDService,
-  getAllUsersWithCurrentService,
-  verifyOtpUserServices,
-  resetUserOtpService,
-} = require("../../services/user");
+const { signUpUserService, signInUserServices, generateEncryptionService, validateUserServices, getAllUsersService, getUserByIdService, saveUserService, deleteUserService, changeUserPasswordService, signOutUserServices, verifyTokenUserServices, getUserDecryptedPassword, getAllUsersWithCurrentService, verifyOtpUserServices, resetUserOtpService } = require("../../services/user");
 const { errorLogger } = require("../../utilities/logger");
-const { fetchAllDataFromDb, panelLoadDataByEnum, loadEnityDataOnGlobal, globalMemoryDatas } = require("../../utilities/fetchAllData");
-const configConstants = require("../../utilities/configConstants");
-
+const { fetchAllDataFromDb, panelLoadDataByEnum } = require("../../utilities/fetchAllData");
 let commonPath = "controller/users";
 
 async function signUpUser(request, reply, fastify) {
@@ -225,50 +206,6 @@ const updateUserPassword = async (request, reply, fastify) => {
   }
 };
 
-const changeUserPassword = async (request, reply, fastify) => {
-  try {
-    const result = await changeUserPasswordByUSerIDService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(
-      fastify,
-      err.message,
-      commonPath + "/changeUserPassword",
-      request
-    );
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-};
-// async function loginRegistrationClient(request, reply, fastify) {
-//   try {
-//     const result = await loginRegistrationClientService(request, fastify);
-//     reply.status(200).send(success(result, 200));
-//   } catch (err) {
-//     errorLogger(fastify, err.message, commonPath + "/loginRegistrationClient", request);
-//     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-//   }
-// }
-
-
-const loadEnityData = async (request, fastify, reply) => {
-  try {
-    const result = await loadEnityDataOnGlobal(request, fastify, reply);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/loadEnityData", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-};
-const globalMemoryData = async (request, reply, fastify) => {
-  try {
-    const result = await globalMemoryDatas(request, fastify, reply);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/globalMemoryData", request);
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-};
-
 const getGlobalMemoryData = async (request, reply, fastify) => {
   try {
     const result = await getGlobalMemoryDataService(request, fastify, reply);
@@ -315,11 +252,8 @@ module.exports = {
   saveUser,
   deleteUser,
   updateUserPassword,
-  changeUserPassword,
   generalImageUpload,
   loadPanelDataInGlobal,
-  loadEnityData,
-  globalMemoryData,
   getGlobalMemoryData,
   verifyOtpUser,
   resetUserOtp,

@@ -179,13 +179,19 @@ const deleteConfigService = async (request, fastify) => {
   return `Config(s) deleted successfully`;
 };
 
+// Signing/encryption secrets and third-party credentials -- never returned
+// by POST /config, even to signed-in staff (the masked list +
+// revealConfigValueService is the only way to view one).
+const SECRET_CONFIG_KEY_PATTERN = /SECRET|PASSWORD|MASTERKEY|ENCRYPTIONKEY|XKEY|APIKEY|AUTHKEY|AUTHTOKEN|AUTHORIZATION_KEY|THIRDPARTYKEY/i;
+const isSecretConfigKey = (key) => SECRET_CONFIG_KEY_PATTERN.test(key) && !/EXPIRY/i.test(key);
+
 const allConfigDetails = async (request) => {
   let result = global.tblConfigs;
 
   const validKeys = request.body.keys.map(element => element.toLowerCase());
   result = result.filter(item => validKeys.includes(item.key.toLowerCase()));
 
-  return result
+  return result.map((item) => (isSecretConfigKey(item.key) ? maskConfigValue(item) : item));
 };
 const getInitConfigDetails = async (request,fastify) => {
   const initKeys = [configConstants.DPAPIURL, configConstants.DPAPIXKEY , configConstants.DPSOCKETURL, configConstants.SCORECARDFRAMEURL, configConstants.ENABLELOGROCKET, configConstants.LOGROCKETAPPID ,

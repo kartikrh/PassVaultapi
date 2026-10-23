@@ -407,60 +407,6 @@ const updateUserPasswordQuery = async (body, fastify, request) => {
 };
 
 
-const getIdByValue = async (data, request , fastify)=>{
-  try {
-    const res = await fastify.db.query(
-      `
-        SELECT "wrKey" as "clientId"
-        FROM "tblEncryptedData"
-        WHERE "wrValue" = $1
-      `,
-      {
-        type: fastify.db.QueryTypes.SELECT,
-        bind: [data.clientId],
-      }
-    );
-    return res[0];
-  } catch (error) {
-    errorLogger(
-      fastify,
-      error.message,
-      "DB ERROR --> repository/TableUser/getIdByValue",
-      request
-    );
-    throw new Error(error.message);
-  }
-}
-
-const getUserListQuery = async (request, fastify) => {
-  try {
-    const result = await fastify.db.query(
-      `SELECT 
-          "WrUserId" as "userId",
-          --"WrUserName" as "userName",
-          "WrName" as "name",
-          "wrParentTree" as "parentTree"
-      FROM "tblUsers"
-      WHERE "WrIsDelete" = FALSE
-      AND "WrIsActive" = TRUE
-      `,
-      {
-        type: QueryTypes.SELECT,
-      }
-    );
-
-    return result;
-  } catch (error) {
-    errorLogger(
-      fastify,
-      error.message,
-      "DB ERROR --> repository/TableUser/getUserListQuery",
-      request
-    );
-    throw new Error(error.message);
-    
-  }
-}
 const getParentIdTreeQuery = async (userId, request, fastify) => {
   try {
     const result = await fastify.db.query(
@@ -495,34 +441,6 @@ const getParentIdTreeQuery = async (userId, request, fastify) => {
     throw new Error(error.message);
   }
 };
-const getUserFullNameQuery = async (userId, request, fastify) => {
-  try {
-    const result = await fastify.db.query(
-      `SELECT 
-          "WrUserId" as "userId",
-          "WrName" as "name"
-      FROM "tblUsers"
-      WHERE "WrUserId" = $1
-      AND "WrIsDelete" = FALSE`,
-      {
-        type: QueryTypes.SELECT,
-        bind: [userId]
-      }
-    );
-
-    return result[0];
-  } catch (error) {
-    errorLogger(
-      fastify,
-      error.message,
-      "DB ERROR --> repository/TableUser/getUserFullNameQuery",
-      request
-    );
-    throw new Error(error.message);
-    
-  }
-}
-
 // Only used for an already-enrolled user (WrUuid set) -- a brand-new,
 // not-yet-confirmed secret instead travels inside the pending 2FA JWT
 // itself (see services/user.js signInUserServices) so an abandoned
@@ -597,10 +515,7 @@ module.exports = {
   deleteUserQuery,
   getOriginalIdFromEncryptedId,
   updateUserPasswordQuery,
-  getIdByValue,
-  getUserListQuery,
   getParentIdTreeQuery,
-  getUserFullNameQuery,
   getUserOtpSecretQuery,
   updateUserOtpSecretQuery,
   resetUserOtpQuery,

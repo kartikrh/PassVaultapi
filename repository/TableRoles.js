@@ -18,22 +18,6 @@ const getAllRolesQuery = async (fastify) => {
   );
 };
 
-const roleByDisplayTypeQuery = async (displayType, fastify) => {
-  return await fastify.db.query(
-    `SELECT 
-            e."wrValue" as "roleId",
-            r."wrRoleName" as "roleName",
-            r."wrDescription" as "description",
-            r."wrDisplayType" as "displayType"
-         FROM "tblRoles" r inner join "tblEncryptedData" e on r."wrRoleId" = e."wrKey"
-         where r."wrDisplayType" = $1 AND r."wrIsDeleted" = false;`,
-    {
-      type: fastify.db.QueryTypes.SELECT,
-      bind: [displayType],
-    }
-  );
-};
-
 const valideRoleId = async (roleId, fastify) => {
   const data = await fastify.db.query(
     `select * from "tblUsers" where 
@@ -384,7 +368,6 @@ module.exports = {
   getAllRolesQuery,
   valideRoleId,
   deleteRoleQuery,
-  roleByDisplayTypeQuery,
   createRoleQuery,
   updateOrCreatePermissionQuery,
   deletePermissionQuery,

@@ -33,18 +33,13 @@ const socketMiddleware = async (socket, next) => {
       return next(new Error("Token Not Found"));
     }
 
+    // Synchronous verify: throws into the catch below, so next() runs once.
     const verifyToken = jwt.verify(
       token,
-      getConfigValue(configConstants.SECRET_KEY_TOKEN),
-      (err, decoded) => {
-        if (err) {
-          return next(new Error(err.message));
-        }
-        return decoded;
-      }
+      getConfigValue(configConstants.SECRET_KEY_TOKEN)
     );
 
-    if (!verifyToken || !verifyToken.WrUserId) {
+    if (!verifyToken || !verifyToken.WrUserId || verifyToken.purpose) {
       return next(new Error("Invalid Token"));
     }
 

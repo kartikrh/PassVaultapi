@@ -18,6 +18,12 @@ async function authorizeClient(request, reply, fastify) {
     }
 
     const decode = jwt.verify(token, secretKey);
+    // Purpose tokens (2FA pendingToken, verify-email, reset-password) are
+    // signed with this same secret -- without this check the token issued
+    // after the password step alone would work as a full session (2FA bypass).
+    if (decode.purpose) {
+      throw new Error("Invalid Token");
+    }
 
     const client = await findClientByIdQuery(decode.WrClientId, fastify);
     if (!client || !client.isActive) {
