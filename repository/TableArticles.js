@@ -231,34 +231,10 @@ const activeInactiveArticleQuery = async (data, request, fastify) => {
     throw new Error(err.message);
   }
 };
-const articleViewersCountQuery = async (data, request, fastify) => {
-  try {
-    return await fastify.db.query(
-      `
-            update "tblArticles" set
-            "wrViewerCount" = COALESCE("wrViewerCount", 0) + 1
-            where "wrId" = $1
-        `,
-      {
-        bind: [data.refId],
-      }
-    );
-  } catch (err) {
-    errorLogger(
-      fastify,
-      err.message,
-      "DB ERROR --> repository/TableArticles/articleViewersCountQuery",
-      request
-    );
-    throw new Error(err.message);
-  }
-};
-
 module.exports = {
   insertArticleQuery,
   updateArticleQuery,
   deleteArticleQuery,
   getAllArticlesQuery,
   activeInactiveArticleQuery,
-  articleViewersCountQuery,
 };

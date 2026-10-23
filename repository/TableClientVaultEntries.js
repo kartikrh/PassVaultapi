@@ -17,6 +17,20 @@ const countActiveEntriesByTypeQuery = async (clientId, entryType, fastify) => {
   }
 };
 
+const isActiveEntryQuery = async (entryId, clientId, fastify) => {
+  try {
+    const result = await fastify.db.query(
+      `SELECT 1 FROM "tblClientVaultEntries"
+       WHERE "wrEntryId" = $1 AND "wrClientId" = $2 AND "wrIsDeleted" = false`,
+      { type: fastify.db.QueryTypes.SELECT, bind: [entryId, clientId] }
+    );
+    return result.length > 0;
+  } catch (err) {
+    errorLogger(fastify, err.message, "DB ERROR --> repository/TableClientVaultEntries/isActiveEntryQuery");
+    throw new Error(err.message);
+  }
+};
+
 const upsertEntryQuery = async (data, fastify) => {
   try {
     const result = await fastify.db.query(
@@ -95,6 +109,7 @@ const moveEntriesToArchiveByClientQuery = async (clientId, deletedClientId, fast
 };
 
 module.exports = {
+  isActiveEntryQuery,
   countActiveEntriesByTypeQuery,
   upsertEntryQuery,
   softDeleteEntryQuery,

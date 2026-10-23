@@ -14,7 +14,6 @@ const {
 const { PROJECT_NAME } = require("../utilities/configConstants");
 const { ImgModuleConfig } = require("../utilities/imageConstant");
 const { sendNotificationByType } = require("../utilities/index");
-// const { handleSitemapUpdate } = require("../utilities/SEOIndexing")
 
 const getAllNewsService = async (request, fastify) => {
   const { isActive, type, dateTime, isPermanent, startDate, endDate } = request.body;
@@ -109,7 +108,6 @@ const createNewsService = async (request, fastify) => {
   // const urlId = resultData.newsId;
   // const urlEndPoint = resultData.title.replace(/ /g, "-");
 
-  // await handleSitemapUpdate(`news/${urlId}/${urlEndPoint}`)
 
   const sendToClient = checkDataSendToClient(resultData);
   if (sendToClient) {

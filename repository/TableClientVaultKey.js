@@ -5,6 +5,7 @@ const KEY_SELECT_COLUMNS = `
   "wrClientId" as "clientId",
   "wrWrappedKey" as "wrappedKey",
   "wrKdfSalt" as "kdfSalt",
+  "wrKeyCheck" as "keyCheck",
   "wrKeyVersion" as "keyVersion",
   "wrIsActive" as "isActive",
   "wrRecoveredAt" as "recoveredAt",
@@ -26,16 +27,17 @@ const findActiveVaultKeyByClientIdQuery = async (clientId, fastify) => {
   }
 };
 
-const insertVaultKeyQuery = async (data, fastify) => {
+const insertVaultKeyQuery = async (data, fastify, transaction) => {
   try {
     const result = await fastify.db.query(
       `INSERT INTO "tblClientVaultKey" (
-        "wrClientId", "wrWrappedKey", "wrKdfSalt", "wrKeyVersion"
+        "wrClientId", "wrKeyCheck", "wrKdfSalt", "wrKeyVersion"
       ) VALUES ($1, $2, $3, $4)
       RETURNING ${KEY_SELECT_COLUMNS}`,
       {
         type: fastify.db.QueryTypes.INSERT,
-        bind: [data.clientId, data.wrappedKey, data.kdfSalt, data.keyVersion || 1],
+        bind: [data.clientId, data.keyCheck, data.kdfSalt, data.keyVersion || 1],
+        transaction,
       }
     );
     return result[0][0];
@@ -45,11 +47,11 @@ const insertVaultKeyQuery = async (data, fastify) => {
   }
 };
 
-const deactivateVaultKeyQuery = async (keyId, fastify) => {
+const deactivateVaultKeyQuery = async (keyId, fastify, transaction) => {
   try {
     return await fastify.db.query(
       `UPDATE "tblClientVaultKey" SET "wrIsActive" = false, "wrUpdatedAt" = now() WHERE "wrKeyId" = $1`,
-      { type: fastify.db.QueryTypes.UPDATE, bind: [keyId] }
+      { type: fastify.db.QueryTypes.UPDATE, bind: [keyId], transaction }
     );
   } catch (err) {
     errorLogger(fastify, err.message, "DB ERROR --> repository/TableClientVaultKey/deactivateVaultKeyQuery");
@@ -57,18 +59,20 @@ const deactivateVaultKeyQuery = async (keyId, fastify) => {
   }
 };
 
-const markVaultKeyRecoveredQuery = async (keyId, fastify) => {
+// Legacy escrow -> zero-knowledge (POST /vault/key/migrate): store the
+// client's key check and drop the server's wrapped copy of the key for good.
+const completeVaultKeyMigrationQuery = async (keyId, keyCheck, fastify) => {
   try {
     return await fastify.db.query(
       `UPDATE "tblClientVaultKey" SET
-        "wrRecoveredAt" = now(),
-        "wrRecoveredCount" = "wrRecoveredCount" + 1,
+        "wrKeyCheck" = $2,
+        "wrWrappedKey" = NULL,
         "wrUpdatedAt" = now()
       WHERE "wrKeyId" = $1`,
-      { type: fastify.db.QueryTypes.UPDATE, bind: [keyId] }
+      { type: fastify.db.QueryTypes.UPDATE, bind: [keyId, keyCheck] }
     );
   } catch (err) {
-    errorLogger(fastify, err.message, "DB ERROR --> repository/TableClientVaultKey/markVaultKeyRecoveredQuery");
+    errorLogger(fastify, err.message, "DB ERROR --> repository/TableClientVaultKey/completeVaultKeyMigrationQuery");
     throw new Error(err.message);
   }
 };
@@ -80,13 +84,10 @@ const markVaultKeyRecoveredQuery = async (keyId, fastify) => {
 // before hardDeleteClientQuery (FK: tblClientVaultKey.wrClientId ->
 // tblClient, no ON DELETE CASCADE).
 //
-// Note this table still carries the wrapped vault key -- wrapped with the
-// single server-side VAULT_MASTER_KEY (utilities/vaultCrypto.js), not
-// anything derived from the client, so it's decryptable by anyone with DB +
-// that key regardless of which table the row sits in. Archiving it (rather
-// than the old behavior of dropping it entirely) was an explicit request;
-// tblDeletedClientVaultKeys should be given the same access restrictions as
-// tblClientVaultKey itself, not treated as inert history.
+// Rows from clients that never migrated (sql/vault/020) still carry the
+// legacy wrapped key -- wrapped with the server-side VAULT_MASTER_KEY, so
+// decryptable by anyone with DB + that key regardless of which table the row
+// sits in. Migrated rows only hold the key check, which the server can't use.
 const moveVaultKeysToArchiveByClientQuery = async (clientId, deletedClientId, fastify) => {
   try {
     return await fastify.db.query(
@@ -94,10 +95,10 @@ const moveVaultKeysToArchiveByClientQuery = async (clientId, deletedClientId, fa
         DELETE FROM "tblClientVaultKey" WHERE "wrClientId" = $1 RETURNING *
       )
       INSERT INTO "tblDeletedClientVaultKeys" (
-        "wrKeyId", "wrClientId", "wrWrappedKey", "wrKdfSalt", "wrKeyVersion",
+        "wrKeyId", "wrClientId", "wrWrappedKey", "wrKeyCheck", "wrKdfSalt", "wrKeyVersion",
         "wrIsActive", "wrRecoveredAt", "wrRecoveredCount", "wrCreatedAt", "wrUpdatedAt", "wrDeletedClientId"
       )
-      SELECT "wrKeyId", "wrClientId", "wrWrappedKey", "wrKdfSalt", "wrKeyVersion",
+      SELECT "wrKeyId", "wrClientId", "wrWrappedKey", "wrKeyCheck", "wrKdfSalt", "wrKeyVersion",
              "wrIsActive", "wrRecoveredAt", "wrRecoveredCount", "wrCreatedAt", "wrUpdatedAt", $2
       FROM moved`,
       { type: fastify.db.QueryTypes.INSERT, bind: [clientId, deletedClientId] }
@@ -112,6 +113,6 @@ module.exports = {
   findActiveVaultKeyByClientIdQuery,
   insertVaultKeyQuery,
   deactivateVaultKeyQuery,
-  markVaultKeyRecoveredQuery,
+  completeVaultKeyMigrationQuery,
   moveVaultKeysToArchiveByClientQuery,
 };

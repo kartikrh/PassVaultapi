@@ -288,10 +288,6 @@ const allPhotoLibraryService = async (request) => {
   return data;
 };
 
-const getAllLibraryImagesService = async (request) => {
-  return global.tblLibraryImages;
-};
-
 const allLibraryImagesService = async (request) => {
   const { photoLibraryId } = request.body;
   const result = global.tblLibraryImages.filter(
@@ -608,7 +604,6 @@ const sendActivePhotoLibraryToClientAPIService = async (fastify) => {
 
 module.exports = {
   allPhotoLibraryService,
-  getAllLibraryImagesService,
   allLibraryImagesService,
   photoLibraryById,
   libraryImageById,
@@ -621,5 +616,5 @@ module.exports = {
   updatePhotoLibraryStatusService,
   updatePhotoLibraryDisplayOrderService,
   getPhotoLibraryCommentaryService,
-  sendActivePhotoLibraryToClientAPIService
+  sendActivePhotoLibraryToClientAPIService,
 };

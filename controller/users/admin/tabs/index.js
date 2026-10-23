@@ -1,16 +1,5 @@
 const { ERROR_CODES, error, success } = require("../../../../utilities/index");
-const {
-  getTabsService,
-  deleteTabsService,
-  getSpecificTabsService,
-  getDisplayTabsService,
-  changeDisplayOrderService,
-  getAllTabsService,
-  saveTabService,
-  getTabsByRoleIDService,
-  getTabsByParentIdService,
-  getUserWisePermissionService,
-} = require("../../../../services/admin.js");
+const { getTabsService, deleteTabsService, getSpecificTabsService, getDisplayTabsService, changeDisplayOrderService, getAllTabsService, saveTabService, getTabsByParentIdService, getUserWisePermissionService } = require("../../../../services/admin.js");
 const { errorLogger } = require("../../../../utilities/logger");
 
 let commonPath = "controller/users/admin/tabs/index";
@@ -36,16 +25,6 @@ async function getUserWisePermission(request, reply, fastify) {
       commonPath + "/getUserWisePermission",
       request
     );
-    reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
-  }
-}
-
-async function getTabsByRoleId(request, reply, fastify) {
-  try {
-    const result = await getTabsByRoleIDService(request, fastify);
-    reply.status(200).send(success(result, 200));
-  } catch (err) {
-    errorLogger(fastify, err.message, commonPath + "/getTabsByRoleId", request);
     reply.status(200).send(error(err.message, ERROR_CODES.SERVER_ERROR, 200));
   }
 }
@@ -134,7 +113,6 @@ module.exports = {
   getDisplayTabs,
   changeDisplayOrder,
   getAllTabsData,
-  getTabsByRoleId,
   getTabsList,
   getUserWisePermission,
 };

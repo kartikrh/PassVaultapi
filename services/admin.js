@@ -1,19 +1,4 @@
-const {
-  getTabsQuery,
-  createTabsQuery,
-  deleteTabsQuery,
-  getTabInfoQuery,
-  updateTabQuery,
-  hasAssociatedChildern,
-  validateAllTabIdsQuery,
-  getMaxDispalyOrderByParent,
-  getAllActiveInactiveTabsQuery,
-  updateDisplayOrder,
-  getTabsByRoleIDQuery,
-  getTabsByPerentIdQuery,
-  getUserWisePermisionQuery,
-  getChildCountQuery,
-} = require("../repository/TableTabs.js");
+const { getTabsQuery, createTabsQuery, deleteTabsQuery, getTabInfoQuery, updateTabQuery, hasAssociatedChildern, validateAllTabIdsQuery, getMaxDispalyOrderByParent, getAllActiveInactiveTabsQuery, updateDisplayOrder, getTabsByPerentIdQuery, getUserWisePermisionQuery, getChildCountQuery } = require("../repository/TableTabs.js");
 
 const { tabsValidator } = require("../utilities/validator.js");
 
@@ -57,19 +42,6 @@ async function getUserWisePermissionService(request, fastify) {
   };
 
   return await getUserWisePermisionQuery(fastify, body);
-}
-
-async function getTabsByRoleIDService(request, fastify) {
-  const { WrIsSuperAdmin, WrUserType } = request.userTokenInfo;
-  const { roleId, isActive } = request.body;
-  const body = {
-    displayType: WrIsSuperAdmin ? [1, 2, 0] : [WrUserType],
-    roleId: roleId === undefined ? 0 : roleId,
-    isSuperAdmin: WrIsSuperAdmin,
-    isActive: isActive === undefined ? true : isActive,
-  };
-
-  return await getTabsByRoleIDQuery(fastify, body);
 }
 
 async function getTabsByParentIdService(request, fastify) {
@@ -232,7 +204,6 @@ module.exports = {
   getDisplayTabsService,
   changeDisplayOrderService,
   getAllTabsService,
-  getTabsByRoleIDService,
   getTabsByParentIdService,
   getUserWisePermissionService,
 };

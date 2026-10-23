@@ -76,28 +76,7 @@ const listDeletedClientsQuery = async (filters, fastify) => {
   }
 };
 
-const getDeletedClientByIdQuery = async (id, fastify) => {
-  try {
-    const result = await fastify.db.query(
-      `SELECT
-        "wrId" as "id",
-        "wrOriginalClientId" as "originalClientId",
-        "wrEmail" as "email",
-        "wrName" as "name",
-        "wrUsername" as "username",
-        "wrReason" as "reason",
-        "wrClientSnapshot" as "clientSnapshot",
-        "wrVaultEntriesSnapshot" as "vaultEntriesSnapshot",
-        "wrActivityLogsSnapshot" as "activityLogsSnapshot",
-        "wrDeletedAt" as "deletedAt"
-       FROM "tblDeletedClients" WHERE "wrId" = $1`,
-      { type: fastify.db.QueryTypes.SELECT, bind: [id] }
-    );
-    return result[0] || null;
-  } catch (err) {
-    errorLogger(fastify, err.message, "DB ERROR --> repository/TableDeletedClients/getDeletedClientByIdQuery");
-    throw new Error(err.message);
-  }
+module.exports = {
+  archiveDeletedClientQuery,
+  listDeletedClientsQuery,
 };
-
-module.exports = { archiveDeletedClientQuery, listDeletedClientsQuery, getDeletedClientByIdQuery };

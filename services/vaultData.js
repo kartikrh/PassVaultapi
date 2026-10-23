@@ -13,6 +13,7 @@ const {
   getClientPlanLimitsQuery,
 } = require("../repository/TableClient");
 const {
+  isActiveEntryQuery,
   countActiveEntriesByTypeQuery,
   upsertEntryQuery,
   softDeleteEntryQuery,
@@ -110,7 +111,14 @@ const putVaultDataService = async (request, fastify) => {
     throw makeError("changeType must be one of create, update, delete", "INVALID_INPUT");
   }
 
-  if (changeType === VaultChangeType.CREATE) {
+  // changeType is client-declared -- an entryId the ledger doesn't already
+  // hold as active is a new entry no matter what the client calls it, so
+  // "update" can't be used to slip past the plan limit.
+  const isNewEntry =
+    changeType !== VaultChangeType.DELETE &&
+    (changeType === VaultChangeType.CREATE || !(await isActiveEntryQuery(entryId, WrClientId, fastify)));
+
+  if (isNewEntry) {
     const [planLimits, currentCount] = await Promise.all([
       getClientPlanLimitsQuery(WrClientId, fastify),
       countActiveEntriesByTypeQuery(WrClientId, entryType, fastify),
